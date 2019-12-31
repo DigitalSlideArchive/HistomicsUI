@@ -1,0 +1,54 @@
+.g-config-breadcrumb-container
+p.g-hui-description
+  | Provides a toolkit for analyzing histology images.
+form#g-hui-form(role="form")
+  .form-group
+    label(for="g-hui-webroot-path") Root Path
+    input#g-hui-webroot-path.form-control.input-sm(
+        type="text", value=settings['histomicsui.webroot_path'] || '',
+        placeholder=`Default: ${defaults['histomicsui.webroot_path'] || 'histomicsui'}`,
+        title="The relative URL of the application.")
+  .form-group
+    label(for="g-hui-brand-name") Brand Name
+    input#g-hui-brand-name.form-control.input-sm(
+        type="text", value=settings['histomicsui.brand_name'] || '',
+        placeholder=`Default: ${defaults['histomicsui.brand_name'] || 'none'}`,
+        title="The brand name of the application.")
+  .form-group
+    label(for="g-hui-brand-color") Brand Color
+    #g-hui-brand-color-container
+      input#g-hui-brand-color.form-control.input-sm(
+          type="color", value=settings['histomicsui.brand_color'] || defaults['histomicsui.brand_color'],
+          title="The color of the application brand text.")
+      button#g-hui-brand-default-color.form-control.input-sm(
+          type="button", title="Default color") default
+  .form-group
+    label(for="g-hui-banner-color") Banner Color
+    #g-hui-banner-color-container
+      input#g-hui-banner-color.form-control.input-sm(
+          type="color", value=settings['histomicsui.banner_color'] || defaults['histomicsui.banner_color'],
+          title="The banner color of the application.")
+      button#g-hui-banner-default-color.form-control.input-sm(
+          type="button", title="Default color") default
+  .form-group
+    label
+      | Default styles for drawing annotations
+    input#g-hui-default-draw-styles.input-sm.form-control(
+        type="text", value=settings['histomicsui.default_draw_styles'],
+        placeholder='A JSON object listing default annotation drawing styles.',
+        title='A dictionary of drawing styles')
+  .form-group
+    label(for="g-hui-quarantine-folder") Quarantine Folder
+    p.g-hui-description
+      | If a quarantine folder is specified, users with write access will see a Quarantine button next to items.  When clicked, this moves that item to the quarantine folder and adds metadata to record where it was originally.  The quarantine folder should have restricted visibility.
+    .input-group.input-group-sm
+      input#g-hui-quarantine-folder.form-control.input-sm(
+          type="text", value=settings['histomicsui.quarantine_folder'] || '',
+          title="A folder to store quarantined items.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  p#g-hui-error-message.g-validation-failed-message
+.g-hui-buttons
+  button#g-hui-save.btn.btn-sm.btn-primary Save
+  button#g-hui-cancel.btn.btn-sm.btn-default Cancel

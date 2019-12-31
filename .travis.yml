@@ -1,0 +1,24 @@
+sudo: false
+dist: xenial
+language: python
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+services:
+  - mongodb
+install:
+  - pip install --upgrade pip
+  - pip install --upgrade virtualenv
+  - pip install tox-travis
+script:
+  # Piping through cat does less buffering of the output but can consume the
+  # exit code
+  #   Deselect the test_conversion tests, as the virtualenv travis uses fails
+  # to import pyvips with an error
+  # "OSError: dlopen: cannot load any more object with static TLS"
+  - tox | cat; test ${PIPESTATUS[0]} -eq 0
+after_success:
+  - pip install codecov
+  - codecov --disable search pycov gcov --file .tox/coverage/py_coverage.xml build/test/coverage/cobertura-coverage.xml
