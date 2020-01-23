@@ -1,3 +1,5 @@
+import $ from 'jquery';
+
 import StyleCollection from '../../collections/StyleCollection';
 import View from '../View';
 

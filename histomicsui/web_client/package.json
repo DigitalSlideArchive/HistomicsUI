@@ -62,8 +62,9 @@
             "import/exports-last": "error",
             "promise/no-native": "error",
             "promise/no-return-in-finally": "error",
-            "promise/no-return-wrap": "error"
-        },        
+            "promise/no-return-wrap": "error",
+            "no-var": "off"
+        },
         "root": true
     },
     "pugLintConfig": {
