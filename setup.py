@@ -42,7 +42,7 @@ setup(
     ],
     install_requires=[
         'girder-large-image-annotation>=1.0.2.dev2',
-        'girder-slicer-cli-web>=1.0.1.dev3',
+        'girder-slicer-cli-web[girder]>=1.0.1.dev3',
         'girder-worker[girder]>=0.6.0',
         'celery>=4.4.0rc5',
     ],
