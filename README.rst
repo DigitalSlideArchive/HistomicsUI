@@ -1,6 +1,6 @@
-======================================
-HistomicsU |build-status| |codecov-io|
-======================================
+=======================================
+HistomicsUI |build-status| |codecov-io|
+=======================================
 
 Organize, visualize, and analyze histology images.
 
