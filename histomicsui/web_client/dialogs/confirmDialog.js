@@ -15,7 +15,6 @@ const defaultOptions = {
     message: 'Are you sure?',
     submitButton: 'Yes',
     onSubmit: _.noop
-
 };
 
 const ConfirmDialog = View.extend({
@@ -23,7 +22,10 @@ const ConfirmDialog = View.extend({
         'click .h-submit': '_submit'
     },
     render() {
-        this.$el.html(template(this._options)).girderModal(this);
+        this.$el.html(template(this._options)).girderModal(this)
+            .on('shown.bs.modal', () => {
+                this.$('.h-submit').trigger('focus');
+            });
         return this;
     },
 
