@@ -1,6 +1,6 @@
-===========
-HistomicsUI
-===========
+======================================
+HistomicsU |build-status| |codecov-io|
+======================================
 
 Organize, visualize, and analyze histology images.
 
@@ -62,4 +62,13 @@ This work is funded in part by the NIH grant U24-CA194362-01_.
 .. _celery: http://www.celeryproject.org/
 .. _HistomicsTK: https://github.com/DigitalSlideArchive/HistomicsTK
 .. _Digital Slide Archive: https://github.com/DigitalSlideArchive/digital_slide_archive
+
+.. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/HistomicsUI.svg?style=svg
+    :target: https://circleci.com/gh/DigitalSlideArchive/HistomicsUI
+    :alt: Build Status
+
+.. |codecov-io| image:: https://codecov.io/github/DigitalSlideArchive/HistomicsUI/coverage.svg?branch=master
+    :target: https://codecov.io/github/DigitalSlideArchive/HistomicsUI?branch=master
+    :alt: codecov.io
+
 
