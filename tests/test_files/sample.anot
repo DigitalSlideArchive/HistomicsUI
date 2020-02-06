@@ -1,0 +1,20 @@
+{
+  "name": "Sample",
+  "elements": [
+    {
+      "type": "point",
+      "center": [1033,363,0],
+      "lineColor": "rgb(0,0,0)",
+      "lineWidth": 2,
+      "fillColor": "rgba(0,0,0,0)"
+    },
+    {
+      "type": "polyline",
+      "points": [[1029,408,0], [1012,449,0], [1055,458,0], [1060,414,0]],
+      "fillColor": "rgba(0,0,0,0)",
+      "lineColor": "rgb(0,0,0)",
+      "lineWidth": 2,
+      "closed": true
+    }
+  ]
+}
