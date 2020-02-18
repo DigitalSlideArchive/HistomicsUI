@@ -1,6 +1,6 @@
 {
     "name": "@girder/histomicsui",
-    "version": "1.0.0",
+    "version": "0.0.0",
     "private": true,
     "description": "Organize, visualize, and analyze histology images.",
     "homepage": "https://github.com/DigitalSlideArchive/histomicsui",
