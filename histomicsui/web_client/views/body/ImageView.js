@@ -724,6 +724,10 @@ var ImageView = View.extend({
     },
 
     _onKeyDown(evt) {
+        /* Don't trigger keys if we are in an input field. */
+        if (/^(input|textarea|select)$/.test((document.activeElement.tagName || '').toLowerCase())) {
+            return;
+        }
         if (evt.key === 'a') {
             this._showOrHideAnnotations();
         } else if (evt.key === 's') {
