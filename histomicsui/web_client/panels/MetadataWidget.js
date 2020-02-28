@@ -422,9 +422,9 @@ var MetadataWidget = Panel.extend({
     setItem: function (item) {
         this.item = item;
         this.item.on('g:changed', function () {
-            this.render(0);
+            this.render();
         }, this);
-        this.render(0);
+        this.render();
         return this;
     },
 
@@ -449,7 +449,7 @@ var MetadataWidget = Panel.extend({
             accessLevel: this.accessLevel,
             parentView: this,
             onMetadataEdited: this.onMetadataEdited,
-            onMetadataAdded: this.onMetadataAdded
+            onMetadataAdded: this.onMetadataAdded,
         });
         widget.$el.appendTo(this.$('.g-widget-metadata-container'));
 
@@ -465,17 +465,16 @@ var MetadataWidget = Panel.extend({
             onMetadataEdited: this.onMetadataEdited,
             onMetadataAdded: this.onMetadataAdded
         })
-            .render() //
+            .render()
             .$el.appendTo(widget.$el);
     },
 
     renderMetadataWidgetHeader: function () {
         // pervent automatically collapse the widget after rendering again
-        this.render(1);
+        this.render();
     },
 
-    render: function (e) {
-        // e is a variable that determines how to render the widget
+    render: function () {
         if (this.item && this.item.id) {
             const imageId = this.item.id;
             const apiPath = `/item/${imageId}/metadata`;
@@ -483,7 +482,6 @@ var MetadataWidget = Panel.extend({
                 var metaDict = this.item.get(this.fieldName) || {};
                 var metaKeys = Object.keys(metaDict);
                 metaKeys.sort(localeSort);
-                // Metadata header
                 var firstKey = (metaKeys)[0];
                 var firstValue = metaDict[firstKey];
                 if (_.isObject(firstValue)) {
@@ -496,7 +494,9 @@ var MetadataWidget = Panel.extend({
                     firstKey: firstKey,
                     firstValue: firstValue,
                     accessLevel: this.item.attributes._accessLevel,
-                    AccessType: AccessType
+                    AccessType: AccessType,
+                    // if never rendered, the jquery selector will be empty and won't be visible
+                    collapsed: !this.$('.s-panel-content').is(':visible')
                 }));
                 // Append each metadatum
                 _.each(metaKeys, function (metaKey) {
@@ -510,16 +510,10 @@ var MetadataWidget = Panel.extend({
                         apiPath: apiPath,
                         onMetadataEdited: this.onMetadataEdited,
                         onMetadataAdded: this.onMetadataAdded
-                    }).render(0).$el);
+                    }).render().$el);
                 }, this);
                 // by default the widget should be collapsed
-                if (e === 1) {
-                    // don't collapse when metadata is deleted/updated
-                    this.$('.s-panel-content').collapse({toggle: false});
-                } else {
-                    // only collapsed when rendering after initializing
-                    this.$('.s-panel-content').collapse({toggle: true});
-                }
+                this.$('.s-panel-content').collapse({toggle: false});
             });
         }
         return this;

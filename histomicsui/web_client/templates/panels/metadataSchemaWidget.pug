@@ -1,0 +1,28 @@
+.s-panel-title-container
+  span.s-panel-title.h-panel-title
+    i.icon-tags
+    |  #{title}
+  if(firstKey && firstValue)
+    span.g-widget-metadata-header-key-value #{firstKey+' '+firstValue+'  '}
+  span.s-panel-controls
+    if (accessLevel >= AccessType.WRITE)
+      // new class introduced in the mentioned PR
+      span.s-no-panel-toggle
+        button.g-widget-metadata-add-button.btn.btn-sm.btn-primary.btn-default.dropdown-toggle(data-toggle="dropdown", title="Add Metadata")
+          i.icon-plus
+        ul.dropdown-menu.pull-right(role="menu")
+          li(role="presentation")
+            a.g-add-simple-metadata(role="menuitem")
+              | Simple
+          li(role="presentation")
+            a.g-add-json-metadata
+              | JSON
+    if collapsed
+      i.icon-down-open
+    else
+      i.icon-up-open
+- var attrs = {}
+if !collapsed
+  - attrs.class = 'in'
+.s-panel-content.collapse&attributes(attrs)
+  .g-widget-metadata-container
