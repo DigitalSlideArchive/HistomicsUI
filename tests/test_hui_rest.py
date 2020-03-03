@@ -275,6 +275,18 @@ class TestHUIEndpoints(object):
                 '#777': 'be a hex color'
             },
             'good': {'#000000': '#000000'},
+        }, {
+            'key': PluginSettings.HUI_ALTERNATE_WEBROOT_PATH,
+            'initial': None,
+            'bad': {
+                'girder': 'not contain "girder"',
+                'girder,histomicstk': 'not contain "girder"'
+            },
+            'good': {
+                '': '',
+                'histomicstk': 'histomicstk',
+                'hui,histomicstk': 'hui,histomicstk'
+            },
         }]
         for setting in settings:
             key = setting['key']

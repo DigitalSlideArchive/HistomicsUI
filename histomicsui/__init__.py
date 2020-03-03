@@ -102,6 +102,12 @@ def validateHistomicsUIWebrootPath(doc):
         raise ValidationException('The webroot path may not be "girder"', 'value')
 
 
+@setting_utilities.validator(PluginSettings.HUI_ALTERNATE_WEBROOT_PATH)
+def validateHistomicsUIAlternateWebrootPath(doc):
+    if re.match(r'(^,|)girder(,|$)', doc['value']):
+        raise ValidationException('The alternate webroot path may not contain "girder"', 'value')
+
+
 @setting_utilities.validator(PluginSettings.HUI_QUARANTINE_FOLDER)
 def validateHistomicsUIQuarantineFolder(doc):
     if not doc.get('value', None):
@@ -190,7 +196,12 @@ class GirderPlugin(plugin.GirderPlugin):
         # under the specified path.
         info['serverRoot'].hui = huiRoot
         webrootPath = Setting().get(PluginSettings.HUI_WEBROOT_PATH)
+        alternateWebrootPath = Setting().get(PluginSettings.HUI_ALTERNATE_WEBROOT_PATH)
         setattr(info['serverRoot'], webrootPath, huiRoot)
+        if alternateWebrootPath:
+            for alt_webroot_path in alternateWebrootPath.split(','):
+                if alt_webroot_path:
+                    setattr(info['serverRoot'], alt_webroot_path, huiRoot)
         info['serverRoot'].girder = girderRoot
 
         # auto-ingest annotations into database when a .anot file is uploaded
@@ -201,7 +212,8 @@ class GirderPlugin(plugin.GirderPlugin):
         def updateWebroot(event):
             """
             If the webroot path setting is changed, bind the new path to the
-            hui webroot resource.
+            hui webroot resource.  Note that a change to the alternate webroot
+            requires a restart.
             """
             if event.info.get('key') == PluginSettings.HUI_WEBROOT_PATH:
                 setattr(info['serverRoot'], event.info['value'], huiRoot)
