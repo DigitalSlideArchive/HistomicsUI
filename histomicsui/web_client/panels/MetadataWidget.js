@@ -449,7 +449,7 @@ var MetadataWidget = Panel.extend({
             accessLevel: this.accessLevel,
             parentView: this,
             onMetadataEdited: this.onMetadataEdited,
-            onMetadataAdded: this.onMetadataAdded,
+            onMetadataAdded: this.onMetadataAdded
         });
         widget.$el.appendTo(this.$('.g-widget-metadata-container'));
 
