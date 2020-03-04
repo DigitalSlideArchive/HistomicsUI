@@ -1262,6 +1262,9 @@ girderTest.promise.done(function () {
                 });
 
                 girderTest.waitForLoad();
+                waitsFor(function () {
+                    return $('.icon-spin3').length === 0;
+                }, 'loading spinners to disappear');
                 runs(function () {
                     expect($('.h-elements-container').length).toBe(1);
                     expect($('.h-annotation-selector .h-annotation:contains("drawn 2") .icon-eye').length).toBe(1);
