@@ -92,6 +92,7 @@
         waitsFor(function () {
             return $('.geojs-layer.active').length > 0;
         }, 'image to load');
+        girderTest.waitForLoad();
         runs(function () {
             expect(girder.plugins.histomicsui.router.getQuery('image')).toBe(imageId);
             currentImageId = imageId;
