@@ -50,6 +50,8 @@ class HistomicsUIResource(Resource):
             PluginSettings.HUI_BRAND_NAME,
             PluginSettings.HUI_DEFAULT_DRAW_STYLES,
             PluginSettings.HUI_QUARANTINE_FOLDER,
+            PluginSettings.HUI_WEBROOT_PATH,
+
         ]
         result = {k: Setting().get(k) for k in keys}
         result[PluginSettings.HUI_QUARANTINE_FOLDER] = bool(
