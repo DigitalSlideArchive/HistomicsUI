@@ -47,6 +47,7 @@ class HistomicsUIResource(Resource):
     @access.public
     def getPublicSettings(self, params):
         keys = [
+            PluginSettings.HUI_BRAND_NAME,
             PluginSettings.HUI_DEFAULT_DRAW_STYLES,
             PluginSettings.HUI_QUARANTINE_FOLDER,
         ]

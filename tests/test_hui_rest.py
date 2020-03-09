@@ -223,6 +223,7 @@ class TestHUIEndpoints(object):
         assert utilities.respStatus(resp) == 200
         settings = resp.json
         assert settings[key] is None
+        assert settings[PluginSettings.HUI_BRAND_NAME] == 'HistomicsUI'
 
         Setting().set(key, '')
         assert Setting().get(key) is None
