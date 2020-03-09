@@ -60,7 +60,7 @@
             "switch-colon-spacing": "error",
             "object-curly-spacing": "off",
             "import/exports-last": "error",
-            "promise/no-native": "off",
+            "promise/no-native": "error",
             "promise/no-return-in-finally": "error",
             "promise/no-return-wrap": "error",
             "no-var": "off"

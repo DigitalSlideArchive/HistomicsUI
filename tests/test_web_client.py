@@ -147,6 +147,7 @@ def testWebClientWithWorker(boundServer, fsAssetstore, db, admin, user, spec, gi
     'annotationSpec.js',
     'huiSpec.js',
     'girderUISpec.js',
+    'itemSpec.js'
 ))
 def testWebClient(boundServer, fsAssetstore, db, admin, user, spec):
     copyHUITest()

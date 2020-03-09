@@ -8,6 +8,8 @@ import { restRequest } from '@girder/core/rest';
 import events from '@girder/core/events';
 import router from '@girder/core/router';
 
+import { HuiSettings } from '../utils';
+
 import ConfigViewTemplate from '../../templates/body/configView.pug';
 import '../../stylesheets/body/configView.styl';
 
@@ -38,7 +40,7 @@ var ConfigView = View.extend({
             this.$('#g-hui-banner-color').val(this.defaults['histomicsui.banner_color']);
         },
         'click #g-hui-cancel': function (event) {
-            router.navigate('plugins', {trigger: true});
+            router.navigate('plugins', { trigger: true });
         },
         'click .g-open-browser': '_openBrowser'
     },
@@ -101,7 +103,7 @@ var ConfigView = View.extend({
             restRequest({
                 url: `resource/${val.id}/path`,
                 method: 'GET',
-                data: {type: val.get('_modelType')}
+                data: { type: val.get('_modelType') }
             }).done((result) => {
                 // Only add the resource path if the value wasn't altered
                 if (this.$('#g-hui-quarantine-folder').val() === val.id) {
@@ -129,6 +131,7 @@ var ConfigView = View.extend({
             },
             error: null
         }).done(() => {
+            HuiSettings.clearSettingsCache();
             events.trigger('g:alert', {
                 icon: 'ok',
                 text: 'Settings saved.',

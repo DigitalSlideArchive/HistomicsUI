@@ -1,22 +1,21 @@
 import { restRequest } from '@girder/core/rest';
 
-// Utility items for HistomicUI views
+/* Utility items for HistomicUI views
+  In the future more utility classes/functions can be added for export
+*/
 class HuiSettings {
     static getSettings() {
-        return new Promise((resolve, reject) => {
-            if (!HuiSettings._hui_settings) {
-                restRequest({
-                    type: 'GET',
-                    url: 'histomicsui/settings'
-                }).then((resp) => {
-                    HuiSettings._hui_settings = resp;
-                    resolve(HuiSettings._hui_settings);
-                    return HuiSettings._hui_settings;
-                });
-            } else {
-                resolve(HuiSettings._hui_settings);
-            }
-        });
+        if (HuiSettings._hui_settings) {
+            return HuiSettings._hui_settings;
+        } else {
+            HuiSettings._hui_settings = restRequest({
+                type: 'GET',
+                url: 'histomicsui/settings'
+            }).then((resp) => {
+                return resp;
+            });
+        }
+        return HuiSettings._hui_settings;
     }
     static clearSettingsCache() {
         delete HuiSettings._hui_settings;
@@ -25,4 +24,4 @@ class HuiSettings {
 
 HuiSettings._hui_settings = null;
 
-export default HuiSettings;
+export { HuiSettings };

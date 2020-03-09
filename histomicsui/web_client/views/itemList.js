@@ -6,7 +6,7 @@ import { restRequest } from '@girder/core/rest';
 import events from '@girder/core/events';
 import ItemListWidget from '@girder/core/views/widgets/ItemListWidget';
 
-import HuiSettings from './utils';
+import { HuiSettings } from './utils';
 
 import '../stylesheets/views/itemList.styl';
 
@@ -61,8 +61,9 @@ wrap(ItemListWidget, 'render', function (render) {
     }
 
     if (this.accessLevel >= AccessType.WRITE) {
-        HuiSettings.getSettings().done((settings) => {
+        HuiSettings.getSettings().then((settings) => {
             adjustView(settings);
+            return settings;
         });
         this.events['click .g-hui-quarantine'] = quarantine;
         this.delegateEvents();
