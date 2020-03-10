@@ -3,8 +3,9 @@ import { restRequest } from '@girder/core/rest';
 import events from '@girder/core/events';
 import ItemView from '@girder/core/views/body/ItemView';
 
-import '../stylesheets/views/itemList.styl';
 import { HuiSettings } from './utils';
+
+import '../stylesheets/views/itemList.styl';
 
 wrap(ItemView, 'render', function (render) {
     function quarantine(event) {
@@ -55,6 +56,5 @@ wrap(ItemView, 'render', function (render) {
         });
         return settings;
     });
-
     render.call(this);
 });

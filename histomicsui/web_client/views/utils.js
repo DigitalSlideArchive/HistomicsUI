@@ -4,6 +4,10 @@ import { restRequest } from '@girder/core/rest';
   In the future more utility classes/functions can be added for export
 */
 class HuiSettings {
+    constructor() {
+        HuiSettings._hui_settings = null;
+    }
+
     static getSettings() {
         if (HuiSettings._hui_settings) {
             return HuiSettings._hui_settings;
@@ -17,11 +21,10 @@ class HuiSettings {
         }
         return HuiSettings._hui_settings;
     }
+
     static clearSettingsCache() {
         delete HuiSettings._hui_settings;
     }
 }
-
-HuiSettings._hui_settings = null;
 
 export { HuiSettings };

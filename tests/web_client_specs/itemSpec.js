@@ -54,7 +54,6 @@ describe('Test the HistomicsUI itemUI screen', function () {
             return (settingsBrandName && settingsBrandName === brandName && settingsWebRootPath && settingsWebRootPath === webRootPath);
         }, 'HistomicsUI settings to change');
     });
-
     it('mock Webgl', function () {
         var GeojsViewer = window.girder.plugins.large_image.views.imageViewerWidget.geojs;
         window.girder.utilities.PluginUtils.wrap(GeojsViewer, 'initialize', function (initialize) {
@@ -98,12 +97,6 @@ describe('Test the HistomicsUI itemUI screen', function () {
         });
         girderTest.waitForLoad();
     });
-    // Lets check to see if there are the proper ui elements
-    it('taking screenshot', function () {
-        waits(1500);
-        console.log('__SCREENSHOT__FINAL');
-    });
-
     it('has a Open HistomicsUI button with TestBrandName', function () {
         runs(function () {
             expect($('.g-hui-open-item').text().indexOf(brandName) !== -1).toBe(true);
