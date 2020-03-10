@@ -40,10 +40,7 @@ describe('itemList', function () {
         girderTest.waitForLoad();
         waitsFor(function () {
             return $('.g-item-actions-button').length > 0;
-        });
-        runs(function () {
-            $('.g-item-actions-button').parent().addClass('group');
-        });
+        });        
     });
     it('has a Open HistomicsUI button', function () {
         runs(function () {

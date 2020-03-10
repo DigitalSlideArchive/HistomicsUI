@@ -51,7 +51,7 @@ describe('Test the HistomicsUI itemUI screen', function () {
             var settingsBrandName = (settings && settings['histomicsui.brand_name']);
             var settingsWebRootPath = (settings && settings['histomicsui.webroot_path']);
 
-            return (settingsBrandName && settingsBrandName === brandName && settingsWebRootPath && settingsWebRootPath === webRootPath);
+            return (settingsBrandName === brandName && settingsWebRootPath === webRootPath);
         }, 'HistomicsUI settings to change');
     });
     it('mock Webgl', function () {

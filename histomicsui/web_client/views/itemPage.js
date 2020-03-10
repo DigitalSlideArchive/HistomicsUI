@@ -31,11 +31,10 @@ wrap(ItemView, 'render', function (render) {
             });
         });
     }
-
-    HuiSettings.getSettings().then((settings) => {
-        const brandName = (settings['histomicsui.brand_name'] || '');
-        const webrootPath = (settings['histomicsui.webroot_path'] || '');
-        this.once('g:rendered', function () {
+    this.once('g:rendered', function () {
+        HuiSettings.getSettings().then((settings) => {
+            const brandName = (settings['histomicsui.brand_name'] || '');
+            const webrootPath = (settings['histomicsui.webroot_path'] || '');
             if (this.$el.find('.g-edit-item[role="menuitem"]').length && !this.$el.find('.g-hui-quarantine-item[role="menuitem"]').length) {
                 this.$el.find('.g-edit-item[role="menuitem"]').parent('li').after(
                     '<li role="presentation"><a class="g-hui-quarantine-item" role="menuitem"><span>Q</span>Quarantine item</a></li>'
@@ -53,8 +52,8 @@ wrap(ItemView, 'render', function (render) {
             }
             this.events['click .g-hui-quarantine-item'] = quarantine;
             this.delegateEvents();
+            return settings;
         });
-        return settings;
     });
     render.call(this);
 });
