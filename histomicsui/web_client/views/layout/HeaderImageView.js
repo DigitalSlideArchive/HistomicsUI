@@ -12,7 +12,7 @@ import '../../stylesheets/layout/headerImage.styl';
 var HeaderImageView = View.extend({
     events: {
         'click .h-open-image': function (evt) {
-            events.trigger('h:openImageUi');
+            events.trigger('h:openImageUi', (this.imageModel || {}));
         },
         'click .h-open-annotated-image': function (evt) {
             events.trigger('h:openAnnotatedImageUi');
