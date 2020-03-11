@@ -6,6 +6,8 @@ import { restRequest } from '@girder/core/rest';
 import events from '@girder/core/events';
 import ItemListWidget from '@girder/core/views/widgets/ItemListWidget';
 
+import { HuiSettings } from './utils';
+
 import '../stylesheets/views/itemList.styl';
 
 wrap(ItemListWidget, 'render', function (render) {
@@ -44,7 +46,7 @@ wrap(ItemListWidget, 'render', function (render) {
             });
             root.trigger('g:changed');
             if (root.parentView && root.parentView.setCurrentModel && root.parentView.parentModel) {
-                root.parentView.setCurrentModel(root.parentView.parentModel, {setRoute: false});
+                root.parentView.setCurrentModel(root.parentView.parentModel, { setRoute: false });
             } else {
                 target.closest('.g-item-list-entry').remove();
             }
@@ -59,17 +61,10 @@ wrap(ItemListWidget, 'render', function (render) {
     }
 
     if (this.accessLevel >= AccessType.WRITE) {
-        if (!this._hui_settings) {
-            restRequest({
-                type: 'GET',
-                url: 'histomicsui/settings'
-            }).done((resp) => {
-                this._hui_settings = resp;
-                adjustView(this._hui_settings);
-            });
-        } else {
-            adjustView(this._hui_settings);
-        }
+        HuiSettings.getSettings().then((settings) => {
+            adjustView(settings);
+            return settings;
+        });
         this.events['click .g-hui-quarantine'] = quarantine;
         this.delegateEvents();
     }
