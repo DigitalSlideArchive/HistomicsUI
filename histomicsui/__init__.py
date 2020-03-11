@@ -58,6 +58,37 @@ _template = os.path.join(
 )
 
 
+def patchCookieParsing():
+    """
+    Python's http cookie parser fails for all cookies when there are some
+    invalid cookies.  Work around some of that.
+
+    See https://bugs.python.org/issue31456 for a discussion.
+    See https://github.com/python/cpython/blob/master/Lib/http/cookies.py for
+    the relevant Python source code.
+    """
+    try:
+        # This will fail in Python 2.7.  Python 2.7 has a backport module, but
+        # it is constructed differently.
+        import http.cookies
+
+        # This is both a sanity check and to make sure we don't do things
+        # multiple times.  It should work on python 3.5 - 3.8 (and possibly
+        # later).  See
+        if (r'\s' not in http.cookies._LegalValueChars and
+                r'\w' in http.cookies._LegalValueChars and
+                http.cookies.BaseCookie._BaseCookie__parse_string.__defaults__ == (
+                    http.cookies._CookiePattern, )):
+            http.cookies._LegalValueChars += r'\s'
+            http.cookies._CookiePattern = re.compile(
+                http.cookies._CookiePattern.pattern.replace(r'\[\]', r'\[\]\s'),
+                http.cookies._CookiePattern.flags)
+            http.cookies.BaseCookie._BaseCookie__parse_string.__defaults__ = (
+                http.cookies._CookiePattern, )
+    except Exception:
+        pass
+
+
 @setting_utilities.validator({
     PluginSettings.HUI_DEFAULT_DRAW_STYLES
 })
@@ -172,6 +203,10 @@ class GirderPlugin(plugin.GirderPlugin):
         plugin.getPlugin('jobs').load(info)
         plugin.getPlugin('slicer_cli_web').load(info)
         plugin.getPlugin('large_image_annotation').load(info)
+
+        # Python's http cookie parser fails for all cookies when there are some
+        # invalid cookies.  Work around some of that.
+        patchCookieParsing()
 
         ModelImporter.registerModel('aperio', Aperio, 'histomicsui')
         ModelImporter.registerModel('case', Case, 'histomicsui')
