@@ -41,9 +41,16 @@ function createDialog(imageModel) {
             widget._rootSelectionView.selected = widget._rootSelectionView.groups['Collections'].get(imageModel.parent.get('baseParentId'));
             widget._rootSelectionView.render();
         }
-        console.log(widget._hierarchyView);
+        console.log('PAGENUM');
+        console.log(widget._hierarchyView.itemListView.collection.pageNum());
         console.log(widget.selectItem);
         widget._selectItem(imageModel);
+
+        console.log(imageModel.cid);
+        console.log('a.g-item-list-link[href="#item/' + imageModel.id + '"]');
+        let selector = 'a.g-item-list-link[href="#item/' + imageModel.id + '"]';
+        $(selector).parent().css({"backgroundColor":"#c1e2b3"});
+        $(".g-hierarchy-widget-container").scrollTop($(selector).offset().top);
     }, 1000);
     widget.on('g:saved', (model) => {
         if (!model) {
