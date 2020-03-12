@@ -14,13 +14,14 @@ function createDialog(imageModel) {
         parentView: null,
         titleText: 'Select a slide...',
         submitText: 'Open',
+        highlightItem: true,
         showItems: true,
         selectItem: true,
-        root: imageModel.parent,
+        defaultSelectedResource: imageModel,
         helpText: 'Click on a slide item to open.',
         rootSelectorSettings: {
-            selected: imageModel.parent.get('collection'),
-            pageLimit: 50
+            pageLimit: 50,
+            selectbyResource: imageModel
         },
         validate: function (item) {
             if (!item.has('largeImage')) {
@@ -30,7 +31,7 @@ function createDialog(imageModel) {
         }
     });
 
-    setTimeout(() => {
+    /*setTimeout(() => {
         console.log(widget._rootSelectionView);
         console.log(imageModel);
         console.log(widget._rootSelectionView.groups);
@@ -49,9 +50,10 @@ function createDialog(imageModel) {
         console.log(imageModel.cid);
         console.log('a.g-item-list-link[href="#item/' + imageModel.id + '"]');
         let selector = 'a.g-item-list-link[href="#item/' + imageModel.id + '"]';
-        $(selector).parent().css({"backgroundColor":"#c1e2b3"});
-        $(".g-hierarchy-widget-container").scrollTop($(selector).offset().top);
+        $(selector).parent().addClass('g-selected');
+        $(".g-hierarchy-widget-container").scrollTop($(selector).offset().top-$(".g-hierarchy-widget-container").height());
     }, 1000);
+    */
     widget.on('g:saved', (model) => {
         if (!model) {
             return;
@@ -72,7 +74,6 @@ function createDialog(imageModel) {
 
 events.on('h:openImageUi', function (imageModel) {
     if (!dialog) {
-        console.log(imageModel);
         dialog = createDialog(imageModel);
     }
     dialog.setElement($('#g-dialog-container')).render();
