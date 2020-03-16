@@ -21,7 +21,7 @@ def process_annotations(event):
                     isinstance(reference.get('identifier'), six.string_types)):
                 identifier = reference['identifier']
         except (ValueError, TypeError):
-            logger.warning('Failed to parse data.process reference: %r', reference)
+            logger.debug('Failed to parse data.process reference: %r', reference)
     if identifier is not None and identifier.endswith('AnnotationFile'):
         if 'userId' not in reference or 'itemId' not in reference:
             logger.error('Annotation reference does not contain required information.')
