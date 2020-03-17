@@ -8,8 +8,6 @@ import router from '../router';
 var dialog;
 
 function createDialog(imageModel) {
-    console.log(imageModel);
-    console.log(imageModel.parent.get('collection'));
     var widget = new BrowserWidget({
         parentView: null,
         titleText: 'Select a slide...',
