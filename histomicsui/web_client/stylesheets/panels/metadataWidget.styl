@@ -1,12 +1,7 @@
 .h-metadata-widget
-  .h-metadata-container
-
   .s-panel-title-container
     .s-no-panel-toggle
       position relative
-
-  .g-widget-metadata-header
-    font-weight bold
 
   .g-widget-metadata-header-key-value
     margin-left 5px
@@ -19,66 +14,30 @@
     margin-bottom 2px
 
   .g-widget-metadata-row
-    border-bottom 1px solid #f0f0f0
-    min-height 25px
+    min-height 30px
+    margin 0
 
   .g-widget-metadata-key, .g-widget-metadata-value
-    display inline-block
-    overflow hidden
-    text-overflow ellipsis
-
-  .g-widget-metadata-key
-    font-weight bold
-    width 30%
-
-    span.small
-      float right
-
-  .g-widget-metadata-value
-    width 100%
-
-    pre
-      padding 0
-      font-size 14px
-      background-color transparent
-      border none
-      max-height 320px
-      overflow auto
-      margin-bottom 0
+    vertical-align top
+    margin 0
 
   .g-json-editor
-    width 54%
-    height 400px
-    display inline-block
-    vertical-align middle
-    margin-left 5px
-    margin-right 5px
+    width 100%
+    margin 0
+    overflow hidden
 
-    .ace_editor, textarea
-      height 365px !important
+    .jsoneditor-menu
+      height initial
+      min-height 35px
+    table.jsoneditor-search
+      position initial
+
+  .g-widget-metadata-value
+    width 59%
 
   button.g-widget-metadata-add-button
     float none
     margin 0 5px 0 0
 
   .g-widget-metadata-container .g-widget-metadata-edit-button
-    margin 2px 8px 0 0
-    float right
-    padding 3px
-
-  .g-widget-metadata-row.editing
-    .g-widget-metadata-key-input, .g-widget-metadata-value-input
-      height 24px
-      display inline-block
-      vertical-align middle
-
-    .g-widget-metadata-key-input
-      width 30%
-
-    .g-widget-metadata-value-input
-      width 54%
-
-    .g-widget-metadata-cancel-button, .g-widget-metadata-save-button, .g-widget-metadata-delete-button, .g-widget-metadata-toggle-button
-      display inline-block
-      height 24px
-      padding 2px
+    margin 2px 0 0 0

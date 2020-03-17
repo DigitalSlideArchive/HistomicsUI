@@ -437,7 +437,7 @@ var MetadataWidget = Panel.extend({
         var EditWidget = this.modes[mode].editor;
         var value = (mode === 'json') ? '{}' : '';
         // expand the widget when adding new metadata
-        this.renderMetadataWidgetHeader();
+        this.$('.s-panel-content').collapse('show');
         var widget = new MetadatumWidget({
             className: 'g-widget-metadata-row editing',
             mode: mode,
