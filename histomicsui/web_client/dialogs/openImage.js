@@ -27,31 +27,7 @@ function createDialog(imageModel) {
             }
             return $.Deferred().resolve().promise();
         }
-    });
-
-    /*setTimeout(() => {
-        console.log(widget._rootSelectionView);
-        console.log(imageModel);
-        console.log(widget._rootSelectionView.groups);
-        console.log(`baseParentType: ${imageModel.get('baseParentType')}`);
-        console.log(`parentID: ${imageModel.parent.get('baseParentId')}`);
-        if (imageModel.get('baseParentType') === 'collection') {
-            console.log(widget._rootSelectionView.groups['Collections'].get(imageModel.parent.get('baseParentId')));
-            widget._rootSelectionView.selected = widget._rootSelectionView.groups['Collections'].get(imageModel.parent.get('baseParentId'));
-            widget._rootSelectionView.render();
-        }
-        console.log('PAGENUM');
-        console.log(widget._hierarchyView.itemListView.collection.pageNum());
-        console.log(widget.selectItem);
-        widget._selectItem(imageModel);
-
-        console.log(imageModel.cid);
-        console.log('a.g-item-list-link[href="#item/' + imageModel.id + '"]');
-        let selector = 'a.g-item-list-link[href="#item/' + imageModel.id + '"]';
-        $(selector).parent().addClass('g-selected');
-        $(".g-hierarchy-widget-container").scrollTop($(selector).offset().top-$(".g-hierarchy-widget-container").height());
-    }, 1000);
-    */
+    });    
     widget.on('g:saved', (model) => {
         if (!model) {
             return;
