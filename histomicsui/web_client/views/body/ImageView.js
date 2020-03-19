@@ -18,6 +18,7 @@ import AnnotationContextMenu from '../popover/AnnotationContextMenu';
 import AnnotationPopover from '../popover/AnnotationPopover';
 import AnnotationSelector from '../../panels/AnnotationSelector';
 import ZoomWidget from '../../panels/ZoomWidget';
+import MetadataWidget from '../../panels/MetadataWidget';
 import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
 import router from '../../router';
@@ -64,6 +65,9 @@ var ImageView = View.extend({
             closeButton: true
         });
         this.zoomWidget = new ZoomWidget({
+            parentView: this
+        });
+        this.metadataWidget = new MetadataWidget({
             parentView: this
         });
         this.annotationSelector = new AnnotationSelector({
@@ -210,6 +214,10 @@ var ImageView = View.extend({
                     this.zoomWidget
                         .setViewer(this.viewerWidget)
                         .setElement('.h-zoom-widget').render();
+
+                    this.metadataWidget
+                        .setItem(this.model)
+                        .setElement('.h-metadata-widget').render();
 
                     this.annotationSelector
                         .setViewer(this.viewerWidget)
