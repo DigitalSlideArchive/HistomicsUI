@@ -149,6 +149,21 @@ class TestHUIResourceAndItem(object):
         items = resp.json
         assert len(items) == 1
 
+    def testFolderQuery(self, server, admin, user):
+        self.makeResources(admin)
+        resp = server.request(
+            path='/folder/query', user=admin, params={'query': json.dumps({
+                'baseParentId': {'$oid': str(admin['_id'])}
+            })})
+        assert utilities.respStatus(resp) == 200
+        assert len(resp.json) == 3
+        resp = server.request(
+            path='/folder/query', user=user, params={'query': json.dumps({
+                'baseParentId': {'$oid': str(admin['_id'])}
+            })})
+        assert utilities.respStatus(resp) == 200
+        assert len(resp.json) == 2
+
     def testResourceMetadata(self, server, admin):
         self.makeResources(admin)
         resp = server.request(
