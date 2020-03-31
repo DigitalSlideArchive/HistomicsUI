@@ -1,4 +1,8 @@
 import datetime
+# validate json
+# import json
+# import jsonschema
+# from jsonschema import validate
 
 from girder import logger
 from girder.api import access
@@ -10,7 +14,6 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.utility.model_importer import ModelImporter
-
 from ..constants import PluginSettings
 from .system import allChildFolders, allChildItems
 
@@ -19,7 +22,6 @@ class HistomicsUIResource(Resource):
     def __init__(self):
         super(HistomicsUIResource, self).__init__()
         self.resourceName = 'histomicsui'
-
         self.route('GET', ('settings',), self.getPublicSettings)
         self.route('PUT', ('quarantine', ':id'), self.putQuarantine)
         self.route('PUT', ('quarantine', ':id', 'restore'), self.restoreQuarantine)
@@ -41,16 +43,16 @@ class HistomicsUIResource(Resource):
         #  `GET /api/v1/histomicsui/query_metadata`
         self.route('GET', ('query_metadata',), self.findItemsByMetadata)
 
+        self.route('GET', ('metadata_schema', ':id'), self.getMetadataSchema)
+
     @describeRoute(
         Description('Get public settings for HistomicsUI.')
     )
     @access.public
     def getPublicSettings(self, params):
         keys = [
-            PluginSettings.HUI_BRAND_NAME,
             PluginSettings.HUI_DEFAULT_DRAW_STYLES,
             PluginSettings.HUI_QUARANTINE_FOLDER,
-            PluginSettings.HUI_WEBROOT_PATH
         ]
         result = {k: Setting().get(k) for k in keys}
         result[PluginSettings.HUI_QUARANTINE_FOLDER] = bool(
@@ -243,3 +245,84 @@ class HistomicsUIResource(Resource):
         # Finally, we turn the iterator into an explicit list for return to the
         # user.  Girder handles json encoding the response.
         return list(response)
+
+    @autoDescribeRoute(
+        Description("Get metadata schema based on an folder\'s id or a collection\'s id.")
+        .param('id', 'The ID of the folder or the collection.', paramType='path')
+        .param('type', 'The type of the resource',
+               # an item won't have schema but folder and collection would
+               enum=['folder', 'collection'])
+        .errorResponse('ID was invalid.')
+        .errorResponse('Access was denied for the resource.', 403)
+    )
+    @access.public
+    # needs a better structure/logic to reorganize/modulize this
+    def getMetadataSchema(self, id, params):
+        user = self.getCurrentUser()
+        modelType = params['type']
+        schema = {}
+        model = ModelImporter.model(modelType)
+        doc = model.load(id=id, user=user, level=AccessType.READ)
+        # schema presented in current folder or collection
+        if doc.get('meta', {}).get('schema'):
+            schema = doc.get('meta', {}).get('schema')
+            return schema
+        else:
+            # loop until it has no parent
+            while doc.get('parentId'):
+                # reload the doc and replace it with parent doc
+                parentId = doc.get('parentId')
+                parentModel = doc.get('parentCollection')
+                doc = ModelImporter.model(parentModel).load(
+                    id=parentId, user=user, level=AccessType.READ)
+                # return parent's schema
+                if doc.get('meta', {}).get('schema'):
+                    schema = doc.get('meta', {}).get('schema')
+                    return schema
+                else:
+                    continue
+            # no parent or schema
+            return
+
+# """todo:auto populate example schema, schema key order
+# {
+#     "$schema": "http://json-schema.org/schema#", // this seems can't be addded to girder??
+#     "additionalProperties": true,
+#     "$id": "/girder/plugins/large_image/models/annotation", //by default
+#     "title":"metadata_schema",
+#     "properties": {
+#         "stain": {
+#           "description": "The stain type of a metadata",
+#           "enum": [ //select box
+#             "H&E",
+#             "PAS",
+#             "Endospore"
+#           ],// order, position
+#           "type": "string"
+#         },
+#         "magification":{//slider
+#             "description": "The magification of a metadata which should be a positive float",
+#             "minimum": 0,
+#             "maximum": 40,
+#             "type": "number"
+#         },
+#          "boolean":{ //check box
+#            "type":"boolean"
+#          },
+#          "enum":{
+#            "type":["string","number"]
+#          },
+#          "integer":{//input box
+#            "minimum": 1,
+#            "type":"number"
+#          },
+#           "float":{
+#            "type":"number"
+#          },
+#           "text":{
+#            "type":"string"
+#          }
+#     },
+#     "type": "object"
+# }
+# """

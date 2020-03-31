@@ -16,9 +16,10 @@ import JSONEditor from 'jsoneditor/dist/jsoneditor.js'; // can't 'jsoneditor'
 import 'jsoneditor/dist/jsoneditor.css';
 
 import 'bootstrap/js/dropdown';
-
 import metadataWidgetTemplate from '../templates/panels/metadataWidget.pug';
 import '../stylesheets/panels/metadataWidget.styl';
+// template for metadata when it has a schema
+import metadataWidgetSchemaTemplate from '../templates/panels/metadataSchemaWidget.pug';
 
 var MetadatumWidget = Panel.extend({
     className: 'g-widget-metadata-row',
@@ -474,10 +475,36 @@ var MetadataWidget = Panel.extend({
         this.render();
     },
 
+    // return a sorted matadata key:value pair for display
+    sortOnKeys: function (metadata) {
+        var sortedKeys = [];
+        for (var key in metadata) {
+            sortedKeys[sortedKeys.length] = key;
+        }
+        sortedKeys.sort();
+        var tempMetadata = {};
+        for (var i = 0; i < sortedKeys.length; i++) {
+            tempMetadata[sortedKeys[i]] = metadata[sortedKeys[i]];
+        }
+        // pop the "stain" pair
+        delete tempMetadata['stain'];
+        return tempMetadata;
+    },
+
     render: function () {
         if (this.item && this.item.id) {
             const imageId = this.item.id;
             const apiPath = `/item/${imageId}/metadata`;
+            // construct the api url to get schema through api
+            const apiRoot = 'http://localhost:8080/api/v1/histomicsui/metadata_schema/';
+            var modelType = this.item.parent.attributes._modelType;
+            const parentFolderId = this.item.parent.id;
+            var apiUrl = `${apiRoot}${parentFolderId}?type=${modelType}`;
+            var metadataSchema;
+            var existKeysList = [];
+            var keysOptionList = [];
+            // key and value pairs of metadata
+            var validatedMetadata = {};
             this.item.getAccessLevel((accessLevel) => {
                 var metaDict = this.item.get(this.fieldName) || {};
                 var metaKeys = Object.keys(metaDict);
@@ -488,32 +515,105 @@ var MetadataWidget = Panel.extend({
                     // if the value is a json object, JSON.stringify to make it more readable
                     firstValue = JSON.stringify(firstValue);
                 }
-                this.$el.html(metadataWidgetTemplate({
-                    item: this.item,
-                    title: this.title,
-                    firstKey: firstKey,
-                    firstValue: firstValue,
-                    accessLevel: this.item.attributes._accessLevel,
-                    AccessType: AccessType,
-                    // if never rendered, the jquery selector will be empty and won't be visible
-                    collapsed: !this.$('.s-panel-content').is(':visible')
-                }));
-                // Append each metadatum
-                _.each(metaKeys, function (metaKey) {
-                    this.$el.find('.g-widget-metadata-container').append(new MetadatumWidget({
-                        mode: this.getModeFromValue(metaDict[metaKey]),
-                        key: metaKey,
-                        value: metaDict[metaKey],
-                        accessLevel: this.item.attributes._accessLevel,
-                        parentView: this,
-                        fieldName: this.fieldName,
-                        apiPath: apiPath,
-                        onMetadataEdited: this.onMetadataEdited,
-                        onMetadataAdded: this.onMetadataAdded
-                    }).render().$el);
-                }, this);
-                // by default the widget should be collapsed
-                this.$('.s-panel-content').collapse({toggle: false});
+                // could use girder request to do this
+                $.get(apiUrl, metaKeys, function (data) {
+                    // data could be a string if no schema is presented
+                    // when there is a data schema presented
+                    if (data.schema) {
+                        metadataSchema = data.schema.properties;
+                        for (var key in metadataSchema) {
+                            keysOptionList.push(key);
+                            for (var i = 0; i < metaKeys.length; i++) {
+                                if (metaKeys[i] === key) {
+                                    // if the key from schema already exist in metadata
+                                    // push it to existKeysList,
+                                    // will not be displayed in the dropdown menu
+                                    existKeysList.push(key);
+                                    // add validated pairs
+                                    validatedMetadata[key] = metaDict[key];
+                                    // todo: validate the value with schema!!
+                                    keysOptionList.pop(key);
+                                }
+                            }
+                        }
+                    } else {
+                        // no schema presented
+                        metadataSchema = 0;
+                    }
+                }).then(() => {
+                    // use different template depends on whether there is a schema
+                    if (metadataSchema === 0) {
+                        // if no schema, then same thing no need for change
+                        this.$el.html(metadataWidgetTemplate({
+                            item: this.item,
+                            title: this.title,
+                            firstKey: firstKey,
+                            firstValue: firstValue,
+                            accessLevel: this.item.attributes._accessLevel,
+                            AccessType: AccessType,
+                            // if never rendered, the jquery selector will be empty and won't be visible
+                            collapsed: !this.$('.s-panel-content').is(':visible')
+                        }));
+                        // Append each metadatum
+                        _.each(metaKeys, function (metaKey) {
+                            this.$el.find('.g-widget-metadata-container').append(new MetadatumWidget({
+                                mode: this.getModeFromValue(metaDict[metaKey]),
+                                key: metaKey,
+                                value: metaDict[metaKey],
+                                accessLevel: this.item.attributes._accessLevel,
+                                parentView: this,
+                                fieldName: this.fieldName,
+                                apiPath: apiPath,
+                                onMetadataEdited: this.onMetadataEdited,
+                                onMetadataAdded: this.onMetadataAdded
+                            }).render().$el);
+                        }, this);
+                    } else {
+                        // the head of the pair: only 'stain':value
+                        var headMetadataForDisplay = {};
+                        // the rest/tail of the pair exclude the first 'stain' pair
+                        var tailMetadataForDisplay = {};
+                        tailMetadataForDisplay = this.sortOnKeys(validatedMetadata);
+                        // fisrt key and value pair hardcode for now?
+                        firstKey = 'stain';
+                        firstValue = validatedMetadata[firstKey];
+                        headMetadataForDisplay[firstKey] = firstValue;
+                        this.$el.html(metadataWidgetSchemaTemplate({
+                            item: this.item,
+                            title: this.title,
+                            firstKey: firstKey,
+                            firstValue: firstValue,
+                            accessLevel: this.item.attributes._accessLevel,
+                            AccessType: AccessType,
+                            // if never rendered, the jquery selector will be empty and won't be visible
+                            collapsed: !this.$('.s-panel-content').is(':visible')
+                        }));
+                        // Append each metadatum
+                        _.each(existKeysList, function (key) {
+                            this.$el.find('.g-widget-metadata-container').append(new MetadatumWidget({
+                                mode: this.getModeFromValue(validatedMetadata[key]),
+                                // mode: this.getModeFromValue(tailMetadataForDisplay[key]),
+                                // fix later: the first key pair currently is not 'stain'
+                                key: key,
+                                // if the key is the first key, display first value else disply the tail
+                                value: (key === firstKey) ? firstValue : tailMetadataForDisplay[key],
+                                accessLevel: this.item.attributes._accessLevel,
+                                parentView: this,
+                                fieldName: this.fieldName,
+                                apiPath: apiPath,
+                                onMetadataEdited: this.onMetadataEdited,
+                                onMetadataAdded: this.onMetadataAdded
+                            }).render().$el);
+                        }, this);
+                    }
+                    // don't collapse when metadata is deleted/updated
+                    this.$('.s-panel-content').collapse({toggle: false});
+                    return 0;
+                }).catch((error) => {
+                    // lint fix
+                    // error  Each then() should return a value or throw  promise/always-return
+                    console.log('Error ' + error.name);
+                });
             });
         }
         return this;
