@@ -22,7 +22,8 @@
         "dependencies": [
             "large_image_annotation",
             "slicer_cli_web"
-        ]
+        ],
+        "webpack": "webpack.helper"
     },
     "scripts": {
         "lint": "eslint . && pug-lint . && stylint"
@@ -30,6 +31,7 @@
     "dependencies": {
         "backbone.localstorage": "^2.0.2",
         "bootstrap-submenu": "^2.0.4",
+        "copy-webpack-plugin": "^4.5.2",
         "tinycolor2": "^1.4.1"
     },
     "devDependencies": {
