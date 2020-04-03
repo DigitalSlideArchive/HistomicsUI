@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
     <link rel="stylesheet" href="${staticPublicPath}/built/girder_lib.min.css">
-    <link rel="icon" type="image/png" href="${staticPublicPath}/built/Girder_Favicon.png">
+    <link rel="icon" type="image/png" href="${staticPublicPath}/built/plugins/histomicsui/favicon.png">
     % for plugin in pluginCss:
     <link rel="stylesheet" href="${staticPublicPath}/built/plugins/${plugin}/plugin.min.css">
     % endfor
