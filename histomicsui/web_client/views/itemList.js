@@ -21,7 +21,7 @@ wrap(ItemListWidget, 'render', function (render) {
         }
         root.$el.find('.g-item-list-entry').each(function () {
             var parent = $(this);
-            parent.remove('.g-hui-quarantine');
+            parent.find('.g-hui-quarantine').remove();
             parent.append($('<a class="g-hui-quarantine"><span>Q</span></a>').attr({
                 'g-item-cid': $('[g-item-cid]', parent).attr('g-item-cid'),
                 title: 'Move this item to the quarantine folder'
