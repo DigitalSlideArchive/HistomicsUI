@@ -15,11 +15,11 @@ function createDialog(imageModel) {
         highlightItem: true,
         showItems: true,
         selectItem: true,
+        paginated: true,
         defaultSelectedResource: imageModel,
         helpText: 'Click on a slide item to open.',
         rootSelectorSettings: {
-            pageLimit: 50,
-            selectbyResource: imageModel
+            pageLimit: 50
         },
         validate: function (item) {
             if (!item.has('largeImage')) {
