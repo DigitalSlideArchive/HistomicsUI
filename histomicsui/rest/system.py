@@ -37,6 +37,9 @@ def addSystemEndpoints(apiRoot):
     """
     # Added to the item route
     apiRoot.item.route('GET', ('query',), getItemsByQuery)
+    # Added to the folder route
+    apiRoot.folder.route('GET', ('query',), getFoldersByQuery)
+    # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
 
@@ -153,6 +156,22 @@ def allChildItems(parent, parentType, user, limit=0, offset=0,
 def getItemsByQuery(self, query, limit, offset, sort):
     user = self.getCurrentUser()
     return Item().findWithPermissions(query, offset=offset, limit=limit, sort=sort, user=user)
+
+
+@access.public(scope=TokenScope.DATA_READ)
+@filtermodel(model=Folder)
+@autoDescribeRoute(
+    Description('List folders that match a query.')
+    .responseClass('Folder', array=True)
+    .jsonParam('query', 'Find folders that match this Mongo query.',
+               required=True, requireObject=True)
+    .pagingParams(defaultSort='_id')
+    .errorResponse()
+)
+@boundHandler()
+def getFoldersByQuery(self, query, limit, offset, sort):
+    user = self.getCurrentUser()
+    return Folder().findWithPermissions(query, offset=offset, limit=limit, sort=sort, user=user)
 
 
 class HUIResourceResource(ResourceResource):
