@@ -27,7 +27,7 @@ function createDialog(imageModel) {
             }
             return $.Deferred().resolve().promise();
         }
-    });    
+    });
     widget.on('g:saved', (model) => {
         if (!model) {
             return;
