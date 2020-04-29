@@ -20,7 +20,7 @@ function createDialog(item, itemParent) {
         root: itemParent,
         rootSelectorSettings: {
             pageLimit: 0,
-            selectByResource: itemParent ? itemParent.get('baseParentId') : undefined
+            selectByResource: itemParent
         },
         validate: function (item) {
             if (!item.has('largeImage')) {
