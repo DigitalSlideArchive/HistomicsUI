@@ -501,7 +501,9 @@ var MetadataWidget = Panel.extend({
             const parentFolderId = this.item.parent.id;
             var apiUrl = `${apiRoot}${parentFolderId}?type=${modelType}`;
             var metadataSchema;
+            // the keys from schema that also exist in metadata
             var existKeysList = [];
+            // keys user can add(already validated with schema)
             var keysOptionList = [];
             // key and value pairs of metadata
             var validatedMetadata = {};
@@ -517,29 +519,31 @@ var MetadataWidget = Panel.extend({
                 }
                 // could use girder request to do this
                 $.get(apiUrl, metaKeys, function (data) {
-                    // data could be a string if no schema is presented
-                    // when there is a data schema presented
-                    if (data.schema) {
-                        metadataSchema = data.schema.properties;
-                        for (var key in metadataSchema) {
-                            keysOptionList.push(key);
-                            for (var i = 0; i < metaKeys.length; i++) {
-                                if (metaKeys[i] === key) {
-                                    // if the key from schema already exist in metadata
-                                    // push it to existKeysList,
-                                    // will not be displayed in the dropdown menu
-                                    existKeysList.push(key);
-                                    // add validated pairs
-                                    validatedMetadata[key] = metaDict[key];
-                                    // todo: validate the value with schema!!
-                                    keysOptionList.pop(key);
+                    if (data === null) {
+                        metadataSchema = 0;
+                    } else {
+                        // when there is a data schema presented
+                        // metadataSchema = (JSON.stringify(data.properties));
+                        // depends on the schema, the way to extract data could be different
+                        // could be: data.properties or data.schema.properties
+                        if (data.properties) {
+                            metadataSchema = data.properties;
+                            for (var key in metadataSchema) {
+                                keysOptionList.push(key);
+                                for (var i = 0; i < metaKeys.length; i++) {
+                                    if (metaKeys[i] === key) {
+                                        // existed keys will not be displayed in the dropdown menu
+                                        existKeysList.push(key);
+                                        // add validated pairs
+                                        // todo: validate the value with schema!!
+                                        validatedMetadata[key] = metaDict[key];
+                                        keysOptionList.pop(key);
+                                    }
                                 }
                             }
                         }
-                    } else {
-                        // no schema presented
-                        metadataSchema = 0;
                     }
+                // able to use data outside the async functions
                 }).then(() => {
                     // use different template depends on whether there is a schema
                     if (metadataSchema === 0) {
