@@ -53,6 +53,7 @@ var ImageView = View.extend({
         }
         this.listenTo(this.model, 'g:fetched', this.render);
         this.listenTo(events, 'h:analysis:rendered', this._setImageInput);
+        this.listenTo(events, 'h:analysis:rendered', this._allowRootSelection);
         this.listenTo(events, 'h:analysis:rendered', this._setDefaultFileOutputs);
         this.listenTo(events, 'h:analysis:rendered', this._resetRegion);
         this.listenTo(this.selectedElements, 'add remove reset', this._redrawSelection);
@@ -366,6 +367,15 @@ var ImageView = View.extend({
                 throw new Error('Could not find the user\'s private folder when setting defaults');
             }
             return userFolders.at(0);
+        });
+    },
+
+    _allowRootSelection() {
+        /* It would be better to adjust heirarchy widgets to start where
+         * current selections are located, but showing the root selector is a
+         * start. */
+        _.chain(this.controlPanel._panelViews).pluck('_childViews').flatten().each((entry) => {
+            entry._rootPath = entry._rootPath === undefined ? false : entry._rootPath;
         });
     },
 
