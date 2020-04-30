@@ -58,7 +58,7 @@ const OpenAnnotatedImage = View.extend({
 
         this._users = new UserCollection();
         this._users.sortField = 'login';
-        this._users.pageLimit = 500;
+        this._users.pageLimit = 0;
         this._usersIsFetched = false;
         this._users.fetch().done(() => {
             this._usersIsFetched = true;
