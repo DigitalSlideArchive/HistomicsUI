@@ -94,7 +94,6 @@ const EditStyleGroups = View.extend({
                 .removeClass('hidden');
         }
 
-        console.log(JSON.stringify(data)); // DWM::
         this.model.set(data);
     },
 

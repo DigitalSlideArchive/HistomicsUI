@@ -4,6 +4,7 @@ import $ from 'jquery';
 import { restRequest } from '@girder/core/rest';
 import ElementCollection from '@girder/large_image_annotation/collections/ElementCollection';
 import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
+import convert from '@girder/large_image_annotation/annotations/convert';
 
 import events from '../../events';
 import View from '../View';
@@ -20,8 +21,31 @@ function point(p) {
 /**
  * Format a distance as a string for the user.
  */
-function length(p) {
-    return `${Math.ceil(p)} px`;
+function length(p, scale) {
+    let result = `${Math.ceil(p)} px`;
+    let scaleWidget = window.geo.gui.scaleWidget;
+    if (scale && scaleWidget && scaleWidget.formatUnit) {
+        let scaleresult = scaleWidget.formatUnit(p * scale, 'si', undefined, 4);
+        if (scaleresult) {
+            result += ` (${scaleresult})`;
+        }
+    }
+    return result;
+}
+
+/**
+ * Format an area as a string for the user.
+ */
+function areaStr(p, scale) {
+    let result = `${Math.ceil(p)} px\xB2`;
+    let scaleWidget = window.geo.gui.scaleWidget;
+    if (scale && scaleWidget && scaleWidget.formatUnit) {
+        let scaleresult = scaleWidget.formatUnit(p * scale * scale, 'si', scaleWidget.areaUnitsTable, 4);
+        if (scaleresult) {
+            result += ` (${scaleresult})`;
+        }
+    }
+    return result;
 }
 
 /**
@@ -80,7 +104,7 @@ var AnnotationPopover = View.extend({
                     elements: {[annotation.id]: [element]},
                     formatDate,
                     users: this._users,
-                    elementProperties: this._elementProperties
+                    elementProperties: (element) => this._elementProperties(element)
                 })
             );
         }
@@ -146,7 +170,8 @@ var AnnotationPopover = View.extend({
         function setIf(key, func = (v) => v) {
             const value = element.get(key);
             if (value) {
-                props[key] = func(value);
+                let args = [value].concat(Array.prototype.slice.call(arguments, 2));
+                props[key] = func.apply(this, args);
             }
         }
 
@@ -159,10 +184,41 @@ var AnnotationPopover = View.extend({
         if (element.get('group')) {
             props.group = element.get('group');
         }
+        let geojson = convert(element, {}).features[0].geometry;
+        let area, edge, scale;
+        if (geojson.type === 'Polygon') {
+            area = edge = 0;
+            for (let j = 0; j < geojson.coordinates.length; j += 1) {
+                for (let i = 0; i < geojson.coordinates[j].length - 1; i += 1) {
+                    let v0 = geojson.coordinates[j][i];
+                    let v1 = geojson.coordinates[j][i + 1];
+                    area += (v1[1] - v0[1]) * (v0[0] + v1[0]) / 2 * (!j ? 1 : -1);
+                    edge += ((v1[0] - v0[0]) ** 2 + (v1[1] - v0[1]) ** 2) ** 0.5;
+                }
+            }
+            area = Math.abs(area);
+        }
+        if (geojson.type === 'LineString') {
+            edge = 0;
+            for (let i = 0; i < geojson.coordinates.length - 1; i += 1) {
+                let v0 = geojson.coordinates[i];
+                let v1 = geojson.coordinates[i + 1];
+                edge += ((v1[0] - v0[0]) ** 2 + (v1[1] - v0[1]) ** 2) ** 0.5;
+            }
+        }
+        if (this && this.parentView && this.parentView.viewerWidget && this.parentView.viewerWidget._scale) {
+            scale = this.parentView.viewerWidget._scale.scale;
+        }
         setIf('center', point);
-        setIf('width', length);
-        setIf('height', length);
+        setIf('width', length, scale);
+        setIf('height', length, scale);
         setIf('rotation', rotation);
+        if (area) {
+            props.area = areaStr(area, scale);
+        }
+        if (edge) {
+            props[geojson.type === 'LineString' ? 'length' : 'perimeter'] = length(edge, scale);
+        }
 
         return props;
     },
