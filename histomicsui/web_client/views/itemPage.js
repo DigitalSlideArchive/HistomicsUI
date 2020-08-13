@@ -21,7 +21,8 @@ wrap(ItemView, 'render', function (render) {
                 type: 'success',
                 timeout: 4000
             });
-            this.render();
+            delete this.model.parent;
+            this.model.fetch({ success: () => this.render() });
         }).fail((resp) => {
             events.trigger('g:alert', {
                 icon: 'cancel',
