@@ -48,8 +48,9 @@ def quarantine_item(item, user, makePlaceholder=True):
             {'_id': item['creatorId']}, originalFolder,
             description=item['description'])
         quarantineInfo['placeholderItemId'] = placeholder['_id']
-        item.setdefault('meta', {})['quarantine'] = quarantineInfo
-        item = Item().updateItem(item)
+    item.setdefault('meta', {})['quarantine'] = quarantineInfo
+    item = Item().updateItem(item)
+    if makePlaceholder:
         placeholderInfo = {
             'quarantined': True,
             'quarantineTime': quarantineInfo['quarantineTime']
@@ -72,7 +73,10 @@ def restore_quarantine_item(item):
     folder = Folder().load(item['meta']['quarantine']['originalFolderId'], force=True)
     if not folder:
         raise RestException('The original folder is not accessible.')
-    placeholder = Item().load(item['meta']['quarantine']['placeholderItemId'], force=True)
+    if 'placeholderItemId' in item['meta']['quarantine']:
+        placeholder = Item().load(item['meta']['quarantine']['placeholderItemId'], force=True)
+    else:
+        placeholder = None
     item = Item().move(item, folder)
     item['updated'] = item['meta']['quarantine']['originalUpdated']
     del item['meta']['quarantine']
