@@ -15,7 +15,7 @@ from ..constants import PluginSettings
 from .system import allChildFolders, allChildItems
 
 
-def quarantine_item(user, item):
+def quarantine_item(item, user, makePlaceholder=True):
     """
     Quarantine an item, marking which user did it.  Note that this raises
     RestExceptions for failures.
@@ -42,18 +42,20 @@ def quarantine_item(user, item):
         'quarantineTime': datetime.datetime.utcnow()
     }
     item = Item().move(item, folder)
-    placeholder = Item().createItem(
-        item['name'], {'_id': item['creatorId']}, originalFolder,
-        description=item['description'])
-    quarantineInfo['placeholderItemId'] = placeholder['_id']
-    item.setdefault('meta', {})['quarantine'] = quarantineInfo
-    item = Item().updateItem(item)
-    placeholderInfo = {
-        'quarantined': True,
-        'quarantineTime': quarantineInfo['quarantineTime']
-    }
-    placeholder.setdefault('meta', {})['quarantine'] = placeholderInfo
-    placeholder = Item().updateItem(placeholder)
+    if makePlaceholder:
+        placeholder = Item().createItem(
+            item['name'] + ' [Removed - Quarantined]',
+            {'_id': item['creatorId']}, originalFolder,
+            description=item['description'])
+        quarantineInfo['placeholderItemId'] = placeholder['_id']
+        item.setdefault('meta', {})['quarantine'] = quarantineInfo
+        item = Item().updateItem(item)
+        placeholderInfo = {
+            'quarantined': True,
+            'quarantineTime': quarantineInfo['quarantineTime']
+        }
+        placeholder.setdefault('meta', {})['quarantine'] = placeholderInfo
+        placeholder = Item().updateItem(placeholder)
     return item
 
 
@@ -132,7 +134,7 @@ class HistomicsUIResource(Resource):
     @access.user(scope=TokenScope.DATA_WRITE)
     @filtermodel(model=Item)
     def putQuarantine(self, item):
-        return quarantine_item(self.getCurrentUser(), item)
+        return quarantine_item(item, self.getCurrentUser())
 
     @autoDescribeRoute(
         Description('Restore a quarantined item to its original folder.')
