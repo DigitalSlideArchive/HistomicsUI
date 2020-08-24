@@ -46,6 +46,8 @@ setup(
         'girder-slicer-cli-web[girder]>=1.0.1.dev3',
         'girder-worker[girder]>=0.6.0',
         'celery>=4.4.0rc5',
+        # Needed for Python 2.7 and Girder worker
+        'diskcache<5;python_version<"3"',
     ],
     license='Apache Software License 2.0',
     long_description=readme,
