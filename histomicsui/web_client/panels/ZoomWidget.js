@@ -41,7 +41,7 @@ var ZoomWidget = Panel.extend({
     }),
     initialize() {
         // set defaults that will be overwritten when a viewer is added
-        this._maxMag = 20;
+        this._maxMag = 10;
         this._maxZoom = 8;
         this._minZoom = 0;
         this._cancelSelection = false;

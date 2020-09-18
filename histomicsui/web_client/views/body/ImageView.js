@@ -46,7 +46,7 @@ var ImageView = View.extend({
         this.selectedElements = this.selectedAnnotation.elements();
 
         // Allow zooming this many powers of 2 more than native pixel resolution
-        this._increaseZoom2x = 1;
+        this._increaseZoom2x = 0;
 
         if (!this.model) {
             this.model = new ItemModel();
@@ -315,7 +315,8 @@ var ImageView = View.extend({
             return restRequest({
                 url: 'item/' + itemId + '/tiles'
             }).then((tiles) => {
-                this.zoomWidget.setMaxMagnification(tiles.magnification || 20, this._increaseZoom2x);
+                let maxMag = Math.min(tiles.magnification || 10, 10);
+                this.zoomWidget.setMaxMagnification(maxMag, this._increaseZoom2x);
                 this.zoomWidget.render();
                 return null;
             });
