@@ -4,7 +4,7 @@ HistomicsUI |build-status| |codecov-io|
 
 Organize, visualize, and analyze histology images.
 
-`HistomicsUI`_ organizes and managed whole slide image (WSI) files using Girder_.  It has a dedicated interface to select WSI, add annotations manually, and to run analysis and algorithms on all or parts of images.
+`HistomicsUI`_ organizes and manages whole slide image (WSI) files using Girder_.  It has a dedicated interface to select WSI, add annotations manually, and to run analysis and algorithms on all or parts of images.
 
 Girder provides authentication, access control, and diverse storage options, including using local file systems and Amazon S2.  WSI images are read and displayed via the large_image_ module.  Algorithms are containerized using Docker_ and are run using the slicer_cli_web_ Girder plugin.  These can be run on multiple worker machines via `Girder Worker`_ and celery_.
 
