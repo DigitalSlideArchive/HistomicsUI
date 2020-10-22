@@ -10,6 +10,7 @@ const AnnotationContextMenu = View.extend({
     events: {
         'click .h-remove-elements': '_removeElements',
         'click .h-edit-elements': '_editElements',
+        'click .h-edit-shape': '_editElements',
         'click .h-set-group': '_setGroup',
         'click .h-remove-group': '_removeGroup'
     },
@@ -43,7 +44,11 @@ const AnnotationContextMenu = View.extend({
         evt.preventDefault();
         evt.stopPropagation();
 
-        this.trigger('h:edit', this.collection.at(0));
+        if ($(evt.target).closest('.list-group-item').hasClass('h-edit-shape')) {
+            this.trigger('h:editShape', this.collection.at(0));
+        } else {
+            this.trigger('h:edit', this.collection.at(0));
+        }
         this.trigger('h:close');
     },
     _setStyleDefinition(group) {

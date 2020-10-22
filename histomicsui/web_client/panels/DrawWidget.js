@@ -1,3 +1,4 @@
+/* globals geo */
 import _ from 'underscore';
 import $ from 'jquery';
 
@@ -92,14 +93,18 @@ var DrawWidget = Panel.extend({
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
             }));
         }
+        this.$('button.h-draw[data-type]').removeClass('active');
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
         }
         this.$('[data-toggle="tooltip"]').tooltip({container: 'body'});
-        if (this.viewer.annotationLayer && !this.viewer.annotationLayer._boundHUIModeChange) {
+        if (this.viewer.annotationLayer && this.viewer.annotationLayer._boundHUIModeChange === undefined) {
             this.viewer.annotationLayer._boundHUIModeChange = true;
-            this.viewer.annotationLayer.geoOn(window.geo.event.annotation.mode, (event) => {
+            this.viewer.annotationLayer.geoOn(geo.event.annotation.mode, (event) => {
+                if (event.mode === this.viewer.annotationLayer.modes.edit || event.oldmode === this.viewer.annotationLayer.modes.edit) {
+                    return;
+                }
                 this.$('button.h-draw').removeClass('active');
                 if (this._drawingType) {
                     this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
@@ -196,7 +201,7 @@ var DrawWidget = Panel.extend({
         if (this.viewer.annotationLayer.mode()) {
             this._drawingType = null;
             this.viewer.annotationLayer.mode(null);
-            this.viewer.annotationLayer.geoOff(window.geo.event.annotation.state);
+            this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
             this.viewer.annotationLayer.removeAllAnnotations();
         }
         if (type) {
@@ -212,12 +217,16 @@ var DrawWidget = Panel.extend({
                     return undefined;
                 });
         }
+        this.$('button.h-draw[data-type]').removeClass('active');
+        if (this._drawingType) {
+            this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
+        }
     },
 
     cancelDrawMode() {
         this.drawElement(undefined, null);
         this.viewer.annotationLayer._boundHUIModeChange = false;
-        this.viewer.annotationLayer.geoOff(window.geo.event.annotation.state);
+        this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
     },
 
     drawingType() {
