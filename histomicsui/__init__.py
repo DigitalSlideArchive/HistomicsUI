@@ -73,7 +73,7 @@ def patchCookieParsing():
         import http.cookies
 
         # This is both a sanity check and to make sure we don't do things
-        # multiple times.  It should work on python 3.5 - 3.8 (and possibly
+        # multiple times.  It should work on python 3.5 - 3.9 (and possibly
         # later).  See
         if (r'\s' not in http.cookies._LegalValueChars and
                 r'\w' in http.cookies._LegalValueChars and
