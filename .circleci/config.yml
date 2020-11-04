@@ -84,7 +84,7 @@ jobs:
           env: flake8,lintclient
   release:
     docker:
-      - image: zachmullen/tox-and-node
+      - image: girder/tox-and-node
     steps:
       - checkout
       - deploy:
