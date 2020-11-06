@@ -2,7 +2,7 @@ import _ from 'underscore';
 import $ from 'jquery';
 
 import Panel from '@girder/slicer_cli_web/views/Panel';
-import { apiRoot } from '@girder/core/rest';
+import { getApiRoot } from '@girder/core/rest';
 
 import editRegionOfInterest from '../dialogs/editRegionOfInterest';
 import router from '../router';
@@ -198,7 +198,7 @@ var ZoomWidget = Panel.extend({
             bottom: bounds.bottom < 0 ? 0 : Math.round(bounds.bottom),
             contentDisposition: 'attachment'
         });
-        const urlView = `/${apiRoot}/item/${imageId}/tiles/region?${params}`;
+        const urlView = `/${getApiRoot()}/item/${imageId}/tiles/region?${params}`;
 
         if (this._cancelSelection) {
             this.viewer.annotationLayer.mode(null);
@@ -211,10 +211,7 @@ var ZoomWidget = Panel.extend({
     },
 
     /**
-     * Respond to clicking an element type by putting the image
-     * viewer into "draw" mode and open a dialog windows to edit this area
-     * params is an object.
-     *
+     * Let the user draw a rectangle and then show a dialog.
      */
     _downloadArea(evt) {
         const mag = Math.round(this._getSliderValue() * 10) / 10;

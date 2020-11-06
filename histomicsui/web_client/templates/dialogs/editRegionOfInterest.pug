@@ -1,4 +1,4 @@
-.modal-dialog(role='document')
+.modal-dialog
   .modal-content
     form.modal-form(role='form', name='editArea')
       .modal-header
@@ -12,7 +12,7 @@
             type='number', min=1, max=maxMag, step=0.1, value=magnification)
         .form-group
           label(for='h-download-image-format') Format
-          select#h-download-image-format.update-form.form-control(name='format')
+          select#h-download-image-format.update-form.form-control
             option JPEG
             option PNG
             option TIFF
@@ -37,4 +37,4 @@
         a#h-download-area-link.h-download-link.btn.btn-primary
           i.icon-download
           |  Download
-        button.btn.btn-default(data-dismiss='modal') Cancel
+        a.btn.btn-default(data-dismiss='modal') Cancel
