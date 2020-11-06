@@ -1,7 +1,7 @@
 import $ from 'jquery';
 
 import View from '@girder/core/views/View';
-import { apiRoot } from '@girder/core/rest';
+import { getApiRoot } from '@girder/core/rest';
 import { formatSize } from '@girder/core/misc';
 
 import router from '../router';
@@ -99,13 +99,15 @@ var EditRegionOfInterest = View.extend({
      * Disable the Download button if SizeFile > 1GB
      */
     downloadDisable(bool) {
+        this.$('#h-download-area-link').unbind('click');
         if (bool) {
             this.$('#h-download-area-link').attr('disabled', 'disabled');
             this.$('#h-msgDisable').removeClass('hidden');
             this.$('#h-download-area-link').bind('click', (ev) => ev.preventDefault());
         } else {
-            this.$('#h-download-area-link').removeAttr('disabled').unbind('click');
+            this.$('#h-download-area-link').removeAttr('disabled');
             this.$('#h-msgDisable').addClass('hidden');
+            this.$('#h-download-area-link').bind('click', () => { this.$el.girderModal('close'); });
         }
     },
 
@@ -114,13 +116,8 @@ var EditRegionOfInterest = View.extend({
      * And download the image
      */
     updateform(evt) {
-        // Find the good compresion ration there are random now
         const selectedOption = $('#h-download-image-format option:selected').text();
         switch (selectedOption) {
-            case 'JPEG':
-                this._format = 'JPEG';
-                this._compressionRatio = 0.35;
-                break;
             case 'PNG':
                 this._format = 'PNG';
                 this._compressionRatio = 0.7;
@@ -129,9 +126,12 @@ var EditRegionOfInterest = View.extend({
                 this._format = 'TIFF';
                 this._compressionRatio = 0.8;
                 break;
+            case 'JPEG':
             default:
                 // JPEG is the default format
+                this._format = 'JPEG';
                 this._compressionRatio = 0.35;
+                break;
         }
         this._magnification = parseFloat($('#h-element-mag').val());
         const bounds = this.scaleBounds();
@@ -165,7 +165,7 @@ var EditRegionOfInterest = View.extend({
             contentDisposition: 'attachment',
             magnification: magnification
         });
-        const urlArea = `/${apiRoot}/item/${imageId}/tiles/region?${params}`;
+        const urlArea = `/${getApiRoot()}/item/${imageId}/tiles/region?${params}`;
         return urlArea;
     }
 });

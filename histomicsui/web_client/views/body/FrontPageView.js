@@ -1,4 +1,4 @@
-import { cancelRestRequests, apiRoot, staticRoot } from '@girder/core/rest';
+import { cancelRestRequests, getApiRoot, staticRoot } from '@girder/core/rest';
 import { getCurrentUser } from '@girder/core/auth';
 import * as version from '@girder/core/version';
 import GirderFrontPageView from '@girder/core/views/body/FrontPageView';
@@ -16,7 +16,7 @@ var FrontPageView = GirderFrontPageView.extend({
 
     render: function () {
         this.$el.html(frontPageTemplate({
-            apiRoot,
+            apiRoot: getApiRoot(),
             staticRoot,
             version,
             currentUser: getCurrentUser()
