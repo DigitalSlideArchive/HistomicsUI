@@ -47,6 +47,7 @@ var ImageView = View.extend({
 
         // Allow zooming this many powers of 2 more than native pixel resolution
         this._increaseZoom2x = 1;
+        this._increaseZoom2xRange = {min: 1, max: 4};
 
         if (!this.model) {
             this.model = new ItemModel();
@@ -193,43 +194,42 @@ var ImageView = View.extend({
                 // also set the query string
                 this.setBoundsQuery();
 
-                if (this.viewer) {
-                    this.viewer.zoomRange({ max: this.viewer.zoomRange().max + this._increaseZoom2x });
+                this.viewer._originalZoomRange = this.viewer.zoomRange().max;
+                this.viewer.zoomRange({ max: this.viewer.zoomRange().max + this._increaseZoom2x });
 
-                    // update the query string on pan events
-                    this.viewer.geoOn(geo.event.pan, () => {
-                        this.setBoundsQuery();
-                    });
+                // update the query string on pan events
+                this.viewer.geoOn(geo.event.pan, () => {
+                    this.setBoundsQuery();
+                });
 
-                    // update the coordinate display on mouse move
-                    this.viewer.geoOn(geo.event.mousemove, (evt) => {
-                        this.showCoordinates(evt);
-                    });
+                // update the coordinate display on mouse move
+                this.viewer.geoOn(geo.event.mousemove, (evt) => {
+                    this.showCoordinates(evt);
+                });
 
-                    // remove the hidden class from the coordinates display
-                    this.$('.h-image-coordinates-container').removeClass('hidden');
+                // remove the hidden class from the coordinates display
+                this.$('.h-image-coordinates-container').removeClass('hidden');
 
-                    // show the right side control container
-                    this.$('#h-annotation-selector-container').removeClass('hidden');
+                // show the right side control container
+                this.$('#h-annotation-selector-container').removeClass('hidden');
 
-                    this.zoomWidget
+                this.zoomWidget
+                    .setViewer(this.viewerWidget)
+                    .setElement('.h-zoom-widget').render();
+
+                this.metadataWidget
+                    .setItem(this.model)
+                    .setElement('.h-metadata-widget').render();
+
+                this.annotationSelector
+                    .setViewer(this.viewerWidget)
+                    .setElement('.h-annotation-selector').render();
+
+                if (this.drawWidget) {
+                    this.$('.h-draw-widget').removeClass('hidden');
+                    this.drawWidget
                         .setViewer(this.viewerWidget)
-                        .setElement('.h-zoom-widget').render();
-
-                    this.metadataWidget
-                        .setItem(this.model)
-                        .setElement('.h-metadata-widget').render();
-
-                    this.annotationSelector
-                        .setViewer(this.viewerWidget)
-                        .setElement('.h-annotation-selector').render();
-
-                    if (this.drawWidget) {
-                        this.$('.h-draw-widget').removeClass('hidden');
-                        this.drawWidget
-                            .setViewer(this.viewerWidget)
-                            .setElement('.h-draw-widget').render();
-                    }
+                        .setElement('.h-draw-widget').render();
                 }
             });
             this.annotationSelector.setItem(this.model);
@@ -315,7 +315,7 @@ var ImageView = View.extend({
             return restRequest({
                 url: 'item/' + itemId + '/tiles'
             }).then((tiles) => {
-                this.zoomWidget.setMaxMagnification(tiles.magnification || 20, this._increaseZoom2x);
+                this.zoomWidget.setMaxMagnification(tiles.magnification || 20, this._increaseZoom2x, this._increaseZoom2xRange);
                 this.zoomWidget.render();
                 return null;
             });

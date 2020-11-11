@@ -37,7 +37,9 @@ var ZoomWidget = Panel.extend({
         'click .h-zoom-button': '_zoomButton',
         'input .h-zoom-slider': '_zoomSliderInput',
         'click .h-download-button-view': '_downloadView',
-        'click .h-download-button-area': '_downloadArea'
+        'click .h-download-button-area': '_downloadArea',
+        'click #h-zoom-range-increase': '_increaseZoomRange',
+        'click #h-zoom-range-decrease': '_decreaseZoomRange'
     }),
     initialize() {
         // set defaults that will be overwritten when a viewer is added
@@ -84,6 +86,9 @@ var ZoomWidget = Panel.extend({
             buttons: buttons
         }));
 
+        // enable or disable zoom range buttons
+        this._zoomRangeControls();
+
         // make the panel collapsible
         this.$('.s-panel-content').collapse({toggle: false});
 
@@ -118,10 +123,12 @@ var ZoomWidget = Panel.extend({
      * Set the native magnification from the current image.  This
      * is given in the /item/{id}/tiles endpoint from large_image.
      */
-    setMaxMagnification(magnification, increase) {
+    setMaxMagnification(magnification, increase, increaseRange) {
         this._increaseZoom2x = increase || 0;
+        this._increaseZoom2xRange = increaseRange || { min: this._increaseZoom2x, max: this._increaseZoom2x };
         this._maxNaturalMag = magnification;
         this._maxMag = magnification * Math.pow(2, this._increaseZoom2x);
+        this._zoomRangeControls();
     },
 
     /**
@@ -251,6 +258,33 @@ var ZoomWidget = Panel.extend({
             this.renderer.zoom(this.magnificationToZoom(val));
         }
         this.$('.h-zoom-value').text(val.toFixed(1));
+    },
+
+    _zoomRangeControls() {
+        if (this._increaseZoom2xRange) {
+            this.$('#h-zoom-range-increase').toggleClass('disabled', this._increaseZoom2x >= this._increaseZoom2xRange.max);
+            this.$('#h-zoom-range-decrease').toggleClass('disabled', this._increaseZoom2x <= this._increaseZoom2xRange.min);
+        }
+    },
+
+    _increaseZoomRange() {
+        if (this._increaseZoom2x < this._increaseZoom2xRange.max) {
+            this._increaseZoom2x += 1;
+            var oldmax = parseInt(this.$('.h-zoom-slider').attr('max'), 10);
+            this.$('.h-zoom-slider').attr('max', oldmax + 1);
+            this.renderer.zoomRange({ max: this.renderer.zoomRange().max + 1 });
+        }
+        this._zoomRangeControls();
+    },
+
+    _decreaseZoomRange() {
+        if (this._increaseZoom2x > this._increaseZoom2xRange.min) {
+            this._increaseZoom2x -= 1;
+            var oldmax = parseInt(this.$('.h-zoom-slider').attr('max'), 10);
+            this.$('.h-zoom-slider').attr('max', oldmax - 1);
+            this.renderer.zoomRange({ max: this.renderer.zoomRange().max - 1 });
+        }
+        this._zoomRangeControls();
     }
 });
 
