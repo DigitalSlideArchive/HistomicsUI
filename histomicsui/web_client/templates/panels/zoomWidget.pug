@@ -8,6 +8,12 @@ block content
     input.h-zoom-slider.form-control(
       type="range", min=min, max=max, step=step, value=value, disabled=disabled)
     span.h-zoom-value.input-group-addon #{value}
+    span.h-zoom-range-controls
+      button#h-zoom-range-increase.btn.btn-sm.btn-default.disabled(title="Increase maximum zoom")
+        i.icon-plus
+      br
+      button#h-zoom-range-decrease.btn.btn-sm.btn-default.disabled(title="Decrease maximum zoom")
+        i.icon-minus
   .btn-group.btn-group-justified.h-zoom-buttons
     each val in buttons
       if val
