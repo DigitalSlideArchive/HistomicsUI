@@ -496,7 +496,7 @@ var MetadataWidget = Panel.extend({
                     accessLevel: this.item.attributes._accessLevel,
                     AccessType: AccessType,
                     // if never rendered, the jquery selector will be empty and won't be visible
-                    collapsed: !this.$('.s-panel-content').is(':visible')
+                    collapsed: !this.$('.s-panel-content').hasClass('in')
                 }));
                 // Append each metadatum
                 _.each(metaKeys, function (metaKey) {
@@ -512,8 +512,6 @@ var MetadataWidget = Panel.extend({
                         onMetadataAdded: this.onMetadataAdded
                     }).render().$el);
                 }, this);
-                // by default the widget should be collapsed
-                this.$('.s-panel-content').collapse({toggle: false});
             });
         }
         return this;

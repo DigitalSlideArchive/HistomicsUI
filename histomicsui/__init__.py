@@ -90,7 +90,8 @@ def patchCookieParsing():
 
 
 @setting_utilities.validator({
-    PluginSettings.HUI_DEFAULT_DRAW_STYLES
+    PluginSettings.HUI_DEFAULT_DRAW_STYLES,
+    PluginSettings.HUI_PANEL_LAYOUT,
 })
 def validateListOrJSON(doc):
     val = doc['value']

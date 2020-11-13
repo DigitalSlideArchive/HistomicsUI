@@ -56,6 +56,7 @@ var ConfigView = View.extend({
             'histomicsui.brand_color',
             'histomicsui.banner_color',
             'histomicsui.default_draw_styles',
+            'histomicsui.panel_layout',
             'histomicsui.quarantine_folder'
         ];
         $.when(

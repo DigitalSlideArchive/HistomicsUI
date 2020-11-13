@@ -232,30 +232,32 @@ class TestHUIEndpoints(object):
         Group().addUser(self.group, self.user2)
 
     def testHUISettings(self, server):
-        key = PluginSettings.HUI_DEFAULT_DRAW_STYLES
+        for key in {
+                PluginSettings.HUI_DEFAULT_DRAW_STYLES,
+                PluginSettings.HUI_PANEL_LAYOUT}:
 
-        resp = server.request(path='/histomicsui/settings')
-        assert utilities.respStatus(resp) == 200
-        settings = resp.json
-        assert settings[key] is None
-        assert settings[PluginSettings.HUI_BRAND_NAME] == 'HistomicsUI'
+            resp = server.request(path='/histomicsui/settings')
+            assert utilities.respStatus(resp) == 200
+            settings = resp.json
+            assert settings[key] is None
+            assert settings[PluginSettings.HUI_BRAND_NAME] == 'HistomicsUI'
 
-        Setting().set(key, '')
-        assert Setting().get(key) is None
-        with pytest.raises(ValidationException, match='must be a JSON'):
-            Setting().set(key, 'not valid')
-        with pytest.raises(ValidationException, match='must be a JSON'):
-            Setting().set(key, json.dumps({'not': 'a list'}))
-        value = [{'lineWidth': 8, 'id': 'Group 8'}]
-        Setting().set(key, json.dumps(value))
-        assert json.loads(Setting().get(key)) == value
-        Setting().set(key, value)
-        assert json.loads(Setting().get(key)) == value
+            Setting().set(key, '')
+            assert Setting().get(key) is None
+            with pytest.raises(ValidationException, match='must be a JSON'):
+                Setting().set(key, 'not valid')
+            with pytest.raises(ValidationException, match='must be a JSON'):
+                Setting().set(key, json.dumps({'not': 'a list'}))
+            value = [{'lineWidth': 8, 'id': 'Group 8'}]
+            Setting().set(key, json.dumps(value))
+            assert json.loads(Setting().get(key)) == value
+            Setting().set(key, value)
+            assert json.loads(Setting().get(key)) == value
 
-        resp = server.request(path='/histomicsui/settings')
-        assert utilities.respStatus(resp) == 200
-        settings = resp.json
-        assert json.loads(settings[key]) == value
+            resp = server.request(path='/histomicsui/settings')
+            assert utilities.respStatus(resp) == 200
+            settings = resp.json
+            assert json.loads(settings[key]) == value
 
     def testGeneralSettings(self, server, admin, user):
         self.makeResources(admin)
