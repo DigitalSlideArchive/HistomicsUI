@@ -89,6 +89,7 @@ var OverviewWidget = Panel.extend({
             strokeWidth: 2,
             fill: false
         }});
+        this._panOutlineDistance = 5;
         /* Clicking in the overview recenters to that spot */
         this._featureLayer.geoOn(geo.event.mouseclick, (evt) => {
             this.parentViewer.viewer.center(evt.geo);
@@ -99,12 +100,16 @@ var OverviewWidget = Panel.extend({
                 mouse: evt.mouse,
                 center: this.parentViewer.viewer.center(),
                 zoom: this.parentViewer.viewer.zoom(),
-                rotate: this.parentViewer.viewer.rotation()
+                rotate: this.parentViewer.viewer.rotation(),
+                distanceToOutline: geo.util.distanceToPolygon2d(evt.mouse.geo, this._outlineFeature.data()[0]) / this.viewer.unitsPerPixel(this.viewer.zoom())
             };
         });
         this._featureLayer.geoOn(geo.event.actionmove, (evt) => {
             switch (evt.state.action) {
                 case 'overview_pan':
+                    if (!this._downState || this._downState.distanceToOutline < -this._panOutlineDistance) {
+                        return;
+                    }
                     let delta = {
                         x: evt.mouse.geo.x - this._downState.mouse.geo.x,
                         y: evt.mouse.geo.y - this._downState.mouse.geo.y
