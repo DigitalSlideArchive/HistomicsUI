@@ -17,6 +17,7 @@ import AnnotationCollection from '@girder/large_image_annotation/collections/Ann
 import AnnotationContextMenu from '../popover/AnnotationContextMenu';
 import AnnotationPopover from '../popover/AnnotationPopover';
 import AnnotationSelector from '../../panels/AnnotationSelector';
+import OverviewWidget from '../../panels/OverviewWidget';
 import ZoomWidget from '../../panels/ZoomWidget';
 import MetadataWidget from '../../panels/MetadataWidget';
 import DrawWidget from '../../panels/DrawWidget';
@@ -66,6 +67,9 @@ var ImageView = View.extend({
         this.controlPanel = new SlicerPanelGroup({
             parentView: this,
             closeButton: true
+        });
+        this.overviewWidget = new OverviewWidget({
+            parentView: this
         });
         this.zoomWidget = new ZoomWidget({
             parentView: this
@@ -217,6 +221,10 @@ var ImageView = View.extend({
                 // show the right side control container
                 this.$('#h-annotation-selector-container').removeClass('hidden');
 
+                this.overviewWidget
+                    .setViewer(this.viewerWidget)
+                    .setElement('.h-overview-widget').render();
+
                 this.zoomWidget
                     .setViewer(this.viewerWidget)
                     .setElement('.h-zoom-widget').render();
@@ -323,6 +331,7 @@ var ImageView = View.extend({
             }).then((tiles) => {
                 this.zoomWidget.setMaxMagnification(tiles.magnification || 20, this._increaseZoom2x, this._increaseZoom2xRange);
                 this.zoomWidget.render();
+                this.overviewWidget.setImage(tiles);
                 return null;
             });
         };
