@@ -88,14 +88,14 @@ var DrawWidget = Panel.extend({
                 groups: this._groups,
                 style: this._style.id,
                 highlighted: this._highlighted,
-                name
+                name,
+                collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
             }));
         }
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
         }
-        this.$('.s-panel-content').collapse({toggle: false});
         this.$('[data-toggle="tooltip"]').tooltip({container: 'body'});
         if (this.viewer.annotationLayer && !this.viewer.annotationLayer._boundHUIModeChange) {
             this.viewer.annotationLayer._boundHUIModeChange = true;

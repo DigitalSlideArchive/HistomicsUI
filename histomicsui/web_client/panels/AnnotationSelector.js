@@ -90,9 +90,9 @@ var AnnotationSelector = Panel.extend({
                     interactiveMode: this._interactiveMode,
                     expandedGroups: this._expandedGroups,
                     annotationGroups,
+                    collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                     _
                 }));
-                this.$('.s-panel-content').collapse({toggle: false});
                 this.$('[data-toggle="tooltip"]').tooltip({container: 'body'});
                 this._changeGlobalOpacity();
                 this._changeGlobalFillOpacity();

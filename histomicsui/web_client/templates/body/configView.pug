@@ -36,7 +36,14 @@ form#g-hui-form(role="form")
     input#g-hui-default-draw-styles.input-sm.form-control(
         type="text", value=settings['histomicsui.default_draw_styles'],
         placeholder='A JSON object listing default annotation drawing styles.',
-        title='A dictionary of drawing styles')
+        title='A list of dictionaries of drawing styles')
+  .form-group
+    label
+      | Panel layout
+    input#g-hui-panel-layout.input-sm.form-control(
+        type="text", value=settings['histomicsui.panel_layout'],
+        placeholder='A JSON list of objects for each panel',
+        title='A JSON list of objects for each panel.  Each panel has name (the short internal name, such as zoom, draw, or analysis), position (one of default, left, right, hidden), state (one of default, open, closed)')
   .form-group
     label(for="g-hui-quarantine-folder") Quarantine Folder
     p.g-hui-description

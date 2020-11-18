@@ -1,3 +1,5 @@
+import $ from 'jquery';
+
 import { restRequest } from '@girder/core/rest';
 
 /* Utility items for HistomicUI views
@@ -10,12 +12,16 @@ class HuiSettings {
 
     static getSettings() {
         if (HuiSettings._hui_settings) {
+            if (HuiSettings._hui_settings_result) {
+                return HuiSettings._hui_settings_result;
+            }
             return HuiSettings._hui_settings;
         } else {
             HuiSettings._hui_settings = restRequest({
                 type: 'GET',
                 url: 'histomicsui/settings'
             }).then((resp) => {
+                HuiSettings._hui_settings = $.Deferred().resolve(resp);
                 return resp;
             });
         }

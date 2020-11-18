@@ -22,23 +22,33 @@
       padding 0 3px
       border-radius 3px
 
-  .h-control-panel-container
-
+  .h-panel-group-left
     overflow-y auto
+    width 300px
+    margin-left 0
+
+    .s-panel
+      margin-left 5px
 
     .h-control-panel.s-panel-group
       background-color rgba(255, 255, 255, 0.5)
       border 1px solid black
       border-radius 5px
 
-  #h-annotation-selector-container
-    right 0
+  .h-panel-group-right
     overflow-y auto
     width 300px
+    right 0
 
     .s-panel
       margin-right 5px
 
 #h-annotation-context-menu
-    position absolute
-    z-index 1000
+  position absolute
+  z-index 1000
+
+.s-panel-group .s-panel:empty
+  border none
+
+.geojs-map
+  outline none

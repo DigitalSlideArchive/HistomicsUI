@@ -23,6 +23,7 @@ import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
 import router from '../../router';
 import events from '../../events';
+import { HuiSettings } from '../utils';
 import View from '../View';
 
 import imageTemplate from '../../templates/body/image.pug';
@@ -117,6 +118,8 @@ var ImageView = View.extend({
         this.listenTo(events, 'g:login g:logout.success g:logout.error', () => {
             this._openId = null;
             this.model.set({ _id: null });
+            this._knownPanels = {};
+            HuiSettings.clearSettingsCache();
         });
         $(document).on('mousedown.h-image-view', (evt) => {
             // let the context menu close itself
@@ -140,7 +143,8 @@ var ImageView = View.extend({
         this._removeDrawWidget();
 
         if (this.model.id === this._openId) {
-            this.controlPanel.setElement('.h-control-panel-container').render();
+            this.controlPanel.setElement('#h-analysis-panel').render();
+            this._orderPanels();
             return;
         }
         this.$el.html(imageTemplate());
@@ -231,6 +235,7 @@ var ImageView = View.extend({
                         .setViewer(this.viewerWidget)
                         .setElement('.h-draw-widget').render();
                 }
+                this._orderPanels();
             });
             this.annotationSelector.setItem(this.model);
 
@@ -245,8 +250,9 @@ var ImageView = View.extend({
                     .setElement('.h-draw-widget').render();
             }
         }
-        this.controlPanel.setElement('.h-control-panel-container').render();
+        this.controlPanel.setElement('#h-analysis-panel').render();
         this.popover.setElement('#h-annotation-popover-container').render();
+        this._orderPanels();
         return this;
     },
     destroy() {
@@ -705,8 +711,9 @@ var ImageView = View.extend({
             this.stopListening(this.drawWidget);
             this.drawWidget.remove();
             this.drawWidget = null;
-            $('<div/>').addClass('h-draw-widget s-panel hidden')
+            $('<div/>').addClass('h-draw-widget s-panel hidden').attr('id', 'h-draw-panel')
                 .appendTo(this.$('#h-annotation-selector-container'));
+            this._orderPanels();
         }
     },
 
@@ -959,6 +966,58 @@ var ImageView = View.extend({
             const elementsCollection = this.annotations.get(annotationId).elements();
             elementsCollection.remove(elements, { silent: true });
             elementsCollection.trigger('reset', elementsCollection);
+        });
+    },
+    _orderPanels() {
+        if (!this._knownPanels) {
+            this._knownPanels = {};
+        }
+        HuiSettings.getSettings().then((settings) => {
+            let layout = settings['histomicsui.panel_layout'];
+            if (!layout) {
+                return null;
+            }
+            layout = JSON.parse(layout);
+            const panels = this.$('[id^=h-][id$=-panel]');
+            panels.each((idx, panel) => {
+                panel = $(panel);
+                let info = {
+                    name: panel.attr('id').substr(2, panel.attr('id').length - 8),
+                    position: 'left',
+                    state: 'open'
+                };
+                if (!panel.closest('.h-panel-group-left').length) {
+                    info.position = 'right';
+                }
+                if (!panel.find('.s-panel-content.collapse.in').length) {
+                    info.state = 'closed';
+                }
+                this._knownPanels[info.name] = info;
+            });
+            layout = layout.filter((spec) => this.$(`#h-${spec.name}-panel`).length).reverse();
+            layout.forEach((spec) => {
+                let panel = this.$(`#h-${spec.name}-panel`);
+                let info = this._knownPanels[spec.name];
+
+                if (spec.position === 'hidden') {
+                    panel.addClass('hidden');
+                    return;
+                }
+                const parent = spec.position === 'left' || (spec.position !== 'right' && info.position === 'left') ? '.h-panel-group-left' : '.h-panel-group-right';
+                panel.prependTo(parent);
+                if (!info.processed && panel.find('.s-panel-content').length) {
+                    if (spec.state === 'open') {
+                        panel.find('.s-panel-content').addClass('in');
+                        panel.find('.s-panel-controls .icon-down-open').removeClass('icon-down-open').addClass('icon-up-open');
+                    }
+                    if (spec.state === 'closed') {
+                        panel.find('.s-panel-content').removeClass('in');
+                        panel.find('.s-panel-controls .icon-up-open').removeClass('icon-up-open').addClass('icon-down-open');
+                    }
+                    info.processed = true;
+                }
+            });
+            return null;
         });
     }
 });

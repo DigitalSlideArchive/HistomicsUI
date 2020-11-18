@@ -10,6 +10,7 @@ SettingDefault.defaults[SettingKey.BRAND_NAME] = 'HistomicsUI'
 # Constants representing the setting keys for this plugin
 class PluginSettings(object):
     HUI_DEFAULT_DRAW_STYLES = 'histomicsui.default_draw_styles'
+    HUI_PANEL_LAYOUT = 'histomicsui.panel_layout'
     HUI_WEBROOT_PATH = 'histomicsui.webroot_path'
     HUI_ALTERNATE_WEBROOT_PATH = 'histomicsui.alternate_webroot_path'
     HUI_BRAND_NAME = 'histomicsui.brand_name'

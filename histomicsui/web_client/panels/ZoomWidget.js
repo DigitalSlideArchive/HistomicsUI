@@ -83,14 +83,12 @@ var ZoomWidget = Panel.extend({
             step: step,
             value: Math.log2(value) - Math.log2(this._maxMag),
             disabled: !this.renderer,
-            buttons: buttons
+            buttons: buttons,
+            collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
         }));
 
         // enable or disable zoom range buttons
         this._zoomRangeControls();
-
-        // make the panel collapsible
-        this.$('.s-panel-content').collapse({toggle: false});
 
         // show tooltip of different download button
         this.$('[data-toggle="tooltip"]').tooltip();
