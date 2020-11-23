@@ -50,6 +50,10 @@ girderTest.promise.done(function () {
                     var frame = frameFeature.data();
                     main.zoom(main.zoom() + 2);
                     expect(frameFeature.data()).not.toEqual(frame);
+                    frame = frameFeature.data();
+                    main.rotation(1);
+                    expect(frameFeature.data()).not.toEqual(frame);
+                    main.rotation(0);
                 });
             });
             it('click pan', function () {

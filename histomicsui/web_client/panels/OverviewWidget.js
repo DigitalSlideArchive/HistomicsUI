@@ -125,15 +125,21 @@ var OverviewWidget = Panel.extend({
             if (evt.lowerLeft.x === evt.upperRight.x || evt.lowerLeft.y === evt.upperRight.y) {
                 return;
             }
-            this.parentViewer.viewer.rotation(0);
-            let ll = this.viewer.displayToGcs(evt.lowerLeft);
-            let ur = this.viewer.displayToGcs(evt.upperRight);
-            this.parentViewer.viewer.bounds({
-                left: ll.x,
-                top: ur.y,
-                right: ur.x,
-                bottom: ll.y
-            });
+            let map = this.parentViewer.viewer;
+            let mapsize = map.size();
+            let lowerLeft = map.gcsToDisplay(this.viewer.displayToGcs(evt.lowerLeft));
+            let upperRight = map.gcsToDisplay(this.viewer.displayToGcs(evt.upperRight));
+            let scaling = {
+                x: Math.abs((upperRight.x - lowerLeft.x) / mapsize.width),
+                y: Math.abs((upperRight.y - lowerLeft.y) / mapsize.height)
+            };
+            let center = map.displayToGcs({
+                x: (lowerLeft.x + upperRight.x) / 2,
+                y: (lowerLeft.y + upperRight.y) / 2
+            }, null);
+            let zoom = map.zoom() - Math.log2(Math.max(scaling.x, scaling.y));
+            map.zoom(zoom);
+            map.center(center, null);
         });
         this.viewer.draw();
         this._boundOnParentPan = _.bind(this._onParentPan, this);
@@ -143,6 +149,10 @@ var OverviewWidget = Panel.extend({
 
     _onParentPan() {
         let parent = this.parentViewer.viewer;
+        if (parent.rotation() !== this.viewer.rotation()) {
+            this.viewer.rotation(parent.rotation());
+            this.viewer.zoom(this.viewer.zoom() - 1);
+        }
         let size = parent.size();
         this._outlineFeature.data([[
             parent.displayToGcs({x: 0, y: 0}),
