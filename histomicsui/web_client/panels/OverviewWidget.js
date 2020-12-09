@@ -35,8 +35,10 @@ var OverviewWidget = Panel.extend({
     },
 
     setImage(tiles) {
-        this._tiles = tiles;
-        this._createOverview();
+        if (!_.isEqual(tiles, this._tiles)) {
+            this._tiles = tiles;
+            this._createOverview();
+        }
         return this;
     },
 
@@ -79,6 +81,15 @@ var OverviewWidget = Panel.extend({
             }
         });
         this.viewer = geo.map(params.map);
+
+        if (window.ResizeObserver) {
+            this._observer = new window.ResizeObserver(() => {
+                if (this.viewer.node().width()) {
+                    this.viewer.size({width: this.viewer.node().width(), height: this.viewer.node().height()});
+                }
+            });
+            this._observer.observe(this.viewer.node()[0]);
+        }
 
         params.layer.autoshareRenderer = false;
         this._tileLayer = this.viewer.createLayer('osm', params.layer);
