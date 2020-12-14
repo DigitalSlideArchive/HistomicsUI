@@ -16,7 +16,7 @@ Installation
 Linux
 =====
 
-In linux with Python 2.7, Python 3.5, 3.6, or 3.7:
+In linux with Python 3.6 or newer:
 
 Prerequisites:
 
