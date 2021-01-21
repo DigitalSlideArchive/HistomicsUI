@@ -43,6 +43,11 @@ Reference Deployment
 
 The standard deployment of HistomicsUI is the `Digital Slide Archive`_.  The associated repository has tools for readily installing via Docker, VirtualBox, or shell scripts on Ubuntu.
 
+Development
+===========
+
+The most convenient way to develop on HistomicsUI is to use the `devops scripts from the Digial Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops>`_. 
+
 Funding
 -------
 This work is funded in part by the NIH grant U24-CA194362-01_.
