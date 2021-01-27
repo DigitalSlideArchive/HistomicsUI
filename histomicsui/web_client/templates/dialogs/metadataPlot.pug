@@ -1,0 +1,32 @@
+.modal-dialog(role='document')
+  .modal-content
+    form.modal-form(role='form')
+      .modal-header
+        button.close(type='button', data-dismiss='modal', aria-label='Close')
+          span(aria-hidden='true') &times;
+        h4.modal-title Metadata Plot
+      .modal-body
+        -
+          var seriesList = [
+            {key: 'x', label: 'x-axis', number: true},
+            {key: 'y', label: 'y-axis', number: true},
+            {key: 'r', label: 'Radius'},
+            {key: 'c', label: 'Color'},
+            {key: 's', label: 'Symbol', string: true}]
+        for series in seriesList
+          .form-group
+            label(for='h-plot-series-' + series.key) #{series.label}
+            select.form-control(id='h-plot-series-' + series.key)
+              if !series.number
+                option(value='_none_', selected=plotConfig[series.key] === undefined) None
+              each opt in plotOptions
+                if (!series.number || opt.type === 'number') && (!series.string || opt.type === 'string')
+                  - var selected = plotConfig[series.key] === opt.sort
+                  option(value=opt.sort, selected=selected) #{opt.root + ' - ' + opt.key}
+        .form-group
+          label(for='h-plot-folder')
+            input#h-plot-folder(type='checkbox', checked=plotConfig.folder)
+            |  Include data from other items in the same folder
+      .modal-footer
+        button.btn.btn-default.h-cancel(type='button', data-dismiss='modal') Cancel
+        button.btn.btn-primary.h-submit(type='submit') Save

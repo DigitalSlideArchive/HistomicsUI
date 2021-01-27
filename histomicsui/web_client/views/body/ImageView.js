@@ -23,6 +23,7 @@ import AnnotationSelector from '../../panels/AnnotationSelector';
 import OverviewWidget from '../../panels/OverviewWidget';
 import ZoomWidget from '../../panels/ZoomWidget';
 import MetadataWidget from '../../panels/MetadataWidget';
+import MetadataPlot from '../../panels/MetadataPlot';
 import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
 import router from '../../router';
@@ -77,6 +78,9 @@ var ImageView = View.extend({
             parentView: this
         });
         this.metadataWidget = new MetadataWidget({
+            parentView: this
+        });
+        this.metadataPlot = new MetadataPlot({
             parentView: this
         });
         this.annotationSelector = new AnnotationSelector({
@@ -235,6 +239,10 @@ var ImageView = View.extend({
                 this.metadataWidget
                     .setItem(this.model)
                     .setElement('.h-metadata-widget').render();
+
+                this.metadataPlot
+                    .setItem(this.model)
+                    .setElement('.h-metadata-plot').render();
 
                 this.annotationSelector
                     .setViewer(this.viewerWidget)

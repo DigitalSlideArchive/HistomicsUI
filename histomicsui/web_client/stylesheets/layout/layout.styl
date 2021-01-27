@@ -61,3 +61,20 @@ body.hui-body
   min-height 0
   padding 0
   overflow hidden
+
+.h-panel-maximized
+  position fixed
+  top 50px
+  right 0
+  bottom 5px
+  left 5px
+  z-index 10000
+  display flex
+  flex-direction column
+  flex-wrap nowrap
+
+  .s-panel-content
+    overflow-y auto
+    flex-grow 1
+  i.icon-up-open
+    display none
