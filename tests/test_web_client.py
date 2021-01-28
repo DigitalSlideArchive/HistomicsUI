@@ -15,7 +15,6 @@ from girder_large_image.models.image_item import ImageItem
 from girder_large_image_annotation.models.annotation import Annotation
 
 from . import girder_utilities as utilities
-from .girder_utilities import girderWorker  # noqa
 
 
 def copyHUITest():
@@ -126,19 +125,6 @@ class MockSlicerCLIWebResource(Resource):
         output and job status events to simulate a real execution of the CLI.
         """
         return {'_id': 'jobid'}
-
-
-@pytest.mark.usefixtures('girderWorker')  # noqa
-@pytest.mark.plugin('histomicsui')
-@pytest.mark.parametrize('spec', (
-    # add spec.js files here
-))
-def testWebClientWithWorker(boundServer, fsAssetstore, db, admin, user, spec, girderWorker):  # noqa
-    copyHUITest()
-    boundServer.root.api.v1.mock_resource = MockSlicerCLIWebResource()
-    makeResources(boundServer, fsAssetstore, admin, user)
-    spec = os.path.join(os.path.dirname(__file__), 'web_client_specs', spec)
-    runWebClientTest(boundServer, spec, 15000)
 
 
 @pytest.mark.plugin('histomicsui')
