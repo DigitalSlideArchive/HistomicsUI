@@ -131,11 +131,12 @@ class MockSlicerCLIWebResource(Resource):
 @pytest.mark.parametrize('spec', (
     'analysisSpec.js',
     'annotationSpec.js',
-    'huiSpec.js',
     'girderUISpec.js',
+    'huiSpec.js',
     'itemSpec.js',
-    'panelLayoutSpec.js',
+    'metadataPanelSpec.js',
     'overviewPanelSpec.js',
+    'panelLayoutSpec.js',
 ))
 def testWebClient(boundServer, fsAssetstore, db, admin, user, spec):
     copyHUITest()
