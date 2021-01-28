@@ -2,16 +2,11 @@
 
 import hashlib
 import os
-import pytest
 import requests
 import six
-import subprocess
 
 from girder.models.folder import Folder
-from girder.models.setting import Setting
 from girder.models.upload import Upload
-
-from girder_worker.girder_plugin.constants import PluginSettings as WorkerSettings
 
 
 _checkedPaths = {}
@@ -144,24 +139,3 @@ def getBody(response, text=True):
         data += chunk
 
     return data
-
-
-@pytest.fixture
-def girderWorker(db):
-    """
-    Run an instance of Girder worker, connected to rabbitmq.  The rabbitmq
-    service must be running.
-    """
-    broker = 'amqp://guest@127.0.0.1'
-    Setting().set(WorkerSettings.BROKER, broker)
-    Setting().set(WorkerSettings.BACKEND, broker)
-    env = os.environ.copy()
-    env['C_FORCE_ROOT'] = 'true'
-    proc = subprocess.Popen([
-        'celery', '-A', 'girder_worker.app', 'worker', '--broker', broker, '--concurrency=1'],
-        close_fds=True, env=env)
-    yield True
-    proc.terminate()
-    proc.wait()
-    Setting().unset(WorkerSettings.BROKER)
-    Setting().unset(WorkerSettings.BACKEND)
