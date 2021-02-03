@@ -396,7 +396,7 @@ var ImageView = View.extend({
 
     _setDefaultFileOutputs() {
         return this._getDefaultOutputFolder().done((folder) => {
-            if (folder) {
+            if (folder && router.getQuery('analysis')) {
                 _.each(
                     this.controlPanel.models().filter((model) => model.get('type') === 'new-file'),
                     (model) => {
@@ -424,6 +424,7 @@ var ImageView = View.extend({
         evt.preventDefault();
         router.setQuery('analysis', null, { trigger: false });
         this.controlPanel.$el.addClass('hidden');
+        events.trigger('query:analysis', null);
     },
 
     /**
