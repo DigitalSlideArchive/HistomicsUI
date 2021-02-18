@@ -514,6 +514,10 @@ var ImageView = View.extend({
 
     widgetRegion(model) {
         var value = model.get('value');
+        if (!this.viewerWidget || !this.viewerWidget.viewer) {
+            model.set('value', '-1,-1,-1,-1');
+            return;
+        }
         this._displayedRegion = value.slice();
         this.showRegion({
             left: parseFloat(value[0]),
