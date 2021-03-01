@@ -81,15 +81,6 @@ def process_annotations(event):
             logger.error('Could not create annotation object from data')
             raise
 
-        if not isinstance(data, list):
-            data = [data]
-        for annotation in data:
-            try:
-                Annotation().createAnnotation(item, user, annotation)
-            except Exception:
-                logger.error('Could not create annotation object from data')
-                raise
-
 
 def quarantine_item(item, user, makePlaceholder=True):
     """
