@@ -277,8 +277,19 @@ class GirderPlugin(plugin.GirderPlugin):
 
             for resource, method, route in endpoints:
                 cls = getattr(info['apiRoot'], resource)
-                func = cls.getRouteHandler(method, route)
+                boundfunc = cls.getRouteHandler(method, route)
+                func = getattr(boundfunc, '__func__', boundfunc)
                 if func.accessLevel == 'public':
-                    func = access.token(func)
+                    newfunc = access.token(func)
+                    newfunc.requiredScopes = getattr(func, 'requiredScopes', None)
+                    if getattr(func, 'requiredScopes', None):
+                        del func.requiredScopes
+                    if getattr(func, 'cookieAuth', None):
+                        newfunc.cookieAuth = True
+                        del func.cookieAuth
+                    # Rebind new function
+                    if boundfunc != func:
+                        newfunc = newfunc.__get__(boundfunc.__self__, boundfunc.__class__)
+                        setattr(newfunc.__self__, newfunc.__name__, newfunc)
                     cls.removeRoute(method, route)
-                    cls.route(method, route, func)
+                    cls.route(method, route, newfunc)
