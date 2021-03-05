@@ -1,10 +1,8 @@
 import $ from 'jquery';
 
 import View from '@girder/core/views/View';
-import { getApiRoot } from '@girder/core/rest';
 import { formatSize } from '@girder/core/misc';
 
-import router from '../router';
 import editRegionOfInterest from '../templates/dialogs/editRegionOfInterest.pug';
 import '../stylesheets/panels/zoomWidget.styl';
 
@@ -148,7 +146,6 @@ var EditRegionOfInterest = View.extend({
      * Return the url to download the image
      */
     getUrl() {
-        const imageId = router.getQuery('image');
         const left = this.areaElement.left;
         const top = this.areaElement.top;
         const right = left + this.areaElement.width;
@@ -165,8 +162,9 @@ var EditRegionOfInterest = View.extend({
             contentDisposition: 'attachment',
             magnification: magnification
         });
-        const urlArea = `/${getApiRoot()}/item/${imageId}/tiles/region?${params}`;
-        return urlArea;
+        let urlView = this.areaElement.frameAndUrl.url.replace('/zxy/{z}/{x}/{y}', '/region');
+        urlView += (urlView.indexOf('?') >= 0 ? '&' : '?') + params;
+        return urlView;
     }
 });
 
