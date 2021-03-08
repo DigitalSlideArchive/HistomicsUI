@@ -2,10 +2,8 @@ import _ from 'underscore';
 import $ from 'jquery';
 
 import Panel from '@girder/slicer_cli_web/views/Panel';
-import { getApiRoot } from '@girder/core/rest';
 
 import editRegionOfInterest from '../dialogs/editRegionOfInterest';
-import router from '../router';
 
 import zoomWidget from '../templates/panels/zoomWidget.pug';
 import '../stylesheets/panels/zoomWidget.styl';
@@ -192,7 +190,6 @@ var ZoomWidget = Panel.extend({
      * A handler called when the download view button is clicked.
      */
     _downloadView(evt) {
-        var imageId = router.getQuery('image');
         var bounds = this.viewer.viewer.bounds();
         var params = $.param({
             width: window.innerWidth,
@@ -203,8 +200,8 @@ var ZoomWidget = Panel.extend({
             bottom: bounds.bottom < 0 ? 0 : Math.round(bounds.bottom),
             contentDisposition: 'attachment'
         });
-        const urlView = `/${getApiRoot()}/item/${imageId}/tiles/region?${params}`;
-
+        let urlView = this.viewer.getFrameAndUrl().url.replace('/zxy/{z}/{x}/{y}', '/region');
+        urlView += (urlView.indexOf('?') >= 0 ? '&' : '?') + params;
         if (this._cancelSelection) {
             this.viewer.annotationLayer.mode(null);
             this._cancelSelection = false;
@@ -237,7 +234,8 @@ var ZoomWidget = Panel.extend({
                     height: coord[3],
                     magnification: mag,
                     maxZoom: maxZoom,
-                    maxMag: maxMag
+                    maxMag: maxMag,
+                    frameAndUrl: this.viewer.getFrameAndUrl()
                 };
                 this._cancelSelection = false;
                 this.$('.h-download-button-area').removeClass('h-download-area-button-selected');

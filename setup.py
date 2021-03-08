@@ -40,8 +40,8 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     install_requires=[
-        'girder-large-image-annotation>=1.0.2.dev2',
-        'girder-slicer-cli-web[girder]>=1.0.1.dev3',
+        'girder-large-image-annotation>=1.4.2',
+        'girder-slicer-cli-web[girder]>=1.2.0',
         'girder-worker[girder]>=0.6.0',
         'celery>=4.4.0rc5',
     ],

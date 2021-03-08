@@ -55,7 +55,7 @@ var OverviewWidget = Panel.extend({
         let params = geo.util.pixelCoordinateParams(
             this.$el.find('.h-overview-image'), tiles.sizeX, tiles.sizeY, tiles.tileWidth, tiles.tileHeight);
         params.layer.useCredentials = true;
-        params.layer.url = this.parentViewer._getTileUrl('{z}', '{x}', '{y}');
+        params.layer.url = this.parentViewer.getFrameAndUrl().url;
         if (tiles.tileWidth > 8192 || tiles.tileHeight > 8192) {
             params.layer.renderer = 'canvas';
         }
@@ -161,6 +161,9 @@ var OverviewWidget = Panel.extend({
         this._boundOnParentPan = _.bind(this._onParentPan, this);
         this.parentViewer.viewer.geoOn(geo.event.pan, this._boundOnParentPan);
         this._onParentPan();
+        this.parentViewer.on('g:imageFrameChanged', () => {
+            this._tileLayer.url(this.parentViewer.getFrameAndUrl().url);
+        });
     },
 
     _onParentPan() {
