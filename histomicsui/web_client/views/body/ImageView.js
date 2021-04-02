@@ -14,6 +14,9 @@ import SlicerPanelGroup from '@girder/slicer_cli_web/views/PanelGroup';
 import AnnotationModel from '@girder/large_image_annotation/models/AnnotationModel';
 import AnnotationCollection from '@girder/large_image_annotation/collections/AnnotationCollection';
 
+import { convert as convertToGeojson } from '@girder/large_image_annotation/annotations';
+import { convert as convertFromGeojson } from '@girder/large_image_annotation/annotations/geojs';
+
 import AnnotationContextMenu from '../popover/AnnotationContextMenu';
 import AnnotationPopover from '../popover/AnnotationPopover';
 import AnnotationSelector from '../../panels/AnnotationSelector';
@@ -33,7 +36,6 @@ import '../../stylesheets/body/image.styl';
 var ImageView = View.extend({
     events: {
         'keydown .h-image-body': '_onKeyDown',
-        'keydown .geojs-map': '_handleKeyDown',
         'click .h-control-panel-container .s-close-panel-group': '_closeAnalysis',
         'mousemove .geojs-map': '_trackMousePosition'
     },
@@ -113,6 +115,7 @@ var ImageView = View.extend({
         this.listenTo(this, 'h:selectElementsByRegion', this._selectElementsByRegion);
         this.listenTo(this, 'h:selectElementsByRegionCancel', this._selectElementsByRegionCancel);
         this.listenTo(this.contextMenu, 'h:edit', this._editElement);
+        this.listenTo(this.contextMenu, 'h:editShape', this._editElementShape);
         this.listenTo(this.contextMenu, 'h:redraw', this._redrawAnnotation);
         this.listenTo(this.contextMenu, 'h:close', this._closeContextMenu);
         this.listenTo(this.selectedElements, 'h:save', this._saveSelection);
@@ -597,7 +600,11 @@ var ImageView = View.extend({
     },
 
     mouseOnAnnotation(element, annotationId) {
-        if (annotationId === 'region-selection' || annotationId === 'selected' || !this.annotationSelector.interactiveMode()) {
+        if (annotationId === 'region-selection' || annotationId === 'selected') {
+            return;
+        }
+        this._lastMouseOnElement = {element: element, annotationId: annotationId};
+        if (!this.annotationSelector.interactiveMode()) {
             return;
         }
         const annotation = this.annotations.get(annotationId);
@@ -609,6 +616,7 @@ var ImageView = View.extend({
     },
 
     mouseOffAnnotation(element, annotationId) {
+        this._lastMouseOnElement = null;
         if (annotationId === 'region-selection' || annotationId === 'selected' || !this.annotationSelector.interactiveMode()) {
             return;
         }
@@ -732,6 +740,9 @@ var ImageView = View.extend({
     },
 
     _editAnnotation(model) {
+        if (this.activeAnnotation === model) {
+            return;
+        }
         this.activeAnnotation = model;
         this._removeDrawWidget();
         if (model) {
@@ -767,10 +778,20 @@ var ImageView = View.extend({
         if (/^(input|textarea|select)$/.test((document.activeElement.tagName || '').toLowerCase())) {
             return;
         }
-        if (evt.key === 'a') {
-            this._showOrHideAnnotations();
-        } else if (evt.key === 's') {
-            this.annotationSelector.selectAnnotationByRegion();
+        switch (evt.key) {
+            case 'a':
+                this._showOrHideAnnotations();
+                break;
+            case 'e':
+                if (this._lastMouseOnElement) {
+                    const annotation = this.annotations.get(this._lastMouseOnElement.annotationId);
+                    const elementModel = annotation.elements().get(this._lastMouseOnElement.element.id);
+                    this._editElementShape(elementModel, annotation.id);
+                }
+                break;
+            case 's':
+                this.annotationSelector.selectAnnotationByRegion();
+                break;
         }
     },
 
@@ -910,6 +931,51 @@ var ImageView = View.extend({
         const annotation = this.annotations.get(element.originalAnnotation);
         this._editAnnotation(annotation);
         editElement(annotation.elements().get(element.id));
+    },
+
+    _editElementShape(element, annotationId) {
+        const annotation = this.annotations.get(element.originalAnnotation || annotationId);
+        this._editAnnotation(annotation);
+        const geojson = convertToGeojson(element);
+        this._currentAnnotationEditShape = {
+            annotation: annotation,
+            element: annotation.elements().get(element.id)
+        };
+        this.viewerWidget.hideAnnotation(annotation.id, element.id);
+        this.viewerWidget.annotationLayer.removeAllAnnotations();
+        const count = this.viewerWidget.annotationLayer.geojson(geojson);
+        if (count !== 1) {
+            return;
+        }
+        const annot = this.viewerWidget.annotationLayer.annotations();
+        if (annot.length !== 1) {
+            return;
+        }
+        // geoOff state so the annotation isn't added by large_image_annotation
+        this.viewerWidget.annotationLayer.geoOff(geo.event.annotation.state);
+        this.viewerWidget.annotationLayer.mode(this.viewerWidget.annotationLayer.modes.edit, annot[0]).draw();
+        if (!this._editElementShapeFinishBound) {
+            this._editElementShapeFinishBound = _.bind(this._editElementShapeFinish, this);
+        }
+        this.viewerWidget.annotationLayer.geoOn(geo.event.annotation.state, this._editElementShapeFinishBound);
+    },
+
+    _editElementShapeFinish(event) {
+        if (event.annotation.state() !== geo.annotation.state.done) {
+            return;
+        }
+        this.viewerWidget.annotationLayer.geoOff(geo.event.annotation.state, this._editElementShapeFinishBound);
+        const annot = convertFromGeojson(event.annotation);
+        var update = {};
+        ['points', 'center', 'width', 'height', 'rotation'].forEach((key) => {
+            if (annot[key] !== undefined) {
+                update[key] = annot[key];
+            }
+        });
+        this._currentAnnotationEditShape.element.set(update);
+        this._currentAnnotationEditShape = null;
+        this.viewerWidget.annotationLayer.removeAllAnnotations();
+        this.viewerWidget.hideAnnotation();
     },
 
     _redrawSelection() {

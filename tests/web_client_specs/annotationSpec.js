@@ -318,6 +318,37 @@ girderTest.promise.done(function () {
                 checkAutoSave('drawn 1', 2, annotationInfo);
             });
 
+            it('modify the location of the last point', function () {
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousemove', {
+                        map: {x: 100, y: 100}
+                    });
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'e'}));
+                });
+                waitsFor(function () {
+                    var map = huiTest.geojsMap();
+                    var layer = map.layers()[3];
+                    return layer.mode() === 'edit';
+                }, 'annotation to be in edit mode');
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 150, y: 100},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 150, y: 100},
+                        button: 'left'
+                    });
+                });
+                waitsFor(function () {
+                    var map = huiTest.geojsMap();
+                    var layer = map.layers()[3];
+                    return layer.mode() !== 'edit';
+                }, 'annotation to not be in edit mode');
+            });
+
             it('delete the last point', function () {
                 $('.h-elements-container .h-element:last .h-delete-element').click();
                 expect($('.h-elements-container .h-element').length).toBe(1);
