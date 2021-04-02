@@ -343,6 +343,15 @@ var MetadataWidget = Panel.extend({
         },
         'click .g-add-simple-metadata': function (event) {
             this.addMetadata(event, 'simple');
+        },
+        'click .h-panel-maximize': function (event) {
+            console.log(this);
+            this.expand();
+            this.$('.s-panel-content').addClass('in');
+            let panelElem = this.$el.closest('.s-panel');
+            let maximize = !panelElem.hasClass('h-panel-maximized');
+            panelElem.toggleClass('h-panel-maximized', maximize);
+            panelElem.toggleClass('s-no-panel-toggle', maximize);
         }
     }),
 

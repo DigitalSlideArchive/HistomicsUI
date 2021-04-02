@@ -55,7 +55,7 @@ girderTest.promise.done(function () {
                     var rightIds = right.map(function (idx, panel) {
                         return $(panel).attr('id');
                     });
-                    expect(rightIds.toArray()).toEqual(['h-annotation-panel', 'h-metadata-panel', 'h-overview-panel', 'h-draw-panel']);
+                    expect(rightIds.toArray()).toEqual(['h-annotation-panel', 'h-metadata-panel', 'h-overview-panel', 'h-metadataplot-panel', 'h-draw-panel']);
                 });
                 waitsFor(function () {
                     return !$('#h-annotation-panel .s-panel-content').hasClass('in');
