@@ -191,14 +191,18 @@ var ZoomWidget = Panel.extend({
      */
     _downloadView(evt) {
         var bounds = this.viewer.viewer.bounds();
+        var left = bounds.left < 0 ? 0 : Math.round(bounds.left),
+            top = bounds.top < 0 ? 0 : Math.round(bounds.top);
         var params = $.param({
             width: window.innerWidth,
             height: window.innerHeight,
-            left: bounds.left < 0 ? 0 : Math.round(bounds.left),
-            top: bounds.top < 0 ? 0 : Math.round(bounds.top),
+            left: left,
+            top: top,
             right: bounds.right < 0 ? 0 : Math.round(bounds.right),
             bottom: bounds.bottom < 0 ? 0 : Math.round(bounds.bottom),
-            contentDisposition: 'attachment'
+            contentDisposition: 'attachment',
+            contentDispositionFilename: this.parentView.model.get('name') + '-'
+            + left + ',' + top + '.jpg'
         });
         let urlView = this.viewer.getFrameAndUrl().url.replace('/zxy/{z}/{x}/{y}', '/region');
         urlView += (urlView.indexOf('?') >= 0 ? '&' : '?') + params;
@@ -235,7 +239,8 @@ var ZoomWidget = Panel.extend({
                     magnification: mag,
                     maxZoom: maxZoom,
                     maxMag: maxMag,
-                    frameAndUrl: this.viewer.getFrameAndUrl()
+                    frameAndUrl: this.viewer.getFrameAndUrl(),
+                    imageName: this.parentView.model.get('name')
                 };
                 this._cancelSelection = false;
                 this.$('.h-download-button-area').removeClass('h-download-area-button-selected');

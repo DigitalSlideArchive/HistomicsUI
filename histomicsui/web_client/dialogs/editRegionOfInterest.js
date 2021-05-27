@@ -6,6 +6,13 @@ import { formatSize } from '@girder/core/misc';
 import editRegionOfInterest from '../templates/dialogs/editRegionOfInterest.pug';
 import '../stylesheets/panels/zoomWidget.styl';
 
+
+const MimeTypeMaps = {
+    'JPEG': '.jpg',
+    'PNG': '.png',
+    'TIFF': '.tiff',
+};
+
 var EditRegionOfInterest = View.extend({
     events: {
         'change .update-form': 'updateform'
@@ -160,7 +167,9 @@ var EditRegionOfInterest = View.extend({
             bottom: bottom,
             encoding: this._format,
             contentDisposition: 'attachment',
-            magnification: magnification
+            magnification: magnification,
+            contentDispositionFilename: this.areaElement.imageName + '-'
+            + left + ',' + top + MimeTypeMaps[this._format]
         });
         let urlView = this.areaElement.frameAndUrl.url.replace('/zxy/{z}/{x}/{y}', '/region');
         urlView += (urlView.indexOf('?') >= 0 ? '&' : '?') + params;
