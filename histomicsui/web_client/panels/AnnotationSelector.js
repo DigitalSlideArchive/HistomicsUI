@@ -215,7 +215,7 @@ var AnnotationSelector = Panel.extend({
     },
 
     _refreshAnnotations() {
-        if (!this.parentItem || !this.parentItem.id) {
+        if (!this.parentItem || !this.parentItem.id || !this.viewer) {
             return;
         }
         // if any annotations are saving, defer this
