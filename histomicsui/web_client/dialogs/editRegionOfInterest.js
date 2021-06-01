@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import 'url-search-params-polyfill';
 
 import View from '@girder/core/views/View';
 import { formatSize } from '@girder/core/misc';
@@ -151,7 +152,7 @@ var EditRegionOfInterest = View.extend({
         const right = left + this.areaElement.width;
         const bottom = top + this.areaElement.height;
         const magnification = parseFloat($('#h-element-mag').val());
-        const params = $.param({
+        const params = {
             regionWidth: this.areaElement.width,
             regionHeight: this.areaElement.height,
             left: left,
@@ -161,9 +162,14 @@ var EditRegionOfInterest = View.extend({
             encoding: this._format,
             contentDisposition: 'attachment',
             magnification: magnification
-        });
+        };
         let urlView = this.areaElement.frameAndUrl.url.replace('/zxy/{z}/{x}/{y}', '/region');
-        urlView += (urlView.indexOf('?') >= 0 ? '&' : '?') + params;
+        for (let [key, value] of new URLSearchParams(urlView.replace(/[^?]*(\?|$)/, ''))) {
+            if (params[key] === undefined) {
+                params[key] = value;
+            }
+        }
+        urlView = urlView.replace(/\?.*$/, '') + '?' + $.param(params);
         return urlView;
     }
 });
