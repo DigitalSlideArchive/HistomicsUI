@@ -397,7 +397,7 @@ var ImageView = View.extend({
     },
 
     _allowRootSelection() {
-        /* It would be better to adjust heirarchy widgets to start where
+        /* It would be better to adjust hierarchy widgets to start where
          * current selections are located, but showing the root selector is a
          * start. */
         _.chain(this.controlPanel._panelViews).pluck('_childViews').flatten().each((entry) => {

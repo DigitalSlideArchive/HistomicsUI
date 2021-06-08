@@ -425,7 +425,7 @@ girderTest.promise.done(function () {
                 });
             });
 
-            it('open the syle group dialog', function () {
+            it('open the style group dialog', function () {
                 runs(function () {
                     $('.h-configure-style-group').click();
                 });
@@ -510,7 +510,7 @@ girderTest.promise.done(function () {
                 });
             });
 
-            it('open the syle group dialog again', function () {
+            it('open the style group dialog again', function () {
                 runs(function () {
                     $('.h-configure-style-group').click();
                 });
@@ -1303,7 +1303,7 @@ girderTest.promise.done(function () {
                 });
             });
 
-            it('open the syle group dialog', function () {
+            it('open the style group dialog', function () {
                 runs(function () {
                     $('.h-configure-style-group').click();
                 });

@@ -138,7 +138,7 @@ var AnnotationPopover = View.extend({
      * fetched, then send a rest request to get the user information and
      * rerender the popover.
      *
-     * As a consequence to avoid always rendering asyncronously, the user name
+     * As a consequence to avoid always rendering asynchronously, the user name
      * will not be shown on the first render.  In practice, this isn't usually
      * noticeable.
      */

@@ -149,8 +149,8 @@ var AnnotationSelector = Panel.extend({
     },
 
     /**
-     * Toggle the renderering of a specific annotation.  Sets the
-     * `displayed` attribute of the `AnnotationModel`.
+     * Toggle the rendering of a specific annotation.  Sets the `displayed`
+     * attribute of the `AnnotationModel`.
      */
     toggleAnnotation(evt) {
         var id = $(evt.currentTarget).parents('.h-annotation').data('id');
