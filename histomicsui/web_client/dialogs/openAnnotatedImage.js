@@ -52,7 +52,7 @@ const OpenAnnotatedImage = View.extend({
         });
 
         // These properties are used to debounce rest calls, preventing a new
-        // rest call from occuring until the previous one has finished.
+        // rest call from occurring until the previous one has finished.
         this._nextQuery = {};
         this.collection._inFetch = false;
 
