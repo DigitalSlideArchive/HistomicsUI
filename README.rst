@@ -72,7 +72,7 @@ This work is funded in part by the NIH grant U24-CA194362-01_.
     :target: https://circleci.com/gh/DigitalSlideArchive/HistomicsUI
     :alt: Build Status
 
-.. |codecov-io| image:: https://codecov.io/github/DigitalSlideArchive/HistomicsUI/coverage.svg?branch=master
+.. |codecov-io| image:: https://img.shields.io/codecov/c/github/DigitalSlideArchive/HistomicsUI.svg
     :target: https://codecov.io/github/DigitalSlideArchive/HistomicsUI?branch=master
     :alt: codecov.io
 
