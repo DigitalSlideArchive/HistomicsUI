@@ -21,6 +21,7 @@ class ImageBrowseResource(ItemResource):
         self.resourceName = 'item'
         apiRoot.item.route('GET', (':id', 'next_image'), self.getNextImage)
         apiRoot.item.route('GET', (':id', 'previous_image'), self.getPreviousImage)
+        apiRoot.item.route('GET', (':id', 'adjacent_images'), self.getPreviousAndNextImages)
 
     def getAdjacentImages(self, currentImage, currentFolder=None):
         folderModel = Folder()
@@ -43,7 +44,9 @@ class ImageBrowseResource(ItemResource):
 
         return {
             'previous': allImages[index - 1],
-            'next': allImages[(index + 1) % len(allImages)]
+            'next': allImages[(index + 1) % len(allImages)],
+            'index': index,
+            'count': len(allImages),
         }
 
     @access.public
@@ -73,3 +76,17 @@ class ImageBrowseResource(ItemResource):
     )
     def getPreviousImage(self, image, folder):
         return self.getAdjacentImages(image, folder)['previous']
+
+    @access.public
+    @autoDescribeRoute(
+        Description('Get the previous and next image in the same folder as the given item.')
+        .modelParam('id', 'The current item ID',
+                    model='item', destName='image', paramType='path', level=AccessType.READ)
+        .modelParam('folderId', 'The (virtual) folder ID the image is located in',
+                    model='folder', destName='folder', paramType='query', level=AccessType.READ,
+                    required=False)
+        .errorResponse()
+        .errorResponse('Image not found', code=404)
+    )
+    def getPreviousAndNextImages(self, image, folder):
+        return self.getAdjacentImages(image, folder)
