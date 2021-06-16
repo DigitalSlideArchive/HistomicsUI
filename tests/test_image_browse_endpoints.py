@@ -91,3 +91,15 @@ class TestImageBrowseEndpoints(object):
             path='/item/%s/next_image' % str(self.items[0]['_id']),
             user=admin, params=dict(folderId=self.extraFolder['_id']))
         assert utilities.respStatus(resp) == 404
+
+    def testGetAdjacentImages(self, server, admin):
+        self.makeResources(admin)
+        resp = server.request(
+            path='/item/%s/adjacent_images' % str(self.items[0]['_id']), user=admin)
+        assert utilities.respStatus(resp) == 200
+        assert resp.json['next']['_id'] == str(self.items[1]['_id'])
+
+        resp = server.request(
+            path='/item/%s/adjacent_images' % str(self.items[-1]['_id']), user=admin)
+        assert utilities.respStatus(resp) == 200
+        assert resp.json['next']['_id'] == str(self.items[0]['_id'])
