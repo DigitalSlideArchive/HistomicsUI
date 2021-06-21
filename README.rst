@@ -36,7 +36,7 @@ To use Girder Worker:
   pip install girder_slicer_cli_web[worker]
   GW_DIRECT_PATHS=true girder_worker -l info -Ofair --prefetch-multiplier=1
 
-The first time you start HistomicsUI, you'll also need to configure Girder with at least one user and one assetstore (see the Girder_ documentation).  Additionally, it is recommended that you install the HistomicsTK_ algorithms.  This can be done going to the Admin Console, Plugins, Slicer CLI Web settings.  Set a default task upload folder, then import the `dsarchive/histomicstk:latest` docker image.
+The first time you start HistomicsUI, you'll also need to configure Girder with at least one user and one assetstore (see the Girder_ documentation).  Additionally, it is recommended that you install the HistomicsTK_ algorithms.  This can be done going to the Admin Console, Plugins, Slicer CLI Web settings.  Set a default task upload folder, then import the ``dsarchive/histomicstk:latest`` docker image.
 
 Reference Deployment
 ====================
@@ -46,7 +46,7 @@ The standard deployment of HistomicsUI is the `Digital Slide Archive`_.  The ass
 Development
 ===========
 
-The most convenient way to develop on HistomicsUI is to use the `devops scripts from the Digial Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops>`_. 
+The most convenient way to develop on HistomicsUI is to use the `devops scripts from the Digital Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops>`_.
 
 Funding
 -------
@@ -75,5 +75,3 @@ This work is funded in part by the NIH grant U24-CA194362-01_.
 .. |codecov-io| image:: https://img.shields.io/codecov/c/github/DigitalSlideArchive/HistomicsUI.svg
     :target: https://codecov.io/github/DigitalSlideArchive/HistomicsUI?branch=master
     :alt: codecov.io
-
-
