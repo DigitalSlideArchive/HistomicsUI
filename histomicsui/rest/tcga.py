@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Endpoints providing a simplified interface for handling TCGA datasets.
 """
