@@ -10,6 +10,7 @@ import * as histomicsui from '@girder/histomicsui';
 // import modules for side effects
 import './views/itemList';
 import './views/itemPage';
+import './views/HierarchyWidget';
 
 import ConfigView from './views/body/ConfigView';
 
