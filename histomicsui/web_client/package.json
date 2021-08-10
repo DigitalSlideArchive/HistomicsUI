@@ -20,6 +20,7 @@
         "name": "histomicsui",
         "main": "./main.js",
         "dependencies": [
+            "large_image",
             "large_image_annotation",
             "slicer_cli_web"
         ],
