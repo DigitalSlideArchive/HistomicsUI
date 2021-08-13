@@ -3,6 +3,8 @@ import _ from 'underscore';
 
 import Panel from '@girder/slicer_cli_web/views/Panel';
 
+import setFrameQuad from '@girder/large_image/views/imageViewerWidget/setFrameQuad.js';
+
 import overviewWidget from '../templates/panels/overviewWidget.pug';
 import '../stylesheets/panels/overviewWidget.styl';
 
@@ -93,6 +95,10 @@ var OverviewWidget = Panel.extend({
 
         params.layer.autoshareRenderer = false;
         this._tileLayer = this.viewer.createLayer('osm', params.layer);
+        if (this.parentViewer._layer && this.parentViewer._layer.setFrameQuad) {
+            setFrameQuad((this.parentViewer._layer.setFrameQuad.status || {}).tileinfo, this._tileLayer, (this.parentViewer._layer.setFrameQuad.status || {}).options);
+            this._tileLayer.setFrameQuad(0);
+        }
         this._featureLayer = this.viewer.createLayer('feature', {features: ['polygon']});
         this._outlineFeature = this._featureLayer.createFeature('polygon', {style: {
             stroke: true,
@@ -163,6 +169,9 @@ var OverviewWidget = Panel.extend({
         this._onParentPan();
         this.parentViewer.on('g:imageFrameChanged', () => {
             this._tileLayer.url(this.parentViewer.getFrameAndUrl().url);
+            if (this.parentViewer._layer && this.parentViewer._layer.setFrameQuad) {
+                this._tileLayer.setFrameQuad((this.parentViewer._layer.setFrameQuad.status || {}).frame);
+            }
         });
     },
 
