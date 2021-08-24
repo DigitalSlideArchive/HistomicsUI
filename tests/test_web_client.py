@@ -125,7 +125,6 @@ class MockSlicerCLIWebResource(Resource):
         return {'_id': 'jobid'}
 
 
-@pytest.mark.singular
 @pytest.mark.plugin('histomicsui')
 @pytest.mark.parametrize('spec', (
     'analysisSpec.js',
