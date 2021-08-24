@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """Test annotation file and metadata handlers."""
 
 import json
-import pytest
 import time
 
+import pytest
 from girder.models.item import Item
 from girder_large_image_annotation.models.annotation import Annotation
 
@@ -13,10 +11,9 @@ from . import girder_utilities as utilities
 
 
 @pytest.mark.plugin('histomicsui')
-class TestHUIHandlers(object):
+class TestHUIHandlers:
     def testAnnotationHandler(self, server, fsAssetstore, admin):
-        file = utilities.uploadExternalFile(
-            'data/Easy1.png.sha512', admin, fsAssetstore)
+        file = utilities.uploadExternalFile('Easy1.png', admin, fsAssetstore)
         item = Item().load(file['itemId'], user=admin)
         utilities.uploadTestFile(
             'sample.anot', admin, fsAssetstore, reference=json.dumps({
@@ -41,8 +38,7 @@ class TestHUIHandlers(object):
         assert Annotation().findOne({'itemId': item['_id']}) is not None
 
     def testMetadataHandler(self, server, fsAssetstore, admin):
-        file = utilities.uploadExternalFile(
-            'data/Easy1.png.sha512', admin, fsAssetstore)
+        file = utilities.uploadExternalFile('Easy1.png', admin, fsAssetstore)
         item = Item().load(file['itemId'], user=admin)
         utilities.uploadTestFile(
             'sample.meta', admin, fsAssetstore, reference=json.dumps({

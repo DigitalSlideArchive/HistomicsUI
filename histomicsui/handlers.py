@@ -1,6 +1,5 @@
 import datetime
 import json
-import six
 
 from girder import logger
 from girder.constants import AccessType
@@ -31,7 +30,7 @@ def _itemFromEvent(event, identifierEnding, itemAccessLevel=AccessType.READ):
         try:
             reference = json.loads(reference)
             if (isinstance(reference, dict) and
-                    isinstance(reference.get('identifier'), six.string_types)):
+                    isinstance(reference.get('identifier'), str)):
                 identifier = reference['identifier']
         except (ValueError, TypeError):
             logger.debug('Failed to parse data.process reference: %r', reference)

@@ -9,7 +9,7 @@ class Cohort(TCGAModel, Folder):
     TCGAType = 'cohort'
 
     def validate(self, doc, **kwargs):
-        super(Cohort, self).validate(doc, **kwargs)
+        super().validate(doc, **kwargs)
         if doc['parentCollection'] != 'collection':
             raise ValidationException(
                 'A Cohort model must be a child of a collection'
@@ -21,7 +21,7 @@ class Cohort(TCGAModel, Folder):
 
         recurse = kwargs.get('recurse', False)
         self.setTCGA(doc, cohort=doc['name'])
-        doc = super(Cohort, self).importDocument(
+        doc = super().importDocument(
             doc, **kwargs)
         if not recurse:
             return doc

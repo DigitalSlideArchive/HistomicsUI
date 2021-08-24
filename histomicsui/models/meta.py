@@ -1,8 +1,6 @@
 import mimetypes
 import re
 
-import six
-
 from girder.constants import AccessType
 from girder.exceptions import ValidationException
 from girder.models.collection import Collection
@@ -17,17 +15,17 @@ from ..constants import TCGACollectionSettingKey
 
 def pruneNoneValues(d):
     """Recursively prune dictionary items with value `None`."""
-    toDelete = [k for k, v in six.viewitems(d) if v is None]
+    toDelete = [k for k, v in d.items() if v is None]
     for k in toDelete:
         del d[k]
-    for _, v in six.viewitems(d):
+    for _, v in d.items():
         if isinstance(v, dict):
             pruneNoneValues(v)
 
 
 def updateDict(d, u):
     """Recursively update a dictionary with items from another."""
-    for k, v in six.viewitems(u):
+    for k, v in u.items():
         if isinstance(v, dict):
             r = updateDict(d.get(k, {}), v)
             d[k] = r
@@ -36,7 +34,7 @@ def updateDict(d, u):
     return d
 
 
-class TCGAModel(object):
+class TCGAModel:
     """
     This class is used as a mixin for all TCGA model classes.  TCGA models
     are distinguished by the existence of a `tcga` property at the top level
@@ -89,26 +87,26 @@ class TCGAModel(object):
         """Expose the tcga key as public metadata."""
         self.exposeFields(AccessType.READ, fields='tcga')
         self.ensureIndices(['tcga.type'] + list(self.TCGAIndices))
-        super(TCGAModel, self).initialize(**kwargs)
+        super().initialize(**kwargs)
         self.name = self.TCGAType
 
     def save(self, doc, baseModel=False, **kwargs):
         """Set the TCGA model type on save."""
         if not baseModel:
             self.setTCGA(doc, type=self.TCGAType)
-        return super(TCGAModel, self).save(doc, **kwargs)
+        return super().save(doc, **kwargs)
 
     def find(self, query=None, **kwargs):
         """Append TCGA model type to any query on this model."""
         query = query or {}
         query['tcga.type'] = self.TCGAType
-        return super(TCGAModel, self).find(query, **kwargs)
+        return super().find(query, **kwargs)
 
     def findOne(self, query=None, **kwargs):
         """Append TCGA model type to any query on this model."""
         query = query or {}
         query['tcga.type'] = self.TCGAType
-        return super(TCGAModel, self).findOne(query, **kwargs)
+        return super().findOne(query, **kwargs)
 
     def setTCGA(self, doc, **tcga):
         """Update the TCGA object and prune values of None."""
@@ -232,8 +230,7 @@ class TCGAModel(object):
             yield child
 
         for child in folder.find({'parentId': doc['_id']}):
-            for subchild in self.iterateItems(child, **kwargs):
-                yield subchild
+            yield from self.iterateItems(child, **kwargs)
 
     def childFolders(self, parent, parentType, user=None, limit=0, offset=0,
                      sort=None, filters=None, cursor=False, **kwargs):
@@ -245,7 +242,7 @@ class TCGAModel(object):
         paging for resources that don't require fine grained permissions.
         """
         if not cursor:
-            return super(TCGAModel, self).childFolders(
+            return super().childFolders(
                 parent, parentType, limit=limit, offset=offset, sort=sort, **kwargs)
 
         parentType = parentType.lower()

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #############################################################################
 #  Copyright Kitware Inc.
 #
@@ -21,8 +19,7 @@ import os
 import re
 
 from bson import json_util
-from girder import events
-from girder import plugin
+from girder import events, plugin
 from girder.api import access
 from girder.exceptions import ValidationException
 from girder.models.folder import Folder
@@ -34,8 +31,7 @@ from girder.utility.model_importer import ModelImporter
 from girder.utility.webroot import Webroot
 from pkg_resources import DistributionNotFound, get_distribution
 
-from . import handlers
-from . import rest
+from . import handlers, rest
 from .constants import PluginSettings
 from .models.aperio import Aperio
 from .models.case import Case
@@ -43,7 +39,6 @@ from .models.cohort import Cohort
 from .models.image import Image
 from .models.pathology import Pathology
 from .models.slide import Slide
-
 
 try:
     __version__ = get_distribution(__name__).version
@@ -193,7 +188,7 @@ class WebrootHistomicsUI(Webroot):
             'huiBrandColor': Setting().get(PluginSettings.HUI_BRAND_COLOR),
             'huiBannerColor': Setting().get(PluginSettings.HUI_BANNER_COLOR),
         })
-        return super(WebrootHistomicsUI, self)._renderHTML()
+        return super()._renderHTML()
 
 
 class GirderPlugin(plugin.GirderPlugin):

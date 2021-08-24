@@ -22,11 +22,11 @@ class Aperio(Item):
         """Expose aperio key as public metadata."""
         self.exposeFields(AccessType.READ, fields='aperio')
         self.ensureIndices(['aperio.image', 'aperio.tag'])
-        return super(Aperio, self).initialize(**kwargs)
+        return super().initialize(**kwargs)
 
     def validate(self, doc, **kwargs):
         """Ensure the item has valid metadata."""
-        super(Aperio, self).validate(doc, **kwargs)
+        super().validate(doc, **kwargs)
         meta = doc.setdefault('aperio', {})
         imageId = meta.get('image')
         try:

@@ -14,7 +14,7 @@ class Slide(TCGAModel, Folder):
             raise ValidationException(
                 'A Slide model must be a child of a folder'
             )
-        super(Slide, self).validate(doc, **kwargs)
+        super().validate(doc, **kwargs)
         case = Case().load(
             doc['parentId'], force=True)
         if not case or self.getTCGAType(case) != 'case':
@@ -37,7 +37,7 @@ class Slide(TCGAModel, Folder):
         tcga = self.getTCGA(parent)
         tcga.pop('meta', None)
         self.setTCGA(doc, **tcga)
-        doc = super(Slide, self).importDocument(doc, **kwargs)
+        doc = super().importDocument(doc, **kwargs)
         if not recurse:
             return doc
 

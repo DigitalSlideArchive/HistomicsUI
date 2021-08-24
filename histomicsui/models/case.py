@@ -17,7 +17,7 @@ class Case(TCGAModel, Folder):
             raise ValidationException(
                 'A Case model must be a child of a folder'
             )
-        super(Case, self).validate(doc, **kwargs)
+        super().validate(doc, **kwargs)
         cohort = Cohort().load(
             doc['parentId'], force=True)
         if not cohort or self.getTCGAType(cohort) != 'cohort':
@@ -45,7 +45,7 @@ class Case(TCGAModel, Folder):
         tcga['label'] = doc['name']
         tcga['caseId'] = doc['_id']
         self.setTCGA(doc, **tcga)
-        doc = super(Case, self).importDocument(doc, **kwargs)
+        doc = super().importDocument(doc, **kwargs)
         if not recurse:
             return doc
 
