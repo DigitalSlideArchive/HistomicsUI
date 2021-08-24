@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import json
-import pytest
 import time
 
+import pytest
 from girder.exceptions import ValidationException
 from girder.models.collection import Collection
 from girder.models.file import File
@@ -116,7 +114,7 @@ def makeResources(self, admin, user):
 
 
 @pytest.mark.plugin('histomicsui')
-class TestTCGAModel(object):
+class TestTCGAModel:
     def testPruneNoneValues(self):
         doc = {
             'a': 0,
@@ -317,7 +315,7 @@ class TestTCGAModel(object):
 
 
 @pytest.mark.plugin('histomicsui')
-class TestTCGARest(object):
+class TestTCGARest:
     def runRecursiveImport(self, server, admin):
         # generate the async import task
         resp = server.request(

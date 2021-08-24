@@ -1,6 +1,6 @@
 from girder.api import access
+from girder.api.describe import Description, autoDescribeRoute
 from girder.api.v1.item import Item as ItemResource
-from girder.api.describe import autoDescribeRoute, Description
 from girder.constants import AccessType
 from girder.exceptions import RestException
 from girder.models.folder import Folder

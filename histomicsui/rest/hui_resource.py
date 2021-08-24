@@ -1,21 +1,21 @@
 from girder import logger
 from girder.api import access
+from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import Resource, filtermodel
-from girder.api.describe import autoDescribeRoute, describeRoute, Description
 from girder.constants import AccessType, TokenScope
 from girder.exceptions import RestException
 from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.utility.model_importer import ModelImporter
 
-from ..constants import PluginSettings
 from .. import handlers
+from ..constants import PluginSettings
 from .system import allChildFolders, allChildItems
 
 
 class HistomicsUIResource(Resource):
     def __init__(self):
-        super(HistomicsUIResource, self).__init__()
+        super().__init__()
         self.resourceName = 'histomicsui'
 
         self.route('GET', ('settings',), self.getPublicSettings)

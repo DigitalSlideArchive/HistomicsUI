@@ -16,7 +16,7 @@ class Pathology(TCGAModel, Item):
             tcga = self.parsePathology(name)
             self.setTCGA(doc, **tcga)
 
-            doc = super(Pathology, self).importDocument(doc, **kwargs)
+            doc = super().importDocument(doc, **kwargs)
             return doc
         elif recurse:
             for item in self.iterateItems(doc):

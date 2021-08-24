@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
 import pytest
-
 from girder.models.folder import Folder
 from girder.models.item import Item
 
@@ -9,7 +6,7 @@ from . import girder_utilities as utilities
 
 
 @pytest.mark.plugin('histomicsui')
-class TestImageBrowseEndpoints(object):
+class TestImageBrowseEndpoints:
     def makeResources(self, admin):
         self.folder = list(Folder().childFolders(admin, 'user', user=admin))[0]
         self.items = [

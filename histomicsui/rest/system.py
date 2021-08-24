@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 ###############################################################################
 #  Copyright Kitware Inc.
 #
@@ -16,11 +14,9 @@
 #  limitations under the License.
 ###############################################################################
 
-import six
-
 from girder.api import access
-from girder.api.describe import Description, describeRoute, autoDescribeRoute
-from girder.api.rest import boundHandler, RestException, filtermodel
+from girder.api.describe import Description, autoDescribeRoute, describeRoute
+from girder.api.rest import RestException, boundHandler, filtermodel
 from girder.api.v1.resource import Resource as ResourceResource
 from girder.constants import AccessType, TokenScope
 from girder.models.folder import Folder
@@ -81,10 +77,8 @@ def allChildFolders(parent, parentType, user, limit=0, offset=0,
                 if not _internal['limit']:
                     _internal['done'] = True
                     return
-        for childFolder in allChildFolders(
-                folder, 'folder', user, sort=sort, _internal=_internal,
-                **kwargs):
-            yield childFolder
+        yield from allChildFolders(
+            folder, 'folder', user, sort=sort, _internal=_internal, **kwargs)
 
 
 def allChildItems(parent, parentType, user, limit=0, offset=0,
@@ -229,7 +223,7 @@ class HUIResourceResource(ResourceResource):
             for id in resources[kind]:
                 model.load(id=id, user=user, level=AccessType.WRITE)
         metaUpdate = {}
-        for key, value in six.iteritems(metadata):
+        for key, value in metadata.items():
             if value is None and not allowNull:
                 metaUpdate.setdefault('$unset', {})['meta.' + key] = ''
             else:

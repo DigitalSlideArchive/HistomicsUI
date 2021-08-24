@@ -2,15 +2,14 @@
 Endpoints providing a simplified interface for handling TCGA datasets.
 """
 
-from __future__ import print_function, division
 
 import re
 
 from girder import logger
 from girder.api import access
-from girder.api.describe import describeRoute, Description
+from girder.api.describe import Description, describeRoute
 from girder.api.rest import Resource, RestException, loadmodel
-from girder.constants import TokenScope, AccessType
+from girder.constants import AccessType, TokenScope
 from girder.exceptions import ValidationException
 from girder.models.collection import Collection
 from girder.models.folder import Folder
@@ -110,7 +109,7 @@ def pagedResponse(cursor, limit, offset, sort):
 class TCGAResource(Resource):
 
     def __init__(self):
-        super(TCGAResource, self).__init__()
+        super().__init__()
 
         @setting_utilities.validator({
             TCGACollectionSettingKey

@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """Test histomicsui endpoints"""
 
 import json
-import pytest
 
+import pytest
 from girder.exceptions import ValidationException
 from girder.models.collection import Collection
 from girder.models.folder import Folder
@@ -18,13 +16,12 @@ from histomicsui.constants import PluginSettings
 
 from . import girder_utilities as utilities
 
-
 # This probably should be moved into a fixture
 config.getConfig()['histomicsui'] = {'restrict_downloads': True}
 
 
 @pytest.mark.plugin('histomicsui')
-class TestHUIResourceAndItem(object):
+class TestHUIResourceAndItem:
     def makeResources(self, admin):
         self.publicFolder = utilities.namedFolder(admin, 'Public')
         self.privateFolder = utilities.namedFolder(admin, 'Private')
@@ -223,7 +220,7 @@ class TestHUIResourceAndItem(object):
 
 
 @pytest.mark.plugin('histomicsui')
-class TestHUIEndpoints(object):
+class TestHUIEndpoints:
     def makeResources(self, admin):
         self.user2 = User().createUser(
             email='user2@email.com', login='user2', firstName='user2',
@@ -339,8 +336,7 @@ class TestHUIEndpoints(object):
 
     def testRestrictDownloads(self, server, fsAssetstore, admin, user):
         self.makeResources(admin)
-        file = utilities.uploadExternalFile(
-            'data/Easy1.png.sha512', user, fsAssetstore)
+        file = utilities.uploadExternalFile('Easy1.png', admin, fsAssetstore)
         resp = server.request(
             path='/item/%s/download' % file['itemId'], user=self.user2, isJson=False)
         assert utilities.respStatus(resp) == 200

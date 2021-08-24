@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import os
-import pytest
 import shutil
-from pytest_girder.web_client import runWebClientTest
 
+import pytest
 from girder.api import access
 from girder.api.describe import Description, describeRoute
 from girder.api.rest import Resource, setRawResponse, setResponseHeader
@@ -13,6 +10,7 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder_large_image.models.image_item import ImageItem
 from girder_large_image_annotation.models.annotation import Annotation
+from pytest_girder.web_client import runWebClientTest
 
 from . import girder_utilities as utilities
 
@@ -32,8 +30,8 @@ def makeResources(server, fsAssetstore, admin, user):
     Item().createItem('Empty', admin, adminPublicFolder)
     # Upload a sample file
     file = utilities.uploadExternalFile(
-        'data/sample_svs_image.TCGA-DU-6399-01A-01-TS1.e8eb65de-d63e-42db-'
-        'af6f-14fefbbdf7bd.svs.sha512', user, fsAssetstore, name='image')
+        'sample_svs_image.TCGA-DU-6399-01A-01-TS1.e8eb65de-d63e-42db-af6f-14fefbbdf7bd.svs',
+        user, fsAssetstore, name='image')
     item = Item().load(file['itemId'], force=True)
     # We have to ask to make this a large image item, because we renamed it
     # 'image' without an extension
@@ -53,7 +51,7 @@ class MockSlicerCLIWebResource(Resource):
     """
 
     def __init__(self):
-        super(MockSlicerCLIWebResource, self).__init__()
+        super().__init__()
         self.route('GET', ('docker_image',), self.dockerImage)
         self.route('GET', ('test_analysis_detection', 'xml'), self.testAnalysisXmlDetection)
         self.route('GET', ('test_analysis_features', 'xml'), self.testAnalysisXmlFeatures)

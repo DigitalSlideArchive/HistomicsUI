@@ -12,7 +12,7 @@ class Image(TCGAModel, Item):
     TCGAType = 'image'
 
     def validate(self, doc, **kwargs):
-        super(Image, self).validate(doc, **kwargs)
+        super().validate(doc, **kwargs)
         if 'largeImage' not in doc:
             raise ValidationException(
                 'An image item must be a "large_image"'
@@ -80,4 +80,4 @@ class Image(TCGAModel, Item):
         tcga = self.getTCGA(parent)
         tcga.update(self.parseImage(name))
         self.setTCGA(doc, **tcga)
-        return super(Image, self).importDocument(doc, **kwargs)
+        return super().importDocument(doc, **kwargs)

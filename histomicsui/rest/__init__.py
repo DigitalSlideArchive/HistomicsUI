@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
-from . import tcga
-from . import aperio
-from . import system
-from .image_browse_resource import ImageBrowseResource
+from . import aperio, system, tcga
 from .hui_resource import HistomicsUIResource
+from .image_browse_resource import ImageBrowseResource
 
 
 def addEndpoints(apiRoot):
