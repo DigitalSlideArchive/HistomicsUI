@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import Backbone from 'backbone';
 
 import '@girder/fontello/dist/css/animation.css';
@@ -29,6 +30,21 @@ var App = GirderApp.extend({
             parentView: this,
             settings: this.settings
         }).render();
+
+        /* Only show job progress */
+        let plv = this.progressListView;
+        if (!plv._origHandleProgress) {
+            plv._origHandleProgress = plv._handleProgress;
+            plv._handleProgress = function (progress) {
+                if (!_.has(plv._map, progress._id) && (progress.data || {}).resourceName !== 'job') {
+                    return;
+                }
+                return plv._origHandleProgress(progress);
+            };
+            plv.stopListening(plv.eventStream, 'g:event.progress', plv._origHandleProgress, plv);
+            plv.listenTo(plv.eventStream, 'g:event.progress', plv._handleProgress, plv);
+        }
+        plv.setElement(this.$('#g-app-progress-container')).render();
 
         return this;
     },
