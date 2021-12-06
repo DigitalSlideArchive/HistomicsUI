@@ -19,7 +19,7 @@ import os
 import re
 
 from bson import json_util
-from girder import events, plugin
+from girder import events, logger, plugin
 from girder.api import access
 from girder.exceptions import ValidationException
 from girder.models.folder import Folder
@@ -195,9 +195,13 @@ class GirderPlugin(plugin.GirderPlugin):
     DISPLAY_NAME = 'HistomicsUI'
     CLIENT_SOURCE_PATH = 'web_client'
 
-    def load(self, info):
+    def load(self, info):  # noqa
         plugin.getPlugin('jobs').load(info)
-        plugin.getPlugin('slicer_cli_web').load(info)
+        try:
+            plugin.getPlugin('slicer_cli_web').load(info)
+        except Exception:
+            logger.info('slicer_cli_web plugin is unavailable.  Analysis '
+                        'tasks are therefore unavailable.')
         plugin.getPlugin('large_image_annotation').load(info)
 
         # Python's http cookie parser fails for all cookies when there are some

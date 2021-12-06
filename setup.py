@@ -42,10 +42,12 @@ setup(
     ],
     install_requires=[
         'girder-large-image-annotation>=1.4.2',
-        'girder-slicer-cli-web[girder]>=1.2.0',
-        'girder-worker[girder]>=0.6.0',
-        'celery>=4.4.0rc5',
     ],
+    extras_require={
+        'analysis': [
+            'girder-slicer-cli-web[girder]>=1.2.0',
+        ],
+    },
     license='Apache Software License 2.0',
     long_description=readme,
     long_description_content_type='text/x-rst',
