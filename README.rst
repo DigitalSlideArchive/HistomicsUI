@@ -25,7 +25,7 @@ Prerequisites:
 
 .. code-block:: bash
 
-  pip install histomicsui --find-links https://girder.github.io/large_image_wheels
+  pip install histomicsui[analysis] --find-links https://girder.github.io/large_image_wheels
   girder build
   girder serve
 
