@@ -50,4 +50,5 @@ venv/
 ENV/
 
 node_modules/
-tests/externaldata
+
+.pre-commit-config.yaml
