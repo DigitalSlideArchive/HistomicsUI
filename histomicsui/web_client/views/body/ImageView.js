@@ -177,6 +177,10 @@ var ImageView = View.extend({
                 highlightFeatureSizeLimit: 5000,
                 scale: { position: { bottom: 20, right: 10 } }
             });
+            // Don't unclamp bounds for the image even if image overlays are present.
+            if (this.viewerWidget.setUnclampBoundsForOverlay) {
+                this.viewerWidget.setUnclampBoundsForOverlay(false);
+            }
             this.trigger('h:viewerWidgetCreated', this.viewerWidget);
 
             // handle annotation mouse events
