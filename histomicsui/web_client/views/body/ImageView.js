@@ -419,7 +419,7 @@ var ImageView = View.extend({
                         analysis = this.controlPanel.$el.find('.s-panel-title:first').text() || analysis;
                         var extension = (model.get('extensions') || '').split('|')[0];
                         var name = `${analysis}-${model.id}${extension}`;
-                        if (model.get('required') !== false) {
+                        if (model.get('required') !== false || (model.get('reference') && extension)) {
                             model.set({
                                 path: [folder.get('name'), name],
                                 parent: folder,

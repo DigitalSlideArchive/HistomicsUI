@@ -41,7 +41,7 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     install_requires=[
-        'girder-large-image-annotation>=1.8.11',
+        'girder-large-image-annotation',
         'girder-slicer-cli-web>=1.2.3',
     ],
     extras_require={
