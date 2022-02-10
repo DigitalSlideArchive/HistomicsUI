@@ -59,17 +59,29 @@ def _itemFromEvent(event, identifierEnding, itemAccessLevel=AccessType.READ):
         return {'item': item, 'user': user, 'file': image, 'uuid': reference.get('uuid')}
 
 
-def resolveAnnotationGirderIds(event, results, data, girderIds):
+def resolveAnnotationGirderIds(event, results, data, possibleGirderIds):
     """
     If an annotation has references to girderIds, resolve them to actual ids.
 
     :param event: a data.process event.
     :param results: the results from _itemFromEvent,
     :param data: annotation data.
-    :param girderIds: a list of annotation elements with girderIds needing
-        resolution.
+    :param possibleGirderIds: a list of annotation elements with girderIds
+        needing resolution.
     :returns: True if all ids were processed.
     """
+    # Exclude actual girderIds from resolution
+    girderIds = []
+    for element in possibleGirderIds:
+        # This will throw an exception if the girderId isn't well-formed as an
+        # actual id.
+        try:
+            if Item().load(element['girderId'], level=AccessType.READ, force=True) is None:
+                girderIds.append(element)
+        except Exception:
+            girderIds.append(element)
+    if not len(girderIds):
+        return True
     idRecord = _recentIdentifiers.get(results.get('uuid'))
     if idRecord and not all(element['girderId'] in idRecord for element in girderIds):
         idRecord['_reprocess'] = lambda: process_annotations(event)
