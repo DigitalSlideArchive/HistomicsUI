@@ -37,18 +37,11 @@ from girder.settings import SettingDefault, SettingKey
 from girder.utility import config
 from girder.utility import path as path_util
 from girder.utility import setting_utilities
-from girder.utility.model_importer import ModelImporter
 from girder.utility.webroot import Webroot
 from pkg_resources import DistributionNotFound, get_distribution
 
 from . import handlers, rest
 from .constants import PluginSettings
-from .models.aperio import Aperio
-from .models.case import Case
-from .models.cohort import Cohort
-from .models.image import Image
-from .models.pathology import Pathology
-from .models.slide import Slide
 
 try:
     __version__ = get_distribution(__name__).version
@@ -414,13 +407,6 @@ class GirderPlugin(plugin.GirderPlugin):
         # invalid cookies.  Work around some of that.
         patchCookieParsing()
 
-        ModelImporter.registerModel('aperio', Aperio, 'histomicsui')
-        ModelImporter.registerModel('case', Case, 'histomicsui')
-        ModelImporter.registerModel('cohort', Cohort, 'histomicsui')
-        ModelImporter.registerModel('image', Image, 'histomicsui')
-        ModelImporter.registerModel('pathology', Pathology, 'histomicsui')
-        ModelImporter.registerModel('slide', Slide, 'histomicsui')
-
         rest.addEndpoints(info['apiRoot'])
         info['serverRoot'].updateHtmlVars({
             'brandName': Setting().get(SettingKey.BRAND_NAME)})
@@ -465,7 +451,7 @@ class GirderPlugin(plugin.GirderPlugin):
         # Auto-ingest annotations into database when a file with an identifier
         # ending in 'AnnotationFile' is uploaded (usually .anot files).
         events.bind('data.process', 'histomicsui.annotations', handlers.process_annotations)
-        # Auto-ingest metadta into parent when a file with an identifier
+        # Auto-ingest metadata into parent when a file with an identifier
         # ending in 'ItemMetadata' is uploaded (usually .meta files).
         events.bind('data.process', 'histomicsui.metadata', handlers.process_metadata)
 

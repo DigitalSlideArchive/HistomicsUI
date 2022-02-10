@@ -1,7 +1,5 @@
 from girder.settings import SettingDefault, SettingKey
 
-TCGACollectionSettingKey = 'tcga.tcga_collection_id'
-
 SettingDefault.defaults[SettingKey.BRAND_NAME] = 'HistomicsUI'
 
 
