@@ -37,14 +37,13 @@ def _itemFromEvent(event, identifierEnding, itemAccessLevel=AccessType.READ):
                 identifier = reference['identifier']
         except (ValueError, TypeError):
             logger.debug('Failed to parse data.process reference: %r', reference)
-    if identifier:
-        if 'uuid' in reference:
-            if reference['uuid'] not in _recentIdentifiers:
-                _recentIdentifiers[reference['uuid']] = {}
-            _recentIdentifiers[reference['uuid']][identifier] = info
-            reprocessFunc = _recentIdentifiers[reference['uuid']].pop('_reprocess', None)
-            if reprocessFunc:
-                reprocessFunc()
+    if identifier and 'uuid' in reference:
+        if reference['uuid'] not in _recentIdentifiers:
+            _recentIdentifiers[reference['uuid']] = {}
+        _recentIdentifiers[reference['uuid']][identifier] = info
+        reprocessFunc = _recentIdentifiers[reference['uuid']].pop('_reprocess', None)
+        if reprocessFunc:
+            reprocessFunc()
     if identifier is not None and identifier.endswith(identifierEnding):
         if 'userId' not in reference or 'itemId' not in reference or 'fileId' not in reference:
             logger.error('Reference does not contain required information.')
