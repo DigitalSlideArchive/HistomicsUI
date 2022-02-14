@@ -48,9 +48,29 @@ Development
 
 The most convenient way to develop on HistomicsUI is to use the `devops scripts from the Digital Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops>`_.
 
+Annotations and Metadata from Jobs
+----------------------------------
+
+This handles ingesting annotations and metadata that are uploaded and associating them with existing large image items in the Girder database.  These annotations and metadata re commonly generated through jobs, such as HistomicTK tasks, but can also be added manually.
+
+If a file is uploaded to the Girder system that includes a ``reference`` record, and that ``reference`` record contains an ``identifier`` field and a ``fileId`` field, specific identifiers can be used to ingest the results.  If a ``userId`` is specified in the ``reference`` record, permissions for adding the annotation or metadata are associated with that user.
+
+Metadata
+========
+
+Identifiers ending in ``ItemMetadata`` are loaded and then set as metadata on the associated item that contains the specified file.  Conceptually, this is the same as calling the ``PUT`` ``item/{id}/metadata`` endpoint.
+
+Annotations
+===========
+
+Identifiers ending in ``AnnotationFile`` are loaded as annotations, associated with the item that contains the specified file.  Conceptually, this is the same as uploaded the file via the annotation endpoints for the item associated with the specified ``fileId``.
+
+If the annotation file contains any annotations with elements that contain ``girderId`` values, the ``girderId`` values can be ``identifier`` values from files that were uploaded with a ``reference`` record that contains a matching ``uuid`` field.  The ``uuid`` field is required for this, but is treated as an arbitrary string.
+
+
 Funding
 -------
-This work is funded in part by the NIH grant U24-CA194362-01_.
+This work was funded in part by the NIH grant U24-CA194362-01_.
 
 .. _HistomicsUI: https://github.com/DigitalSlideArchive/HistomicsUI
 .. _Docker: https://www.docker.com/

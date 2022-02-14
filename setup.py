@@ -44,6 +44,7 @@ setup(
     install_requires=[
         'girder-large-image-annotation',
         'girder-slicer-cli-web>=1.2.3',
+        'cachetools',
     ],
     extras_require={
         'analysis': [

@@ -65,3 +65,57 @@ class TestHUIHandlers:
         item = Item().load(file['itemId'], user=admin)
         assert item['meta']['sample'] == 'value'
         assert item['meta']['complex']['key1'] == 'value1'
+
+    def testAnnotationWithGirderIdHandler(self, server, fsAssetstore, admin):
+        file = utilities.uploadExternalFile('Easy1.png', admin, fsAssetstore)
+        item = Item().load(file['itemId'], user=admin)
+        utilities.uploadExternalFile(
+            'Easy1.png', admin, fsAssetstore, reference=json.dumps({
+                'identifier': 'ImageRecord1',
+                'uuid': '12345',
+                'userId': str(admin['_id']),
+                'itemId': str(item['_id']),
+                'fileId': str(file['_id']),
+            }))
+        assert Annotation().findOne({'itemId': item['_id']}) is None
+        utilities.uploadTestFile(
+            'sample_girder_id.anot', admin, fsAssetstore, reference=json.dumps({
+                'identifier': 'IsAnAnnotationFile',
+                'uuid': '12345',
+                'userId': str(admin['_id']),
+                'itemId': str(item['_id']),
+                'fileId': str(file['_id']),
+            }))
+        starttime = time.time()
+        while time.time() < starttime + 10:
+            if Annotation().findOne({'itemId': item['_id']}) is not None:
+                break
+            time.sleep(0.1)
+        assert Annotation().findOne({'itemId': item['_id']}) is not None
+
+    def testAnnotationWithGirderIdHandlerAltOrder(self, server, fsAssetstore, admin):
+        file = utilities.uploadExternalFile('Easy1.png', admin, fsAssetstore)
+        item = Item().load(file['itemId'], user=admin)
+        utilities.uploadTestFile(
+            'sample_girder_id.anot', admin, fsAssetstore, reference=json.dumps({
+                'identifier': 'IsAnAnnotationFile',
+                'uuid': '12346',
+                'userId': str(admin['_id']),
+                'itemId': str(item['_id']),
+                'fileId': str(file['_id']),
+            }))
+        assert Annotation().findOne({'itemId': item['_id']}) is None
+        utilities.uploadExternalFile(
+            'Easy1.png', admin, fsAssetstore, reference=json.dumps({
+                'identifier': 'ImageRecord1',
+                'uuid': '12346',
+                'userId': str(admin['_id']),
+                'itemId': str(item['_id']),
+                'fileId': str(file['_id']),
+            }))
+        starttime = time.time()
+        while time.time() < starttime + 10:
+            if Annotation().findOne({'itemId': item['_id']}) is not None:
+                break
+            time.sleep(0.1)
+        assert Annotation().findOne({'itemId': item['_id']}) is not None
