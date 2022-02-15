@@ -534,12 +534,37 @@ var ImageView = View.extend({
             return;
         }
         this._displayedRegion = value.slice();
-        this.showRegion({
-            left: parseFloat(value[0]),
-            right: parseFloat(value[0]) + parseFloat(value[2]),
-            top: parseFloat(value[1]),
-            bottom: parseFloat(value[1]) + parseFloat(value[3])
-        });
+        if (value.length === 4) {
+            this.showRegion({
+                left: parseFloat(value[0]),
+                right: parseFloat(value[0]) + parseFloat(value[2]),
+                top: parseFloat(value[1]),
+                bottom: parseFloat(value[1]) + parseFloat(value[3])
+            });
+        } else if (value.length === 6) {
+            this.showRegion({
+                left: parseFloat(value[0]) - parseFloat(value[3]),
+                right: parseFloat(value[0]) + parseFloat(value[3]),
+                top: parseFloat(value[1]) - parseFloat(value[4]),
+                bottom: parseFloat(value[1]) + parseFloat(value[4])
+            });
+        } else if (value.length >= 8) {
+            let points = [[]];
+            for (let idx = 0; idx < value.length - 1; idx += 2) {
+                if (parseFloat(value[idx]) === -1 && parseFloat(value[idx + 1]) === -1) {
+                    points.push([]);
+                } else {
+                    points[points.length - 1].push([parseFloat(value[idx]), parseFloat(value[idx + 1])]);
+                }
+            }
+            this.showRegion({
+                elements: points.map((pts) => ({
+                    type: 'polyline',
+                    closed: true,
+                    points: pts
+                }))
+            });
+        }
     },
 
     _resetRegion() {
@@ -572,33 +597,48 @@ var ImageView = View.extend({
             return;
         }
 
-        var center = [
-            (region.left + region.right) / 2,
-            (region.top + region.bottom) / 2,
-            0
-        ];
-        var width = region.right - region.left;
-        var height = region.bottom - region.top;
         var fillColor = 'rgba(255,255,255,0)';
         var lineColor = 'rgba(0,0,0,1)';
         var lineWidth = 2;
-        var rotation = 0;
-        var annotation = new AnnotationModel({
-            _id: 'region-selection',
-            name: 'Region',
-            annotation: {
-                elements: [{
-                    type: 'rectangle',
-                    center,
-                    width,
-                    height,
-                    rotation,
-                    fillColor,
-                    lineColor,
-                    lineWidth
-                }]
-            }
-        });
+        var annotation;
+        if (region.elements) {
+            annotation = new AnnotationModel({
+                _id: 'region-selection',
+                name: 'Region',
+                annotation: {
+                    elements: region.elements.map((entry) => _.extend({}, entry, {
+                        fillColor,
+                        lineColor,
+                        lineWidth
+                    }))
+                }
+            });
+        } else {
+            var center = [
+                (region.left + region.right) / 2,
+                (region.top + region.bottom) / 2,
+                0
+            ];
+            var width = region.right - region.left;
+            var height = region.bottom - region.top;
+            var rotation = 0;
+            annotation = new AnnotationModel({
+                _id: 'region-selection',
+                name: 'Region',
+                annotation: {
+                    elements: [{
+                        type: 'rectangle',
+                        center,
+                        width,
+                        height,
+                        rotation,
+                        fillColor,
+                        lineColor,
+                        lineWidth
+                    }]
+                }
+            });
+        }
         this.viewerWidget.drawAnnotation(annotation, { fetch: false });
     },
 
