@@ -191,6 +191,9 @@ var ImageView = View.extend({
             this.listenTo(this.viewerWidget, 'g:mouseClickAnnotation', this.mouseClickAnnotation);
             this.listenTo(this.viewerWidget, 'g:mouseResetAnnotation', this.mouseResetAnnotation);
 
+            // handle overlay layers
+            this.listenTo(this.viewerWidget, 'g:drawOverlayAnnotation', this.drawOverlayAnnotation);
+
             this.viewerWidget.on('g:imageRendered', () => {
                 events.trigger('h:imageOpened', this.model);
                 // store a reference to the underlying viewer
@@ -663,6 +666,20 @@ var ImageView = View.extend({
     mouseResetAnnotation() {
         if (this.popover.collection.length) {
             this.popover.collection.reset();
+        }
+    },
+
+    drawOverlayAnnotation(overlayElement, overlayLayer) {
+        if (overlayElement && overlayElement.type === 'pixelmap') {
+            // If a pixelmap overlay is drawn on the base image, add some interactivity
+            overlayLayer.geoOn(geo.event.feature.mouseclick, function (event) {
+                const index = overlayElement.boundaries ? (event.index - event.index % 2) : event.index;
+                const offset = overlayElement.boundaries ? 1 : 0;
+                const data = overlayLayer.data();
+                const categories = overlayElement.categories;
+                data[index] = (data[index] + 1) % categories.length;
+                overlayLayer.indexModified(index, index + offset).draw();
+            });
         }
     },
 

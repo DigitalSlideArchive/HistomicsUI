@@ -57,6 +57,10 @@ var DrawWidget = Panel.extend({
                 this._groups.get(this._style.id).save();
             }
         });
+        if (this.collection.models.filter((element) => element.attributes.type === 'pixelmap').length > 0) {
+            // Add a style group for each pixelmap element
+            this._addPixelmapStyles();
+        }
         this.on('h:mouseon', (model) => {
             if (model && model.id) {
                 this._highlighted[model.id] = true;
@@ -249,6 +253,10 @@ var DrawWidget = Panel.extend({
         }
     },
 
+    getStyleGroup() {
+        return this._style;
+    },
+
     _styleGroupEditor() {
         var dlg = editStyleGroups(this._style, this._groups);
         dlg.$el.on('hidden.bs.modal', () => {
@@ -272,6 +280,21 @@ var DrawWidget = Panel.extend({
             'get', 'group'
         );
         this.annotation.set('groups', groups);
+    },
+
+    _addPixelmapStyles() {
+        let pixelmapElements = this.collection.models.filter((element) => element.attributes.type === 'pixelmap');
+        pixelmapElements = pixelmapElements.map((element) => element.attributes);
+        _.forEach(pixelmapElements, (element) => {
+            _.forEach(element.categories, (category, idx) => {
+                const style = new StyleModel({
+                    id: `${idx}-${category.label || 'no_label'}-${element.id}`,
+                    lineColor: category.strokeColor,
+                    fillColor: category.fillColor,
+                });
+                this._groups.add(style.toJSON());
+            });
+        });
     }
 });
 
