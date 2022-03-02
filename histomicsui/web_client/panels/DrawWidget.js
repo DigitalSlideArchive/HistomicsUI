@@ -8,6 +8,7 @@ import Panel from '@girder/slicer_cli_web/views/Panel';
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
+import addPixelmapCategory from '../dialogs/addPixelmapCategory';
 import editStyleGroups from '../dialogs/editStyleGroups';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import '../stylesheets/panels/drawWidget.styl';
@@ -19,6 +20,7 @@ import '../stylesheets/panels/drawWidget.styl';
 var DrawWidget = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .h-edit-element': 'editElement',
+        'click .h-add-category': 'addPixelmapCategory',
         'click .h-delete-element': 'deleteElement',
         'click .h-draw': 'drawElement',
         'change .h-style-group': '_setStyleGroup',
@@ -57,10 +59,10 @@ var DrawWidget = Panel.extend({
                 this._groups.get(this._style.id).save();
             }
         });
-        if (this.collection.models.filter((element) => element.attributes.type === 'pixelmap').length > 0) {
-            // Add a style group for each pixelmap element
-            this._addPixelmapStyles();
-        }
+        // make sure we have a style group for categories belonging to pixelmap elements
+        this.collection.models.filter((element) => element.get('type') === 'pixelmap').forEach((pixelmap) => {
+            this._addPixelmapStyles(pixelmap.get('id'));
+        });
         this.on('h:mouseon', (model) => {
             if (model && model.id) {
                 this._highlighted[model.id] = true;
@@ -167,6 +169,19 @@ var DrawWidget = Panel.extend({
             label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
             this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
             this._skipRenderHTML = true;
+        });
+    },
+
+    /**
+     * Respond to a click on the "add category" button by rendering
+     * the AddPixelmapCategory modal dialog.
+     * @param {object} evt information about the event triggering the callback
+     */
+    addPixelmapCategory(evt) {
+        let element = this.collection.get(this._getId(evt));
+        let dialog = addPixelmapCategory(element);
+        this.listenTo(dialog, 'h:addPixelmapCategory', (pixelmap) => {
+            this._addPixelmapStyles(pixelmap.get('id'));
         });
     },
 
@@ -282,18 +297,19 @@ var DrawWidget = Panel.extend({
         this.annotation.set('groups', groups);
     },
 
-    _addPixelmapStyles() {
-        let pixelmapElements = this.collection.models.filter((element) => element.attributes.type === 'pixelmap');
-        pixelmapElements = pixelmapElements.map((element) => element.attributes);
-        _.forEach(pixelmapElements, (element) => {
-            _.forEach(element.categories, (category, idx) => {
-                const style = new StyleModel({
-                    id: `${idx}-${category.label || 'no_label'}-${element.id}`,
-                    lineColor: category.strokeColor,
-                    fillColor: category.fillColor,
-                });
-                this._groups.add(style.toJSON());
+    /**
+     * Create style groups for each category given a pixelmap
+     * @param {string} pixelmapId ID of the pixelmap element
+     */
+    _addPixelmapStyles(pixelmapId) {
+        const pixelmap = this.collection.get(pixelmapId)
+        _.each(pixelmap.get('categories'), (category, idx) => {
+            const style = new StyleModel({
+                id: `${pixelmapId}-${idx}-${category.label || 'no_label'}`,
+                lineColor: category.strokeColor,
+                fillColor: category.fillColor
             });
+            this._groups.add(style.toJSON());
         });
     }
 });
