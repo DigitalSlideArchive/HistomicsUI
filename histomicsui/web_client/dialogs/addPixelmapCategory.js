@@ -40,13 +40,16 @@ var AddPixelmapCategory = View.extend({
         }
 
         const strokeColor = this.$('#h-category-stroke-color').val();
-        if (strokeColor) {
+        if (!strokeColor && this.pixelmap.get('boundaries')) {
+            validation += 'This pixelmap contains boundaries. Stroke color cannot be empty. '
+            this.$('#h-category-stroke-color').parent().addClass('has-error');
+        } else {
             newCategory.strokeColor = this.convertColor(strokeColor);
         }
 
         const fillColor = this.$('#h-category-fill-color').val();
         if (!fillColor) {
-            validation += 'No fill color chosen. ';
+            validation += 'Fill color cannot be empty. ';
             this.$('#h-category-fill-color').parent().addClass('has-error');
         } else {
             newCategory.fillColor = this.convertColor(fillColor);

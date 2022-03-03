@@ -266,6 +266,7 @@ var DrawWidget = Panel.extend({
         if (!this._style.get('group') && this._style.id !== 'default') {
             this._style.set('group', this._style.id);
         }
+        this.trigger('h:changeStyleGroup', this._groups.get(this.$('.h-style-group').val()));
     },
 
     getStyleGroup() {

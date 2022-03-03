@@ -50,6 +50,10 @@ var ImageView = View.extend({
         this.selectedAnnotation = new AnnotationModel({ _id: 'selected' });
         this.selectedElements = this.selectedAnnotation.elements();
 
+        // use an object to keep track of overlay elements currently drawn.
+        // the keys for this object should be the overlay element ids
+        this._currentOverlayLayers = {};
+
         // Allow zooming this many powers of 2 more than native pixel resolution
         this._increaseZoom2x = 1;
         this._increaseZoom2xRange = {min: 1, max: 4};
@@ -522,6 +526,16 @@ var ImageView = View.extend({
         this.viewerWidget.drawAnnotation(annotation);
     },
 
+    /**
+     * Handle the DrawWidget changing style group. This is used to
+     * set up events for interacting with any pixelmaps that may be
+     * part of the selected annotation.
+     * @param {object} newStyle the new styleGroup of the DrawWidget
+     */
+    _handleStyleGroupChange(newStyle) {
+        this._updatePixelmapEvents(newStyle);
+    },
+
     _highlightAnnotationForInteractiveMode(annotation, element) {
         if (!this.annotationSelector.interactiveMode()) {
             return;
@@ -669,18 +683,88 @@ var ImageView = View.extend({
         }
     },
 
-    drawOverlayAnnotation(overlayElement, overlayLayer) {
-        if (overlayElement && overlayElement.type === 'pixelmap') {
-            // If a pixelmap overlay is drawn on the base image, add some interactivity
-            overlayLayer.geoOn(geo.event.feature.mouseclick, function (event) {
+    /**
+     * If the active style group corresponds to a category on a
+     * drawn pixelmap, add a click event to that pixelmap to change
+     * categories of pixelmap regions.
+     * @param {object} style The active style group
+     */
+    _updatePixelmapEvents(style) {
+        // remove current events from pixelmaps.
+        for (const layerId in this._currentOverlayLayers) {
+            if (this._currentOverlayLayers[layerId].element.type === 'pixelmap') {
+                this._currentOverlayLayers[layerId].layer.geoOff(geo.event.feature.mouseclick);
+                this._currentOverlayLayers[layerId].layer.geoOff(geo.event.feature.mousemove);
+            }
+        }
+
+        // check if new style belongs to a pixelmap. it will be of form
+        // <element id>-<index>-<label>
+        const styleParts = style.get('id').split('-');
+        if (styleParts.length !== 3) { return; }
+        if (parseInt(styleParts[1]) === NaN) { return; }
+        const elementId = styleParts[0];
+        const newIndex = styleParts[1];
+        if (this._currentOverlayLayers[elementId] && this._currentOverlayLayers[elementId].layer) {
+            const overlayElement = this._currentOverlayLayers[elementId].element;
+            const overlayLayer = this._currentOverlayLayers[elementId].layer;
+
+            // add event for clicking a single superpixel
+            this._currentOverlayLayers[elementId].layer.geoOn(geo.event.feature.mouseclick, function (event) {
                 const index = overlayElement.boundaries ? (event.index - event.index % 2) : event.index;
                 const offset = overlayElement.boundaries ? 1 : 0;
                 const data = overlayLayer.data();
                 const categories = overlayElement.categories;
-                data[index] = (data[index] + 1) % categories.length;
+                const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
+                data[index] =  data[index + offset] = newValue;
+                overlayLayer.indexModified(index, index + offset).draw();
+            });
+
+            this._currentOverlayLayers[elementId].layer.map().interactor().removeAction(geo.geo_action.zoomselect);
+
+            // add event for shift+click+drag
+            this._currentOverlayLayers[elementId].layer.geoOn(geo.event.feature.mousemove, function (event) {
+                if (!event.mouse.modifiers.shift || !event.mouse.buttons.left) {
+                    return;
+                }
+                const index = overlayElement.boundaries ? (event.index - event.index % 2) : event.index;
+                const offset = overlayElement.boundaries ? 1 : 0;
+                const data = overlayLayer.data();
+                const categories = overlayElement.categories;
+                const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
+                data[index] =  data[index + offset] = newValue;
                 overlayLayer.indexModified(index, index + offset).draw();
             });
         }
+
+    },
+
+
+    drawOverlayAnnotation(overlayElement, overlayLayer) {
+        this._currentOverlayLayers[overlayElement.id] = {
+            element: overlayElement,
+            layer: overlayLayer,
+        };
+        if (overlayElement.type === 'pixelmap') {
+            // check if there's an active style group
+            if (this.drawWidget) {
+                const style = this.drawWidget.getStyleGroup();
+                // update events on overlay layers
+                this._updatePixelmapEvents(style);
+            }
+        }
+
+        // if (overlayElement && overlayElement.type === 'pixelmap') {
+            // // If a pixelmap overlay is drawn on the base image, add some interactivity
+            // overlayLayer.geoOn(geo.event.feature.mouseclick, function (event) {
+                // const index = overlayElement.boundaries ? (event.index - event.index % 2) : event.index;
+                // const offset = overlayElement.boundaries ? 1 : 0;
+                // const data = overlayLayer.data();
+                // const categories = overlayElement.categories;
+                // data[index] = (data[index] + 1) % categories.length;
+                // overlayLayer.indexModified(index, index + offset).draw();
+            // });
+        // }
     },
 
     mouseClickAnnotation(element, annotationId, evt) {
@@ -784,6 +868,7 @@ var ImageView = View.extend({
                 viewer: this.viewerWidget
             }).render();
             this.listenTo(this.drawWidget, 'h:redraw', this._redrawAnnotation);
+            this.listenTo(this.drawWidget, 'h:changeStyleGroup', this._handleStyleGroupChange);
             this.$('.h-draw-widget').removeClass('hidden');
         }
     },
