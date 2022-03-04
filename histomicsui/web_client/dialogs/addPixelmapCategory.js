@@ -1,6 +1,6 @@
 import tinycolor from 'tinycolor2';
 
-import View from '@girder/core/views/View'
+import View from '@girder/core/views/View';
 
 import addPixelmapCategory from '../templates/dialogs/addPixelmapCategory.pug';
 import '@girder/core/utilities/jquery/girderModal';
@@ -41,7 +41,7 @@ var AddPixelmapCategory = View.extend({
 
         const strokeColor = this.$('#h-category-stroke-color').val();
         if (!strokeColor && this.pixelmap.get('boundaries')) {
-            validation += 'This pixelmap contains boundaries. Stroke color cannot be empty. '
+            validation += 'This pixelmap contains boundaries. Stroke color cannot be empty. ';
             this.$('#h-category-stroke-color').parent().addClass('has-error');
         } else {
             newCategory.strokeColor = this.convertColor(strokeColor);

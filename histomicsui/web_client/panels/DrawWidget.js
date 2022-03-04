@@ -303,7 +303,7 @@ var DrawWidget = Panel.extend({
      * @param {string} pixelmapId ID of the pixelmap element
      */
     _addPixelmapStyles(pixelmapId) {
-        const pixelmap = this.collection.get(pixelmapId)
+        const pixelmap = this.collection.get(pixelmapId);
         _.each(pixelmap.get('categories'), (category, idx) => {
             const style = new StyleModel({
                 id: `${pixelmapId}-${idx}-${category.label || 'no_label'}`,

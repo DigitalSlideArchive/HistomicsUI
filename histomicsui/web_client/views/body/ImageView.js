@@ -289,6 +289,7 @@ var ImageView = View.extend({
         if (this.viewerWidget) {
             this.viewerWidget.destroy();
         }
+        // TODO if active superpixel layers, save the data
         this.viewerWidget = null;
         events.trigger('h:imageOpened', null);
         $(document).off('.h-image-view');
@@ -513,6 +514,7 @@ var ImageView = View.extend({
                 return null;
             });
         } else {
+            // TODO remove overlay layers and save pixelmap data before removal
             this.viewerWidget.removeAnnotation(annotation);
         }
     },
@@ -702,7 +704,7 @@ var ImageView = View.extend({
         // <element id>-<index>-<label>
         const styleParts = style.get('id').split('-');
         if (styleParts.length !== 3) { return; }
-        if (parseInt(styleParts[1]) === NaN) { return; }
+        if (isNaN(parseInt(styleParts[1]))) { return; }
         const elementId = styleParts[0];
         const newIndex = styleParts[1];
         if (this._currentOverlayLayers[elementId] && this._currentOverlayLayers[elementId].layer) {
@@ -716,7 +718,7 @@ var ImageView = View.extend({
                 const data = overlayLayer.data();
                 const categories = overlayElement.categories;
                 const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
-                data[index] =  data[index + offset] = newValue;
+                data[index] = data[index + offset] = newValue;
                 overlayLayer.indexModified(index, index + offset).draw();
             });
 
@@ -732,18 +734,16 @@ var ImageView = View.extend({
                 const data = overlayLayer.data();
                 const categories = overlayElement.categories;
                 const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
-                data[index] =  data[index + offset] = newValue;
+                data[index] = data[index + offset] = newValue;
                 overlayLayer.indexModified(index, index + offset).draw();
             });
         }
-
     },
-
 
     drawOverlayAnnotation(overlayElement, overlayLayer) {
         this._currentOverlayLayers[overlayElement.id] = {
             element: overlayElement,
-            layer: overlayLayer,
+            layer: overlayLayer
         };
         if (overlayElement.type === 'pixelmap') {
             // check if there's an active style group
@@ -753,18 +753,6 @@ var ImageView = View.extend({
                 this._updatePixelmapEvents(style);
             }
         }
-
-        // if (overlayElement && overlayElement.type === 'pixelmap') {
-            // // If a pixelmap overlay is drawn on the base image, add some interactivity
-            // overlayLayer.geoOn(geo.event.feature.mouseclick, function (event) {
-                // const index = overlayElement.boundaries ? (event.index - event.index % 2) : event.index;
-                // const offset = overlayElement.boundaries ? 1 : 0;
-                // const data = overlayLayer.data();
-                // const categories = overlayElement.categories;
-                // data[index] = (data[index] + 1) % categories.length;
-                // overlayLayer.indexModified(index, index + offset).draw();
-            // });
-        // }
     },
 
     mouseClickAnnotation(element, annotationId, evt) {
