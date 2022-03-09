@@ -51,10 +51,6 @@ var ImageView = View.extend({
         this.selectedAnnotation = new AnnotationModel({ _id: 'selected' });
         this.selectedElements = this.selectedAnnotation.elements();
 
-        // use an object to keep track of overlay elements currently drawn.
-        // the keys for this object should be the overlay element ids
-        this._currentOverlayLayers = {};
-
         // Allow zooming this many powers of 2 more than native pixel resolution
         this._increaseZoom2x = 1;
         this._increaseZoom2xRange = {min: 1, max: 4};
@@ -197,8 +193,6 @@ var ImageView = View.extend({
             this.listenTo(this.viewerWidget, 'g:mouseResetAnnotation', this.mouseResetAnnotation);
 
             // handle overlay events
-            this.listenTo(this.viewerWidget, 'g:drawOverlayAnnotation', this.drawOverlayAnnotation);
-            this.listenTo(this.viewerWidget, 'g:removeOverlayAnnotation', this.removeOverlayAnnotation);
             this.listenTo(this.viewerWidget, 'g:mouseClickAnnotationOverlay', this.mouseClickOverlay);
             this.listenTo(this.viewerWidget, 'g:mouseOverAnnotationOverlay', this.mouseOverOverlay);
 
@@ -747,17 +741,6 @@ var ImageView = View.extend({
             const pixelmapElement = this.activeAnnotation.elements().models.find((model) => model.get('id') === overlayElement.id);
             this._debounceUpdatePixelmapValues(pixelmapElement, overlayLayer);
         }
-    },
-
-    drawOverlayAnnotation(overlayElement, overlayLayer) {
-        this._currentOverlayLayers[overlayElement.id] = {
-            element: overlayElement,
-            layer: overlayLayer
-        };
-    },
-
-    removeOverlayAnnotation(overlayElement, overlayLayer) {
-        delete this._currentOverlayLayers[overlayElement.id];
     },
 
     mouseClickAnnotation(element, annotationId, evt) {
