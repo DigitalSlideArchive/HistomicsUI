@@ -19,6 +19,7 @@ import { convert as convertFromGeojson } from '@girder/large_image_annotation/an
 
 import AnnotationContextMenu from '../popover/AnnotationContextMenu';
 import AnnotationPopover from '../popover/AnnotationPopover';
+import PixelmapContextMenu from '../popover/PixelmapContextMenu';
 import AnnotationSelector from '../../panels/AnnotationSelector';
 import OverviewWidget from '../../panels/OverviewWidget';
 import ZoomWidget from '../../panels/ZoomWidget';
@@ -96,6 +97,11 @@ var ImageView = View.extend({
             parentView: this,
             collection: this.selectedElements
         });
+        this.pixelmapContextMenu = new PixelmapContextMenu({
+            parentView: this,
+            pixelmap: this._activePixelMap,
+            dataIndex: -1,
+        });
         this.listenTo(this, 'h:styleGroupsEdited', () => {
             this.contextMenu.refetchStyles();
         });
@@ -125,6 +131,8 @@ var ImageView = View.extend({
         this.listenTo(this.contextMenu, 'h:close', this._closeContextMenu);
         this.listenTo(this.selectedElements, 'h:save', this._saveSelection);
         this.listenTo(this.selectedElements, 'h:remove', this._removeSelection);
+        this.listenTo(this.pixelmapContextMenu, 'h:update', this._handlePixelmapContextMenu);
+        this.listenTo(this.pixelmapContextMenu, 'h:close', this._closePixelmapContextMenu);
 
         this.listenTo(events, 's:widgetChanged:region', this.widgetRegion);
         this.listenTo(events, 'g:login g:logout.success g:logout.error', () => {
@@ -139,6 +147,11 @@ var ImageView = View.extend({
                 return;
             }
             this._closeContextMenu();
+
+            if ($(evt.target).parents('#h-pixelmap-context-menu').length) {
+                return;
+            }
+            this._closePixelmapContextMenu();
         });
         $(document).on('keydown.h-image-view', (evt) => {
             if (evt.keyCode === 27) {
@@ -161,6 +174,7 @@ var ImageView = View.extend({
         }
         this.$el.html(imageTemplate());
         this.contextMenu.setElement(this.$('#h-annotation-context-menu')).render();
+        this.pixelmapContextMenu.setElement(this.$('#h-pixelmap-context-menu')).render();
 
         if (this.model.id) {
             this._openId = this.model.id;
@@ -288,7 +302,6 @@ var ImageView = View.extend({
         if (this.viewerWidget) {
             this.viewerWidget.destroy();
         }
-        // TODO if active superpixel layers, save the data
         this.viewerWidget = null;
         events.trigger('h:imageOpened', null);
         $(document).off('.h-image-view');
@@ -690,7 +703,7 @@ var ImageView = View.extend({
         if (styleIdParts[0] !== annotationElement.id
             || isNaN(categoryIndex)
             || categoryIndex < 0
-            || categoryIndex >= annotationElement.categories.length) {
+            || categoryIndex >= annotationElement.get('categories').length) {
             return undefined;
         }
         return categoryIndex;
@@ -704,7 +717,27 @@ var ImageView = View.extend({
         pixelmapElementModel.set('values', newData);
     },
 
+    _closePixelmapContextMenu() {
+        this.$('#h-pixelmap-context-menu').addClass('hidden');
+    },
+
+    _handlePixelmapContextMenu(pixelmap, dataIndex, categoryIndex) {
+        const pixelmapLayer = this.viewer.layers().find((layer) => layer.id() === pixelmap.get('id'));
+        if (!pixelmapLayer || dataIndex < 0) {
+            return;
+        }
+        const layerDataIndex = pixelmap.get('boundaries') ? (dataIndex - dataIndex % 2) : dataIndex;
+        const offset = pixelmap.get('boundaries') ? 1 : 0;
+        const data = pixelmapLayer.data();
+        const categories = pixelmap.get('categories');
+        const newValue = (categoryIndex < 0 || categoryIndex >= categories.length) ? 0 : categoryIndex;
+        data[layerDataIndex] = data[layerDataIndex + offset] = newValue;
+        pixelmapLayer.indexModified(layerDataIndex, layerDataIndex + offset).draw();
+        this._debounceUpdatePixelmapValues(pixelmap, pixelmapLayer);
+    },
+
     mouseClickOverlay(overlayElement, overlayLayer, event) {
+        if (overlayElement.get('type') !== 'pixelmap') { return; }
         const overlayAnnotationIsSelected = this.activeAnnotation.elements().models.map((model) => model.get('id')).includes(overlayElement.id);
         if (event.mouse.buttonsDown.left && this.drawWidget && overlayAnnotationIsSelected) {
             // left click. check what the active style is and if it applies
@@ -712,15 +745,42 @@ var ImageView = View.extend({
             const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
             if (newIndex === undefined) { return; }
 
-            const index = overlayElement.boundaries ? (event.index - event.index % 2) : event.index;
-            const offset = overlayElement.boundaries ? 1 : 0;
+            const index = overlayElement.get('boundaries') ? (event.index - event.index % 2) : event.index;
+            const offset = overlayElement.get('boundaries') ? 1 : 0;
             const data = overlayLayer.data();
-            const categories = overlayElement.categories;
+            const categories = overlayElement.get('categories');
             const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
             data[index] = data[index + offset] = newValue;
             overlayLayer.indexModified(index, index + offset).draw();
-            const pixelmapElement = this.activeAnnotation.elements().models.find((model) => model.get('id') === overlayElement.id);
-            this._debounceUpdatePixelmapValues(pixelmapElement, overlayLayer);
+            this._debounceUpdatePixelmapValues(overlayElement, overlayLayer);
+        } else if (event.mouse.buttonsDown.right) {
+            // show pixelmap context menu
+            this._activePixelMap = overlayElement;
+            this.pixelmapContextMenu.updatePixelmap(overlayElement, event.index);
+            window.setTimeout(() => {
+                const $window = $(window);
+                const menu = this.$('#h-pixelmap-context-menu');
+                const position = event.mouse.page;
+                menu.removeClass('hidden');
+                // adjust the vertical position of the context menu
+                // == 0, above the bottom; < 0, number of pixels below the bottom
+                // the menu height is bigger by 20 pixels due to extra padding
+                const belowWindow = Math.min(0, $window.height() - position.y - menu.height() + 20);
+                // ensure the top is not above the top of the window
+                const top = Math.max(0, position.y + belowWindow);
+
+                // Put the context menu to the left of the cursor if it is too close
+                // to the right edge.
+                const windowWidth = $window.width();
+                const menuWidth = menu.width();
+                let left = position.x;
+                if (left + menuWidth > windowWidth) {
+                    left -= menuWidth;
+                }
+                left = Math.max(left, 0);
+
+                menu.css({ left, top });
+            }, 1);
         }
     },
 
@@ -731,25 +791,22 @@ var ImageView = View.extend({
             const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
             if (newIndex === undefined) { return; }
 
-            const index = overlayElement.boundaries ? (event.index - event.index % 2) : event.index;
-            const offset = overlayElement.boundaries ? 1 : 0;
+            const index = overlayElement.get('boundaries') ? (event.index - event.index % 2) : event.index;
+            const offset = overlayElement.get('boundaries') ? 1 : 0;
             const data = overlayLayer.data();
-            const categories = overlayElement.categories;
+            const categories = overlayElement.get('categories');
             const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
             data[index] = data[index + offset] = newValue;
             overlayLayer.indexModified(index, index + offset).draw();
-            const pixelmapElement = this.activeAnnotation.elements().models.find((model) => model.get('id') === overlayElement.id);
-            this._debounceUpdatePixelmapValues(pixelmapElement, overlayLayer);
+            this._debounceUpdatePixelmapValues(overlayElement, overlayLayer);
         }
     },
 
     mouseClickAnnotation(element, annotationId, evt) {
-        console.log({ element, annotationId, evt });
         if (!element.annotation) {
             // This is an instance of "selectedElements" and should be ignored.
             return;
         }
-        // TODO invetigate here
 
         /*
          * Click events on geojs features are triggered once per feature in a single animation frame.

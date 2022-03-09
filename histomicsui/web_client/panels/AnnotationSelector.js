@@ -375,7 +375,6 @@ var AnnotationSelector = Panel.extend({
             annotation._saving = true;
             annotation._saveAgain = false;
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
-                console.log('redrawing in _saveAnnotation');
                 this.trigger('h:redraw', annotation);
             }
             annotation.save().fail(() => {
