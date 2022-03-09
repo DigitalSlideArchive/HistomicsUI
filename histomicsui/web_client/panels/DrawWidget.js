@@ -77,7 +77,7 @@ var DrawWidget = Panel.extend({
         });
     },
 
-    render() {
+    render(updatedElement) {
         this.$('[data-toggle="tooltip"]').tooltip('destroy');
         if (!this.viewer) {
             this.$el.empty();
@@ -85,7 +85,9 @@ var DrawWidget = Panel.extend({
             return;
         }
         const name = (this.annotation.get('annotation') || {}).name || 'Untitled';
-        this.trigger('h:redraw', this.annotation);
+        if (!updatedElement || (updatedElement.attributes && updatedElement.get('type') !== 'pixelmap')) {
+            this.trigger('h:redraw', this.annotation);
+        }
         if (this._skipRenderHTML) {
             delete this._skipRenderHTML;
         } else {

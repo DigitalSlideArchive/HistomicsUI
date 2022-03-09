@@ -47,6 +47,7 @@ var ImageView = View.extend({
         this._displayedRegion = null;
         this._currentMousePosition = null;
         this._selectElementsByRegionCanceled = false;
+        this._debounceUpdatePixelmapValues = _.debounce(this._updatePixelmapValues, 500);
         this.selectedAnnotation = new AnnotationModel({ _id: 'selected' });
         this.selectedElements = this.selectedAnnotation.elements();
 
@@ -701,6 +702,14 @@ var ImageView = View.extend({
         return categoryIndex;
     },
 
+    _updatePixelmapValues(pixelmapElementModel, layer) {
+        let newData = layer.data();
+        if (pixelmapElementModel.get('boundaries')) {
+            newData = newData.filter((d, i) => i % 2 === 0);
+        }
+        pixelmapElementModel.set('values', newData);
+    },
+
     mouseClickOverlay(overlayElement, overlayLayer, event) {
         const overlayAnnotationIsSelected = this.activeAnnotation.elements().models.map((model) => model.get('id')).includes(overlayElement.id);
         if (event.mouse.buttonsDown.left && this.drawWidget && overlayAnnotationIsSelected) {
@@ -716,11 +725,14 @@ var ImageView = View.extend({
             const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
             data[index] = data[index + offset] = newValue;
             overlayLayer.indexModified(index, index + offset).draw();
+            const pixelmapElement = this.activeAnnotation.elements().models.find((model) => model.get('id') === overlayElement.id);
+            this._debounceUpdatePixelmapValues(pixelmapElement, overlayLayer);
         }
     },
 
     mouseOverOverlay(overlayElement, overlayLayer, event) {
-        if (event.mouse.buttons.left && event.mouse.modifiers.shift && this.drawWidget) {
+        const overlayAnnotationIsSelected = this.activeAnnotation.elements().models.map((model) => model.get('id')).includes(overlayElement.id);
+        if (event.mouse.buttons.left && event.mouse.modifiers.shift && this.drawWidget && overlayAnnotationIsSelected) {
             const style = this.drawWidget.getStyleGroup();
             const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
             if (newIndex === undefined) { return; }
@@ -732,6 +744,8 @@ var ImageView = View.extend({
             const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
             data[index] = data[index + offset] = newValue;
             overlayLayer.indexModified(index, index + offset).draw();
+            const pixelmapElement = this.activeAnnotation.elements().models.find((model) => model.get('id') === overlayElement.id);
+            this._debounceUpdatePixelmapValues(pixelmapElement, overlayLayer);
         }
     },
 
