@@ -100,7 +100,7 @@ var ImageView = View.extend({
         this.pixelmapContextMenu = new PixelmapContextMenu({
             parentView: this,
             pixelmap: this._activePixelMap,
-            dataIndex: -1,
+            dataIndex: -1
         });
         this.listenTo(this, 'h:styleGroupsEdited', () => {
             this.contextMenu.refetchStyles();
@@ -700,10 +700,10 @@ var ImageView = View.extend({
             return undefined;
         }
         const categoryIndex = parseInt(styleIdParts[1]);
-        if (styleIdParts[0] !== annotationElement.id
-            || isNaN(categoryIndex)
-            || categoryIndex < 0
-            || categoryIndex >= annotationElement.get('categories').length) {
+        if (styleIdParts[0] !== annotationElement.id ||
+            isNaN(categoryIndex) ||
+            categoryIndex < 0 ||
+            categoryIndex >= annotationElement.get('categories').length) {
             return undefined;
         }
         return categoryIndex;
