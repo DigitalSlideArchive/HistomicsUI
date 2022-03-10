@@ -345,6 +345,7 @@ var MetadataWidget = Panel.extend({
             this.addMetadata(event, 'simple');
         },
         'click .h-panel-maximize': function (event) {
+            console.log(this);
             this.expand();
             this.$('.s-panel-content').addClass('in');
             let panelElem = this.$el.closest('.s-panel');
