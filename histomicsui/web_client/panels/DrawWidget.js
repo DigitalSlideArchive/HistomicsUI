@@ -184,6 +184,7 @@ var DrawWidget = Panel.extend({
         let dialog = addPixelmapCategory(element);
         this.listenTo(dialog, 'h:addPixelmapCategory', (pixelmap) => {
             this._addPixelmapStyles(pixelmap.get('id'));
+            this.trigger('h:redraw', this.annotation);
         });
     },
 
