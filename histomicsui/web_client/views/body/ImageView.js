@@ -738,7 +738,7 @@ var ImageView = View.extend({
 
     mouseClickOverlay(overlayElement, overlayLayer, event) {
         if (overlayElement.get('type') !== 'pixelmap') { return; }
-        const overlayAnnotationIsSelected = this.activeAnnotation.elements().models.map((model) => model.get('id')).includes(overlayElement.id);
+        const overlayAnnotationIsSelected = this.activeAnnotation && this.activeAnnotation.elements().get(overlayElement.id);
         if (event.mouse.buttonsDown.left && this.drawWidget && overlayAnnotationIsSelected) {
             // left click. check what the active style is and if it applies
             const style = this.drawWidget.getStyleGroup();
@@ -785,7 +785,7 @@ var ImageView = View.extend({
     },
 
     mouseOverOverlay(overlayElement, overlayLayer, event) {
-        const overlayAnnotationIsSelected = this.activeAnnotation.elements().models.map((model) => model.get('id')).includes(overlayElement.id);
+        const overlayAnnotationIsSelected = this.activeAnnotation && this.activeAnnotation.elements().get(overlayElement.id);
         if (event.mouse.buttons.left && event.mouse.modifiers.shift && this.drawWidget && overlayAnnotationIsSelected) {
             const style = this.drawWidget.getStyleGroup();
             const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
