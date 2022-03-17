@@ -692,6 +692,15 @@ var ImageView = View.extend({
         }
     },
 
+    getPixelmapElements() {
+        let allPixelmaps = [];
+        this.annotations.each((annotation) => {
+            const pixelmaps = annotation.elements().filter((element) => element.get('type') === 'pixelmap');
+            allPixelmaps = allPixelmaps.concat(pixelmaps);
+        });
+        return allPixelmaps;
+    },
+
     _getCategoryIndexFromStyleGroup(annotationElement, styleGroup) {
         // check if the style group is associated with an element (e.g. pixelmap)
         // and if it is, return the category index, undefined if not

@@ -32,6 +32,10 @@ const EditStyleGroups = View.extend({
         'change select': '_setStyle'
     },
 
+    initialize(settings) {
+        this.pixelmapIds = settings.pixelmapIds;
+    },
+
     render() {
         this.$('.h-colorpicker').colorpicker('destroy');
         this.$el.html(
@@ -39,11 +43,16 @@ const EditStyleGroups = View.extend({
                 collection: this.collection,
                 model: this.model,
                 newStyle: this._newStyle,
-                user: getCurrentUser() || {}
+                user: getCurrentUser() || {},
+                isPixelmapStyle: this.isPixelmapStyle()
             })
         );
         this.$('.h-colorpicker').colorpicker();
         return this;
+    },
+
+    isPixelmapStyle() {
+        return this.pixelmapIds.includes(this.model.get('id').split('-')[0]);
     },
 
     _setStyle(evt) {
@@ -262,16 +271,18 @@ const EditStyleGroupsDialog = View.extend({
         'click .h-cancel': '_cancelChanges'
     },
 
-    initialize() {
+    initialize(settings) {
         // save the collection and current model so we can restore everything
         // when we cancel
         this.originalCollectionData = this.collection.toJSON();
         this.originalModelData = this.model.toJSON();
         this.originalModelId = this.model.id;
+        this.pixelmapIds = settings.pixelmapIds;
         this.form = new EditStyleGroups({
             parentView: this,
             model: new StyleModel(this.model.toJSON()),
-            collection: this.collection
+            collection: this.collection,
+            pixelmapIds: this.pixelmapIds
         });
     },
 
@@ -284,9 +295,34 @@ const EditStyleGroupsDialog = View.extend({
 
     _submit(evt) {
         evt.preventDefault();
+        if (this.form.isPixelmapStyle()) {
+            this._submitPixelmapCategory();
+            return;
+        }
         this.model.set(this.form.model.toJSON());
         this.collection.add(this.form.model.toJSON(), {merge: true});
         this.collection.get(this.model.id).save();
+        this.$el.modal('hide');
+    },
+
+    _submitPixelmapCategory() {
+        let newLabel = this.form.$('#h-category-label').val();
+        let newCategoryStyle;
+        const id = this.form.$('.h-group-name :selected').val();
+        const modelIdParts = id.split('-');
+        const newId = [modelIdParts[0], modelIdParts[1], newLabel].join('-');
+        if (newId !== id) {
+            newCategoryStyle = new StyleModel({
+                id: newId,
+                lineColor: this.form.model.get('lineColor') || rgba(0, 0, 0, 0),
+                fillColor: this.form.model.get('fillColor') || rgba(0, 0, 0, 0)
+            });
+        } else {
+            this.model.set(this.form.model.toJSON());
+            this.collection.add(this.form.model.toJSON(), { merge: true });
+            this.collection.get(this.form.model.id).save();
+        }
+        this.trigger('h:updatePixelmapStyle', newId, id, newCategoryStyle || this.form.model);
         this.$el.modal('hide');
     },
 
@@ -310,11 +346,12 @@ const EditStyleGroupsDialog = View.extend({
  * @param {StyleGroupCollection} collection
  * @returns {EditStyleGroup} The dialog's view
  */
-function show(style, groups) {
+function show(style, groups, pixelmapIds) {
     const dialog = new EditStyleGroupsDialog({
         parentView: null,
         collection: groups,
         model: style,
+        pixelmapIds: pixelmapIds,
         el: $('#g-dialog-container')
     });
     return dialog.render();

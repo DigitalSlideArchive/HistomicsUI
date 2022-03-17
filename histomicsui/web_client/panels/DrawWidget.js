@@ -276,8 +276,29 @@ var DrawWidget = Panel.extend({
         return this._style;
     },
 
+    _handlePixelmapCategoryUpdate(newId, oldId, newStyle) {
+        const newIdParts = newId.split('-');
+        const elementToUpdate = this.parentView.getPixelmapElements().filter((element) => element.get('id') === newIdParts[0])[0];
+        if (!elementToUpdate) {
+            return;
+        }
+        const categories = JSON.parse(JSON.stringify(elementToUpdate.get('categories')));
+        categories[newIdParts[1]].label = newIdParts.slice(2).join('-');
+        categories[newIdParts[1]].strokeColor = newStyle.get('lineColor');
+        categories[newIdParts[1]].fillColor = newStyle.get('fillColor');
+        elementToUpdate.set('categories', categories);
+
+        const oldStyle = this._groups.get(oldId);
+        oldStyle.destroy();
+        this._groups.remove(oldStyle);
+        this._groups.add(newStyle.toJSON());
+        this._groups.get(newId).save();
+    },
+
     _styleGroupEditor() {
-        var dlg = editStyleGroups(this._style, this._groups);
+        const pixelmapIds = this.parentView.getPixelmapElements().map((ele) => ele.get('id'));
+        var dlg = editStyleGroups(this._style, this._groups, pixelmapIds);
+        this.listenTo(dlg, 'h:updatePixelmapStyle', this._handlePixelmapCategoryUpdate);
         dlg.$el.on('hidden.bs.modal', () => {
             this.render();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
