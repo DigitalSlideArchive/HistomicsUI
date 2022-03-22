@@ -24,9 +24,12 @@ var SaveAnnotation = View.extend({
         // clean up old colorpickers when rerendering
         this.$('.h-colorpicker').colorpicker('destroy');
 
-        const elementTypes = this.annotation.get('annotation').elements
-            .map((element) => element.type)
-            .filter((type, index, types) => types.indexOf(type) === index);
+        let elementTypes = [];
+        if (this.annotation.get('annotation').elements) {
+            elementTypes = this.annotation.get('annotation').elements
+                .map((element) => element.type)
+                .filter((type, index, types) => types.indexOf(type) === index);
+        }
         // should be updated when additional shape elements are supported
         const styleEditableElementTypes = ['point', 'polyline', 'rectangle', 'arrow', 'circle', 'ellipse'];
         const annotationHasEditableElements = _.filter(elementTypes, (type) => styleEditableElementTypes.includes(type)).length > 0;
