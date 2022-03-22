@@ -60,9 +60,14 @@ var DrawWidget = Panel.extend({
             }
         });
         // make sure we have a style group for categories belonging to pixelmap elements
-        this.collection.models.filter((element) => element.get('type') === 'pixelmap').forEach((pixelmap) => {
-            this._addPixelmapStyles(pixelmap.get('id'));
-        });
+        const pixelmaps = this.collection.models.filter((element) => element.get('type') === 'pixelmap');
+        if (pixelmaps.length > 0) {
+            pixelmaps.forEach((pixelmap) => {
+                // this._addPixelmapStyles(pixelmap.get('id'));
+                this._reconcilePixelmapCategories(pixelmap.get('id'));
+            });
+            this.trigger('h:redraw', this.annotation);
+        }
         this.on('h:mouseon', (model) => {
             if (model && model.id) {
                 this._highlighted[model.id] = true;
@@ -336,6 +341,73 @@ var DrawWidget = Panel.extend({
             });
             this._groups.add(style.toJSON());
         });
+    },
+
+    _reconcilePixelmapCategories(pixelmapId) {
+        const pixelmap = this.collection.get(pixelmapId);
+        const existingCategories = pixelmap.get('categories') || [];
+        const newCategories = [];
+        const newStyleGroups = [];
+
+        // update existing categories based on style groups,
+        // and create necessary style groups based on existing
+        // categories
+        _.forEach(existingCategories, (category) => {
+            const correspondingStyle = this._groups.get(category.label);
+            if (!correspondingStyle) {
+                const newStyle = new StyleModel({
+                    id: category.label,
+                    lineColor: category.strokeColor,
+                    fillColor: category.fillColor
+                });
+                newStyleGroups.push(newStyle);
+            } else {
+                category.strokeColor = correspondingStyle.get('lineColor');
+                category.fillColor = correspondingStyle.get('fillColor');
+            }
+            newCategories.push(category);
+        });
+
+        // create new categories based on existing style groups
+        this._groups.each((group) => {
+            console.log(group.get('id'));
+            const correspondingCategory = existingCategories.find((category) => (
+                category.label === group.get('id')));
+            if (!correspondingCategory) {
+                newCategories.push({
+                    label: group.get('id'),
+                    strokeColor: group.get('lineColor'),
+                    fillColor: group.get('fillColor')
+                });
+            }
+        });
+
+        _.forEach(newStyleGroups, (group) => {
+            this._groups.add(group);
+            this._groups.get(group.get('id')).save();
+        });
+
+        // build new categories array, adjust pixelmap's data array
+        const originalDefaultIndex = _.findIndex(newCategories, (category) => category.label === 'default');
+        // move the default category to the front of the array
+        const updatedCategories = _.filter(newCategories, (category) => category.label === 'default')
+            .concat(_.filter(newCategories, (category) => category.label !== 'default'));
+        pixelmap.set('categories', updatedCategories);
+        if (originalDefaultIndex !== 0) {
+            // if the default category was added or moved as part of reconcilation,
+            // increment all values in the data array to account for this change
+            const originalData = pixelmap.get('values');
+            const newData = _.map(originalData, (value) => {
+                if (value === originalDefaultIndex) {
+                    return 0;
+                }
+                if (value < originalDefaultIndex) {
+                    return value + 1;
+                }
+                return value;
+            });
+            pixelmap.set('values', newData);
+        }
     }
 });
 
