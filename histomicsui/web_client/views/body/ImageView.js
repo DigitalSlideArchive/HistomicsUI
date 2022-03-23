@@ -17,6 +17,9 @@ import AnnotationCollection from '@girder/large_image_annotation/collections/Ann
 import { convert as convertToGeojson } from '@girder/large_image_annotation/annotations';
 import { convert as convertFromGeojson } from '@girder/large_image_annotation/annotations/geojs';
 
+import StyleCollection from '../../collections/StyleCollection';
+import StyleModel from '../../models/StyleModel';
+
 import AnnotationContextMenu from '../popover/AnnotationContextMenu';
 import AnnotationPopover from '../popover/AnnotationPopover';
 import PixelmapContextMenu from '../popover/PixelmapContextMenu';
@@ -500,13 +503,100 @@ var ImageView = View.extend({
         this.viewer.rotation(rotation * Math.PI / 180);
     },
 
+    _reconcilePixelmapCategories(pixelmapId, groups, annotation) {
+        const pixelmap = annotation.elements().get(pixelmapId);
+        const existingCategories = pixelmap.get('categories') || [];
+        const newCategories = [];
+        const newStyleGroups = [];
+
+        // update existing categories based on style groups,
+        // and create necessary style groups based on existing
+        // categories
+        _.forEach(existingCategories, (category) => {
+            const correspondingStyle = groups.get(category.label);
+            if (!correspondingStyle) {
+                const newStyle = new StyleModel({
+                    id: category.label,
+                    lineColor: category.strokeColor,
+                    fillColor: category.fillColor
+                });
+                newStyleGroups.push(newStyle);
+            } else {
+                if (category.strokeColor !== correspondingStyle.get('lineColor')) {
+                    category.strokeColor = correspondingStyle.get('lineColor');
+                }
+                if (category.fillColor !== correspondingStyle.get('fillColor')) {
+                    category.fillColor = correspondingStyle.get('fillColor');
+                }
+            }
+            newCategories.push(category);
+        });
+
+        // create new categories based on existing style groups
+        groups.each((group) => {
+            const correspondingCategory = existingCategories.find((category) => (
+                category.label === group.get('id')));
+            if (!correspondingCategory) {
+                newCategories.push({
+                    label: group.get('id'),
+                    strokeColor: group.get('lineColor'),
+                    fillColor: group.get('fillColor')
+                });
+            }
+        });
+
+        _.forEach(newStyleGroups, (group) => {
+            groups.add(group);
+            groups.get(group.get('id')).save();
+        });
+
+        const originalDefaultIndex = _.findIndex(newCategories, (category) => category.label === 'default');
+        const updatedCategories = _.filter(newCategories, (category) => category.label === 'default')
+            .concat(_.filter(newCategories, (category) => category.label !== 'default'));
+        pixelmap.set('categories', updatedCategories);
+        if (originalDefaultIndex !== 0) {
+            // if the default category was added or moved as part of reconcilation,
+            // increment all values in the data array to account for this change
+            const originalData = pixelmap.get('values');
+            const newData = _.map(originalData, (value) => {
+                if (value === originalDefaultIndex) {
+                    return 0;
+                }
+                if (value < originalDefaultIndex) {
+                    return value + 1;
+                }
+                return value;
+            });
+            pixelmap.set('values', newData);
+        }
+    },
+
+    _updatePixelmapElements(pixelmapElements, annotation) {
+        // get existing style groups
+        const groups = new StyleCollection();
+        const defaultStyle = new StyleModel({ id: 'default' });
+        groups.fetch().done(() => {
+            if (!groups.has('default')) {
+                groups.add(defaultStyle.toJSON());
+                groups.get('default').save();
+            }
+            // now we can look at the pixelmap elements
+            // const savePromises = [];
+            _.forEach(pixelmapElements, (pixelmap) => {
+                this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
+                console.log({ pixelmap });
+            });
+            console.log('finished iterating pixelmap elements');
+            this.viewerWidget.drawAnnotation(annotation);
+        });
+    },
+
     toggleAnnotation(annotation) {
         if (!this.viewerWidget) {
             // We may need a way to queue annotation draws while viewer
             // initializes, but for now ignore them.
             return;
         }
-
         if (annotation.get('displayed')) {
             var viewer = this.viewerWidget.viewer || {};
             if (viewer.zoomRange && annotation._pageElements === true) {
@@ -522,6 +612,17 @@ var ImageView = View.extend({
                 if (!annotation.get('displayed') || annotation.get('itemId') !== this.model.id) {
                     return null;
                 }
+                // update pixelmaps based on styles
+                // get the styles (possible on init?)
+                // reconcile styles with each pixelmap
+                // update data for all pixelmaps, if needed
+                // draw the annotation
+                const pixelmapElements = annotation.elements().where({ type: 'pixelmap' });
+                console.log(pixelmapElements);
+                if (pixelmapElements.length > 0) {
+                    this._updatePixelmapElements(pixelmapElements, annotation);
+                    return null;
+                }
                 this.viewerWidget.drawAnnotation(annotation);
                 return null;
             });
@@ -531,12 +632,24 @@ var ImageView = View.extend({
     },
 
     _redrawAnnotation(annotation) {
+        console.log('redrawing annotation');
+        console.log({ annotation });
         if (!this.viewerWidget || !annotation.get('displayed')) {
             // We may need a way to queue annotation draws while viewer
             // initializes, but for now ignore them.
             return;
         }
         this.viewerWidget.drawAnnotation(annotation);
+    },
+
+    _redrawPixelmap(pixelmapId) {
+        console.log('redrawing pixelmap');
+        console.log({ vw: this.viewerWidget, v: this.viewer });
+        if (!this.viewerWidget || !this.viewer) {
+            return;
+        }
+        console.log(this.viewer.layers());
+
     },
 
     /**
