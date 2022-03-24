@@ -806,20 +806,9 @@ var ImageView = View.extend({
     },
 
     _getCategoryIndexFromStyleGroup(annotationElement, styleGroup) {
-        // check if the style group is associated with an element (e.g. pixelmap)
-        // and if it is, return the category index, undefined if not
-        const styleIdParts = styleGroup.get('id').split('-');
-        if (styleIdParts.length < 3) {
-            return undefined;
-        }
-        const categoryIndex = parseInt(styleIdParts[1]);
-        if (styleIdParts[0] !== annotationElement.id ||
-            isNaN(categoryIndex) ||
-            categoryIndex < 0 ||
-            categoryIndex >= annotationElement.get('categories').length) {
-            return undefined;
-        }
-        return categoryIndex;
+        const categories = annotationElement.get('categories');
+        const newIndex = _.findIndex(categories, (category) => category.label === styleGroup.get('id'));
+        return (newIndex < 0) ? 0 : newIndex;
     },
 
     _updatePixelmapValues(pixelmapElementModel, layer) {
@@ -856,7 +845,6 @@ var ImageView = View.extend({
             // left click. check what the active style is and if it applies
             const style = this.drawWidget.getStyleGroup();
             const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
-            if (newIndex === undefined) { return; }
 
             const index = overlayElement.get('boundaries') ? (event.index - event.index % 2) : event.index;
             const offset = overlayElement.get('boundaries') ? 1 : 0;
@@ -902,7 +890,6 @@ var ImageView = View.extend({
         if (event.mouse.buttons.left && event.mouse.modifiers.shift && this.drawWidget && overlayAnnotationIsSelected) {
             const style = this.drawWidget.getStyleGroup();
             const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
-            if (newIndex === undefined) { return; }
 
             const index = overlayElement.get('boundaries') ? (event.index - event.index % 2) : event.index;
             const offset = overlayElement.get('boundaries') ? 1 : 0;
