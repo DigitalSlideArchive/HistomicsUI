@@ -8,7 +8,6 @@ import Panel from '@girder/slicer_cli_web/views/Panel';
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
-import addPixelmapCategory from '../dialogs/addPixelmapCategory';
 import editStyleGroups from '../dialogs/editStyleGroups';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import '../stylesheets/panels/drawWidget.styl';
@@ -20,7 +19,6 @@ import '../stylesheets/panels/drawWidget.styl';
 var DrawWidget = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .h-edit-element': 'editElement',
-        'click .h-add-category': 'addPixelmapCategory',
         'click .h-delete-element': 'deleteElement',
         'click .h-draw': 'drawElement',
         'change .h-style-group': '_setStyleGroup',
@@ -167,19 +165,6 @@ var DrawWidget = Panel.extend({
             label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
             this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
             this._skipRenderHTML = true;
-        });
-    },
-
-    /**
-     * Respond to a click on the "add category" button by rendering
-     * the AddPixelmapCategory modal dialog.
-     * @param {object} evt information about the event triggering the callback
-     */
-    addPixelmapCategory(evt) {
-        let element = this.collection.get(this._getId(evt));
-        let dialog = addPixelmapCategory(element);
-        this.listenTo(dialog, 'h:addPixelmapCategory', (pixelmap) => {
-            this.trigger('h:redraw', this.annotation);
         });
     },
 
