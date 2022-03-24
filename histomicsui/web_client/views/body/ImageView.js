@@ -52,6 +52,7 @@ var ImageView = View.extend({
         this._currentMousePosition = null;
         this._selectElementsByRegionCanceled = false;
         this._debounceUpdatePixelmapValues = _.debounce(this._updatePixelmapValues, 500);
+        this._overlayLayers = {};
         this.selectedAnnotation = new AnnotationModel({ _id: 'selected' });
         this.selectedElements = this.selectedAnnotation.elements();
 
@@ -212,6 +213,8 @@ var ImageView = View.extend({
             // handle overlay events
             this.listenTo(this.viewerWidget, 'g:mouseClickAnnotationOverlay', this.mouseClickOverlay);
             this.listenTo(this.viewerWidget, 'g:mouseOverAnnotationOverlay', this.mouseOverOverlay);
+            this.listenTo(this.viewerWidget, 'g:drawOverlayAnnotation', this.overlayLayerDrawn);
+            this.listenTo(this.viewerWidget, 'g:removeOverlayAnnotation', this.overlayLayerRemoved);
 
             this.viewerWidget.on('g:imageRendered', () => {
                 events.trigger('h:imageOpened', this.model);
@@ -503,15 +506,20 @@ var ImageView = View.extend({
         this.viewer.rotation(rotation * Math.PI / 180);
     },
 
-    _reconcilePixelmapCategories(pixelmapId, groups, annotation) {
+    _updatePixelmapsWithCategories(newCategories) {
+        const pixelmapElements = _.map(this._overlayLayers, (record) => record.element);
+        _.each(pixelmapElements, (element) => {
+            const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
+            this.reconcilePixelmapCategories(element.id, newCategories, annotation);
+            this._redrawAnnotation(annotation);
+        });
+    },
+
+    reconcilePixelmapCategories(pixelmapId, groups, annotation) {
         const pixelmap = annotation.elements().get(pixelmapId);
         const existingCategories = pixelmap.get('categories') || [];
         const newCategories = [];
         const newStyleGroups = [];
-
-        // update existing categories based on style groups,
-        // and create necessary style groups based on existing
-        // categories
         _.forEach(existingCategories, (category) => {
             const correspondingStyle = groups.get(category.label);
             if (!correspondingStyle) {
@@ -532,7 +540,6 @@ var ImageView = View.extend({
             newCategories.push(category);
         });
 
-        // create new categories based on existing style groups
         groups.each((group) => {
             const correspondingCategory = existingCategories.find((category) => (
                 category.label === group.get('id')));
@@ -550,13 +557,12 @@ var ImageView = View.extend({
             groups.get(group.get('id')).save();
         });
 
+        // move the default category to index 0 and adjust data array if needed
         const originalDefaultIndex = _.findIndex(newCategories, (category) => category.label === 'default');
         const updatedCategories = _.filter(newCategories, (category) => category.label === 'default')
             .concat(_.filter(newCategories, (category) => category.label !== 'default'));
         pixelmap.set('categories', updatedCategories);
         if (originalDefaultIndex !== 0) {
-            // if the default category was added or moved as part of reconcilation,
-            // increment all values in the data array to account for this change
             const originalData = pixelmap.get('values');
             const newData = _.map(originalData, (value) => {
                 if (value === originalDefaultIndex) {
@@ -583,10 +589,8 @@ var ImageView = View.extend({
             // now we can look at the pixelmap elements
             // const savePromises = [];
             _.forEach(pixelmapElements, (pixelmap) => {
-                this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
-                console.log({ pixelmap });
+                this.reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
             });
-            console.log('finished iterating pixelmap elements');
             this.viewerWidget.drawAnnotation(annotation);
         });
     },
@@ -618,7 +622,6 @@ var ImageView = View.extend({
                 // update data for all pixelmaps, if needed
                 // draw the annotation
                 const pixelmapElements = annotation.elements().where({ type: 'pixelmap' });
-                console.log(pixelmapElements);
                 if (pixelmapElements.length > 0) {
                     this._updatePixelmapElements(pixelmapElements, annotation);
                     return null;
@@ -632,24 +635,12 @@ var ImageView = View.extend({
     },
 
     _redrawAnnotation(annotation) {
-        console.log('redrawing annotation');
-        console.log({ annotation });
         if (!this.viewerWidget || !annotation.get('displayed')) {
             // We may need a way to queue annotation draws while viewer
             // initializes, but for now ignore them.
             return;
         }
         this.viewerWidget.drawAnnotation(annotation);
-    },
-
-    _redrawPixelmap(pixelmapId) {
-        console.log('redrawing pixelmap');
-        console.log({ vw: this.viewerWidget, v: this.viewer });
-        if (!this.viewerWidget || !this.viewer) {
-            return;
-        }
-        console.log(this.viewer.layers());
-
     },
 
     /**
@@ -924,6 +915,19 @@ var ImageView = View.extend({
         }
     },
 
+    overlayLayerDrawn(element, layer) {
+        this._overlayLayers[element.id] = {
+            layer: layer,
+            element: element
+        };
+    },
+
+    overlayLayerRemoved(element, layer) {
+        if (this._overlayLayers[element.id]) {
+            delete this._overlayLayers[element.id];
+        }
+    },
+
     mouseClickAnnotation(element, annotationId, evt) {
         if (!element.annotation) {
             // This is an instance of "selectedElements" and should be ignored.
@@ -1025,6 +1029,7 @@ var ImageView = View.extend({
                 viewer: this.viewerWidget
             }).render();
             this.listenTo(this.drawWidget, 'h:redraw', this._redrawAnnotation);
+            this.listenTo(this.drawWidget, 'h:styleGroupsUpdated', this._updatePixelmapsWithCategories);
             this.$('.h-draw-widget').removeClass('hidden');
         }
     },

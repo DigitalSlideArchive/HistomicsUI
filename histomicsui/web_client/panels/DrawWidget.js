@@ -47,7 +47,7 @@ var DrawWidget = Panel.extend({
         this._highlighted = {};
         this._groups = new StyleCollection();
         this._style = new StyleModel({id: 'default'});
-        this.listenTo(this._groups, 'update', this.render);
+        this.listenTo(this._groups, 'update', this._handleStyleGroupsUpdate);
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
         this._groups.fetch().done(() => {
@@ -298,6 +298,11 @@ var DrawWidget = Panel.extend({
             this.render();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
         });
+    },
+
+    _handleStyleGroupsUpdate() {
+        this.render();
+        this.trigger('h:styleGroupsUpdated', this._groups);
     },
 
     _highlightElement(evt) {
