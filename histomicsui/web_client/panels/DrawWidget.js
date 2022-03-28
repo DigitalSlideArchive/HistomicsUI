@@ -252,6 +252,10 @@ var DrawWidget = Panel.extend({
         this.trigger('h:changeStyleGroup', this._groups.get(this.$('.h-style-group').val()));
     },
 
+    refetchStyleGroups() {
+        this._groups.fetch().done(() => this.render());
+    },
+
     getStyleGroup() {
         return this._style;
     },
@@ -287,7 +291,7 @@ var DrawWidget = Panel.extend({
 
     _handleStyleGroupsUpdate() {
         this.render();
-        this.trigger('h:styleGroupsUpdated', this._groups);
+        this.trigger('h:styleGroupsUpdated');
     },
 
     _highlightElement(evt) {

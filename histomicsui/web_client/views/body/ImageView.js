@@ -136,6 +136,7 @@ var ImageView = View.extend({
         this.listenTo(this.selectedElements, 'h:save', this._saveSelection);
         this.listenTo(this.selectedElements, 'h:remove', this._removeSelection);
         this.listenTo(this.pixelmapContextMenu, 'h:update', this._handlePixelmapContextMenu);
+        this.listenTo(this.pixelmapContextMenu, 'h:updatePixelmap', this._handlePixelmapContextMenu);
         this.listenTo(this.pixelmapContextMenu, 'h:close', this._closePixelmapContextMenu);
 
         this.listenTo(events, 's:widgetChanged:region', this.widgetRegion);
@@ -506,16 +507,20 @@ var ImageView = View.extend({
         this.viewer.rotation(rotation * Math.PI / 180);
     },
 
-    _updatePixelmapsWithCategories(newCategories) {
+    _updatePixelmapsWithCategories() {
         const pixelmapElements = _.map(this._overlayLayers, (record) => record.element);
-        _.each(pixelmapElements, (element) => {
-            const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
-            this.reconcilePixelmapCategories(element.id, newCategories, annotation);
-            this._redrawAnnotation(annotation);
+        const groups = new StyleCollection();
+        groups.fetch().done(() => {
+            _.each(pixelmapElements, (element) => {
+                const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
+                this._reconcilePixelmapCategories(element.id, groups, annotation);
+                this._redrawAnnotation(annotation);
+            });
+            this.contextMenu.refetchStyles();
         });
     },
 
-    reconcilePixelmapCategories(pixelmapId, groups, annotation) {
+    _reconcilePixelmapCategories(pixelmapId, groups, annotation) {
         const pixelmap = annotation.elements().get(pixelmapId);
         const existingCategories = pixelmap.get('categories') || [];
         const newCategories = [];
@@ -589,9 +594,13 @@ var ImageView = View.extend({
             // now we can look at the pixelmap elements
             // const savePromises = [];
             _.forEach(pixelmapElements, (pixelmap) => {
-                this.reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
+                this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
             });
             this.viewerWidget.drawAnnotation(annotation);
+            if (this.drawWidget) {
+                this.drawWidget.refetchStyleGroups();
+                this.contextMenu.refetchStyles();
+            }
         });
     },
 
@@ -856,32 +865,33 @@ var ImageView = View.extend({
             this._debounceUpdatePixelmapValues(overlayElement, overlayLayer);
         } else if (event.mouse.buttonsDown.right) {
             // show pixelmap context menu
-            this._activePixelMap = overlayElement;
-            this.pixelmapContextMenu.updatePixelmap(overlayElement, event.index);
-            window.setTimeout(() => {
-                const $window = $(window);
-                const menu = this.$('#h-pixelmap-context-menu');
-                const position = event.mouse.page;
-                menu.removeClass('hidden');
-                // adjust the vertical position of the context menu
-                // == 0, above the bottom; < 0, number of pixels below the bottom
-                // the menu height is bigger by 20 pixels due to extra padding
-                const belowWindow = Math.min(0, $window.height() - position.y - menu.height() + 20);
-                // ensure the top is not above the top of the window
-                const top = Math.max(0, position.y + belowWindow);
+            // this._activePixelMap = overlayElement;
+            // this.pixelmapContextMenu.updatePixelmap(overlayElement, event.index);
+            // window.setTimeout(() => {
+                // const $window = $(window);
+                // const menu = this.$('#h-pixelmap-context-menu');
+                // const position = event.mouse.page;
+                // menu.removeClass('hidden');
+                // // adjust the vertical position of the context menu
+                // // == 0, above the bottom; < 0, number of pixels below the bottom
+                // // the menu height is bigger by 20 pixels due to extra padding
+                // const belowWindow = Math.min(0, $window.height() - position.y - menu.height() + 20);
+                // // ensure the top is not above the top of the window
+                // const top = Math.max(0, position.y + belowWindow);
 
-                // Put the context menu to the left of the cursor if it is too close
-                // to the right edge.
-                const windowWidth = $window.width();
-                const menuWidth = menu.width();
-                let left = position.x;
-                if (left + menuWidth > windowWidth) {
-                    left -= menuWidth;
-                }
-                left = Math.max(left, 0);
+                // // Put the context menu to the left of the cursor if it is too close
+                // // to the right edge.
+                // const windowWidth = $window.width();
+                // const menuWidth = menu.width();
+                // let left = position.x;
+                // if (left + menuWidth > windowWidth) {
+                    // left -= menuWidth;
+                // }
+                // left = Math.max(left, 0);
 
-                menu.css({ left, top });
-            }, 1);
+                // menu.css({ left, top });
+            // }, 1);
+            this._openContextMenu(overlayElement, null, event);
         }
     },
 
@@ -1142,6 +1152,11 @@ var ImageView = View.extend({
         if (!this.selectedElements.get(element.id)) {
             // If still not selected, then the user does not have access.
             return;
+        }
+
+        if (this.selectedElements.models.length === 1 && element.get('type') === 'pixelmap') {
+            // shenanigans ensue
+            this.contextMenu.setPixelmapData(element, evt.index);
         }
 
         // Defer the context menu action into the next animation frame
