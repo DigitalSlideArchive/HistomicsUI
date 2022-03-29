@@ -16,15 +16,23 @@ block content
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
         type='button', data-type='point', data-toggle='tooltip', title='Draw a new point', class=drawingType === 'point' ? 'active' : null)
-        | #[span.icon-circle-empty]Point
+        | #[span.icon-circle]Point
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
         type='button', data-type='rectangle', data-toggle='tooltip', title='Draw a new rectangle', class=drawingType === 'rectangle' ? 'active' : null)
         | #[span.icon-check-empty]Rectangle
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
+        type='button', data-type='ellipse', data-toggle='tooltip', title='Draw a new ellipse', class=drawingType === 'ellipse' ? 'active' : null)
+        | #[span.icon-circle-empty.flattenicon]Ellipse
+    .btn-group.btn-group-sm
+      button.h-draw.btn.btn-default(
+        type='button', data-type='circle', data-toggle='tooltip', title='Draw a new circle', class=drawingType === 'circle' ? 'active' : null)
+        | #[span.icon-circle-empty]Circle
+    .btn-group.btn-group-sm
+      button.h-draw.btn.btn-default(
         type='button', data-type='polygon', data-toggle='tooltip', title='Draw a new polygon', class=drawingType === 'polygon' ? 'active' : null)
-        | #[span.icon-star-empty]Polygon
+        | #[span.icon-draw-polygon]Polygon
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
         type='button', data-type='line', data-toggle='tooltip', title='Draw a new line', class=drawingType === 'line' ? 'active' : null)

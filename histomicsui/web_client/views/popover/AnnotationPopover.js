@@ -4,6 +4,8 @@ import $ from 'jquery';
 import { restRequest } from '@girder/core/rest';
 import ElementCollection from '@girder/large_image_annotation/collections/ElementCollection';
 import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
+import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
+import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
 import convert from '@girder/large_image_annotation/annotations/convert';
 
 import events from '../../events';
@@ -184,25 +186,38 @@ var AnnotationPopover = View.extend({
         if (element.get('group')) {
             props.group = element.get('group');
         }
-        let geojson = convert(element, {}).features[0].geometry;
+        let geojson = convert(element, {}).features[0];
+        let geogeom = geojson.geometry;
         let area, edge, scale;
-        if (geojson.type === 'Polygon') {
+        if (geogeom.type === 'Polygon') {
             area = edge = 0;
-            for (let j = 0; j < geojson.coordinates.length; j += 1) {
-                for (let i = 0; i < geojson.coordinates[j].length - 1; i += 1) {
-                    let v0 = geojson.coordinates[j][i];
-                    let v1 = geojson.coordinates[j][i + 1];
+            let lens = [];
+            for (let j = 0; j < geogeom.coordinates.length; j += 1) {
+                for (let i = 0; i < geogeom.coordinates[j].length - 1; i += 1) {
+                    let v0 = geogeom.coordinates[j][i];
+                    let v1 = geogeom.coordinates[j][i + 1];
                     area += (v1[1] - v0[1]) * (v0[0] + v1[0]) / 2 * (!j ? 1 : -1);
-                    edge += ((v1[0] - v0[0]) ** 2 + (v1[1] - v0[1]) ** 2) ** 0.5;
+                    let len = ((v1[0] - v0[0]) ** 2 + (v1[1] - v0[1]) ** 2) ** 0.5;
+                    edge += len;
+                    lens.push(len);
                 }
             }
             area = Math.abs(area);
+            if ((geojson.properties.annotationType === 'ellipse' || geojson.properties.annotationType === 'circle') && edge) {
+                area *= Math.PI / 4;
+                const a = lens[0] / 2;
+                const b = lens[1] / 2;
+                const h = (a - b) ** 2 / (a + b) ** 2;
+                // Ramanujan's approximation -- we actually need a series to
+                // compute this properly.
+                edge = Math.PI * (a + b) * (1 + 3 * h / (10 + (4 - 3 * h) ** 0.5));
+            }
         }
-        if (geojson.type === 'LineString') {
+        if (geogeom.type === 'LineString') {
             edge = 0;
-            for (let i = 0; i < geojson.coordinates.length - 1; i += 1) {
-                let v0 = geojson.coordinates[i];
-                let v1 = geojson.coordinates[i + 1];
+            for (let i = 0; i < geogeom.coordinates.length - 1; i += 1) {
+                let v0 = geogeom.coordinates[i];
+                let v1 = geogeom.coordinates[i + 1];
                 edge += ((v1[0] - v0[0]) ** 2 + (v1[1] - v0[1]) ** 2) ** 0.5;
             }
         }
@@ -212,6 +227,7 @@ var AnnotationPopover = View.extend({
         setIf('center', point);
         setIf('width', length, scale);
         setIf('height', length, scale);
+        setIf('radius', length, scale);
         setIf('rotation', rotation);
         if (area) {
             props.area = areaStr(area, scale);
@@ -293,17 +309,30 @@ var AnnotationPopover = View.extend({
         const lastElement = this._closestElement;
         this._closestElement = null;
         this.collection.each((e) => {
-            let distance;
-            // TODO: distance calculation only valid for polylines and rectangles...
-            // ignore other element types
-            if (e.get('type') === 'polyline') {
-                distance = this._distanceToElement(e.get('points'));
-            } else if (e.get('type') === 'rectangle') {
-                distance = this._distanceToElement(
-                    convertRectangle(e.attributes).coordinates[0]
-                );
-            } else {
-                distance = 0;
+            let distance = 0;
+            // Distance calculation is only valid for polylines, rectangles,
+            // ellipses, and circle.  We should handle other annotations.
+            // For ellipses and circles, we should take curvature into
+            // account
+            switch (e.get('type')) {
+                case 'polyline':
+                    distance = this._distanceToElement(e.get('points'));
+                    break;
+                case 'rectangle':
+                    distance = this._distanceToElement(
+                        convertRectangle(e.attributes).coordinates[0]
+                    );
+                    break;
+                case 'ellipse':
+                    distance = this._distanceToElement(
+                        convertEllipse(e.attributes).coordinates[0]
+                    );
+                    break;
+                case 'circle':
+                    distance = this._distanceToElement(
+                        convertCircle(e.attributes).coordinates[0]
+                    );
+                    break;
             }
             if (distance < minimumDistance) {
                 this._closestElement = e;
