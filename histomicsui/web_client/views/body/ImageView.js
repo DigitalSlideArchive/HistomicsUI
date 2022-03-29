@@ -133,11 +133,9 @@ var ImageView = View.extend({
         this.listenTo(this.contextMenu, 'h:editShape', this._editElementShape);
         this.listenTo(this.contextMenu, 'h:redraw', this._redrawAnnotation);
         this.listenTo(this.contextMenu, 'h:close', this._closeContextMenu);
+        this.listenTo(this.contextMenu, 'h:updatePixelmap', this._handlePixelmapContextMenu);
         this.listenTo(this.selectedElements, 'h:save', this._saveSelection);
         this.listenTo(this.selectedElements, 'h:remove', this._removeSelection);
-        this.listenTo(this.pixelmapContextMenu, 'h:update', this._handlePixelmapContextMenu);
-        this.listenTo(this.pixelmapContextMenu, 'h:updatePixelmap', this._handlePixelmapContextMenu);
-        this.listenTo(this.pixelmapContextMenu, 'h:close', this._closePixelmapContextMenu);
 
         this.listenTo(events, 's:widgetChanged:region', this.widgetRegion);
         this.listenTo(events, 'g:login g:logout.success g:logout.error', () => {
@@ -597,9 +595,9 @@ var ImageView = View.extend({
                 this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
             });
             this.viewerWidget.drawAnnotation(annotation);
+            this.contextMenu.refetchStyles();
             if (this.drawWidget) {
                 this.drawWidget.refetchStyleGroups();
-                this.contextMenu.refetchStyles();
             }
         });
     },
@@ -820,19 +818,23 @@ var ImageView = View.extend({
         return (newIndex < 0) ? 0 : newIndex;
     },
 
-    _updatePixelmapValues(pixelmapElementModel, layer) {
+    _updatePixelmapValues(pixelmapElementModel, layer, annotation) {
         let newData = layer.data();
         if (pixelmapElementModel.get('boundaries')) {
             newData = newData.filter((d, i) => i % 2 === 0);
         }
         pixelmapElementModel.set('values', newData);
+        if (annotation) {
+            this._redrawAnnotation(annotation);
+        }
     },
 
     _closePixelmapContextMenu() {
         this.$('#h-pixelmap-context-menu').addClass('hidden');
     },
 
-    _handlePixelmapContextMenu(pixelmap, dataIndex, categoryIndex) {
+    _handlePixelmapContextMenu(pixelmap, dataIndex, group) {
+        const categoryIndex = _.findIndex(pixelmap.get('categories'), (category) => category.label === group);
         const pixelmapLayer = this.viewer.layers().find((layer) => layer.id() === pixelmap.get('id'));
         if (!pixelmapLayer || dataIndex < 0) {
             return;
@@ -844,7 +846,9 @@ var ImageView = View.extend({
         const newValue = (categoryIndex < 0 || categoryIndex >= categories.length) ? 0 : categoryIndex;
         data[layerDataIndex] = data[layerDataIndex + offset] = newValue;
         pixelmapLayer.indexModified(layerDataIndex, layerDataIndex + offset).draw();
-        this._debounceUpdatePixelmapValues(pixelmap, pixelmapLayer);
+        const annotation = this.annotations.find((annotation) => annotation.elements().get(pixelmap.id));
+        this._debounceUpdatePixelmapValues(pixelmap, pixelmapLayer, annotation);
+        this._closeContextMenu();
     },
 
     mouseClickOverlay(overlayElement, overlayLayer, event) {
@@ -865,8 +869,6 @@ var ImageView = View.extend({
             this._debounceUpdatePixelmapValues(overlayElement, overlayLayer);
         } else if (event.mouse.buttonsDown.right) {
             // show pixelmap context menu
-            // this._activePixelMap = overlayElement;
-            // this.pixelmapContextMenu.updatePixelmap(overlayElement, event.index);
             // window.setTimeout(() => {
                 // const $window = $(window);
                 // const menu = this.$('#h-pixelmap-context-menu');
@@ -1155,7 +1157,6 @@ var ImageView = View.extend({
         }
 
         if (this.selectedElements.models.length === 1 && element.get('type') === 'pixelmap') {
-            // shenanigans ensue
             this.contextMenu.setPixelmapData(element, evt.index);
         }
 
@@ -1198,6 +1199,7 @@ var ImageView = View.extend({
         }
         this.$('#h-annotation-context-menu').addClass('hidden');
         this._resetSelection();
+        this.contextMenu.setPixelmapData();
         if (this.popover.collection.length) {
             this.popover.collection.reset();
         }
