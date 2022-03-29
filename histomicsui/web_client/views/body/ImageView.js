@@ -102,9 +102,7 @@ var ImageView = View.extend({
             collection: this.selectedElements
         });
         this.pixelmapContextMenu = new PixelmapContextMenu({
-            parentView: this,
-            pixelmap: this._activePixelMap,
-            dataIndex: -1
+            parentView: this
         });
         this.listenTo(this, 'h:styleGroupsEdited', () => {
             this.contextMenu.refetchStyles();
@@ -133,7 +131,8 @@ var ImageView = View.extend({
         this.listenTo(this.contextMenu, 'h:editShape', this._editElementShape);
         this.listenTo(this.contextMenu, 'h:redraw', this._redrawAnnotation);
         this.listenTo(this.contextMenu, 'h:close', this._closeContextMenu);
-        this.listenTo(this.contextMenu, 'h:updatePixelmap', this._handlePixelmapContextMenu);
+        this.listenTo(this.pixelmapContextMenu, 'h:update', this._handlePixelmapContextMenu);
+        this.listenTo(this.pixelmapContextMenu, 'h:close', this._closePixelmapContextMenu);
         this.listenTo(this.selectedElements, 'h:save', this._saveSelection);
         this.listenTo(this.selectedElements, 'h:remove', this._removeSelection);
 
@@ -830,7 +829,12 @@ var ImageView = View.extend({
     },
 
     _closePixelmapContextMenu() {
+        if (!this._pixelmapContextMenuActive) {
+            return;
+        }
+        this.pixelmapContextMenu.updatePixelmap();
         this.$('#h-pixelmap-context-menu').addClass('hidden');
+        this._pixelmapContextMenuActive = false;
     },
 
     _handlePixelmapContextMenu(pixelmap, dataIndex, group) {
@@ -846,20 +850,19 @@ var ImageView = View.extend({
         const newValue = (categoryIndex < 0 || categoryIndex >= categories.length) ? 0 : categoryIndex;
         data[layerDataIndex] = data[layerDataIndex + offset] = newValue;
         pixelmapLayer.indexModified(layerDataIndex, layerDataIndex + offset).draw();
-        const annotation = this.annotations.find((annotation) => annotation.elements().get(pixelmap.id));
-        this._debounceUpdatePixelmapValues(pixelmap, pixelmapLayer, annotation);
+        this._debounceUpdatePixelmapValues(pixelmap, pixelmapLayer);
         this._closeContextMenu();
     },
 
     mouseClickOverlay(overlayElement, overlayLayer, event) {
         if (overlayElement.get('type') !== 'pixelmap') { return; }
         const overlayAnnotationIsSelected = this.activeAnnotation && this.activeAnnotation.elements().get(overlayElement.id);
+        const index = overlayElement.get('boundaries') ? (event.index - event.index % 2) : event.index;
         if (event.mouse.buttonsDown.left && this.drawWidget && overlayAnnotationIsSelected) {
             // left click. check what the active style is and if it applies
             const style = this.drawWidget.getStyleGroup();
             const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
 
-            const index = overlayElement.get('boundaries') ? (event.index - event.index % 2) : event.index;
             const offset = overlayElement.get('boundaries') ? 1 : 0;
             const data = overlayLayer.data();
             const categories = overlayElement.get('categories');
@@ -868,32 +871,39 @@ var ImageView = View.extend({
             overlayLayer.indexModified(index, index + offset).draw();
             this._debounceUpdatePixelmapValues(overlayElement, overlayLayer);
         } else if (event.mouse.buttonsDown.right) {
-            // show pixelmap context menu
-            // window.setTimeout(() => {
-                // const $window = $(window);
-                // const menu = this.$('#h-pixelmap-context-menu');
-                // const position = event.mouse.page;
-                // menu.removeClass('hidden');
-                // // adjust the vertical position of the context menu
-                // // == 0, above the bottom; < 0, number of pixels below the bottom
-                // // the menu height is bigger by 20 pixels due to extra padding
-                // const belowWindow = Math.min(0, $window.height() - position.y - menu.height() + 20);
-                // // ensure the top is not above the top of the window
-                // const top = Math.max(0, position.y + belowWindow);
+            const annotation = this.annotations.find((annotation) => annotation.elements().get(overlayElement.id));
+            this._queueMouseClickAction(overlayElement, annotation.id, null, null);
+            window.requestAnimationFrame(() => {
+                const data = this._processMouseClickQueue();
+                if (!data || data.element.id !== overlayElement.id) {
+                    return;
+                }
+                if (!this._canOpenContextMenu()) {
+                    return;
+                }
+                this.pixelmapContextMenu.updatePixelmap(overlayElement, event.index);
+                // show pixelmap context menu
+                window.setTimeout(() => {
+                    const $window = $(window);
+                    const menu = this.$('#h-pixelmap-context-menu');
+                    const position = event.mouse.page;
+                    menu.removeClass('hidden');
+                    // adjust the vertical position of the context menu
+                    const belowWindow = Math.min(0, $window.height() - position.y - menu.height() + 20);
+                    const top = Math.max(0, position.y + belowWindow);
 
-                // // Put the context menu to the left of the cursor if it is too close
-                // // to the right edge.
-                // const windowWidth = $window.width();
-                // const menuWidth = menu.width();
-                // let left = position.x;
-                // if (left + menuWidth > windowWidth) {
-                    // left -= menuWidth;
-                // }
-                // left = Math.max(left, 0);
+                    const windowWidth = $window.width();
+                    const menuWidth = menu.width();
+                    let left = position.x;
+                    if (left + menuWidth > windowWidth) {
+                        left -= menuWidth;
+                    }
+                    left = Math.max(left, 0);
 
-                // menu.css({ left, top });
-            // }, 1);
-            this._openContextMenu(overlayElement, null, event);
+                    menu.css({ left, top });
+                    this._pixelmapContextMenuActive = true;
+                }, 1);
+            });
         }
     },
 
@@ -961,19 +971,21 @@ var ImageView = View.extend({
 
     _queueMouseClickAction(element, annotationId, geometry, center) {
         let minimumDistance = Number.POSITIVE_INFINITY;
-        if (geometry.type !== 'Polygon') {
-            // We don't current try to resolve any other geometry type, for the moment,
-            // any point or line clicked on will always be chosen over a polygon.
-            minimumDistance = 0;
-        } else {
-            const points = geometry.coordinates[0];
-            // use an explicit loop for speed
-            for (let index = 0; index < points.length; index += 1) {
-                const point = points[index];
-                const dx = point[0] - center.x;
-                const dy = point[1] - center.y;
-                const distance = dx * dx + dy * dy;
-                minimumDistance = Math.min(minimumDistance, distance);
+        if (geometry) {
+            if (geometry.type !== 'Polygon') {
+                // We don't current try to resolve any other geometry type, for the moment,
+                // any point or line clicked on will always be chosen over a polygon.
+                minimumDistance = 0;
+            } else {
+                const points = geometry.coordinates[0];
+                // use an explicit loop for speed
+                for (let index = 0; index < points.length; index += 1) {
+                    const point = points[index];
+                    const dx = point[0] - center.x;
+                    const dy = point[1] - center.y;
+                    const distance = dx * dx + dy * dy;
+                    minimumDistance = Math.min(minimumDistance, distance);
+                }
             }
         }
         this._mouseClickQueue.push({ element, annotationId, value: minimumDistance });
@@ -1145,7 +1157,14 @@ var ImageView = View.extend({
         return results;
     },
 
+    _canOpenContextMenu() {
+        return !this._contextMenuActive && !this._pixelmapContextMenuActive;
+    },
+
     _openContextMenu(element, annotationId, evt) {
+        if (!this._canOpenContextMenu()) {
+            return;
+        }
         if (!this.selectedElements.get(element.id)) {
             this._resetSelection();
             this._selectElement(element);
