@@ -639,10 +639,6 @@ var ImageView = View.extend({
                     return null;
                 }
                 // update pixelmaps based on styles
-                // get the styles (possible on init?)
-                // reconcile styles with each pixelmap
-                // update data for all pixelmaps, if needed
-                // draw the annotation
                 const pixelmapElements = annotation.elements().where({ type: 'pixelmap' });
                 if (pixelmapElements.length > 0) {
                     this._updatePixelmapElements(pixelmapElements, annotation);
@@ -665,12 +661,6 @@ var ImageView = View.extend({
         this.viewerWidget.drawAnnotation(annotation);
     },
 
-    /**
-     * Handle the DrawWidget changing style group. This is used to
-     * set up events for interacting with any pixelmaps that may be
-     * part of the selected annotation.
-     * @param {object} newStyle the new styleGroup of the DrawWidget
-     */
     _highlightAnnotationForInteractiveMode(annotation, element) {
         if (!this.annotationSelector.interactiveMode()) {
             return;
@@ -867,7 +857,6 @@ var ImageView = View.extend({
         data[layerDataIndex] = data[layerDataIndex + offset] = newValue;
         pixelmapLayer.indexModified(layerDataIndex, layerDataIndex + offset).draw();
         this._debounceUpdatePixelmapValues(pixelmap, pixelmapLayer);
-        this._closeContextMenu();
     },
 
     mouseClickOverlay(overlayElement, overlayLayer, event) {
@@ -1192,10 +1181,6 @@ var ImageView = View.extend({
             return;
         }
 
-        if (this.selectedElements.models.length === 1 && element.get('type') === 'pixelmap') {
-            this.contextMenu.setPixelmapData(element, evt.index);
-        }
-
         // Defer the context menu action into the next animation frame
         // to work around a problem with preventDefault on Windows
         window.setTimeout(() => {
@@ -1235,7 +1220,6 @@ var ImageView = View.extend({
         }
         this.$('#h-annotation-context-menu').addClass('hidden');
         this._resetSelection();
-        this.contextMenu.setPixelmapData();
         if (this.popover.collection.length) {
             this.popover.collection.reset();
         }

@@ -250,40 +250,14 @@ var DrawWidget = Panel.extend({
         if (!this._style.get('group') && this._style.id !== 'default') {
             this._style.set('group', this._style.id);
         }
-        this.trigger('h:changeStyleGroup', this._groups.get(this.$('.h-style-group').val()));
-    },
-
-    refetchStyles() {
-        this._groups.fetch().done(() => this.render());
     },
 
     getStyleGroup() {
         return this._style;
     },
 
-    _handlePixelmapCategoryUpdate(newId, oldId, newStyle) {
-        const newIdParts = newId.split('-');
-        const elementToUpdate = this.parentView.getPixelmapElements().filter((element) => element.get('id') === newIdParts[0])[0];
-        if (!elementToUpdate) {
-            return;
-        }
-        const categories = JSON.parse(JSON.stringify(elementToUpdate.get('categories')));
-        categories[newIdParts[1]].label = newIdParts.slice(2).join('-');
-        categories[newIdParts[1]].strokeColor = newStyle.get('lineColor');
-        categories[newIdParts[1]].fillColor = newStyle.get('fillColor');
-        elementToUpdate.set('categories', categories);
-
-        const oldStyle = this._groups.get(oldId);
-        oldStyle.destroy();
-        this._groups.remove(oldStyle);
-        this._groups.add(newStyle.toJSON());
-        this._groups.get(newId).save();
-    },
-
     _styleGroupEditor() {
-        const pixelmapIds = this.parentView.getPixelmapElements().map((ele) => ele.get('id'));
-        var dlg = editStyleGroups(this._style, this._groups, pixelmapIds);
-        this.listenTo(dlg, 'h:updatePixelmapStyle', this._handlePixelmapCategoryUpdate);
+        var dlg = editStyleGroups(this._style, this._groups);
         this.listenTo(dlg, 'h:deleteStyle', this._handleStyleGroupRemoved);
         dlg.$el.on('hidden.bs.modal', () => {
             this.render();
@@ -315,22 +289,6 @@ var DrawWidget = Panel.extend({
             'get', 'group'
         );
         this.annotation.set('groups', groups);
-    },
-
-    /**
-     * Create style groups for each category given a pixelmap
-     * @param {string} pixelmapId ID of the pixelmap element
-     */
-    _addPixelmapStyles(pixelmapId) {
-        const pixelmap = this.collection.get(pixelmapId);
-        _.each(pixelmap.get('categories'), (category, idx) => {
-            const style = new StyleModel({
-                id: `${pixelmapId}-${idx}-${category.label || 'no_label'}`,
-                lineColor: category.strokeColor,
-                fillColor: category.fillColor
-            });
-            this._groups.add(style.toJSON());
-        });
     }
 });
 

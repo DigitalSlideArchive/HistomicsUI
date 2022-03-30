@@ -16,8 +16,6 @@ const AnnotationContextMenu = View.extend({
     },
     initialize(settings) {
         this._cachedGroupCount = {};
-        this._pixelmap = null;
-        this._pixelmapDataIndex = -1;
         this.styles = new StyleCollection();
         this.styles.fetch().done(() => this.render());
         this.listenTo(this.collection, 'add remove reset', this.render);
@@ -34,15 +32,6 @@ const AnnotationContextMenu = View.extend({
     },
     setGroupCount(groupCount) {
         this._cachedGroupCount = groupCount;
-    },
-    setPixelmapData(pixelmap, dataIndex) {
-        if (pixelmap && dataIndex) {
-            this._pixelmap = pixelmap;
-            this._pixelmapDataIndex = dataIndex;
-            return;
-        }
-        this._pixelmap = null;
-        this._pixelmapDataIndex = -1;
     },
     _removeElements(evt) {
         evt.preventDefault();
@@ -63,10 +52,6 @@ const AnnotationContextMenu = View.extend({
         this.trigger('h:close');
     },
     _setStyleDefinition(group) {
-        if (this._pixelmap) {
-            this.trigger('h:updatePixelmap', this._pixelmap, this._pixelmapDataIndex, group);
-            return;
-        }
         const style = this.styles.get({ id: group }) || this.styles.get({ id: 'default' });
         const styleAttrs = Object.assign({}, style.toJSON());
         delete styleAttrs.id;
