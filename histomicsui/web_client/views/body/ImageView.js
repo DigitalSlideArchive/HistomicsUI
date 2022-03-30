@@ -513,7 +513,7 @@ var ImageView = View.extend({
                 groups.add(defaultStyle.toJSON());
                 groups.get('default').save();
             }
-            _.forEach(pixelmapElements, (pixelmap) => {
+            _.each(pixelmapElements, (pixelmap) => {
                 this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
             });
             this.viewerWidget.drawAnnotation(annotation);
@@ -521,7 +521,7 @@ var ImageView = View.extend({
     },
 
     _updatePixelmapsWithCategories(groups) {
-        const pixelmapElements = _.map(this._overlayLayers, (record) => record.element);
+        const pixelmapElements = _.pluck(this._overlayLayers, 'element');
         _.each(pixelmapElements, (element) => {
             const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
             this._reconcilePixelmapCategories(element.id, groups, annotation);
@@ -535,11 +535,11 @@ var ImageView = View.extend({
         _.each(pixelmapElements, (element) => {
             const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
             const pixelmap = annotation.elements().get(element.id);
-            const removedIndex = _.findIndex(pixelmap.get('categories'), (category) => category.label === label);
+            const removedIndex = _.findIndex(pixelmap.get('categories'), { label: label });
             if (removedIndex === -1) {
                 return;
             }
-            const newCategories = _.filter(pixelmap.get('categories'), (category) => category.label !== label);
+            const newCategories = _.reject(pixelmap.get('categories'), { label: label });
             const newValues = _.map(pixelmap.get('values'), (value) => {
                 if (value === removedIndex) {
                     return 0;
@@ -560,7 +560,7 @@ var ImageView = View.extend({
         const existingCategories = pixelmap.get('categories') || [];
         const newCategories = [];
         const newStyleGroups = [];
-        _.forEach(existingCategories, (category) => {
+        _.each(existingCategories, (category) => {
             const correspondingStyle = groups.get(category.label);
             if (!correspondingStyle) {
                 const newStyle = new StyleModel({
@@ -592,15 +592,15 @@ var ImageView = View.extend({
             }
         });
 
-        _.forEach(newStyleGroups, (group) => {
+        _.each(newStyleGroups, (group) => {
             groups.add(group);
             groups.get(group.get('id')).save();
         });
 
         // move the default category to index 0 and adjust data array if needed
-        const originalDefaultIndex = _.findIndex(newCategories, (category) => category.label === 'default');
-        const updatedCategories = _.filter(newCategories, (category) => category.label === 'default')
-            .concat(_.filter(newCategories, (category) => category.label !== 'default'));
+        const originalDefaultIndex = _.findIndex(newCategories, { label: 'default' });
+        const updatedCategories = _.where(newCategories, { label: 'default' })
+            .concat(_.reject(newCategories, { label: 'default' }));
         pixelmap.set('categories', updatedCategories);
         if (originalDefaultIndex !== 0) {
             const originalData = pixelmap.get('values');
@@ -819,7 +819,8 @@ var ImageView = View.extend({
 
     _getCategoryIndexFromStyleGroup(annotationElement, styleGroup) {
         const categories = annotationElement.get('categories');
-        const newIndex = _.findIndex(categories, (category) => category.label === styleGroup.get('id'));
+        const groupId = styleGroup.get('id');
+        const newIndex = _.findIndex(categories, { label: groupId });
         return (newIndex < 0) ? 0 : newIndex;
     },
 
@@ -844,7 +845,7 @@ var ImageView = View.extend({
     },
 
     _handlePixelmapContextMenu(pixelmap, dataIndex, group) {
-        const categoryIndex = _.findIndex(pixelmap.get('categories'), (category) => category.label === group);
+        const categoryIndex = _.findIndex(pixelmap.get('categories'), { label: group });
         const pixelmapLayer = this.viewer.layers().find((layer) => layer.id() === pixelmap.get('id'));
         if (!pixelmapLayer || dataIndex < 0) {
             return;

@@ -35,7 +35,6 @@ var SaveAnnotation = View.extend({
         const annotationHasEditableElements = _.filter(elementTypes, (type) => styleEditableElementTypes.includes(type)).length > 0;
         const showStyleEditor = this.annotation.get('annotation').elements && !this.annotation._pageElements && annotationHasEditableElements;
 
-
         const defaultStyles = {};
 
         if (showStyleEditor) {
