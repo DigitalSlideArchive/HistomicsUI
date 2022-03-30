@@ -505,12 +505,19 @@ var ImageView = View.extend({
         this.viewer.rotation(rotation * Math.PI / 180);
     },
 
-    _syncStyles() {
-        this.contextMenu.refetchStyles();
-        this.pixelmapContextMenu.refetchStyles();
-        if (this.drawWidget) {
-            this.drawWidget.refetchStyles();
-        }
+    _updatePixelmapElements(pixelmapElements, annotation) {
+        const groups = new StyleCollection();
+        const defaultStyle = new StyleModel({ id: 'default' });
+        groups.fetch().done(() => {
+            if (!groups.has('default')) {
+                groups.add(defaultStyle.toJSON());
+                groups.get('default').save();
+            }
+            _.forEach(pixelmapElements, (pixelmap) => {
+                this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
+            });
+            this.viewerWidget.drawAnnotation(annotation);
+        });
     },
 
     _updatePixelmapsWithCategories(groups) {
@@ -524,8 +531,6 @@ var ImageView = View.extend({
 
     _removeCategoryFromPixelmaps(group) {
         const label = group.get('id');
-        // should probably get ALL pixelmaps?
-        // const pixelmapElements = _.map(this._overlayLayers, (record) => record.element);
         const pixelmapElements = this.getPixelmapElements();
         _.each(pixelmapElements, (element) => {
             const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
@@ -534,7 +539,6 @@ var ImageView = View.extend({
             if (removedIndex === -1) {
                 return;
             }
-            console.log({ removedIndex });
             const newCategories = _.filter(pixelmap.get('categories'), (category) => category.label !== label);
             const newValues = _.map(pixelmap.get('values'), (value) => {
                 if (value === removedIndex) {
@@ -549,12 +553,9 @@ var ImageView = View.extend({
             pixelmap.set('values', newValues);
             this._redrawAnnotation(annotation);
         });
-        // this._syncStyles();
     },
 
     _reconcilePixelmapCategories(pixelmapId, groups, annotation) {
-        console.log('in _reconcile');
-        console.log({ pixelmapId, groups });
         const pixelmap = annotation.elements().get(pixelmapId);
         const existingCategories = pixelmap.get('categories') || [];
         const newCategories = [];
@@ -614,22 +615,6 @@ var ImageView = View.extend({
             });
             pixelmap.set('values', newData);
         }
-    },
-
-    _updatePixelmapElements(pixelmapElements, annotation) {
-        const groups = new StyleCollection();
-        const defaultStyle = new StyleModel({ id: 'default' });
-        groups.fetch().done(() => {
-            if (!groups.has('default')) {
-                groups.add(defaultStyle.toJSON());
-                groups.get('default').save();
-            }
-            _.forEach(pixelmapElements, (pixelmap) => {
-                this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
-            });
-            this.viewerWidget.drawAnnotation(annotation);
-            // this._syncStyles();
-        });
     },
 
     toggleAnnotation(annotation) {
