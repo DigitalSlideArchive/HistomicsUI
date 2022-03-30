@@ -45,7 +45,8 @@ var DrawWidget = Panel.extend({
         this._highlighted = {};
         this._groups = new StyleCollection();
         this._style = new StyleModel({id: 'default'});
-        this.listenTo(this._groups, 'update', this._handleStyleGroupsUpdate);
+        this.listenTo(this._groups, 'add change', this._handleStyleGroupsUpdate);
+        this.listenTo(this._groups, 'remove', this.render);
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
         this._groups.fetch().done(() => {
@@ -252,7 +253,7 @@ var DrawWidget = Panel.extend({
         this.trigger('h:changeStyleGroup', this._groups.get(this.$('.h-style-group').val()));
     },
 
-    refetchStyleGroups() {
+    refetchStyles() {
         this._groups.fetch().done(() => this.render());
     },
 
@@ -283,15 +284,20 @@ var DrawWidget = Panel.extend({
         const pixelmapIds = this.parentView.getPixelmapElements().map((ele) => ele.get('id'));
         var dlg = editStyleGroups(this._style, this._groups, pixelmapIds);
         this.listenTo(dlg, 'h:updatePixelmapStyle', this._handlePixelmapCategoryUpdate);
+        this.listenTo(dlg, 'h:deleteStyle', this._handleStyleGroupRemoved);
         dlg.$el.on('hidden.bs.modal', () => {
             this.render();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
         });
     },
 
+    _handleStyleGroupRemoved(group) {
+        this.trigger('h:deleteStyle', group);
+    },
+
     _handleStyleGroupsUpdate() {
         this.render();
-        this.trigger('h:styleGroupsUpdated');
+        this.trigger('h:styleGroupsUpdated', this._groups);
     },
 
     _highlightElement(evt) {

@@ -106,6 +106,7 @@ var ImageView = View.extend({
         });
         this.listenTo(this, 'h:styleGroupsEdited', () => {
             this.contextMenu.refetchStyles();
+            this.pixelmapContextMenu.refetchStyles();
         });
 
         this.listenTo(this.annotationSelector, 'h:groupCount', (obj) => {
@@ -504,20 +505,56 @@ var ImageView = View.extend({
         this.viewer.rotation(rotation * Math.PI / 180);
     },
 
-    _updatePixelmapsWithCategories() {
+    _syncStyles() {
+        this.contextMenu.refetchStyles();
+        this.pixelmapContextMenu.refetchStyles();
+        if (this.drawWidget) {
+            this.drawWidget.refetchStyles();
+        }
+    },
+
+    _updatePixelmapsWithCategories(groups) {
         const pixelmapElements = _.map(this._overlayLayers, (record) => record.element);
-        const groups = new StyleCollection();
-        groups.fetch().done(() => {
-            _.each(pixelmapElements, (element) => {
-                const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
-                this._reconcilePixelmapCategories(element.id, groups, annotation);
-                this._redrawAnnotation(annotation);
-            });
-            this.contextMenu.refetchStyles();
+        _.each(pixelmapElements, (element) => {
+            const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
+            this._reconcilePixelmapCategories(element.id, groups, annotation);
+            this._redrawAnnotation(annotation);
         });
     },
 
+    _removeCategoryFromPixelmaps(group) {
+        const label = group.get('id');
+        // should probably get ALL pixelmaps?
+        // const pixelmapElements = _.map(this._overlayLayers, (record) => record.element);
+        const pixelmapElements = this.getPixelmapElements();
+        _.each(pixelmapElements, (element) => {
+            const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
+            const pixelmap = annotation.elements().get(element.id);
+            const removedIndex = _.findIndex(pixelmap.get('categories'), (category) => category.label === label);
+            if (removedIndex === -1) {
+                return;
+            }
+            console.log({ removedIndex });
+            const newCategories = _.filter(pixelmap.get('categories'), (category) => category.label !== label);
+            const newValues = _.map(pixelmap.get('values'), (value) => {
+                if (value === removedIndex) {
+                    return 0;
+                }
+                if (value > removedIndex) {
+                    return value - 1;
+                }
+                return value;
+            });
+            pixelmap.set('categories', newCategories);
+            pixelmap.set('values', newValues);
+            this._redrawAnnotation(annotation);
+        });
+        // this._syncStyles();
+    },
+
     _reconcilePixelmapCategories(pixelmapId, groups, annotation) {
+        console.log('in _reconcile');
+        console.log({ pixelmapId, groups });
         const pixelmap = annotation.elements().get(pixelmapId);
         const existingCategories = pixelmap.get('categories') || [];
         const newCategories = [];
@@ -580,7 +617,6 @@ var ImageView = View.extend({
     },
 
     _updatePixelmapElements(pixelmapElements, annotation) {
-        // get existing style groups
         const groups = new StyleCollection();
         const defaultStyle = new StyleModel({ id: 'default' });
         groups.fetch().done(() => {
@@ -588,16 +624,11 @@ var ImageView = View.extend({
                 groups.add(defaultStyle.toJSON());
                 groups.get('default').save();
             }
-            // now we can look at the pixelmap elements
-            // const savePromises = [];
             _.forEach(pixelmapElements, (pixelmap) => {
                 this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
             });
             this.viewerWidget.drawAnnotation(annotation);
-            this.contextMenu.refetchStyles();
-            if (this.drawWidget) {
-                this.drawWidget.refetchStyleGroups();
-            }
+            // this._syncStyles();
         });
     },
 
@@ -1041,6 +1072,7 @@ var ImageView = View.extend({
             }).render();
             this.listenTo(this.drawWidget, 'h:redraw', this._redrawAnnotation);
             this.listenTo(this.drawWidget, 'h:styleGroupsUpdated', this._updatePixelmapsWithCategories);
+            this.listenTo(this.drawWidget, 'h:deleteStyle', this._removeCategoryFromPixelmaps);
             this.$('.h-draw-widget').removeClass('hidden');
         }
     },

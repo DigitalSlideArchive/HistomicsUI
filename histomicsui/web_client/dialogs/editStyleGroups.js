@@ -140,6 +140,7 @@ const EditStyleGroups = View.extend({
         } else {
             const id = this.$('.h-group-name :selected').val();
             var model = this.collection.get(id);
+            this.parentView.trigger('h:deleteStyle', model);
             model.destroy();
             this.collection.remove(model);
         }
