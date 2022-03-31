@@ -47,7 +47,6 @@
         "eslint-plugin-node": "*",
         "eslint-plugin-promise": "*",
         "eslint-plugin-standard": "*",
-        "eslint-plugin-underscore": "*",
         "pug-lint": "^2",
         "stylint": "^2"
     },
