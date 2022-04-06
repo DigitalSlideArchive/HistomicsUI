@@ -1,7 +1,10 @@
 /* globals beforeEach, afterEach, describe, it, expect, girder, backbone, waitsFor, runs, _, huiTest */
 
 girderTest.importPlugin('jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui');
-girderTest.addScript('/static/built/plugins/histomicsui/huiTest.js');
+girderTest.addScripts([
+    '/static/built/plugins/histomicsui/huiTest.js',
+    '/static/built/plugins/histomicsui/extra/sinon.js'
+]);
 
 girderTest.promise.done(function () {
     huiTest.startApp();
@@ -16,8 +19,9 @@ girderTest.promise.done(function () {
                 huiTest.openImage('image');
             });
         });
-        describe('pixelmap category syncing', function () {
+        describe('pixelmap behavior', function () {
             var girder, largeImageAnnotation, histomicsUI, pixelmapId, pixelmapAnnotation, pixelmapElement, fetched, newCategory, newGroup;
+            var stubDebounce;
             beforeEach(function () {
                 girder = window.girder;
                 largeImageAnnotation = girder.plugins.large_image_annotation;
@@ -35,7 +39,7 @@ girderTest.promise.done(function () {
                             name: 'test pixelmap annotation',
                             elements: [{
                                 type: 'pixelmap',
-                                girderId: '123412341234123412341234',
+                                girderId: huiTest.imageId(),
                                 values: [0, 1, 0, 1, 0, 1, 0, 1],
                                 categories: [
                                     {
@@ -153,6 +157,168 @@ girderTest.promise.done(function () {
                 expect(values[1]).toEqual(0);
                 newCategory.destroy(); // id: category1
                 huiTest.app.bodyView.drawWidget._groups.remove(newCategory);
+            });
+
+            it('updates layer data on  left click', function () {
+                pixelmapElement.set('values', [1, 1, 1, 1, 1, 1, 1, 1]);
+                var layerData = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+                var clickEvent = {
+                    index: 0,
+                    mouse: {
+                        buttonsDown: {
+                            left: true
+                        }
+                    }
+                };
+                var mockLayer = {
+                    data: function (newData) {
+                        if (newData) {
+                            layerData = newData;
+                        }
+                        return layerData;
+                     },
+                    indexModified: function (min, max) { return null; },
+                    draw: function () { return null },
+                };
+                var stubIndexModified = sinon.stub(mockLayer, 'indexModified');
+                stubIndexModified.returns(mockLayer);
+                var stubDraw = sinon.stub(mockLayer, 'draw');
+                stubDebounce = sinon.stub(huiTest.app.bodyView, '_debounceUpdatePixelmapValues');
+                huiTest.app.bodyView.mouseClickOverlay(pixelmapElement, mockLayer, clickEvent);
+                expect(layerData[0]).toEqual(0);
+                expect(layerData[1]).toEqual(0);
+                sinon.assert.called(stubDraw);
+                sinon.assert.called(stubDebounce)
+            });
+
+            it('allows click shift and drag', function () {
+                pixelmapElement.set('values', [1, 1, 1, 1, 1, 1, 1, 1]);
+                var layerData = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+                var clickEvent = {
+                    index: 1,
+                    mouse: {
+                        buttons: {
+                            left: true
+                        },
+                        modifiers: {
+                            shift: true
+                        }
+                    }
+                };
+                var mockLayer = {
+                    data: function () {
+                        return layerData;
+                    },
+                    indexModified: function (min, max) { return null; },
+                    draw: function () { return null; }
+                }
+                var stubIndexModified = sinon.stub(mockLayer, 'indexModified');
+                stubIndexModified.returns(mockLayer);
+                var stubDraw = sinon.stub(mockLayer, 'draw');
+                huiTest.app.bodyView.mouseOverOverlay(pixelmapElement, mockLayer, clickEvent);
+                expect(layerData[0]).toEqual(0);
+                expect(layerData[1]).toEqual(0);
+                sinon.assert.called(stubDraw);
+                sinon.assert.calledTwice(stubDebounce);
+            });
+
+            it('does nothing on left click if no draw widget', function () {
+                huiTest.app.bodyView._removeDrawWidget();
+                pixelmapElement.set('values', [1, 1, 1, 1, 1, 1, 1, 1]);
+                var layerData = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+                var clickEvent = {
+                    index: 0,
+                    mouse: {
+                        buttonsDown: {
+                            left: true
+                        }
+                    }
+                };
+                var mockLayer = {
+                    data: function (newData) {
+                        if (newData) {
+                            layerData = newData;
+                        }
+                        return layerData;
+                     },
+                    indexModified: function (min, max) { return null; },
+                    draw: function () { return null },
+                };
+                var stubIndexModified = sinon.stub(mockLayer, 'indexModified');
+                stubIndexModified.returns(mockLayer);
+                var stubDraw = sinon.stub(mockLayer, 'draw');
+                huiTest.app.bodyView.mouseClickOverlay(pixelmapElement, mockLayer, clickEvent);
+                expect(layerData[0]).toEqual(1);
+                expect(layerData[1]).toEqual(1);
+                sinon.assert.notCalled(stubDraw);
+                sinon.assert.calledTwice(stubDebounce);
+
+            });
+
+            it('does nothing on click and drag if no draw widget', function () {
+                pixelmapElement.set('values', [1, 1, 1, 1, 1, 1, 1, 1]);
+                var layerData = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+                var clickEvent = {
+                    index: 1,
+                    mouse: {
+                        buttons: {
+                            left: true
+                        },
+                        modifiers: {
+                            shift: true
+                        }
+                    }
+                };
+                var mockLayer = {
+                    data: function () {
+                        return layerData;
+                    },
+                    indexModified: function (min, max) { return null; },
+                    draw: function () { return null; }
+                }
+                var stubIndexModified = sinon.stub(mockLayer, 'indexModified');
+                stubIndexModified.returns(mockLayer);
+                var stubDraw = sinon.stub(mockLayer, 'draw');
+                huiTest.app.bodyView.mouseOverOverlay(pixelmapElement, mockLayer, clickEvent);
+                expect(layerData[0]).toEqual(1);
+                expect(layerData[1]).toEqual(1);
+                sinon.assert.notCalled(stubDraw);
+                sinon.assert.calledTwice(stubDebounce);
+
+            });
+
+            it('opens context menu for right click', function () {
+                pixelmapElement.set('values', [1, 1, 1, 1, 1, 1, 1, 1]);
+                var layerData = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+                var clickEvent = {
+                    index: 0,
+                    mouse: {
+                        buttonsDown: {
+                            right: true
+                        },
+                        page: {
+                            x: 100,
+                            y: 100
+                        }
+                    }
+                };
+                var mockLayer = {
+                    data: function (newData) {
+                        if (newData) {
+                            layerData = newData;
+                        }
+                        return layerData;
+                     },
+                    indexModified: function (min, max) { return null; },
+                    draw: function () { return null },
+                };
+                var spyQueueMouse = sinon.spy(huiTest.app.bodyView, '_queueMouseClickAction');
+                huiTest.app.bodyView.mouseClickOverlay(pixelmapElement, mockLayer, clickEvent);
+                sinon.assert.called(spyQueueMouse);
+
+                waitsFor(function () {
+                    return huiTest.app.bodyView._pixelmapContextMenuActive === true;
+                });
             });
         });
     });
