@@ -285,12 +285,6 @@ const EditStyleGroupsDialog = View.extend({
     _submit(evt) {
         evt.preventDefault();
         this.model.set(this.form.model.toJSON());
-        const originalIds = _.pluck(this.originalCollectionData, 'id');
-        const newIds = this.collection.map((group) => group.get('id'));
-        const deletedIds = _.filter(originalIds, (id) => !newIds.includes(id));
-        if (deletedIds.length > 0) {
-            this.trigger('h:deleteStyles', deletedIds);
-        }
         this.collection.add(this.form.model.toJSON(), {merge: true});
         this.collection.get(this.model.id).save();
         this.$el.modal('hide');

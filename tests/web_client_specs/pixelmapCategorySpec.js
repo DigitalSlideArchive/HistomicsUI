@@ -148,17 +148,6 @@ girderTest.promise.done(function () {
                 expect(values[values.length - 1]).toEqual(2);
             });
 
-            it('removes a deleted style group from pixelmaps', function () {
-                huiTest.app.bodyView.annotations.add(pixelmapAnnotation);
-                huiTest.app.bodyView._removeCategoryFromPixelmaps(newCategory);
-                const values = pixelmapElement.get('values');
-                expect(pixelmapElement.get('categories').length).toEqual(2);
-                expect(values[values.length - 1]).toEqual(1);
-                expect(values[1]).toEqual(0);
-                newCategory.destroy(); // id: category1
-                huiTest.app.bodyView.drawWidget._groups.remove(newCategory);
-            });
-
             it('updates layer data on  left click', function () {
                 pixelmapElement.set('values', [1, 1, 1, 1, 1, 1, 1, 1]);
                 var layerData = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];

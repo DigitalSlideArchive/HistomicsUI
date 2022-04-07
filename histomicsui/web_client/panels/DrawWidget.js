@@ -258,15 +258,10 @@ var DrawWidget = Panel.extend({
 
     _styleGroupEditor() {
         var dlg = editStyleGroups(this._style, this._groups);
-        this.listenTo(dlg, 'h:deleteStyles', this._handleStyleGroupRemoved);
         dlg.$el.on('hidden.bs.modal', () => {
             this.render();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
         });
-    },
-
-    _handleStyleGroupRemoved(groupIds) {
-        this.trigger('h:deleteStyles', groupIds);
     },
 
     _handleStyleGroupsUpdate() {

@@ -529,34 +529,6 @@ var ImageView = View.extend({
         });
     },
 
-    _removeCategoryFromPixelmaps(groupIds) {
-        _.each(groupIds, (label) => {
-            // const label = group.get('id');
-            const pixelmapElements = this.getPixelmapElements();
-            _.each(pixelmapElements, (element) => {
-                const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
-                const pixelmap = annotation.elements().get(element.id);
-                const removedIndex = _.findIndex(pixelmap.get('categories'), { label: label });
-                if (removedIndex === -1) {
-                    return;
-                }
-                const newCategories = _.reject(pixelmap.get('categories'), { label: label });
-                const newValues = _.map(pixelmap.get('values'), (value) => {
-                    if (value === removedIndex) {
-                        return 0;
-                    }
-                    if (value > removedIndex) {
-                        return value - 1;
-                    }
-                    return value;
-                });
-                pixelmap.set('categories', newCategories);
-                pixelmap.set('values', newValues);
-                this._redrawAnnotation(annotation);
-            });
-        });
-    },
-
     _reconcilePixelmapCategories(pixelmapId, groups, annotation) {
         const pixelmap = annotation.elements().get(pixelmapId);
         const existingCategories = pixelmap.get('categories') || [];
@@ -1049,7 +1021,6 @@ var ImageView = View.extend({
             }).render();
             this.listenTo(this.drawWidget, 'h:redraw', this._redrawAnnotation);
             this.listenTo(this.drawWidget, 'h:styleGroupsUpdated', this._updatePixelmapsWithCategories);
-            this.listenTo(this.drawWidget, 'h:deleteStyles', this._removeCategoryFromPixelmaps);
             this.$('.h-draw-widget').removeClass('hidden');
         }
     },
