@@ -136,6 +136,7 @@ class MockSlicerCLIWebResource(Resource):
     'metadataPlotSpec.js',
     'overviewPanelSpec.js',
     'panelLayoutSpec.js',
+    'pixelmapCategorySpec.js',
 ))
 def testWebClient(boundServer, fsAssetstore, db, admin, user, spec):
     copyHUITest()

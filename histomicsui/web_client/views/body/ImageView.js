@@ -17,8 +17,12 @@ import AnnotationCollection from '@girder/large_image_annotation/collections/Ann
 import { convert as convertToGeojson } from '@girder/large_image_annotation/annotations';
 import { convert as convertFromGeojson } from '@girder/large_image_annotation/annotations/geojs';
 
+import StyleCollection from '../../collections/StyleCollection';
+import StyleModel from '../../models/StyleModel';
+
 import AnnotationContextMenu from '../popover/AnnotationContextMenu';
 import AnnotationPopover from '../popover/AnnotationPopover';
+import PixelmapContextMenu from '../popover/PixelmapContextMenu';
 import AnnotationSelector from '../../panels/AnnotationSelector';
 import OverviewWidget from '../../panels/OverviewWidget';
 import ZoomWidget from '../../panels/ZoomWidget';
@@ -47,6 +51,8 @@ var ImageView = View.extend({
         this._displayedRegion = null;
         this._currentMousePosition = null;
         this._selectElementsByRegionCanceled = false;
+        this._debounceUpdatePixelmapValues = _.debounce(this._updatePixelmapValues, 500);
+        this._overlayLayers = {};
         this.selectedAnnotation = new AnnotationModel({ _id: 'selected' });
         this.selectedElements = this.selectedAnnotation.elements();
 
@@ -95,8 +101,12 @@ var ImageView = View.extend({
             parentView: this,
             collection: this.selectedElements
         });
+        this.pixelmapContextMenu = new PixelmapContextMenu({
+            parentView: this
+        });
         this.listenTo(this, 'h:styleGroupsEdited', () => {
             this.contextMenu.refetchStyles();
+            this.pixelmapContextMenu.refetchStyles();
         });
 
         this.listenTo(this.annotationSelector, 'h:groupCount', (obj) => {
@@ -122,6 +132,8 @@ var ImageView = View.extend({
         this.listenTo(this.contextMenu, 'h:editShape', this._editElementShape);
         this.listenTo(this.contextMenu, 'h:redraw', this._redrawAnnotation);
         this.listenTo(this.contextMenu, 'h:close', this._closeContextMenu);
+        this.listenTo(this.pixelmapContextMenu, 'h:update', this._handlePixelmapContextMenu);
+        this.listenTo(this.pixelmapContextMenu, 'h:close', this._closePixelmapContextMenu);
         this.listenTo(this.selectedElements, 'h:save', this._saveSelection);
         this.listenTo(this.selectedElements, 'h:remove', this._removeSelection);
 
@@ -138,6 +150,11 @@ var ImageView = View.extend({
                 return;
             }
             this._closeContextMenu();
+
+            if ($(evt.target).parents('#h-pixelmap-context-menu').length) {
+                return;
+            }
+            this._closePixelmapContextMenu();
         });
         $(document).on('keydown.h-image-view', (evt) => {
             if (evt.keyCode === 27) {
@@ -160,6 +177,7 @@ var ImageView = View.extend({
         }
         this.$el.html(imageTemplate());
         this.contextMenu.setElement(this.$('#h-annotation-context-menu')).render();
+        this.pixelmapContextMenu.setElement(this.$('#h-pixelmap-context-menu')).render();
 
         if (this.model.id) {
             this._openId = this.model.id;
@@ -191,10 +209,17 @@ var ImageView = View.extend({
             this.listenTo(this.viewerWidget, 'g:mouseClickAnnotation', this.mouseClickAnnotation);
             this.listenTo(this.viewerWidget, 'g:mouseResetAnnotation', this.mouseResetAnnotation);
 
+            // handle overlay events
+            this.listenTo(this.viewerWidget, 'g:mouseClickAnnotationOverlay', this.mouseClickOverlay);
+            this.listenTo(this.viewerWidget, 'g:mouseOverAnnotationOverlay', this.mouseOverOverlay);
+            this.listenTo(this.viewerWidget, 'g:drawOverlayAnnotation', this.overlayLayerDrawn);
+            this.listenTo(this.viewerWidget, 'g:removeOverlayAnnotation', this.overlayLayerRemoved);
+
             this.viewerWidget.on('g:imageRendered', () => {
                 events.trigger('h:imageOpened', this.model);
                 // store a reference to the underlying viewer
                 this.viewer = this.viewerWidget.viewer;
+                this.viewer.interactor().removeAction(geo.geo_action.zoomselect);
 
                 this.imageWidth = this.viewer.maxBounds().right;
                 this.imageHeight = this.viewer.maxBounds().bottom;
@@ -480,13 +505,98 @@ var ImageView = View.extend({
         this.viewer.rotation(rotation * Math.PI / 180);
     },
 
+    _updatePixelmapElements(pixelmapElements, annotation) {
+        const groups = new StyleCollection();
+        const defaultStyle = new StyleModel({ id: 'default' });
+        groups.fetch().done(() => {
+            if (!groups.has('default')) {
+                groups.add(defaultStyle.toJSON());
+                groups.get('default').save();
+            }
+            _.each(pixelmapElements, (pixelmap) => {
+                this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
+            });
+            this.viewerWidget.drawAnnotation(annotation);
+        });
+    },
+
+    _updatePixelmapsWithCategories(groups) {
+        const pixelmapElements = _.pluck(this._overlayLayers, 'element');
+        _.each(pixelmapElements, (element) => {
+            const annotation = _.find(this.annotations.models, (annotation) => annotation.elements().get(element.id));
+            this._reconcilePixelmapCategories(element.id, groups, annotation);
+            this._redrawAnnotation(annotation);
+        });
+    },
+
+    _reconcilePixelmapCategories(pixelmapId, groups, annotation) {
+        const pixelmap = annotation.elements().get(pixelmapId);
+        const existingCategories = pixelmap.get('categories') || [];
+        const newCategories = [];
+        const newStyleGroups = [];
+        _.each(existingCategories, (category) => {
+            const correspondingStyle = groups.get(category.label);
+            if (!correspondingStyle) {
+                const newStyle = new StyleModel({
+                    id: category.label,
+                    lineColor: category.strokeColor,
+                    fillColor: category.fillColor
+                });
+                newStyleGroups.push(newStyle);
+            } else {
+                if (category.strokeColor !== correspondingStyle.get('lineColor')) {
+                    category.strokeColor = correspondingStyle.get('lineColor');
+                }
+                if (category.fillColor !== correspondingStyle.get('fillColor')) {
+                    category.fillColor = correspondingStyle.get('fillColor');
+                }
+            }
+            newCategories.push(category);
+        });
+
+        groups.each((group) => {
+            const correspondingCategory = existingCategories.find((category) => (
+                category.label === group.get('id')));
+            if (!correspondingCategory) {
+                newCategories.push({
+                    label: group.get('id'),
+                    strokeColor: group.get('lineColor'),
+                    fillColor: group.get('fillColor')
+                });
+            }
+        });
+
+        _.each(newStyleGroups, (group) => {
+            groups.add(group);
+            groups.get(group.get('id')).save();
+        });
+
+        // move the default category to index 0 and adjust data array if needed
+        const originalDefaultIndex = _.findIndex(newCategories, { label: 'default' });
+        const updatedCategories = _.where(newCategories, { label: 'default' })
+            .concat(_.reject(newCategories, { label: 'default' }));
+        pixelmap.set('categories', updatedCategories);
+        if (originalDefaultIndex !== 0) {
+            const originalData = pixelmap.get('values');
+            const newData = _.map(originalData, (value) => {
+                if (value === originalDefaultIndex) {
+                    return 0;
+                }
+                if (value < originalDefaultIndex) {
+                    return value + 1;
+                }
+                return value;
+            });
+            pixelmap.set('values', newData);
+        }
+    },
+
     toggleAnnotation(annotation) {
         if (!this.viewerWidget) {
             // We may need a way to queue annotation draws while viewer
             // initializes, but for now ignore them.
             return;
         }
-
         if (annotation.get('displayed')) {
             var viewer = this.viewerWidget.viewer || {};
             if (viewer.zoomRange && annotation._pageElements === true) {
@@ -500,6 +610,12 @@ var ImageView = View.extend({
                 // abandon this if the annotation should not longer be shown
                 // or we are now showing a different image.
                 if (!annotation.get('displayed') || annotation.get('itemId') !== this.model.id) {
+                    return null;
+                }
+                // update pixelmaps based on styles
+                const pixelmapElements = annotation.elements().where({ type: 'pixelmap' });
+                if (pixelmapElements.length > 0) {
+                    this._updatePixelmapElements(pixelmapElements, annotation);
                     return null;
                 }
                 this.viewerWidget.drawAnnotation(annotation);
@@ -706,6 +822,141 @@ var ImageView = View.extend({
         }
     },
 
+    getPixelmapElements() {
+        let allPixelmaps = [];
+        this.annotations.each((annotation) => {
+            const pixelmaps = annotation.elements().filter((element) => element.get('type') === 'pixelmap');
+            allPixelmaps = allPixelmaps.concat(pixelmaps);
+        });
+        return allPixelmaps;
+    },
+
+    _getCategoryIndexFromStyleGroup(annotationElement, styleGroup) {
+        const categories = annotationElement.get('categories');
+        const groupId = styleGroup.get('id');
+        const newIndex = _.findIndex(categories, { label: groupId });
+        return (newIndex < 0) ? 0 : newIndex;
+    },
+
+    _updatePixelmapValues(pixelmapElementModel, layer, annotation) {
+        let newData = layer.data();
+        if (pixelmapElementModel.get('boundaries')) {
+            newData = newData.filter((d, i) => i % 2 === 0);
+        }
+        pixelmapElementModel.set('values', newData);
+        if (annotation) {
+            this._redrawAnnotation(annotation);
+        }
+    },
+
+    _closePixelmapContextMenu() {
+        if (!this._pixelmapContextMenuActive) {
+            return;
+        }
+        this.pixelmapContextMenu.updatePixelmap();
+        this.$('#h-pixelmap-context-menu').addClass('hidden');
+        this._pixelmapContextMenuActive = false;
+    },
+
+    _handlePixelmapContextMenu(pixelmap, dataIndex, group) {
+        const categoryIndex = _.findIndex(pixelmap.get('categories'), { label: group });
+        const pixelmapLayer = this.viewer.layers().find((layer) => layer.id() === pixelmap.get('id'));
+        if (!pixelmapLayer || dataIndex < 0) {
+            return;
+        }
+        const layerDataIndex = pixelmap.get('boundaries') ? (dataIndex - dataIndex % 2) : dataIndex;
+        const offset = pixelmap.get('boundaries') ? 1 : 0;
+        const data = pixelmapLayer.data();
+        const categories = pixelmap.get('categories');
+        const newValue = (categoryIndex < 0 || categoryIndex >= categories.length) ? 0 : categoryIndex;
+        data[layerDataIndex] = data[layerDataIndex + offset] = newValue;
+        pixelmapLayer.indexModified(layerDataIndex, layerDataIndex + offset).draw();
+        this._debounceUpdatePixelmapValues(pixelmap, pixelmapLayer);
+    },
+
+    mouseClickOverlay(overlayElement, overlayLayer, event) {
+        if (overlayElement.get('type') !== 'pixelmap') { return; }
+        const overlayAnnotationIsSelected = this.activeAnnotation && this.activeAnnotation.elements().get(overlayElement.id);
+        const index = overlayElement.get('boundaries') ? (event.index - event.index % 2) : event.index;
+        if (event.mouse.buttonsDown.left && this.drawWidget && overlayAnnotationIsSelected) {
+            // left click. check what the active style is and if it applies
+            const style = this.drawWidget.getStyleGroup();
+            const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
+
+            const offset = overlayElement.get('boundaries') ? 1 : 0;
+            const data = overlayLayer.data();
+            const categories = overlayElement.get('categories');
+            const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
+            data[index] = data[index + offset] = newValue;
+            overlayLayer.indexModified(index, index + offset).draw();
+            this._debounceUpdatePixelmapValues(overlayElement, overlayLayer);
+        } else if (event.mouse.buttonsDown.right) {
+            const annotation = this.annotations.find((annotation) => annotation.elements().get(overlayElement.id));
+            this._queueMouseClickAction(overlayElement, annotation.id, null, null);
+            window.requestAnimationFrame(() => {
+                const data = this._processMouseClickQueue();
+                if (!data || data.element.id !== overlayElement.id) {
+                    return;
+                }
+                if (!this._canOpenContextMenu()) {
+                    return;
+                }
+                this.pixelmapContextMenu.updatePixelmap(overlayElement, event.index);
+                // show pixelmap context menu
+                window.setTimeout(() => {
+                    const $window = $(window);
+                    const menu = this.$('#h-pixelmap-context-menu');
+                    const position = event.mouse.page;
+                    menu.removeClass('hidden');
+                    // adjust the vertical position of the context menu
+                    const belowWindow = Math.min(0, $window.height() - position.y - menu.height() + 20);
+                    const top = Math.max(0, position.y + belowWindow);
+
+                    const windowWidth = $window.width();
+                    const menuWidth = menu.width();
+                    let left = position.x;
+                    if (left + menuWidth > windowWidth) {
+                        left -= menuWidth;
+                    }
+                    left = Math.max(left, 0);
+
+                    menu.css({ left, top });
+                    this._pixelmapContextMenuActive = true;
+                }, 1);
+            });
+        }
+    },
+
+    mouseOverOverlay(overlayElement, overlayLayer, event) {
+        const overlayAnnotationIsSelected = this.activeAnnotation && this.activeAnnotation.elements().get(overlayElement.id);
+        if (event.mouse.buttons.left && event.mouse.modifiers.shift && this.drawWidget && overlayAnnotationIsSelected) {
+            const style = this.drawWidget.getStyleGroup();
+            const newIndex = this._getCategoryIndexFromStyleGroup(overlayElement, style);
+
+            const index = overlayElement.get('boundaries') ? (event.index - event.index % 2) : event.index;
+            const offset = overlayElement.get('boundaries') ? 1 : 0;
+            const data = overlayLayer.data();
+            const categories = overlayElement.get('categories');
+            const newValue = (newIndex < 0 || newIndex >= categories.length) ? 0 : newIndex;
+            data[index] = data[index + offset] = newValue;
+            overlayLayer.indexModified(index, index + offset).draw();
+            this._debounceUpdatePixelmapValues(overlayElement, overlayLayer);
+        }
+    },
+
+    overlayLayerDrawn(element, layer) {
+        this._overlayLayers[element.id] = {
+            layer: layer,
+            element: element
+        };
+    },
+
+    overlayLayerRemoved(element, layer) {
+        if (this._overlayLayers[element.id]) {
+            delete this._overlayLayers[element.id];
+        }
+    },
+
     mouseClickAnnotation(element, annotationId, evt) {
         if (!element.annotation) {
             // This is an instance of "selectedElements" and should be ignored.
@@ -740,19 +991,21 @@ var ImageView = View.extend({
 
     _queueMouseClickAction(element, annotationId, geometry, center) {
         let minimumDistance = Number.POSITIVE_INFINITY;
-        if (geometry.type !== 'Polygon') {
-            // We don't current try to resolve any other geometry type, for the moment,
-            // any point or line clicked on will always be chosen over a polygon.
-            minimumDistance = 0;
-        } else {
-            const points = geometry.coordinates[0];
-            // use an explicit loop for speed
-            for (let index = 0; index < points.length; index += 1) {
-                const point = points[index];
-                const dx = point[0] - center.x;
-                const dy = point[1] - center.y;
-                const distance = dx * dx + dy * dy;
-                minimumDistance = Math.min(minimumDistance, distance);
+        if (geometry) {
+            if (geometry.type !== 'Polygon') {
+                // We don't current try to resolve any other geometry type, for the moment,
+                // any point or line clicked on will always be chosen over a polygon.
+                minimumDistance = 0;
+            } else {
+                const points = geometry.coordinates[0];
+                // use an explicit loop for speed
+                for (let index = 0; index < points.length; index += 1) {
+                    const point = points[index];
+                    const dx = point[0] - center.x;
+                    const dy = point[1] - center.y;
+                    const distance = dx * dx + dy * dy;
+                    minimumDistance = Math.min(minimumDistance, distance);
+                }
             }
         }
         this._mouseClickQueue.push({ element, annotationId, value: minimumDistance });
@@ -807,6 +1060,7 @@ var ImageView = View.extend({
                 viewer: this.viewerWidget
             }).render();
             this.listenTo(this.drawWidget, 'h:redraw', this._redrawAnnotation);
+            this.listenTo(this.drawWidget, 'h:styleGroupsUpdated', this._updatePixelmapsWithCategories);
             this.$('.h-draw-widget').removeClass('hidden');
         }
     },
@@ -923,7 +1177,14 @@ var ImageView = View.extend({
         return results;
     },
 
+    _canOpenContextMenu() {
+        return !this._contextMenuActive && !this._pixelmapContextMenuActive;
+    },
+
     _openContextMenu(element, annotationId, evt) {
+        if (!this._canOpenContextMenu()) {
+            return;
+        }
         if (!this.selectedElements.get(element.id)) {
             this._resetSelection();
             this._selectElement(element);

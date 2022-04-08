@@ -45,7 +45,8 @@ var DrawWidget = Panel.extend({
         this._highlighted = {};
         this._groups = new StyleCollection();
         this._style = new StyleModel({id: 'default'});
-        this.listenTo(this._groups, 'update', this.render);
+        this.listenTo(this._groups, 'add change', this._handleStyleGroupsUpdate);
+        this.listenTo(this._groups, 'remove', this.render);
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
         this._groups.fetch().done(() => {
@@ -71,7 +72,7 @@ var DrawWidget = Panel.extend({
         });
     },
 
-    render() {
+    render(updatedElement) {
         this.$('[data-toggle="tooltip"]').tooltip('destroy');
         if (!this.viewer) {
             this.$el.empty();
@@ -79,7 +80,9 @@ var DrawWidget = Panel.extend({
             return;
         }
         const name = (this.annotation.get('annotation') || {}).name || 'Untitled';
-        this.trigger('h:redraw', this.annotation);
+        if (!updatedElement || (updatedElement.attributes && updatedElement.get('type') !== 'pixelmap')) {
+            this.trigger('h:redraw', this.annotation);
+        }
         if (this._skipRenderHTML) {
             delete this._skipRenderHTML;
         } else {
@@ -249,12 +252,21 @@ var DrawWidget = Panel.extend({
         }
     },
 
+    getStyleGroup() {
+        return this._style;
+    },
+
     _styleGroupEditor() {
         var dlg = editStyleGroups(this._style, this._groups);
         dlg.$el.on('hidden.bs.modal', () => {
             this.render();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
         });
+    },
+
+    _handleStyleGroupsUpdate() {
+        this.render();
+        this.trigger('h:styleGroupsUpdated', this._groups);
     },
 
     _highlightElement(evt) {

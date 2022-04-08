@@ -374,7 +374,9 @@ var AnnotationSelector = Panel.extend({
             let lastSaveAgain = annotation._saveAgain;
             annotation._saving = true;
             annotation._saveAgain = false;
-            this.trigger('h:redraw', annotation);
+            if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
+                this.trigger('h:redraw', annotation);
+            }
             annotation.save().fail(() => {
                 /* If we fail to save (possible because the server didn't
                  * respond), try again, gradually backing off the frequency
