@@ -80,7 +80,7 @@ girderTest.promise.done(function () {
             });
         });
         it('draw a region of interest', function () {
-            var regionButton = $('.s-select-region-button');
+            var regionButton = $('.s-select-region-button:first');
             var interactor = huiTest.geojsMap().interactor();
 
             expect(regionButton.length).toBe(1);
