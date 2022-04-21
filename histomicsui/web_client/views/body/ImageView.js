@@ -41,6 +41,7 @@ import '../../stylesheets/body/image.styl';
 var ImageView = View.extend({
     events: {
         'keydown .h-image-body': '_onKeyDown',
+        'click': '_clearTooltips',
         'click .h-control-panel-container .s-close-panel-group': '_closeAnalysis',
         'mousemove .geojs-map': '_trackMousePosition'
     },
@@ -458,6 +459,10 @@ var ImageView = View.extend({
                 );
             }
         });
+    },
+
+    _clearTooltips() {
+        $('.tooltip[role="tooltip"]').remove();
     },
 
     _closeAnalysis(evt) {
