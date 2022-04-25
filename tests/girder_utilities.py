@@ -1,3 +1,4 @@
+import io
 import os
 
 from girder.models.folder import Folder
@@ -39,6 +40,13 @@ def uploadTestFile(fileName, user, assetstore, folderName='Public', name=None, r
         name=None, reference=reference)
 
 
+def uploadText(text, user, assetstore, folder, name):
+    file = Upload().uploadFromFile(
+        io.BytesIO(text.encode()), len(text), name,
+        parentType='folder', parent=folder, user=user, assetstore=assetstore)
+    return file
+
+
 def respStatus(resp):
     return int(resp.output_status.split()[0])
 
@@ -55,9 +63,9 @@ def getBody(response, text=True):
 
     for chunk in response.body:
         if text and isinstance(chunk, bytes):
-            chunk = chunk.decode('utf8')
+            chunk = chunk.decode()
         elif not text and not isinstance(chunk, bytes):
-            chunk = chunk.encode('utf8')
+            chunk = chunk.encode()
         data += chunk
 
     return data

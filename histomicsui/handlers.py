@@ -119,7 +119,7 @@ def process_annotations(event):
         logger.error('Could not load models from the database')
         return
     try:
-        data = json.loads(b''.join(File().download(file)()).decode('utf8'))
+        data = json.loads(b''.join(File().download(file)()).decode())
     except Exception:
         logger.error('Could not parse annotation file')
         raise
@@ -229,7 +229,7 @@ def process_metadata(event):
         logger.error('Could not load models from the database')
         return
     try:
-        data = json.loads(b''.join(File().download(file)()).decode('utf8'))
+        data = json.loads(b''.join(File().download(file)()).decode())
     except Exception:
         logger.error('Could not parse metadata file')
         raise
