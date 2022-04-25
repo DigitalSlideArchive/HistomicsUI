@@ -32,9 +32,9 @@ class ImageBrowseResource(ItemResource):
                 currentImage['folderId'], user=self.getCurrentUser(), level=AccessType.READ)
 
         if folder.get('isVirtual'):
-            children = folderModel.childItems(folder, includeVirtual=True)
+            children = folderModel.childItems(folder, sort=[('name', 1)], includeVirtual=True)
         else:
-            children = folderModel.childItems(folder)
+            children = folderModel.childItems(folder, sort=[('name', 1)])
 
         allImages = [item for item in children if _isLargeImageItem(item)]
         try:
