@@ -55,6 +55,17 @@ form#g-hui-form(role="form")
       .input-group-btn
         button.g-open-browser.btn.btn-default(type="button")
           i.icon-folder-open
+  .form-group
+    label Keep annotation files after ingest
+    p.g-hui-image-description
+      | After an annotation (.anot) file is uploaded and ingested, it can be kept as a new item or removes.
+    .g-hui-delete-annotations-after-ingest-container
+      label.radio-inline
+        input.g-hui-keep-annotations-after-ingest(type="radio", name="g-hui-delete-annotations-after-ingest", checked=settings['histomicsui.delete_annotations_after_ingest'] !== true ? 'checked': undefined)
+        | Keep annotation items after ingest
+      label.radio-inline
+        input.g-hui-delete-annotations-after-ingest(type="radio", name="g-hui-delete-annotations-after-ingest", checked=settings['histomicsui.delete_annotations_after_ingest'] !== true ? undefined : 'checked')
+        | Remove annotation items after ingest
   p#g-hui-error-message.g-validation-failed-message
 .g-hui-buttons
   button#g-hui-save.btn.btn-sm.btn-primary Save

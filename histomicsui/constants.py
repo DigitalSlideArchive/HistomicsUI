@@ -15,3 +15,4 @@ class PluginSettings:
     HUI_BRAND_COLOR = 'histomicsui.brand_color'
     HUI_BANNER_COLOR = 'histomicsui.banner_color'
     HUI_QUARANTINE_FOLDER = 'histomicsui.quarantine_folder'
+    HUI_DELETE_ANNOTATIONS_AFTER_INGEST = 'histomicsui.delete_annotations_after_ingest'
