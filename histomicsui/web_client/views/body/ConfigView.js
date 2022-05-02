@@ -26,8 +26,13 @@ var ConfigView = View.extend({
                     key,
                     value: element.val() || null
                 };
-                if (key === 'histomicsui.quarantine_folder') {
-                    result.value = result.value ? result.value.split(' ')[0] : '';
+                switch (key) {
+                    case 'histomicsui.quarantine_folder':
+                        result.value = result.value ? result.value.split(' ')[0] : '';
+                        break;
+                    case 'histomicsui.delete_annotations_after_ingest':
+                        result.value = this.$('.g-hui-delete-annotations-after-ingest').prop('checked');
+                        break;
                 }
                 return result;
             });
@@ -57,7 +62,8 @@ var ConfigView = View.extend({
             'histomicsui.banner_color',
             'histomicsui.default_draw_styles',
             'histomicsui.panel_layout',
-            'histomicsui.quarantine_folder'
+            'histomicsui.quarantine_folder',
+            'histomicsui.delete_annotations_after_ingest'
         ];
         $.when(
             restRequest({

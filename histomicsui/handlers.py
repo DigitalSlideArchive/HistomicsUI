@@ -142,6 +142,10 @@ def process_annotations(event):
         except Exception:
             logger.error('Could not create annotation object from data')
             raise
+    if Setting().get(PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST):
+        item = Item().load(file['itemId'], force=True)
+        if item and len(list(Item().childFiles(item, limit=2))) == 1:
+            Item().remove(item)
 
 
 def quarantine_item(item, user, makePlaceholder=True):

@@ -152,6 +152,16 @@ SettingDefault.defaults.update({
 })
 
 
+@setting_utilities.validator({
+    PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST,
+})
+def validateBoolean(doc):
+    val = doc['value']
+    if str(val).lower() not in ('false', 'true', ''):
+        raise ValidationException('%s must be a boolean.' % doc['key'], 'value')
+    doc['value'] = (str(val).lower() == 'true')
+
+
 def childItems(self, folder, limit=0, offset=0, sort=None, filters=None,
                includeVirtual=False, **kwargs):
     if not includeVirtual or not folder.get('isVirtual') or 'virtualItemsQuery' not in folder:
