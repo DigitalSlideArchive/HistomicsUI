@@ -169,6 +169,31 @@ function show(annotation, options) {
     dialog.annotation = annotation;
     dialog.options = options;
     dialog.setElement('#g-dialog-container').render();
+
+    // Bootstrap 3's default behavior is to close the modal when a
+    // `click` event occurs outside of the modal. By using the `click`
+    // event, the following scenario could occur -
+    // The user clicks and holds down the mouse button when the cursor
+    // is inside the modal, but releases when the mouse cursor is
+    // outside the modal. The browser will recognize this as a `click`
+    // event and will close the modal.
+    //
+    // Instead, we want this behavior to happen on a `mousedown` event.
+    // So, below we disable the auto-closing behavior and attach our
+    // own event listener to do it:
+    const dialogContainer = $('#g-dialog-container');
+
+    // Disable the auto-closing of the modal on `click`
+    // (see https://getbootstrap.com/docs/3.4/javascript/#modals-options)
+    dialogContainer.modal({backdrop: 'static'});
+
+    // Attach our own event listener to handle auto-closing the modal
+    dialogContainer.on('mousedown', (evt) => {
+        if (!evt.target.closest('.modal-content')) {
+            dialogContainer.modal('hide');
+        }
+    });
+
     return dialog;
 }
 
