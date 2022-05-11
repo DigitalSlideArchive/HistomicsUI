@@ -248,10 +248,43 @@ var DrawWidget = Panel.extend({
         if (!this._style.get('group') && this._style.id !== 'default') {
             this._style.set('group', this._style.id);
         }
+        this.$('.h-style-group').val(group.id);
     },
 
     _setToSelectedStyleGroup() {
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
+    },
+
+    /**
+     * Set the style group to the next available group in the dropdown.
+     *
+     * If the currently selected group is the last group in the dropdown,
+     * the first group in the dropdown is selected instead.
+     */
+    setToNextStyleGroup() {
+        let nextGroup = this.$('.h-style-group option:selected').next().val();
+        // A style group can have an empty string for a name, so we must explicitly
+        // test if this is undefined instead of just testing truthiness.
+        if (nextGroup === undefined) {
+            nextGroup = this.$('.h-style-group option:first').val();
+        }
+        this._setStyleGroup(this._groups.get(nextGroup).toJSON());
+    },
+
+    /**
+     * Set the style group to the previous available group in the dropdown.
+     *
+     * If the currently selected group is the first group in the dropdown,
+     * the last group in the dropdown is selected instead.
+     */
+    setToPrevStyleGroup() {
+        let prevGroup = this.$('.h-style-group option:selected').prev().val();
+        // A style group can have an empty string for a name, so we must explicitly
+        // test if this is undefined instead of just testing truthiness.
+        if (prevGroup === undefined) {
+            prevGroup = this.$('.h-style-group option:last-child').val();
+        }
+        this._setStyleGroup(this._groups.get(prevGroup).toJSON());
     },
 
     getStyleGroup() {
