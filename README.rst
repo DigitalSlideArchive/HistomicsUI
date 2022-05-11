@@ -48,6 +48,8 @@ Development
 
 The most convenient way to develop on HistomicsUI is to use the `devops scripts from the Digital Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops>`_.
 
+If you are making changes to the HistomicsUI frontend, you can make Girder watch the source code and perform hot reloads on changes using the ``--watch-plugin`` argument to ``girder build``. See the `Girder docs <https://girder.readthedocs.io/en/stable/development.html#during-development>`_ for more information.
+
 Annotations and Metadata from Jobs
 ----------------------------------
 
