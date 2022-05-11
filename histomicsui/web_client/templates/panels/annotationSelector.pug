@@ -76,6 +76,7 @@ block content
       input#h-toggle-interactive(type='checkbox', checked=interactiveMode)
       | Interactive
     if accessLevel >= writeAccessLevel
-      button.btn.btn-sm.btn-primary.h-create-annotation
-        | #[span.icon-plus-squared] New
+      label(title='Create a new annotation. Keyboard shortcut: n')
+        button.btn.btn-sm.btn-primary.h-create-annotation
+          | #[span.icon-plus-squared] New
     .clearfix
