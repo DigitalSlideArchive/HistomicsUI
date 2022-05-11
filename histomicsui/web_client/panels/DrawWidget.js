@@ -21,7 +21,7 @@ var DrawWidget = Panel.extend({
         'click .h-edit-element': 'editElement',
         'click .h-delete-element': 'deleteElement',
         'click .h-draw': 'drawElement',
-        'change .h-style-group': '_setStyleGroup',
+        'change .h-style-group': '_setToSelectedStyleGroup',
         'click .h-configure-style-group': '_styleGroupEditor',
         'mouseenter .h-element': '_highlightElement',
         'mouseleave .h-element': '_unhighlightElement'
@@ -243,13 +243,15 @@ var DrawWidget = Panel.extend({
         return this.$(evt.currentTarget).parent('.h-element').data('id');
     },
 
-    _setStyleGroup() {
-        this._style.set(
-            this._groups.get(this.$('.h-style-group').val()).toJSON()
-        );
+    _setStyleGroup(group) {
+        this._style.set(group);
         if (!this._style.get('group') && this._style.id !== 'default') {
             this._style.set('group', this._style.id);
         }
+    },
+
+    _setToSelectedStyleGroup() {
+        this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
     },
 
     getStyleGroup() {
