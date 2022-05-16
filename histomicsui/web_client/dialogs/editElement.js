@@ -2,9 +2,8 @@ import tinycolor from 'tinycolor2';
 
 import View from '@girder/core/views/View';
 import { createApp } from 'vue/dist/vue.esm-bundler';
-import Hello from '../vue/components/hello';
 
-// import Hello from '../vue/components/Hello.vue';
+import Hello from '../vue/components/hello';
 
 import editElement from '../templates/dialogs/editElement.pug';
 import '@girder/core/utilities/jquery/girderModal';
@@ -31,14 +30,13 @@ var EditElement = View.extend({
 
     afterRender() {
         console.log('After render');
-        // const el = this.$('.vue-component-heatmap').get(0);
-        // // this.vueComponent = new Vue(Hello).$mount(el);
-        // const app = createApp(
-            // Hello, { element: this.annotationElement });
-        // app.config.errorHandler = (err) => {
-           // console.error(`Error in Vue app: ${err}`);
-        // };
-        // app.mount(el);
+        const el = this.$('.vue-component-heatmap').get(0);
+        const app = createApp(
+            Hello, { element: this.annotationElement });
+        app.config.errorHandler = (err) => {
+            console.error(`Error in Vue app: ${err}`);
+        };
+        app.mount(el);
     },
 
     /**
