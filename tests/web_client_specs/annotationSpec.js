@@ -547,6 +547,30 @@ girderTest.promise.done(function () {
                 });
             });
 
+            it('change style group using keyboard shortcuts', function () {
+                runs(function () {
+                    // Pressing q should select the previous annotation group in the list
+                    $('.h-draw-widget').trigger($.Event('keydown', {key: 'q'}));
+                    expect($('.h-style-group').val()).toBe('default');
+
+                    // Since the currently selected style group is the first
+                    // one in the list, pressing q should cause it to wrap
+                    // around and select the last style group in the list
+                    $('.h-draw-widget').trigger($.Event('keydown', {key: 'q'}));
+                    expect($('.h-style-group').val()).toBe('new');
+
+                    // Pressing w should select the next annotation group in the list
+                    $('.h-draw-widget').trigger($.Event('keydown', {key: 'w'}));
+                    expect($('.h-style-group').val()).toBe('default');
+
+                    // Since the currently selected style group is the last
+                    // one in the list, pressing w should cause it to wrap
+                    // around and select the first style group in the list
+                    $('.h-draw-widget').trigger($.Event('keydown', {key: 'w'}));
+                    expect($('.h-style-group').val()).toBe('new');
+                });
+            });
+
             it('open the style group dialog again', function () {
                 runs(function () {
                     $('.h-configure-style-group').click();
