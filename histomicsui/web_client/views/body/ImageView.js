@@ -1162,6 +1162,16 @@ var ImageView = View.extend({
                     }
                 }
                 break;
+            case 'q':
+                if (this.annotationSelector._activeAnnotation) {
+                    this.drawWidget.setToPrevStyleGroup();
+                }
+                break;
+            case 'w':
+                if (this.annotationSelector._activeAnnotation) {
+                    this.drawWidget.setToNextStyleGroup();
+                }
+                break;
         }
     },
 

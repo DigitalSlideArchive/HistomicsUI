@@ -21,7 +21,7 @@ var DrawWidget = Panel.extend({
         'click .h-edit-element': 'editElement',
         'click .h-delete-element': 'deleteElement',
         'click .h-draw': 'drawElement',
-        'change .h-style-group': '_setStyleGroup',
+        'change .h-style-group': '_setToSelectedStyleGroup',
         'click .h-configure-style-group': '_styleGroupEditor',
         'mouseenter .h-element': '_highlightElement',
         'mouseleave .h-element': '_unhighlightElement'
@@ -243,13 +243,48 @@ var DrawWidget = Panel.extend({
         return this.$(evt.currentTarget).parent('.h-element').data('id');
     },
 
-    _setStyleGroup() {
-        this._style.set(
-            this._groups.get(this.$('.h-style-group').val()).toJSON()
-        );
+    _setStyleGroup(group) {
+        this._style.set(group);
         if (!this._style.get('group') && this._style.id !== 'default') {
             this._style.set('group', this._style.id);
         }
+        this.$('.h-style-group').val(group.id);
+    },
+
+    _setToSelectedStyleGroup() {
+        this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
+    },
+
+    /**
+     * Set the style group to the next available group in the dropdown.
+     *
+     * If the currently selected group is the last group in the dropdown,
+     * the first group in the dropdown is selected instead.
+     */
+    setToNextStyleGroup() {
+        let nextGroup = this.$('.h-style-group option:selected').next().val();
+        // A style group can have an empty string for a name, so we must explicitly
+        // test if this is undefined instead of just testing truthiness.
+        if (nextGroup === undefined) {
+            nextGroup = this.$('.h-style-group option:first').val();
+        }
+        this._setStyleGroup(this._groups.get(nextGroup).toJSON());
+    },
+
+    /**
+     * Set the style group to the previous available group in the dropdown.
+     *
+     * If the currently selected group is the first group in the dropdown,
+     * the last group in the dropdown is selected instead.
+     */
+    setToPrevStyleGroup() {
+        let prevGroup = this.$('.h-style-group option:selected').prev().val();
+        // A style group can have an empty string for a name, so we must explicitly
+        // test if this is undefined instead of just testing truthiness.
+        if (prevGroup === undefined) {
+            prevGroup = this.$('.h-style-group option:last-child').val();
+        }
+        this._setStyleGroup(this._groups.get(prevGroup).toJSON());
     },
 
     getStyleGroup() {
