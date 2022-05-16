@@ -404,6 +404,43 @@ girderTest.promise.done(function () {
                     expect($('button.h-draw[data-type="point"]').hasClass('active')).toBe(true);
                 });
             });
+
+            it('check that keyboard shortcuts behave correctly', function () {
+                runs(function () {
+                    // expect that hitting keyboard shortcut for each shape will
+                    // switch the annotation mode to it, and hitting it again will
+                    // turn off drawing mode.
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'r'}));
+                    expect($('.h-draw.active').attr('data-type')).toBe('rectangle');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'r'}));
+                    expect($('.h-draw.active').length).toBe(0);
+
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'o'}));
+                    expect($('.h-draw.active').attr('data-type')).toBe('point');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'o'}));
+                    expect($('.h-draw.active').length).toBe(0);
+
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'c'}));
+                    expect($('.h-draw.active').attr('data-type')).toBe('circle');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'c'}));
+                    expect($('.h-draw.active').length).toBe(0);
+
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'i'}));
+                    expect($('.h-draw.active').attr('data-type')).toBe('ellipse');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'i'}));
+                    expect($('.h-draw.active').length).toBe(0);
+
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'p'}));
+                    expect($('.h-draw.active').attr('data-type')).toBe('polygon');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'p'}));
+                    expect($('.h-draw.active').length).toBe(0);
+
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'l'}));
+                    expect($('.h-draw.active').attr('data-type')).toBe('line');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'l'}));
+                    expect($('.h-draw.active').length).toBe(0);
+                });
+            });
         });
 
         describe('Annotation styles', function () {

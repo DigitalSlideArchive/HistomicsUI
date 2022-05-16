@@ -1103,6 +1103,65 @@ var ImageView = View.extend({
             case 's':
                 this.annotationSelector.selectAnnotationByRegion();
                 break;
+            case ' ': // pressing space bar creates a new annotation
+                if (!this.annotationSelector._activeAnnotation) {
+                    this.annotationSelector.createAnnotation();
+                }
+                break;
+            case 'o':
+                if (this.annotationSelector._activeAnnotation) {
+                    if (this.drawWidget._drawingType === 'point') {
+                        this.drawWidget.cancelDrawMode();
+                    } else {
+                        this.drawWidget.drawElement(undefined, 'point');
+                    }
+                }
+                break;
+            case 'r':
+                if (this.annotationSelector._activeAnnotation) {
+                    if (this.drawWidget._drawingType === 'rectangle') {
+                        this.drawWidget.cancelDrawMode();
+                    } else {
+                        this.drawWidget.drawElement(undefined, 'rectangle');
+                    }
+                }
+                break;
+            case 'i':
+                if (this.annotationSelector._activeAnnotation) {
+                    if (this.drawWidget._drawingType === 'ellipse') {
+                        this.drawWidget.cancelDrawMode();
+                    } else {
+                        this.drawWidget.drawElement(undefined, 'ellipse');
+                    }
+                }
+                break;
+            case 'c':
+                if (this.annotationSelector._activeAnnotation) {
+                    if (this.drawWidget._drawingType === 'circle') {
+                        this.drawWidget.cancelDrawMode();
+                    } else {
+                        this.drawWidget.drawElement(undefined, 'circle');
+                    }
+                }
+                break;
+            case 'p':
+                if (this.annotationSelector._activeAnnotation) {
+                    if (this.drawWidget._drawingType === 'polygon') {
+                        this.drawWidget.cancelDrawMode();
+                    } else {
+                        this.drawWidget.drawElement(undefined, 'polygon');
+                    }
+                }
+                break;
+            case 'l':
+                if (this.annotationSelector._activeAnnotation) {
+                    if (this.drawWidget._drawingType === 'line') {
+                        this.drawWidget.cancelDrawMode();
+                    } else {
+                        this.drawWidget.drawElement(undefined, 'line');
+                    }
+                }
+                break;
         }
     },
 
