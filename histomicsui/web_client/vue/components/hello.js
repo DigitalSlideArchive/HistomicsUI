@@ -7,12 +7,14 @@ export default {
             normalizeRange: null,
             colorRange: null,
             colorObjects: null,
-            rangeValues: null
+            rangeValues: null,
+            minColor: null,
+            maxColor: null
         };
     },
     methods: {
-        getColorString(colorObject) {
-            return tinycolor(colorObject).toRgbString();
+        getColorString(color) {
+            return tinycolor(color).toRgbString();
         },
         addColor(index) {
             const defaultColor = 'rgba(0, 0, 0, 0)';
@@ -22,14 +24,12 @@ export default {
         },
         removeColor(index) {
             console.log(index);
+            this.rangeValues.splice(index, 1);
+            this.colorRange.splice(index, 1);
+            this.colorObjects.splice(index, 1);
         }
     },
     watch: {
-        radius(newRadius, oldRadius) {
-        },
-        colorObjects(newObjects, oldObjects) {
-            console.log({ newObjects, oldObjects });
-        }
     },
     mounted() {
         this.radius = this.element.get('radius');
@@ -38,8 +38,9 @@ export default {
         if (this.colorRange) {
             this.colorObjects = this.colorRange.map((color) => tinycolor(color).toRgb());
         }
+        this.minColor = tinycolor(this.element.get('minColor') || 'rgba(0, 0, 0, 0)').toRgb();
+        this.maxColor = tinycolor(this.element.get('maxColor') || 'rgba(0, 0, 0, 0)').toRgb();
         this.rangeValues = this.element.get('rangeValues');
-        console.log(this.colorObjects);
     },
     template: `
         <div class="form-group" v-if="this.radius" ref="uniquekey">
@@ -48,7 +49,7 @@ export default {
         </div>
         <div class="form-group" v-if="this.colorRange && this.rangeValues">
             <label for="h-griddata-range">Range Colors</label>
-            <table id="h-griddata-range" class="table table-bordered">
+            <table id="h-griddata-range" class="table table-bordered table-condensed">
                 <thead>
                     <tr>
                         <th>Value</th>
@@ -57,9 +58,33 @@ export default {
                         <th>B</th>
                         <th>A</th>
                         <th>Color</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
+                <tr>
+                    <td>
+                        Min. color
+                    </td>
+                    <td>
+                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="minColor.r">
+                    </td>
+                    <td>
+                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="minColor.g">
+                    </td>
+                    <td>
+                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="minColor.b">
+                    </td>
+                    <td>
+                        <input class="input-sm form-control" type="number" min="0" max="1" step=".01" v-model="minColor.a">
+                    </td>
+                    <td>
+                        <span>
+                            <i :style="{ 'background-color': getColorString(this.minColor), height: '25px', width: '25px', display: 'block' }">
+                            </i>
+                        </span>
+                    </td>
+                </tr>
                 <tr v-for="(value, index) in rangeValues">
                     <td>
                         <input class="input-sm form-control" type="number" step="0.1" v-model="this.rangeValues[index]">
@@ -83,12 +108,35 @@ export default {
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-default" @click.prevent="addColor(index)">
-                            <span class="icon-plus"></span>
-                        </button>
-                        <button class="btn btn-default" @click.prevent="removeColor(index)">
-                            <span class="icon-minus"></span>
-                        </button>
+                        <a @click.prevent="addColor(index)">
+                            <span class="icon-plus" title="Add row below"></span>
+                        </a>
+                        <a @click.prevent="removeColor(index)">
+                            <span class="icon-minus" title="Remove this row"></span>
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Max. color
+                    </td>
+                    <td>
+                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="maxColor.r">
+                    </td>
+                    <td>
+                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="maxColor.g">
+                    </td>
+                    <td>
+                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="maxColor.b">
+                    </td>
+                    <td>
+                        <input class="input-sm form-control" type="number" min="0" max="1" step=".01" v-model="maxColor.a">
+                    </td>
+                    <td>
+                        <span>
+                            <i :style="{ 'background-color': getColorString(this.maxColor), height: '25px', width: '25px', display: 'block' }">
+                            </i>
+                        </span>
                     </td>
                 </tr>
                 </tbody>
