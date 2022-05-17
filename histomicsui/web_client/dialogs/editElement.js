@@ -19,7 +19,6 @@ var EditElement = View.extend({
     },
 
     render() {
-        console.log('inside render');
         this.$el.html(
             editElement({
                 element: this.annotationElement.toJSON()
@@ -29,7 +28,6 @@ var EditElement = View.extend({
     },
 
     afterRender() {
-        console.log('After render');
         const el = this.$('.vue-component-heatmap').get(0);
         const app = createApp(
             Hello, { element: this.annotationElement });
