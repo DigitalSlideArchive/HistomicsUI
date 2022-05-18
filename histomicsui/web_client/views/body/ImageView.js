@@ -1104,12 +1104,12 @@ var ImageView = View.extend({
                 this.annotationSelector.selectAnnotationByRegion();
                 break;
             case ' ': // pressing space bar creates a new annotation
-                if (!this.annotationSelector._activeAnnotation) {
+                if (!this.activeAnnotation) {
                     this.annotationSelector.createAnnotation();
                 }
                 break;
             case 'o':
-                if (this.annotationSelector._activeAnnotation) {
+                if (this.activeAnnotation) {
                     if (this.drawWidget._drawingType === 'point') {
                         this.drawWidget.cancelDrawMode();
                     } else {
@@ -1118,7 +1118,7 @@ var ImageView = View.extend({
                 }
                 break;
             case 'r':
-                if (this.annotationSelector._activeAnnotation) {
+                if (this.activeAnnotation) {
                     if (this.drawWidget._drawingType === 'rectangle') {
                         this.drawWidget.cancelDrawMode();
                     } else {
@@ -1127,7 +1127,7 @@ var ImageView = View.extend({
                 }
                 break;
             case 'i':
-                if (this.annotationSelector._activeAnnotation) {
+                if (this.activeAnnotation) {
                     if (this.drawWidget._drawingType === 'ellipse') {
                         this.drawWidget.cancelDrawMode();
                     } else {
@@ -1136,7 +1136,7 @@ var ImageView = View.extend({
                 }
                 break;
             case 'c':
-                if (this.annotationSelector._activeAnnotation) {
+                if (this.activeAnnotation) {
                     if (this.drawWidget._drawingType === 'circle') {
                         this.drawWidget.cancelDrawMode();
                     } else {
@@ -1145,7 +1145,7 @@ var ImageView = View.extend({
                 }
                 break;
             case 'p':
-                if (this.annotationSelector._activeAnnotation) {
+                if (this.activeAnnotation) {
                     if (this.drawWidget._drawingType === 'polygon') {
                         this.drawWidget.cancelDrawMode();
                     } else {
@@ -1154,7 +1154,7 @@ var ImageView = View.extend({
                 }
                 break;
             case 'l':
-                if (this.annotationSelector._activeAnnotation) {
+                if (this.activeAnnotation) {
                     if (this.drawWidget._drawingType === 'line') {
                         this.drawWidget.cancelDrawMode();
                     } else {
@@ -1163,18 +1163,18 @@ var ImageView = View.extend({
                 }
                 break;
             case 'q':
-                if (this.annotationSelector._activeAnnotation) {
+                if (this.activeAnnotation) {
                     this.drawWidget.setToPrevStyleGroup();
                 }
                 break;
             case 'w':
-                if (this.annotationSelector._activeAnnotation) {
+                if (this.activeAnnotation) {
                     this.drawWidget.setToNextStyleGroup();
                 }
                 break;
             case 'Enter':
                 const drawingType = this.drawWidget._drawingType;
-                if (this.annotationSelector._activeAnnotation && ['polygon', 'line'].includes(drawingType)) {
+                if (this.activeAnnotation && ['polygon', 'line'].includes(drawingType)) {
                     const annotation = this.viewerWidget.annotationLayer.annotations()[0];
 
                     // The current mouse position is included as the last vertex, so remove
