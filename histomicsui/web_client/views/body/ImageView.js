@@ -1104,9 +1104,7 @@ var ImageView = View.extend({
                 this.annotationSelector.selectAnnotationByRegion();
                 break;
             case ' ': // pressing space bar creates a new annotation
-                if (!this.activeAnnotation) {
-                    this.annotationSelector.createAnnotation();
-                }
+                this.annotationSelector.createAnnotation();
                 break;
             case 'o':
                 if (this.activeAnnotation) {
