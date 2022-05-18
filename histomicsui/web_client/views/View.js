@@ -25,5 +25,11 @@ export default View.extend({
                 dialogContainer.modal('hide');
             }
         });
+
+        // Whenever a new dialog is rendered in the DOM, set the tabindex
+        // of its buttons to 0 so they can be selected with the Tab key.
+        $(document).on('DOMNodeInserted', '#g-dialog-container', () => {
+            $('.btn', '#g-dialog-container').prop('tabindex', '0');
+        });
     }
 });
