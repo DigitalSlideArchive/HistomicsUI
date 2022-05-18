@@ -11,6 +11,7 @@ export default {
             rangeValues: null,
             minColor: null,
             maxColor: null,
+            stepped: null,
             validationErrors: []
         };
     },
@@ -33,21 +34,22 @@ export default {
             this.colorObjects.splice(index + 1, 0, tinycolor(defaultColor).toRgb());
         },
         removeColor(index) {
-            console.log(index);
             this.rangeValues.splice(index, 1);
             this.colorRange.splice(index, 1);
             this.colorObjects.splice(index, 1);
         },
         cancelClicked() {
-            console.log(this);
             this.$root.$el.parentNode.removeChild(this.$el);
         },
         submitClicked() {
-            console.log('submit clicked');
+            this.validationErrors = [];
             this.tryValidateForm();
+            if (this.validationErrors.length === 0) {
+                this.saveElement();
+                this.$refs.close.click();
+            }
         },
         tryValidateForm() {
-            this.validationErrors = [];
             if (this.normalizeRange) {
                 // check values
                 const invalidRangeValues = this.rangeValues.filter(
@@ -69,6 +71,21 @@ export default {
                     'Invalid color(s) in row(s) ' + invalidColorRows.join(', ')
                 );
             }
+        },
+        saveElement() {
+            const propsToSave = {
+                rangeValues: this.rangeValues,
+                colorRange: this.colorObjects.map((colorObj) => tinycolor(colorObj).toRgbString()),
+                normalizeRange: this.normalizeRange
+            };
+            if (this.type === 'heatmap') {
+                propsToSave['radius'] = this.radius;
+            } else {
+                // griddata
+                propsToSave['minColor'] = tinycolor(this.minColor).toRgbString();
+                propsToSave['maxColor'] = tinycolor(this.maxColor).toRgbString();
+            }
+            this.element.set(propsToSave);
         }
     },
     watch: {
@@ -90,7 +107,7 @@ export default {
             <div class="modal-content">
                 <form class="modal-form">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" ref="close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                         <h4>{{ headerMessage }}</h4>
