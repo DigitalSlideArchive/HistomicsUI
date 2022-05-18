@@ -1172,6 +1172,26 @@ var ImageView = View.extend({
                     this.drawWidget.setToNextStyleGroup();
                 }
                 break;
+            case 'Enter':
+                const drawingType = this.drawWidget._drawingType;
+                if (this.annotationSelector._activeAnnotation && ['polygon', 'line'].includes(drawingType)) {
+                    const annotation = this.viewerWidget.annotationLayer.annotations()[0];
+
+                    // The current mouse position is included as the last vertex, so remove
+                    // it before saving it
+                    annotation.options('vertices').pop();
+
+                    // Only save the annotation if there are enough vertices for it to form
+                    // a line or polygon
+                    if (
+                        (drawingType === 'polygon' && annotation.options('vertices').length > 2) ||
+                        (drawingType === 'line' && annotation.options('vertices').length > 1)
+                    ) {
+                        annotation.state(geo.annotation.state.done).modified().draw();
+                    }
+
+                    this.drawWidget.cancelDrawMode();
+                }
         }
     },
 
