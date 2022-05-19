@@ -14,15 +14,12 @@
 #  limitations under the License.
 #############################################################################
 
-import json
 
-from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import RestException, boundHandler, filtermodel
 from girder.api.v1.resource import Resource as ResourceResource
 from girder.constants import AccessType, TokenScope
-from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.utility.model_importer import ModelImporter
@@ -38,7 +35,6 @@ def addSystemEndpoints(apiRoot):
     apiRoot.item.route('GET', ('query',), getItemsByQuery)
     # Added to the folder route
     apiRoot.folder.route('GET', ('query',), getFoldersByQuery)
-    apiRoot.folder.route('GET', (':id', 'json_config', ':name'), getJSONConfigFile)
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
@@ -170,40 +166,6 @@ def getItemsByQuery(self, query, limit, offset, sort):
 def getFoldersByQuery(self, query, limit, offset, sort):
     user = self.getCurrentUser()
     return Folder().findWithPermissions(query, offset=offset, limit=limit, sort=sort, user=user)
-
-
-@access.public(scope=TokenScope.DATA_READ)
-@autoDescribeRoute(
-    Description(
-        'Get a config file.  This walks up the chain of parent folders until '
-        'the file is found.  If not found, the .config folder in the parent '
-        'collection or user is checked.')
-    .modelParam('id', model=Folder, level=AccessType.READ)
-    .param('name', 'The name of the file.', paramType='path')
-    .errorResponse()
-)
-@boundHandler()
-def getJSONConfigFile(self, folder, name):
-    user = self.getCurrentUser()
-    while folder:
-        item = Item().findOne({'folderId': folder['_id'], 'name': name},
-                              user=user, level=AccessType.READ)
-        if item:
-            for file in Item().childFiles(item):
-                if file['size'] > 10 * 1024 ** 2:
-                    logger.info('Not loading %s -- too large' % file['name'])
-                    continue
-                with File().open(file) as fptr:
-                    return json.loads(fptr.read())
-        if folder['parentCollection'] != 'folder':
-            if folder['name'] == '.config':
-                break
-            folder = Folder().findOne({
-                'parentId': folder['parentId'],
-                'parentCollection': folder['parentCollection'],
-                'name': '.config'})
-        else:
-            folder = Folder().load(folder['parentId'], user=user, level=AccessType.READ)
 
 
 class HUIResourceResource(ResourceResource):
