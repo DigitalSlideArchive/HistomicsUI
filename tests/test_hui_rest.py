@@ -218,42 +218,6 @@ class TestHUIResourceAndItem:
         assert meta['keyb']['keyc'] is None
         assert meta['keyb']['keyd'] == 'valued'
 
-    def testJSONConfigFile(self, server, admin, fsAssetstore):
-        self.makeResources(admin)
-        resp = server.request(
-            path='/folder/%s/json_config/sample.json' % str(self.colFolderC['_id']),
-            method='GET')
-        assert utilities.respStatus(resp) == 200
-        assert resp.json is None
-
-        self.colFolderConfig = Folder().createFolder(
-            self.collection, '.config', parentType='collection',
-            creator=admin)
-        utilities.uploadText(
-            json.dumps({'keyA': 'value1'}),
-            admin, fsAssetstore, self.colFolderConfig, 'sample.json')
-        resp = server.request(
-            path='/folder/%s/json_config/sample.json' % str(self.colFolderC['_id']))
-        assert utilities.respStatus(resp) == 200
-        assert resp.json['keyA'] == 'value1'
-
-        utilities.uploadText(
-            json.dumps({'keyA': 'value2'}),
-            admin, fsAssetstore, self.colFolderA, 'sample.json')
-        resp = server.request(
-            path='/folder/%s/json_config/sample.json' % str(self.colFolderC['_id']))
-        assert utilities.respStatus(resp) == 200
-        assert resp.json['keyA'] == 'value2'
-
-        utilities.uploadText(
-            json.dumps({'keyA': 'value3'}),
-            admin, fsAssetstore, self.colFolderC, 'sample.json')
-        resp = server.request(
-            path='/folder/%s/json_config/sample.json' % str(self.colFolderC['_id']))
-        assert utilities.respStatus(resp) == 200
-        assert resp.json['keyA'] == 'value3'
-        # ##DWM::
-
 
 @pytest.mark.plugin('histomicsui')
 class TestHUIEndpoints:
