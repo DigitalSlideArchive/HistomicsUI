@@ -1,4 +1,5 @@
 import tinycolor from 'tinycolor2';
+import _ from 'underscore';
 export default {
     props: ['element'],
     data() {
@@ -29,9 +30,9 @@ export default {
         },
         addColor(index) {
             const defaultColor = 'rgba(0, 0, 0, 0)';
+            this.colorObjects.splice(index + 1, 0, tinycolor(defaultColor).toRgb());
             this.rangeValues.splice(index + 1, 0, 0);
             this.colorRange.splice(index + 1, 0, defaultColor);
-            this.colorObjects.splice(index + 1, 0, tinycolor(defaultColor).toRgb());
         },
         removeColor(index) {
             this.rangeValues.splice(index, 1);
@@ -85,6 +86,7 @@ export default {
                 propsToSave['minColor'] = tinycolor(this.minColor).toRgbString();
                 propsToSave['maxColor'] = tinycolor(this.maxColor).toRgbString();
             }
+            console.log(propsToSave);
             this.element.set(propsToSave);
         }
     },
@@ -94,13 +96,13 @@ export default {
         this.type = this.element.get('type');
         this.radius = this.element.get('radius');
         this.normalizeRange = this.element.get('normalizeRange');
-        this.colorRange = this.element.get('colorRange');
+        this.colorRange = _.clone(this.element.get('colorRange'));
         if (this.colorRange) {
             this.colorObjects = this.colorRange.map((color) => tinycolor(color).toRgb());
         }
         this.minColor = tinycolor(this.element.get('minColor') || 'rgba(0, 0, 0, 0)').toRgb();
         this.maxColor = tinycolor(this.element.get('maxColor') || 'rgba(0, 0, 0, 0)').toRgb();
-        this.rangeValues = this.element.get('rangeValues');
+        this.rangeValues = _.clone(this.element.get('rangeValues'));
     },
     template: `
         <div class="modal-dialog">

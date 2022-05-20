@@ -3,7 +3,7 @@ import tinycolor from 'tinycolor2';
 import View from '@girder/core/views/View';
 import { createApp } from 'vue/dist/vue.esm-bundler';
 
-import Hello from '../vue/components/hello';
+import EditHeatmapElement from '../vue/components/editHeatmapElement';
 
 import editElement from '../templates/dialogs/editElement.pug';
 import '@girder/core/utilities/jquery/girderModal';
@@ -30,7 +30,7 @@ var EditElement = View.extend({
     afterRender() {
         const el = this.$('.vue-component-heatmap').get(0);
         const app = createApp(
-            Hello, { element: this.annotationElement });
+            EditHeatmapElement, { element: this.annotationElement });
         app.config.errorHandler = (err) => {
             console.error(`Error in Vue app: ${err}`);
         };
