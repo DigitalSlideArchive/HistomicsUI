@@ -18,8 +18,8 @@ module.exports = function (config) {
         } */])
     );
     // config.module.rules.push({
-        // test: /\.vue$/,
-        // use: require.resolve('vue-loader')
+    //    test: /\.vue$/,
+    //    use: require.resolve('vue-loader')
     // });
     // config.plugins.push(new VueLoaderPlugin());
     return config;
