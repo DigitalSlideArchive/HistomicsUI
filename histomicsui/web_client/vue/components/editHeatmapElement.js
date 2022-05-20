@@ -86,7 +86,6 @@ export default {
                 propsToSave['minColor'] = tinycolor(this.minColor).toRgbString();
                 propsToSave['maxColor'] = tinycolor(this.maxColor).toRgbString();
             }
-            console.log(propsToSave);
             this.element.set(propsToSave);
         }
     },
@@ -225,7 +224,7 @@ export default {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal" aria-label="Close" ref="close" id="close">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" ref="close" id="close">
                             Cancel
                         </button>
                         <button type="button" class="btn btn-primary" @click.prevent="submitClicked()">
