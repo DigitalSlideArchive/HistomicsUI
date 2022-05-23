@@ -13,6 +13,7 @@ export default {
             minColor: null,
             maxColor: null,
             stepped: null,
+            scaleWithZoom: null,
             validationErrors: []
         };
     },
@@ -81,6 +82,7 @@ export default {
             };
             if (this.type === 'heatmap') {
                 propsToSave['radius'] = this.radius;
+                propsToSave['scaleWithZoom'] = this.scaleWithZoom;
             } else {
                 // griddata
                 propsToSave['minColor'] = tinycolor(this.minColor).toRgbString();
@@ -102,6 +104,7 @@ export default {
         this.minColor = tinycolor(this.element.get('minColor') || 'rgba(0, 0, 0, 0)').toRgb();
         this.maxColor = tinycolor(this.element.get('maxColor') || 'rgba(0, 0, 0, 0)').toRgb();
         this.rangeValues = _.clone(this.element.get('rangeValues'));
+        this.scaleWithZoom = this.element.get('scaleWithZoom') || false;
     },
     template: `
         <div class="modal-dialog">
@@ -221,6 +224,9 @@ export default {
                         </div>
                         <div class="checkbox">
                             <label><input type="checkbox" v-model="this.normalizeRange"> <b>Normalize Range</b></label>
+                        </div>
+                        <div v-if="this.type === 'heatmap'" class="checkbox">
+                        <label><input type="checkbox" v-model="this.scaleWithZoom"> <b>Scale With Zoom</b></label>
                         </div>
                     </div>
                     <div class="modal-footer">
