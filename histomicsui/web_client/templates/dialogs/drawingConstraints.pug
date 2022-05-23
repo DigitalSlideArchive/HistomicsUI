@@ -1,0 +1,18 @@
+.modal-dialog(role='document')
+  .modal-content
+    form.modal-form(role='form')
+      .modal-header
+        button.close(type='button', data-dismiss='modal', aria-label='Close')
+          span(aria-hidden='true') &times;
+        h4.modal-title Set Constraints
+      .modal-body
+        .form-group
+                label
+                  input.form-control(type='number', name='width')
+                  | Width
+                label
+                  input.form-control(type='number', name='height')
+                  | Height
+      .modal-footer
+        button.btn.btn-default.h-cancel(type='button', data-dismiss='modal') Cancel
+        button.btn.btn-primary.h-submit(type='submit') Save
