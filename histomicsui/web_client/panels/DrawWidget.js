@@ -9,8 +9,15 @@ import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
+import setConstraints from '../dialogs/setConstraints';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import '../stylesheets/panels/drawWidget.styl';
+
+const CONSTRAINTS = {
+    unconstrained: 'Unconstrained',
+    fixedAspectRatio: 'Fixed Aspect Ratio',
+    fixedSize: 'Fixed Size'
+};
 
 /**
  * Create a panel with controls to draw and edit
@@ -23,6 +30,8 @@ var DrawWidget = Panel.extend({
         'click .h-draw': 'drawElement',
         'change .h-style-group': '_setToSelectedStyleGroup',
         'click .h-configure-style-group': '_styleGroupEditor',
+        'change .h-drawing-constraints': '_setDrawingConstraint',
+        'click .h-configure-h-drawing-constraints': '_drawingConstraintEditor',
         'mouseenter .h-element': '_highlightElement',
         'mouseleave .h-element': '_unhighlightElement'
     }),
@@ -93,7 +102,10 @@ var DrawWidget = Panel.extend({
                 style: this._style.id,
                 highlighted: this._highlighted,
                 name,
-                collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
+                collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
+                // Enable constraints dropdown if rectangle or ellipse is selected
+                constraints: ['rectangle', 'ellipse'].includes(this.drawingType()) ? Object.values(CONSTRAINTS) : [],
+                selectedConstraint: localStorage.getItem(`h-${this.drawingType()}-mode` || CONSTRAINTS.unconstrained)
             }));
         }
         this.$('button.h-draw[data-type]').removeClass('active');
@@ -224,6 +236,7 @@ var DrawWidget = Panel.extend({
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
         }
+        this.render();
     },
 
     cancelDrawMode() {
@@ -319,6 +332,18 @@ var DrawWidget = Panel.extend({
             'get', 'group'
         );
         this.annotation.set('groups', groups);
+    },
+
+    _setDrawingConstraint(evt) {
+        const constraintType = evt.target.value;
+        localStorage.setItem(`h-${this.drawingType()}-mode`, constraintType);
+        if (constraintType === CONSTRAINTS.fixedAspectRatio || constraintType === CONSTRAINTS.fixedSize) {
+            setConstraints();
+        }
+    },
+
+    _drawingConstraintEditor() {
+        setConstraints();
     }
 });
 

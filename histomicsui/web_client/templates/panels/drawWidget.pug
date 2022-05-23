@@ -12,6 +12,15 @@ block content
     .input-group-btn
       button.btn.btn-default.h-configure-style-group(type='button')
         span.icon-cog(data-toggle='tooltip', title='Configure style group. Keyboard shortcuts: "q" and "w" to select next and previous style group, respectively')
+  if constraints.length
+    .input-group.input-group-sm.h-drawing-constraints-row
+      select.form-control.h-drawing-constraints
+        each constraint in constraints
+          option(value=constraint, selected=selectedConstraint === constraint)
+            = constraint
+      .input-group-btn
+        button.btn.btn-default.h-configure-h-drawing-constraints(type='button')
+          span.icon-cog(data-toggle='tooltip', title='Configure drawing constraints for currently selected shape.')
   .btn-group.btn-justified.btn-group-sm.h-draw-tools
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
