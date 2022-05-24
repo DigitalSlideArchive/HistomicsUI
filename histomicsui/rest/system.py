@@ -35,6 +35,7 @@ def addSystemEndpoints(apiRoot):
     apiRoot.item.route('GET', ('query',), getItemsByQuery)
     # Added to the folder route
     apiRoot.folder.route('GET', ('query',), getFoldersByQuery)
+    apiRoot.system.route('PUT', ('restart',), restartServer)
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
@@ -166,6 +167,41 @@ def getItemsByQuery(self, query, limit, offset, sort):
 def getFoldersByQuery(self, query, limit, offset, sort):
     user = self.getCurrentUser()
     return Folder().findWithPermissions(query, offset=offset, limit=limit, sort=sort, user=user)
+
+
+@access.admin
+@autoDescribeRoute(
+    Description('Restart the Girder REST server.')
+    .notes('Must be a system administrator to call this.')
+    .errorResponse('You are not a system administrator.', 403)
+)
+@boundHandler()
+def restartServer(self):
+    import datetime
+
+    import cherrypy
+    from girder.utility import config
+
+    if not config.getConfig()['server'].get('cherrypy_server', True):
+        raise RestException('Restarting of server is disabled.', 403)
+
+    class Restart(cherrypy.process.plugins.Monitor):
+        def __init__(self, bus, frequency=1):
+            cherrypy.process.plugins.Monitor.__init__(
+                self, bus, self.run, frequency)
+
+        def start(self):
+            cherrypy.process.plugins.Monitor.start(self)
+
+        def run(self):
+            self.bus.log('Restarting.')
+            self.thread.cancel()
+            self.bus.restart()
+
+    restart = Restart(cherrypy.engine)
+    restart.subscribe()
+    restart.start()
+    return {'restarted': datetime.datetime.utcnow()}
 
 
 class HUIResourceResource(ResourceResource):
