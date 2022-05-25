@@ -14,6 +14,7 @@
 #  limitations under the License.
 #############################################################################
 
+import datetime
 
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
@@ -23,6 +24,7 @@ from girder.constants import AccessType, TokenScope
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.utility.model_importer import ModelImporter
+from girder_jobs.models.job import Job
 
 
 def addSystemEndpoints(apiRoot):
@@ -35,7 +37,11 @@ def addSystemEndpoints(apiRoot):
     apiRoot.item.route('GET', ('query',), getItemsByQuery)
     # Added to the folder route
     apiRoot.folder.route('GET', ('query',), getFoldersByQuery)
+    # Added to the system route
     apiRoot.system.route('PUT', ('restart',), restartServer)
+    # Added to the job route
+    apiRoot.job.route('GET', ('old',), getOldJobs)
+    apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
@@ -202,6 +208,46 @@ def restartServer(self):
     restart.subscribe()
     restart.start()
     return {'restarted': datetime.datetime.utcnow()}
+
+
+@autoDescribeRoute(
+    Description('Report on old jobs.')
+    .param('age', 'The minimum age in days.', required=False,
+           dataType='int', default=1)
+    .param('status', 'A comma-separated list of statuses to include.  Blank '
+           'for all.', required=False, default='0,1,2')
+    .errorResponse()
+)
+@access.admin
+@boundHandler()
+def getOldJobs(self, age, status):
+    age = datetime.datetime.utcnow() + datetime.timedelta(-age)
+    query = {'updated': {'$lt': age}}
+    if status:
+        query['status'] = {'$in': [int(s) for s in status.split(',')]}
+    return Job().find(query, force=True).count()
+
+
+@autoDescribeRoute(
+    Description('Delete old jobs.')
+    .param('age', 'The minimum age in days.', required=False,
+           dataType='int', default=1)
+    .param('status', 'A comma-separated list of statuses to include.  Blank '
+           'for all.', required=False, default='0,1,2')
+    .errorResponse()
+)
+@access.admin
+@boundHandler()
+def deleteOldJobs(self, age, status):
+    age = datetime.datetime.utcnow() + datetime.timedelta(-age)
+    query = {'updated': {'$lt': age}}
+    if status:
+        query['status'] = {'$in': [int(s) for s in status.split(',')]}
+    count = 0
+    for job in Job().find(query, force=True):
+        Job().remove(job)
+        count += 1
+    return count
 
 
 class HUIResourceResource(ResourceResource):
