@@ -73,7 +73,6 @@ var DrawWidget = Panel.extend({
     },
 
     render(updatedElement) {
-        this.$('[data-toggle="tooltip"]').tooltip('destroy');
         if (!this.viewer) {
             this.$el.empty();
             delete this._skipRenderHTML;
@@ -101,7 +100,6 @@ var DrawWidget = Panel.extend({
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
         }
-        this.$('[data-toggle="tooltip"]').tooltip({container: 'body'});
         if (this.viewer.annotationLayer && this.viewer.annotationLayer._boundHUIModeChange === undefined) {
             this.viewer.annotationLayer._boundHUIModeChange = true;
             this.viewer.annotationLayer.geoOn(geo.event.annotation.mode, (event) => {

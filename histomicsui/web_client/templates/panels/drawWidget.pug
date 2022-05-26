@@ -11,31 +11,31 @@ block content
           = group.id
     .input-group-btn
       button.btn.btn-default.h-configure-style-group(type='button')
-        span.icon-cog(data-toggle='tooltip', title='Configure style group. Keyboard shortcuts: "q" and "w" to select next and previous style group, respectively')
+        span.icon-cog(title='Configure style group. Keyboard shortcuts: "q" and "w" to select next and previous style group, respectively')
   .btn-group.btn-justified.btn-group-sm.h-draw-tools
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
-        type='button', data-type='point', data-toggle='tooltip', title='Draw a new point (keyboard shortcut: o)', class=drawingType === 'point' ? 'active' : null)
+        type='button', data-type='point', title='Draw a new point (keyboard shortcut: o)', class=drawingType === 'point' ? 'active' : null)
         | #[span.icon-circle]Point
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
-        type='button', data-type='rectangle', data-toggle='tooltip', title='Draw a new rectangle (keyboard shortcut: r)', class=drawingType === 'rectangle' ? 'active' : null)
+        type='button', data-type='rectangle', title='Draw a new rectangle (keyboard shortcut: r)', class=drawingType === 'rectangle' ? 'active' : null)
         | #[span.icon-check-empty]Rectangle
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
-        type='button', data-type='ellipse', data-toggle='tooltip', title='Draw a new ellipse (keyboard shortcut: i)', class=drawingType === 'ellipse' ? 'active' : null)
+        type='button', data-type='ellipse', title='Draw a new ellipse (keyboard shortcut: i)', class=drawingType === 'ellipse' ? 'active' : null)
         | #[span.icon-circle-empty.flattenicon]Ellipse
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
-        type='button', data-type='circle', data-toggle='tooltip', title='Draw a new circle (keyboard shortcut: c)', class=drawingType === 'circle' ? 'active' : null)
+        type='button', data-type='circle', title='Draw a new circle (keyboard shortcut: c)', class=drawingType === 'circle' ? 'active' : null)
         | #[span.icon-circle-empty]Circle
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
-        type='button', data-type='polygon', data-toggle='tooltip', title='Draw a new polygon (keyboard shortcut: p)', class=drawingType === 'polygon' ? 'active' : null)
+        type='button', data-type='polygon', title='Draw a new polygon (keyboard shortcut: p)', class=drawingType === 'polygon' ? 'active' : null)
         | #[span.icon-draw-polygon]Polygon
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
-        type='button', data-type='line', data-toggle='tooltip', title='Draw a new line (keyboard shortcut: l)', class=drawingType === 'line' ? 'active' : null)
+        type='button', data-type='line', title='Draw a new line (keyboard shortcut: l)', class=drawingType === 'line' ? 'active' : null)
         | #[span.icon-pencil]Line
 
   if elements.length

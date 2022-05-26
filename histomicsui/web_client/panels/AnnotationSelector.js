@@ -71,7 +71,6 @@ var AnnotationSelector = Panel.extend({
         if (this.parentItem && this.parentItem.id) {
             this.parentItem.getAccessLevel((imageAccessLevel) => {
                 const annotationGroups = this._getAnnotationGroups();
-                this.$('[data-toggle="tooltip"]').tooltip('destroy');
                 if (!this.viewer) {
                     this.$el.empty();
                     return;
@@ -93,7 +92,6 @@ var AnnotationSelector = Panel.extend({
                     collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                     _
                 }));
-                this.$('[data-toggle="tooltip"]').tooltip({container: 'body'});
                 this._changeGlobalOpacity();
                 this._changeGlobalFillOpacity();
                 if (this._showAllAnnotationsState) {
