@@ -5,6 +5,8 @@ import $ from 'jquery';
 import events from '@girder/core/events';
 import Panel from '@girder/slicer_cli_web/views/Panel';
 
+import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/convert';
+
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
@@ -179,8 +181,77 @@ var DrawWidget = Panel.extend({
     },
 
     /**
-     * Respond to clicking an element type by putting the image
-     * viewer into "draw" mode.
+     * Apply a boolean operation to the existign polygons.
+     *
+     * @param {object[]} element A list of elements that were specified.
+     * @param {geo.annotation[]} annotations The list of specified geojs
+     *      annotations.
+     * @param {object} opts An object with the current boolean operation.
+     * @returns {boolean} true if the operation was handled.
+     */
+    _applyBooleanOp(element, annotations, evtOpts) {
+        if (annotations.length !== 1 || !annotations[0].toPolygonList) {
+            return false;
+        }
+        const op = evtOpts.currentBooleanOperation;
+        const existing = this.viewer._annotations[this.annotation.id].features.filter((f) => ['polygon', 'marker'].indexOf(f.featureType) >= 0);
+        if (!existing.length) {
+            return false;
+        }
+        const near = existing.map((f) => f.polygonSearch(
+            annotations[0].toPolygonList()[0][0].map((pt) => ({x: pt[0], y: pt[1]})),
+            {partial: true}, null));
+        if (!near.some((n) => n.found.length)) {
+            return false;
+        }
+        const oldids = {};
+        const geojson = {type: 'FeatureCollection', features: []};
+        near.forEach((n) => n.found.forEach((element) => {
+            // filter to match current style group
+            if (element.properties.element && element.properties.element.group !== this._style.get('group')) {
+                return;
+            }
+            element.properties.annotationId = element.properties.annotation;
+            geojson.features.push(element);
+            oldids[element.id] = true;
+        }));
+        if (!geojson.features.length) {
+            return false;
+        }
+        this.viewer.annotationLayer.removeAllAnnotations();
+        this.viewer.annotationLayer.geojson(geojson);
+        const opts = {
+            correspond: {},
+            keepAnnotations: 'exact',
+            style: this.viewer.annotationLayer
+        };
+        geo.util.polyops[op](this.viewer.annotationLayer, annotations[0], opts);
+        const newAnnot = this.viewer.annotationLayer.annotations();
+
+        this.viewer.annotationLayer.removeAllAnnotations();
+        Object.keys(oldids).forEach((id) => this.collection.remove(id));
+        element = newAnnot.map((annot) => {
+            const result = convertAnnotation(annot);
+            if (!result.id) {
+                result.id = this.viewer._guid();
+            }
+            return result;
+        });
+        this.collection.add(
+            _.map(element, (el) => {
+                el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
+                if (!this._style.get('group')) {
+                    delete el.group;
+                }
+                return el;
+            })
+        );
+        return true;
+    },
+
+    /**
+     * Respond to clicking an element type by putting the image viewer into
+     * "draw" mode.
      *
      * @param {jQuery.Event} [evt] The button click that triggered this event.
      *      `undefined` to use a passed-in type.
@@ -196,7 +267,7 @@ var DrawWidget = Panel.extend({
         } else {
             $el = this.$('button.h-draw[data-type="' + type + '"]');
         }
-        if (this.viewer.annotationLayer.mode() === type && this._drawingType === type) {
+        if (this.viewer.annotationLayer.mode() === type && this._drawingType === type && (!type || this.viewer.annotationLayer.currentAnnotation)) {
             return;
         }
         if (this.viewer.annotationLayer.mode()) {
@@ -206,15 +277,32 @@ var DrawWidget = Panel.extend({
             this.viewer.annotationLayer.removeAllAnnotations();
         }
         if (type) {
+            this.parentView._resetSelection();
             // always show the active annotation when drawing a new element
             this.annotation.set('displayed', true);
 
             this._drawingType = type;
             this.viewer.startDrawMode(type)
-                .then((element) => {
+                .then((element, annotations, opts) => {
+                    opts = opts || {};
+                    if (opts.currentBooleanOperation) {
+                        const processed = this._applyBooleanOp(element, annotations, opts);
+                        if (processed || ['difference', 'intersect'].indexOf(element.currentBooleanOperation) >= 0) {
+                            this.drawElement(undefined, this._drawingType);
+                            return undefined;
+                        }
+                    }
+                    // add current style group information
                     this.collection.add(
-                        _.map(element, (el) => _.extend(el, _.omit(this._style.toJSON(), 'id')))
+                        _.map(element, (el) => {
+                            el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
+                            if (!this._style.get('group')) {
+                                delete el.group;
+                            }
+                            return el;
+                        })
                     );
+                    this.drawElement(undefined, this._drawingType);
                     return undefined;
                 });
         }
@@ -245,6 +333,8 @@ var DrawWidget = Panel.extend({
         this._style.set(group);
         if (!this._style.get('group') && this._style.id !== 'default') {
             this._style.set('group', this._style.id);
+        } else if (this._style.get('group') && this._style.id === 'default') {
+            this._style.unset('group');
         }
         this.$('.h-style-group').val(group.id);
     },

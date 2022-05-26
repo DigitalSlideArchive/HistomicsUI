@@ -985,7 +985,9 @@ var ImageView = View.extend({
             if (evt.mouse.buttonsDown.right) {
                 this._openContextMenu(element.annotation.elements().get(element.id), annotationId, evt);
             } else if (evt.mouse.modifiers.ctrl) {
-                this._toggleSelectElement(element.annotation.elements().get(element.id));
+                if (!this.viewerWidget.annotationLayer.mode()) {
+                    this._toggleSelectElement(element.annotation.elements().get(element.id));
+                }
             }
         });
     },
@@ -1417,7 +1419,9 @@ var ImageView = View.extend({
     },
 
     _resetSelection() {
-        this.viewerWidget.highlightAnnotation();
+        if (this.viewerWidget._highlightAnnotation) {
+            this.viewerWidget.highlightAnnotation();
+        }
         if (this.selectedElements.length) {
             this.selectedElements.reset();
         }
