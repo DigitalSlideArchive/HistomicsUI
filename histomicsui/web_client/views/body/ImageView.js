@@ -982,10 +982,10 @@ var ImageView = View.extend({
 
         window.requestAnimationFrame(() => {
             const { element, annotationId } = this._processMouseClickQueue();
-            if (evt.mouse.buttonsDown.right) {
-                this._openContextMenu(element.annotation.elements().get(element.id), annotationId, evt);
-            } else if (evt.mouse.modifiers.ctrl) {
-                if (!this.viewerWidget.annotationLayer.mode()) {
+            if (!evt.mouse.modifiers.shift) {
+                if (evt.mouse.buttonsDown.right) {
+                    this._openContextMenu(element.annotation.elements().get(element.id), annotationId, evt);
+                } else if (evt.mouse.modifiers.ctrl) {
                     this._toggleSelectElement(element.annotation.elements().get(element.id));
                 }
             }
