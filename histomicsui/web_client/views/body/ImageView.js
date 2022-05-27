@@ -25,6 +25,7 @@ import AnnotationPopover from '../popover/AnnotationPopover';
 import PixelmapContextMenu from '../popover/PixelmapContextMenu';
 import AnnotationSelector from '../../panels/AnnotationSelector';
 import OverviewWidget from '../../panels/OverviewWidget';
+import RoiWidget from '../../panels/RoiWidget';
 import ZoomWidget from '../../panels/ZoomWidget';
 import MetadataWidget from '../../panels/MetadataWidget';
 import MetadataPlot from '../../panels/MetadataPlot';
@@ -80,6 +81,26 @@ var ImageView = View.extend({
         });
         this.overviewWidget = new OverviewWidget({
             parentView: this
+        });
+        this.roiWidget = new RoiWidget({
+            parentView: this,
+            rois: [{
+                x: 10000,
+                y: 10000,
+                radius: 64
+            }, {
+                x: 20000,
+                y: 10000,
+                radius: 64
+            }, {
+                x: 10000,
+                y: 20000,
+                radius: 64
+            }, {
+                x: 20000,
+                y: 20000,
+                radius: 64
+            }]
         });
         this.zoomWidget = new ZoomWidget({
             parentView: this
@@ -265,6 +286,10 @@ var ImageView = View.extend({
                 this.overviewWidget
                     .setViewer(this.viewerWidget)
                     .setElement('.h-overview-widget').render();
+
+                this.roiWidget
+                    .setViewer(this.viewerWidget)
+                    .setElement('.h-roi-widget').render();
 
                 this.zoomWidget
                     .setViewer(this.viewerWidget)

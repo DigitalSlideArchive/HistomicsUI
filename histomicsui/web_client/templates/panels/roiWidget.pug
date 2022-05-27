@@ -1,0 +1,18 @@
+extends ./panel.pug
+
+block title
+  | #[span.icon-tags] ROIs
+
+block content
+  .h-roi-content
+    .h-roi-img-block
+      a.h-roi-img-container.h-roi-img-left(data-value=0)
+      a.h-roi-img-container.h-roi-img-center(data-value=1)
+      a.h-roi-img-container.h-roi-img-right(data-value=2)
+    .h-roi-buttons
+      button.btn.btn-default.btn-sm.h-prev-rois(data-value="prev")
+        i.icon-left-open
+      button.btn.btn-default.btn-sm.h-next-rois(data-value="next")
+        i.icon-right-open
+    .h-roi-footer
+      span.roi-count
