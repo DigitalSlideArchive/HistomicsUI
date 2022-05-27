@@ -441,6 +441,103 @@ girderTest.promise.done(function () {
                     expect($('.h-draw.active').length).toBe(0);
                 });
             });
+            it('test a boolean polygon operation', function () {
+                var annotCount, toggle;
+                runs(function () {
+                    annotCount = $('.h-elements-container .h-element').length;
+                    $('.h-draw[data-type="rectangle"]').click();
+                });
+
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'rectangle mode to activate');
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 100, y: 100},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 100, y: 100},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 200, y: 200},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 200, y: 200},
+                        button: 'left'
+                    });
+                });
+                waitsFor(function () {
+                    return $('.h-elements-container .h-element').length === annotCount + 1;
+                }, 'one annotation to be added');
+                girderTest.waitForLoad();
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'rectangle mode to activate');
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 210, y: 100},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 210, y: 100},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 300, y: 200},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 300, y: 200},
+                        button: 'left'
+                    });
+                });
+                waitsFor(function () {
+                    return $('.h-elements-container .h-element').length === annotCount + 2;
+                }, 'a second annotation to be added');
+                girderTest.waitForLoad();
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'rectangle mode to activate');
+                waitsFor(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    toggle = toggle ? 0 : 1;
+                    interactor.simulateEvent('mousemove', {
+                        map: {x: 140 + toggle, y: 110},
+                        button: 'left',
+                        modifiers: 'shift'
+                    });
+                    return $('.geojs-map.annotation-union').length > 0;
+                }, 'boolean mode to be active');
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 150, y: 110},
+                        button: 'left',
+                        modifiers: 'shift'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 150, y: 110},
+                        button: 'left',
+                        modifiers: 'shift'
+                    });
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 250, y: 210},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 250, y: 210},
+                        button: 'left'
+                    });
+                });
+                waitsFor(function () {
+                    return $('.h-elements-container .h-element').length === annotCount + 1;
+                }, 'two annotations to merge into one');
+            });
         });
 
         describe('Annotation styles', function () {
