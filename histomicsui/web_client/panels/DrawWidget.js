@@ -12,6 +12,7 @@ import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
 import drawWidget from '../templates/panels/drawWidget.pug';
+import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
 import '../stylesheets/panels/drawWidget.styl';
 
 /**
@@ -173,11 +174,31 @@ var DrawWidget = Panel.extend({
      * Respond to a click on the "delete" button by removing
      * the element from the element collection.
      */
-    deleteElement(evt) {
-        let id = this._getId(evt);
+    deleteElement(evt, id) {
+        if (evt) {
+            id = this._getId(evt);
+        }
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
         this.collection.remove(id);
+    },
+
+    /**
+     * Add a list of elements, updating the element container efficiently.
+     *
+     * @params {object[]} elements The list of elements to add to the
+     *    collection.
+     */
+    addElements(elements) {
+        this._skipRenderHTML = true;
+        elements = this.collection.add(elements);
+        this.$el.find('.h-elements-container').append(
+            drawWidgetElement({
+                elements: elements,
+                style: this._style.id,
+                highlighted: this._highlighted
+            })
+        );
     },
 
     /**
@@ -229,7 +250,7 @@ var DrawWidget = Panel.extend({
         const newAnnot = this.viewer.annotationLayer.annotations();
 
         this.viewer.annotationLayer.removeAllAnnotations();
-        Object.keys(oldids).forEach((id) => this.collection.remove(id));
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id));
         element = newAnnot.map((annot) => {
             const result = convertAnnotation(annot);
             if (!result.id) {
@@ -237,7 +258,7 @@ var DrawWidget = Panel.extend({
             }
             return result;
         });
-        this.collection.add(
+        this.addElements(
             _.map(element, (el) => {
                 el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
                 if (!this._style.get('group')) {
@@ -293,7 +314,7 @@ var DrawWidget = Panel.extend({
                         }
                     }
                     // add current style group information
-                    this.collection.add(
+                    this.addElements(
                         _.map(element, (el) => {
                             el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
                             if (!this._style.get('group')) {
