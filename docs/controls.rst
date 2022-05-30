@@ -84,6 +84,9 @@ Annotation Controls
   - **o**, **r**, **i**, **c**, **p**, **l**: Switch to point, rectangle,
     ellipse, circle, polygon, or line drawing mode.  If already in that mode,
     turn off drawing mode.
+    
+    - **shift**: When drawing a rectanle or an ellipse, after starting to draw 
+      it, holding down shift will adjust it to a square or circle.
 
   - **enter**: While drawing a line or polygon annotation element, finish
     drawing, closing the polygon or terminating the line.
