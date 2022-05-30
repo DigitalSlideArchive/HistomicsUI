@@ -102,9 +102,17 @@ Annotation Controls
     When the annotation element is finished, it will be combined with any
     existing elements in the same annotation document and the same style group.
 
+    .. image:: images/union.gif
+       :width: 256
+       :alt: Union operation
+
   - **ctrl**: When drawing an annotation element with area, switch to
     **Subtract** mode.  The drawing annotation will be removed from any
     existing elements in the same annotation document and the same style group.
+
+    .. image:: images/difference.gif
+       :width: 256
+       :alt: Difference operation
 
   - **shift+ctrl**: When drawing an annotation element with area, switch to
     **Union** mode.  The drawing annotation will be combined with nearby
@@ -112,11 +120,19 @@ Annotation Controls
     style group, only keeping area that is in both the new and existing
     elements.
 
+    .. image:: images/intersect.gif
+       :width: 256
+       :alt: Intersect operation
+
   - **shift+alt**: When drawing an annotation element with area, switch to
     **XOR** mode.  The drawing annotation will be combined with nearby
     existing annotation elements in the same annotation document and the same
     style group, keeping areas that is in either but not both the new and
     existing elements and removing areas that are in both.
+
+    .. image:: images/xor.gif
+       :width: 256
+       :alt: Xor operation
 
 - **Change Style Group**:
 
