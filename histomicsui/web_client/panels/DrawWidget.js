@@ -423,10 +423,20 @@ var DrawWidget = Panel.extend({
     },
 
     _recalculateGroupAggregation() {
-        const groups = _.invoke(
-            this.collection.filter((el) => el.get('group')),
-            'get', 'group'
-        );
+        const groups = [];
+        const used = {};
+        this.collection.forEach((el) => {
+            const group = el.get('group') || '__null__';
+            if (!used[group]) {
+                used[group] = true;
+                if (group !== '__null__') {
+                    groups.push(group);
+                }
+            }
+        });
+        if (used.__null__) {
+            groups.push(null);
+        }
         this.annotation.set('groups', groups);
     }
 });
