@@ -1332,6 +1332,7 @@ var ImageView = View.extend({
             this.popover.collection.reset();
         }
         this._contextMenuActive = false;
+        this.viewerWidget.viewer.node().focus();
     },
 
     _editElement(element) {
