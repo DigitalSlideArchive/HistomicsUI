@@ -174,13 +174,13 @@ var DrawWidget = Panel.extend({
      * Respond to a click on the "delete" button by removing
      * the element from the element collection.
      */
-    deleteElement(evt, id) {
+    deleteElement(evt, id, opts) {
         if (evt) {
             id = this._getId(evt);
         }
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
-        this.collection.remove(id);
+        this.collection.remove(id, opts);
     },
 
     /**
@@ -239,7 +239,7 @@ var DrawWidget = Panel.extend({
         if (!geojson.features.length) {
             return false;
         }
-        this.viewer.annotationLayer.removeAllAnnotations();
+        this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
         this.viewer.annotationLayer.geojson(geojson);
         const opts = {
             correspond: {},
@@ -249,8 +249,8 @@ var DrawWidget = Panel.extend({
         geo.util.polyops[op](this.viewer.annotationLayer, annotations[0], opts);
         const newAnnot = this.viewer.annotationLayer.annotations();
 
-        this.viewer.annotationLayer.removeAllAnnotations();
-        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id));
+        this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {silent: true}));
         element = newAnnot.map((annot) => {
             const result = convertAnnotation(annot);
             if (!result.id) {
@@ -308,7 +308,7 @@ var DrawWidget = Panel.extend({
                     opts = opts || {};
                     if (opts.currentBooleanOperation) {
                         const processed = this._applyBooleanOp(element, annotations, opts);
-                        if (processed || ['difference', 'intersect'].indexOf(element.currentBooleanOperation) >= 0) {
+                        if (processed || ['difference', 'intersect'].indexOf(opts.currentBooleanOperation) >= 0) {
                             this.drawElement(undefined, this._drawingType);
                             return undefined;
                         }

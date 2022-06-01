@@ -985,7 +985,7 @@ var ImageView = View.extend({
             if (!evt.mouse.modifiers.shift) {
                 if (evt.mouse.buttonsDown.right) {
                     this._openContextMenu(element.annotation.elements().get(element.id), annotationId, evt);
-                } else if (evt.mouse.modifiers.ctrl) {
+                } else if (evt.mouse.modifiers.ctrl && !this.viewerWidget.annotationLayer.mode()) {
                     this._toggleSelectElement(element.annotation.elements().get(element.id));
                 }
             }
@@ -1412,10 +1412,12 @@ var ImageView = View.extend({
     },
 
     _toggleSelectElement(element) {
-        if (this.selectedElements.get(element.id)) {
-            this._unselectElement(element);
-        } else {
-            this._selectElement(element);
+        if (element) {
+            if (this.selectedElements.get(element.id)) {
+                this._unselectElement(element);
+            } else {
+                this._selectElement(element);
+            }
         }
     },
 
