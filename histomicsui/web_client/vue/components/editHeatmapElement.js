@@ -5,6 +5,7 @@ export default {
     data() {
         return {
             type: null,
+            interpretation: null,
             radius: null,
             normalizeRange: null,
             colorRange: null,
@@ -87,6 +88,9 @@ export default {
                 // griddata
                 propsToSave['minColor'] = tinycolor(this.minColor).toRgbString();
                 propsToSave['maxColor'] = tinycolor(this.maxColor).toRgbString();
+                if (this.interpretation === 'contour' || this.interpretation === 'chloropleth') {
+                    propsToSave['stepped'] = this.stepped;
+                }
             }
             this.element.set(propsToSave);
         }
@@ -95,6 +99,7 @@ export default {
     },
     mounted() {
         this.type = this.element.get('type');
+        this.interpretation = this.element.get('interpretation') || null;
         this.radius = this.element.get('radius');
         this.normalizeRange = this.element.get('normalizeRange');
         this.colorRange = _.clone(this.element.get('colorRange'));
@@ -105,6 +110,7 @@ export default {
         this.maxColor = tinycolor(this.element.get('maxColor') || 'rgba(0, 0, 0, 0)').toRgb();
         this.rangeValues = _.clone(this.element.get('rangeValues'));
         this.scaleWithZoom = this.element.get('scaleWithZoom') || false;
+        this.stepped = this.element.get('stepped') || false;
     },
     template: `
         <div class="modal-dialog">
@@ -226,7 +232,10 @@ export default {
                             <label><input type="checkbox" v-model="this.normalizeRange"> <b>Normalize Range</b></label>
                         </div>
                         <div v-if="this.type === 'heatmap'" class="checkbox">
-                        <label><input type="checkbox" v-model="this.scaleWithZoom"> <b>Scale With Zoom</b></label>
+                            <label><input type="checkbox" v-model="this.scaleWithZoom"> <b>Scale With Zoom</b></label>
+                        </div>
+                        <div v-if="this.interpretation === 'contour' || this.interpretation === 'chloropleth'" class="checkbox">
+                            <label><input type="checkbox" v-model="this.stepped"> <b>Stepped</b></label>
                         </div>
                     </div>
                     <div class="modal-footer">
