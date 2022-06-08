@@ -9,13 +9,18 @@ export default {
             attributes: _.clone(this.element.attributes)
         };
     },
+    methods: {
+        handleSubmit(propsToSave) {
+            this.element.set(propsToSave);
+        }
+    },
     components: {
         EditHeatmapElement
     },
     template: `
         <edit-heatmap-element ref="presentation"
             :elementData="this.attributes"
-            @validate="this.updateCanSubmit()"
+            @submit="handleSubmit"
         >
         </edit-heatmap-element>
     `

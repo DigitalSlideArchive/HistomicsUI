@@ -2,6 +2,7 @@ import tinycolor from 'tinycolor2';
 import _ from 'underscore';
 export default {
     props: ['elementData'],
+    emits: ['submit'],
     data() {
         return {
             type: this.elementData.type,
@@ -48,7 +49,7 @@ export default {
             this.validationErrors = [];
             this.tryValidateForm();
             if (this.validationErrors.length === 0) {
-                this.saveElement();
+                this.notifySubmit();
                 this.$refs.close.click();
             }
         },
@@ -65,17 +66,16 @@ export default {
                     );
                 }
             }
-            const invalidColorRows = this.colorObjects.filter(
-                (color) => !tinycolor(color).isValid()).map(
-                (color, index) => index
-            );
-            if (invalidColorRows.length) {
-                this.validationErrors.push(
-                    'Invalid color(s) in row(s) ' + invalidColorRows.join(', ')
-                );
-            }
+            _.each(this.colorObjects, (colorObj, index) => {
+                const isValidColor = tinycolor(colorObj).isValid();
+                if (!isValidColor) {
+                    this.validationErrors.push(
+                        `Invaid color for value ${this.rangeValues[index]}`
+                    );
+                }
+            });
         },
-        saveElement() {
+        notifySubmit() {
             const propsToSave = {
                 rangeValues: this.rangeValues,
                 colorRange: this.colorObjects.map((colorObj) => tinycolor(colorObj).toRgbString()),
@@ -92,7 +92,7 @@ export default {
                     propsToSave['stepped'] = this.stepped;
                 }
             }
-            this.element.set(propsToSave);
+            this.$emit('submit', propsToSave);
         }
     },
     watch: {
