@@ -1,20 +1,20 @@
 import tinycolor from 'tinycolor2';
 import _ from 'underscore';
 export default {
-    props: ['element'],
+    props: ['elementData'],
     data() {
         return {
-            type: null,
-            interpretation: null,
-            radius: null,
-            normalizeRange: null,
-            colorRange: null,
+            type: this.elementData.type,
+            interpretation: this.elementData.interpretation,
+            radius: this.elementData.radius,
+            normalizeRange: this.elementData.normalizeRange,
+            colorRange: _.clone(this.elementData.colorRange),
             colorObjects: null,
-            rangeValues: null,
-            minColor: null,
-            maxColor: null,
-            stepped: null,
-            scaleWithZoom: null,
+            rangeValues: _.clone(this.elementData.rangeValues),
+            minColor: this.elementData.minColor,
+            maxColor: this.elementData.maxColor,
+            stepped: this.elementData.stepped,
+            scaleWithZoom: this.elementData.scaleWithZoom,
             validationErrors: []
         };
     },
@@ -98,19 +98,9 @@ export default {
     watch: {
     },
     mounted() {
-        this.type = this.element.get('type');
-        this.interpretation = this.element.get('interpretation') || null;
-        this.radius = this.element.get('radius');
-        this.normalizeRange = this.element.get('normalizeRange');
-        this.colorRange = _.clone(this.element.get('colorRange'));
         if (this.colorRange) {
             this.colorObjects = this.colorRange.map((color) => tinycolor(color).toRgb());
         }
-        this.minColor = tinycolor(this.element.get('minColor') || 'rgba(0, 0, 0, 0)').toRgb();
-        this.maxColor = tinycolor(this.element.get('maxColor') || 'rgba(0, 0, 0, 0)').toRgb();
-        this.rangeValues = _.clone(this.element.get('rangeValues'));
-        this.scaleWithZoom = this.element.get('scaleWithZoom') || false;
-        this.stepped = this.element.get('stepped') || false;
     },
     template: `
         <div class="modal-dialog">
@@ -133,7 +123,7 @@ export default {
                             <label for="h-griddata-radius">Radius</label>
                             <input id="h-griddata-radius" class="input-sm form-control" type="number" min="1" v-model="this.radius">
                         </div>
-                        <div class="form-group" v-if="this.colorRange && this.rangeValues">
+                        <div class="form-group" v-if="this.colorObjects && this.rangeValues">
                             <label for="h-griddata-range">Range Colors</label>
                             <table id="h-griddata-range" class="table table-bordered table-condensed">
                                 <thead>
