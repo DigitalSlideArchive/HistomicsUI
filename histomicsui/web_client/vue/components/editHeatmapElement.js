@@ -2,7 +2,7 @@ import tinycolor from 'tinycolor2';
 import _ from 'underscore';
 export default {
     props: ['elementData'],
-    emits: ['submit'],
+    emits: ['submit', 'cancel'],
     data() {
         return {
             type: this.elementData.type,
@@ -42,15 +42,11 @@ export default {
             this.colorRange.splice(index, 1);
             this.colorObjects.splice(index, 1);
         },
-        cancelClicked() {
-            this.$root.$el.parentNode.removeChild(this.$el);
-        },
         submitClicked() {
             this.validationErrors = [];
             this.tryValidateForm();
             if (this.validationErrors.length === 0) {
                 this.notifySubmit();
-                this.$refs.close.click();
             }
         },
         tryValidateForm() {
@@ -107,7 +103,7 @@ export default {
             <div class="modal-content">
                 <form class="modal-form">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" ref="close">
+                        <button type="button" class="close"  @click="() => this.$emit('cancel')" aria-label="Close" ref="close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                         <h4>{{ headerMessage }}</h4>
@@ -229,7 +225,7 @@ export default {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal" ref="close" id="close">
+                        <button type="button" class="btn btn-default" @click.prevent="() => this.$emit('cancel')" id="close">
                             Cancel
                         </button>
                         <button type="button" class="btn btn-primary" @click.prevent="submitClicked()">

@@ -3,7 +3,7 @@ import _ from 'underscore';
 import EditHeatmapElement from './editHeatmapElement';
 
 export default {
-    props: ['element'],
+    props: ['element', 'parentView'],
     data() {
         return {
             attributes: _.clone(this.element.attributes)
@@ -12,6 +12,10 @@ export default {
     methods: {
         handleSubmit(propsToSave) {
             this.element.set(propsToSave);
+            this.close();
+        },
+        close() {
+            this.parentView.closeVueModal();
         }
     },
     components: {
@@ -21,6 +25,7 @@ export default {
         <edit-heatmap-element ref="presentation"
             :elementData="this.attributes"
             @submit="handleSubmit"
+            @cancel="close"
         >
         </edit-heatmap-element>
     `
