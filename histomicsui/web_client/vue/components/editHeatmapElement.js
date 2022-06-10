@@ -103,8 +103,8 @@ export default {
             <div class="modal-content">
                 <form class="modal-form">
                     <div class="modal-header">
-                        <button type="button" class="close"  @click="() => this.$emit('cancel')" aria-label="Close" ref="close">
-                            <span aria-hidden="true">&times;</span>
+                        <button type="button" class="close"  @click="() => this.$emit('cancel')" ref="close">
+                            <span>&times;</span>
                         </button>
                         <h4>{{ headerMessage }}</h4>
                     </div>
