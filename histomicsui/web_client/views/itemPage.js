@@ -41,14 +41,11 @@ wrap(ItemView, 'render', function (render) {
                     '<li role="presentation"><a class="g-hui-quarantine-item" role="menuitem"><span>Q</span>Quarantine item</a></li>'
                 );
             }
-            if (this.$el.find('.g-item-actions-menu').length && !this.$el.find('.g-hui-open-item[role="menuitem"]').length &&
-                this.model.attributes.largeImage) {
-                this.$el.find('.g-item-actions-menu').prepend(
-                    `<li role="presentation">
-                    <a class="g-hui-open-item" role="menuitem" href="${webrootPath}#?image=${this.model.id}" target="_blank">
-                        <i class="icon-link-ext"></i>Open in ${brandName}
-                    </a>
-                </li>`
+            if (!this.$el.find('.g-hui-open-item[role="button"]').length && this.model.attributes.largeImage) {
+                this.$el.find('.g-upload-into-item').after(
+                    `<a class="g-hui-open-item btn btn-sm btn-primary" role="button" href="${webrootPath}#?image=${this.model.id}" target="_blank">
+                            <i class="icon-link-ext"></i>Open in ${brandName}
+                    </a>`
                 );
             }
             this.events['click .g-hui-quarantine-item'] = quarantine;
