@@ -63,7 +63,7 @@ wrap(ItemListWidget, 'render', function (render) {
     HuiSettings.getSettings().then((settings) => {
         const brandName = (settings['histomicsui.brand_name'] || '');
         const webrootPath = (settings['histomicsui.webroot_path'] || '');
-        for (let ix = 0; ix<this.collection.length; ix++) {
+        for (let ix = 0; ix < this.collection.length; ix++) {
             if (!this.$el.find('.g-item-list li:eq(' + ix + ') .g-hui-open-link').length && this.collection.models[ix].attributes.largeImage) {
                 this.$el.find('.g-item-list li:eq(' + ix + ')>.g-item-size').before(
                     `<a class="g-hui-open-link" title="Open in ${brandName}" href="${webrootPath}#?image=${this.collection.models[ix].id}" target="_blank">
@@ -74,8 +74,8 @@ wrap(ItemListWidget, 'render', function (render) {
         }
         if (this.accessLevel >= AccessType.WRITE) {
             adjustView(settings);
-            return settings;
         }
+        return settings;
     });
 
     if (this.accessLevel >= AccessType.WRITE) {
