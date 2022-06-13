@@ -11,6 +11,7 @@ export default {
             normalizeRange: this.elementData.normalizeRange,
             colorRange: _.clone(this.elementData.colorRange),
             colorObjects: null,
+            colorRangeData: [],
             rangeValues: _.clone(this.elementData.rangeValues),
             minColor: this.elementData.minColor,
             maxColor: this.elementData.maxColor,
@@ -30,6 +31,16 @@ export default {
     methods: {
         getColorString(color) {
             return tinycolor(color).toRgbString();
+        },
+        updateColorString(index) {
+            console.log(this.colorRangeData[index]);
+            const entry = this.colorRangeData[index];
+            entry.colorString = tinycolor({
+                r: entry.r,
+                b: entry.b,
+                g: entry.g,
+                a: entry.a
+            }).toRgbString();
         },
         addColor(index) {
             const defaultColor = 'rgba(0, 0, 0, 0)';
@@ -73,12 +84,18 @@ export default {
         },
         notifySubmit() {
             const propsToSave = {
-                rangeValues: this.rangeValues,
-                colorRange: this.colorObjects.map((colorObj) => tinycolor(colorObj).toRgbString()),
+                rangeValues: this.colorRangeData.map((entry) => entry.value),
+                colorRange: this.colorRangeData.map((entry) => tinycolor({
+                    r: entry.r,
+                    b: entry.b,
+                    g: entry.g,
+                    a: entry.a
+                }).toRgbString()),
                 normalizeRange: this.normalizeRange
             };
             if (this.type === 'heatmap') {
-                propsToSave['radius'] = this.radius;
+                console.log(this.radius);
+                propsToSave['radius'] = parseInt(this.radius);
                 propsToSave['scaleWithZoom'] = this.scaleWithZoom;
             } else {
                 // griddata
@@ -89,21 +106,33 @@ export default {
                 }
             }
             this.$emit('submit', propsToSave);
+        },
+        cancelDialog() {
+            this.$emit('cancel');
+        },
+        radiusChanged() {
+            console.log(this.radius);
         }
     },
     watch: {
     },
     mounted() {
         if (this.colorRange) {
+            _.forEach(this.colorRange, (color, index) => {
+                const entry = tinycolor(color).toRgb();
+                entry['colorString'] = this.getColorString(tinycolor(color).toRgb());
+                entry['value'] = this.rangeValues[index];
+                this.colorRangeData.push(entry);
+            });
             this.colorObjects = this.colorRange.map((color) => tinycolor(color).toRgb());
         }
     },
     template: `
-        <div class="modal-dialog">
+        <div class="modal-dialog" v-if="this.colorRangeData">
             <div class="modal-content">
                 <form class="modal-form">
                     <div class="modal-header">
-                        <button type="button" class="close"  @click="() => this.$emit('cancel')" ref="close">
+                        <button type="button" class="close"  @click="cancelDialog()" ref="close">
                             <span>&times;</span>
                         </button>
                         <h4>{{ headerMessage }}</h4>
@@ -117,9 +146,9 @@ export default {
                         </div>
                         <div class="form-group" v-if="this.radius" ref="uniquekey">
                             <label for="h-griddata-radius">Radius</label>
-                            <input id="h-griddata-radius" class="input-sm form-control" type="number" min="1" v-model="this.radius">
+                            <input id="h-griddata-radius" class="input-sm form-control" type="number" min="1" v-model="radius" @change.prevent="radiusChanged()">
                         </div>
-                        <div class="form-group" v-if="this.colorObjects && this.rangeValues">
+                        <div class="form-group" v-if="this.colorRangeData.length > 0">
                             <label for="h-griddata-range">Range Colors</label>
                             <table id="h-griddata-range" class="table table-bordered table-condensed">
                                 <thead>
@@ -157,25 +186,25 @@ export default {
                                         </span>
                                     </td>
                                 </tr>
-                                <tr v-for="(value, index) in rangeValues">
+                                <tr v-for="(entry, index) in colorRangeData">
                                     <td>
-                                        <input class="input-sm form-control" type="number" step="0.1" v-model="this.rangeValues[index]">
+                                        <input class="input-sm form-control" type="number" step="0.1" v-model="entry.value">
                                     </td>
                                     <td>
-                                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="this.colorObjects[index].r">
+                                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="entry.r" @change="updateColorString(index)">
                                     </td>
                                     <td>
-                                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="this.colorObjects[index].g">
+                                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="entry.g" @change="updateColorString(index)">
                                     </td>
                                     <td>
-                                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="this.colorObjects[index].b">
+                                        <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="entry.b" @change="updateColorString(index)">
                                     </td>
                                     <td>
-                                        <input class="input-sm form-control" type="number" min="0" max="1" step=".01" v-model="this.colorObjects[index].a">
+                                        <input class="input-sm form-control" type="number" min="0" max="1" step=".01" v-model="entry.a" @change="updateColorString(index)">
                                     </td>
                                     <td>
                                         <span>
-                                            <i :style="{ 'background-color': getColorString(this.colorObjects[index]), height: '25px', width: '25px', display: 'block' }">
+                                            <i :style="{ 'background-color': entry.colorString, height: '25px', width: '25px', display: 'block' }">
                                             </i>
                                         </span>
                                     </td>
@@ -215,17 +244,17 @@ export default {
                             </table>
                         </div>
                         <div class="checkbox">
-                            <label><input type="checkbox" v-model="this.normalizeRange"> <b>Normalize Range</b></label>
+                            <label><input type="checkbox" v-model="normalizeRange"> <b>Normalize Range</b></label>
                         </div>
                         <div v-if="this.type === 'heatmap'" class="checkbox">
-                            <label><input type="checkbox" v-model="this.scaleWithZoom"> <b>Scale With Zoom</b></label>
+                            <label><input type="checkbox" v-model="scaleWithZoom"> <b>Scale With Zoom</b></label>
                         </div>
                         <div v-if="this.interpretation === 'contour' || this.interpretation === 'chloropleth'" class="checkbox">
-                            <label><input type="checkbox" v-model="this.stepped"> <b>Stepped</b></label>
+                            <label><input type="checkbox" v-model="stepped"> <b>Stepped</b></label>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" @click.prevent="() => this.$emit('cancel')" id="close">
+                        <button type="button" class="btn btn-default" @click.prevent="cancelDialog()" id="close">
                             Cancel
                         </button>
                         <button type="button" class="btn btn-primary" @click.prevent="submitClicked()">

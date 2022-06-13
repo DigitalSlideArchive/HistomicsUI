@@ -6,7 +6,7 @@ export default {
     props: ['element', 'parentView'],
     data() {
         return {
-            attributes: _.clone(this.element.attributes)
+            attributes: _.clone(this.element.attributes || {})
         };
     },
     methods: {
