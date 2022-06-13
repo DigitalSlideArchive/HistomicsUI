@@ -42,7 +42,7 @@ wrap(ItemView, 'render', function (render) {
                 );
             }
             if (!this.$el.find('.g-hui-open-item[role="button"]').length && this.model.attributes.largeImage) {
-                this.$el.find('.btn-group').before(
+                this.$el.find('.g-item-header .btn-group').before(
                     `<a class="g-hui-open-item btn btn-sm btn-primary" role="button" href="${webrootPath}#?image=${this.model.id}" target="_blank">
                             <i class="icon-link-ext"></i>Open in ${brandName}
                     </a>`
