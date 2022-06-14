@@ -14,8 +14,8 @@ export default {
             colorObjects: null,
             colorRangeData: [],
             rangeValues: _.clone(this.elementData.rangeValues),
-            minColor: this.elementData.minColor,
-            maxColor: this.elementData.maxColor,
+            minColor: tinycolor(this.elementData.minColor || 'transparent').toRgb(),
+            maxColor: tinycolor(this.elementData.maxColor || 'transparent').toRgb(),
             stepped: this.elementData.stepped,
             scaleWithZoom: this.elementData.scaleWithZoom,
             validationErrors: []
