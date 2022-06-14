@@ -3,7 +3,7 @@ import tinycolor from 'tinycolor2';
 import View from '@girder/core/views/View';
 import Vue from 'vue/dist/vue.js';
 
-import EditHeatmapElementContainer from '../vue/components/editHeatmapElementContainer';
+import EditHeatmapElementContainerSfc from '../vue/components/EditHeatmapElementContainerSfc.vue';
 
 import editElement from '../templates/dialogs/editElement.pug';
 import '@girder/core/utilities/jquery/girderModal';
@@ -29,7 +29,7 @@ var EditElement = View.extend({
 
     afterRender() {
         const el = this.$('.vue-component-heatmap').get(0);
-        const VueRoot = Vue.extend(EditHeatmapElementContainer);
+        const VueRoot = Vue.extend(EditHeatmapElementContainerSfc);
         const vm = new VueRoot({
             el,
             propsData: {
