@@ -29,17 +29,6 @@ var EditElement = View.extend({
 
     afterRender() {
         const el = this.$('.vue-component-heatmap').get(0);
-        // const app = createApp(
-            // EditHeatmapElementContainer, {
-                // element: this.annotationElement,
-                // parentView: this
-            // }
-        // );
-        // this.vueApp = app;
-        // app.config.errorHandler = (err) => {
-            // console.error(`Error in Vue app: ${err}`);
-        // };
-        // app.mount(el);
         const VueRoot = Vue.extend(EditHeatmapElementContainer);
         const vm = new VueRoot({
             el,

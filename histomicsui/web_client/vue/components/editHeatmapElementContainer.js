@@ -1,6 +1,7 @@
 import _ from 'underscore';
 
 import EditHeatmapElement from './editHeatmapElement';
+import EditHeatmapElementSfc from './EditHeatmapElementSfc.vue';
 
 export default {
     props: ['element', 'parentView'],
@@ -19,14 +20,23 @@ export default {
         }
     },
     components: {
-        EditHeatmapElement
+        EditHeatmapElement,
+        EditHeatmapElementSfc
     },
     template: `
-        <edit-heatmap-element ref="presentation"
-            :elementData="this.attributes"
-            @submit="handleSubmit"
-            @cancel="close"
-        >
-        </edit-heatmap-element>
+        <div>
+            <!-- <edit-heatmap-element ref="presentation"
+                :elementData="this.attributes"
+                @submit="handleSubmit"
+                @cancel="close"
+            >
+            </edit-heatmap-element> -->
+            <edit-heatmap-element-sfc ref="sfcpresentation"
+                :elementData="this.attributes"
+                @submit="handleSubmit"
+                @cancel="close"
+            >
+            </edit-heatmap-element-sfc>
+        </div>
     `
 };
