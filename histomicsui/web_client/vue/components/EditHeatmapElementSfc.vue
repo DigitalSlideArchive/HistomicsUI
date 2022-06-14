@@ -18,7 +18,8 @@ export default {
             maxColor: tinycolor(this.elementData.maxColor || 'transparent').toRgb(),
             stepped: this.elementData.stepped,
             scaleWithZoom: this.elementData.scaleWithZoom,
-            validationErrors: []
+            validationErrors: [],
+            gradientString: ''
         };
     },
     computed: {
@@ -33,8 +34,26 @@ export default {
         getColorString(color) {
             return tinycolor(color).toRgbString();
         },
+        getGradientString() {
+            let res = 'linear-gradient(to right';
+            if (this.type === 'griddata') {
+                res += `, ${tinycolor(this.minColor).toRgbString()}`;
+            }
+            _.forEach(this.colorRangeData, (entry) => {
+                res += `, ${tinycolor({
+                    r: entry.r,
+                    g: entry.g,
+                    b: entry.b,
+                    a: entry.a
+                }).toRgbString()}`
+            });
+            if (this.type === 'griddata') {
+                res += `, ${tinycolor(this.maxColor).toRgbString()}`;
+            }
+            res += ')';
+            return res;
+        },
         updateColorString(index) {
-            console.log(this.colorRangeData[index]);
             const entry = this.colorRangeData[index];
             entry.colorString = tinycolor({
                 r: entry.r,
@@ -95,7 +114,6 @@ export default {
                 normalizeRange: this.normalizeRange
             };
             if (this.type === 'heatmap') {
-                console.log(this.radius);
                 propsToSave['radius'] = parseInt(this.radius);
                 propsToSave['scaleWithZoom'] = this.scaleWithZoom;
             } else {
@@ -110,12 +128,15 @@ export default {
         },
         cancelDialog() {
             this.$emit('cancel');
-        },
-        radiusChanged() {
-            console.log(this.radius);
         }
     },
     watch: {
+        colorRangeData: {
+            handler() {
+                this.gradientString = this.getGradientString();
+            },
+            deep: true
+        }
     },
     mounted() {
         if (this.colorRange) {
@@ -125,6 +146,7 @@ export default {
                 entry['value'] = this.rangeValues[index];
                 this.colorRangeData.push(entry);
             });
+            this.gradientString = this.getGradientString();
             this.colorObjects = this.colorRange.map((color) => tinycolor(color).toRgb());
         }
     }
@@ -246,6 +268,12 @@ export default {
                             </tr>
                             </tbody>
                         </table>
+                        <div :style="{
+                            'height': '50px',
+                            'background-color': 'transparent',
+                            'background-image': gradientString
+                        }">
+                        </div>
                     </div>
                     <div class="checkbox">
                         <label><input type="checkbox" v-model="normalizeRange"> <b>Normalize Range</b></label>
