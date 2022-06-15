@@ -115,6 +115,7 @@ var AnnotationPopover = View.extend({
             this._hide();
         }
         this._height = this.$('.h-annotation-popover').height();
+        this._position();
         return this;
     },
 
@@ -270,7 +271,12 @@ var AnnotationPopover = View.extend({
      * mouse pointer.
      */
     _position(evt) {
-        if (this._visible()) {
+        if (evt) {
+            this._lastPositionEvt = evt;
+        } else {
+            evt = this._lastPositionEvt;
+        }
+        if (evt && this._visible()) {
             this.$el.css({
                 left: evt.pageX + 5,
                 top: evt.pageY - this._height / 2
