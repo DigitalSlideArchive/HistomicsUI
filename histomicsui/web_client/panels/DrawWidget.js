@@ -213,6 +213,11 @@ var DrawWidget = Panel.extend({
             bottom: Math.max(... yCoords)
         }
         const map = this.parentView.viewer;
+        const originalZoomRange = map.zoomRange();
+        map.zoomRange({
+            min: Number.NEGATIVE_INFINITY,
+            max: Number.POSITIVE_INFINITY,
+        });
         map.clampBoundsX(false);
         map.clampBoundsY(false);
         const newView = pointAnnot ? {
@@ -221,6 +226,7 @@ var DrawWidget = Panel.extend({
                 y: bounds.top
             },
         } : map.zoomAndCenterFromBounds(bounds, map.rotation());
+        map.zoomRange(originalZoomRange);
         map.transition({
             center: newView.center,
             duration: ((newView.center.x-map.center().x)**2+(newView.center.y-map.center().y)**2)**0.5,
