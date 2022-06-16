@@ -1,8 +1,9 @@
 <script>
 import _ from 'underscore';
+import Vue from 'vue/dist/vue.js';
 
 import EditHeatmapElementSfc from './EditHeatmapElementSfc.vue';
-export default {
+export default Vue.extend({
     props: ['element', 'parentView'],
     data() {
         return {
@@ -21,7 +22,7 @@ export default {
     components: {
         EditHeatmapElementSfc
     }
-}
+})
 </script>
 
 <template>

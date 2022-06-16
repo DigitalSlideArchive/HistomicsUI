@@ -1,7 +1,6 @@
 import tinycolor from 'tinycolor2';
 
 import View from '@girder/core/views/View';
-import Vue from 'vue/dist/vue.js';
 
 import EditHeatmapElementContainerSfc from '../vue/components/EditHeatmapElementContainerSfc.vue';
 
@@ -29,8 +28,7 @@ var EditElement = View.extend({
 
     afterRender() {
         const el = this.$('.vue-component-heatmap').get(0);
-        const VueRoot = Vue.extend(EditHeatmapElementContainerSfc);
-        const vm = new VueRoot({
+        const vm = new EditHeatmapElementContainerSfc({
             el,
             propsData: {
                 element: this.annotationElement,
