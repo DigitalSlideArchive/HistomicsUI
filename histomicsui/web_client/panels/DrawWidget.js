@@ -6,6 +6,9 @@ import events from '@girder/core/events';
 import Panel from '@girder/slicer_cli_web/views/Panel';
 
 import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/convert';
+import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
+import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
+import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
 
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
@@ -22,6 +25,7 @@ import '../stylesheets/panels/drawWidget.styl';
 var DrawWidget = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .h-edit-element': 'editElement',
+        'click .h-view-element': 'viewElement',
         'click .h-delete-element': 'deleteElement',
         'click .h-draw': 'drawElement',
         'change .h-style-group': '_setToSelectedStyleGroup',
@@ -168,6 +172,61 @@ var DrawWidget = Panel.extend({
             this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
             this._skipRenderHTML = true;
         });
+    },
+
+    /**
+     * Respond to a click on the "view" button by changing the
+     * viewer location and zoom level to focus on one annotation
+     */
+    viewElement(evt) {
+        const annot = this.collection._byId[$(evt.target).parent().attr('data-id')];
+        let points;
+        let pointAnnot = false;
+        switch (annot.get('type')) {
+            case 'point':
+                points = [annot.get('center')];
+                pointAnnot = true
+                break;
+            case 'polyline':
+                points = annot.get('points');
+                break;
+            case 'rectangle':
+                points = convertRectangle(annot.attributes).coordinates[0];
+                break;
+            case 'ellipse':
+                points = convertEllipse(annot.attributes).coordinates[0];
+                break;
+            case 'circle':
+                points = convertCircle(annot.attributes).coordinates[0];
+                break;
+        }
+        const xCoords = points.map((point) => {
+            return point[0]
+        });
+        const yCoords = points.map((point) => {
+            return point[1]
+        });
+        const bounds = {
+            left: Math.min(... xCoords),
+            top: Math.min(... yCoords),
+            right: Math.max(... xCoords),
+            bottom: Math.max(... yCoords)
+        }
+        const map = this.parentView.viewer;
+        map.clampBoundsX(false);
+        map.clampBoundsY(false);
+        const newView = pointAnnot ? {
+            center: {
+                x: bounds.left,
+                y: bounds.top
+            },
+        } : map.zoomAndCenterFromBounds(bounds, map.rotation());
+        map.transition({
+            center: newView.center,
+            duration: ((newView.center.x-map.center().x)**2+(newView.center.y-map.center().y)**2)**0.5,
+            zoom: pointAnnot ? map.zoom() : (newView.zoom > 0 ? newView.zoom*0.4 : newView.zoom*2.5),
+        });
+        this._skipRenderHTML = true;
     },
 
     /**
