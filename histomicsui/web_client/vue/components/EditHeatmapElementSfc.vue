@@ -63,15 +63,18 @@ export default {
             }).toRgbString();
         },
         addColor(index) {
-            const defaultColor = 'rgba(0, 0, 0, 0)';
-            this.colorObjects.splice(index + 1, 0, tinycolor(defaultColor).toRgb());
-            this.rangeValues.splice(index + 1, 0, 0);
-            this.colorRange.splice(index + 1, 0, defaultColor);
+            const newEntry = {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 0,
+                colorString: 'rgba(0, 0, 0, 0)',
+                value: 0
+            }
+            this.colorRangeData.splice(index + 1, 0, newEntry);
         },
         removeColor(index) {
-            this.rangeValues.splice(index, 1);
-            this.colorRange.splice(index, 1);
-            this.colorObjects.splice(index, 1);
+            this.colorRangeData.splice(index, 1);
         },
         submitClicked() {
             this.validationErrors = [];
@@ -104,7 +107,7 @@ export default {
         },
         notifySubmit() {
             const propsToSave = {
-                rangeValues: this.colorRangeData.map((entry) => entry.value),
+                rangeValues: this.colorRangeData.map((entry) => parseFloat(entry.value)),
                 colorRange: this.colorRangeData.map((entry) => tinycolor({
                     r: entry.r,
                     b: entry.b,
@@ -172,7 +175,7 @@ export default {
                     </div>
                     <div class="form-group" v-if="this.radius" ref="uniquekey">
                         <label for="h-griddata-radius">Radius</label>
-                        <input id="h-griddata-radius" class="input-sm form-control" type="number" min="1" v-model="radius" @change.prevent="radiusChanged()">
+                        <input id="h-griddata-radius" class="input-sm form-control" type="number" min="1" v-model="radius">
                     </div>
                     <div class="form-group" v-if="this.colorRangeData.length > 0">
                         <label for="h-griddata-range">Range Colors</label>
@@ -212,7 +215,7 @@ export default {
                                     </span>
                                 </td>
                             </tr>
-                            <tr v-for="(entry, index) in colorRangeData" :key="entry.value">
+                            <tr v-for="(entry, index) in colorRangeData" :key="index">
                                 <td>
                                     <input class="input-sm form-control" type="number" step="0.1" v-model="entry.value">
                                 </td>
@@ -268,12 +271,6 @@ export default {
                             </tr>
                             </tbody>
                         </table>
-                        <div :style="{
-                            'height': '50px',
-                            'background-color': 'transparent',
-                            'background-image': gradientString
-                        }">
-                        </div>
                     </div>
                     <div class="checkbox">
                         <label><input type="checkbox" v-model="normalizeRange"> <b>Normalize Range</b></label>
