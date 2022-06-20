@@ -1,9 +1,15 @@
 <script>
+import '@simonwep/pickr/dist/themes/classic.min.css';
+import  Picker from '@simonwep/pickr/dist/pickr.es5.min.js';
 import tinycolor from 'tinycolor2';
 import _ from 'underscore';
+import ColorPickerInput from './ColorPickerInput.vue';
 export default {
     props: ['elementData'],
     emits: ['submit', 'cancel'],
+    components: {
+        ColorPickerInput
+    },
     data() {
         return {
             type: this.elementData.type,
@@ -11,15 +17,14 @@ export default {
             radius: this.elementData.radius,
             normalizeRange: this.elementData.normalizeRange,
             colorRange: _.clone(this.elementData.colorRange),
-            colorObjects: null,
             colorRangeData: [],
             rangeValues: _.clone(this.elementData.rangeValues),
-            minColor: tinycolor(this.elementData.minColor || 'transparent').toRgb(),
-            maxColor: tinycolor(this.elementData.maxColor || 'transparent').toRgb(),
+            minColor: this.elementData.minColor || 'rgba(0, 0, 0, 0)',
+            maxColor: this.elementData.maxColor || 'rgba(0, 0, 0, 0)',
             stepped: this.elementData.stepped,
             scaleWithZoom: this.elementData.scaleWithZoom,
             validationErrors: [],
-            gradientString: ''
+            testColor: '#ff0000'
         };
     },
     computed: {
@@ -32,35 +37,7 @@ export default {
     },
     methods: {
         getColorString(color) {
-            return tinycolor(color).toRgbString();
-        },
-        getGradientString() {
-            let res = 'linear-gradient(to right';
-            if (this.type === 'griddata') {
-                res += `, ${tinycolor(this.minColor).toRgbString()}`;
-            }
-            _.forEach(this.colorRangeData, (entry) => {
-                res += `, ${tinycolor({
-                    r: entry.r,
-                    g: entry.g,
-                    b: entry.b,
-                    a: entry.a
-                }).toRgbString()}`
-            });
-            if (this.type === 'griddata') {
-                res += `, ${tinycolor(this.maxColor).toRgbString()}`;
-            }
-            res += ')';
-            return res;
-        },
-        updateColorString(index) {
-            const entry = this.colorRangeData[index];
-            entry.colorString = tinycolor({
-                r: entry.r,
-                b: entry.b,
-                g: entry.g,
-                a: entry.a
-            }).toRgbString();
+            return tinycolor(color).toString();
         },
         addColor(index) {
             const newEntry = {
@@ -72,9 +49,16 @@ export default {
                 value: 0
             }
             this.colorRangeData.splice(index + 1, 0, newEntry);
+            this.updateRangeDataKeys();
         },
         removeColor(index) {
             this.colorRangeData.splice(index, 1);
+            this.updateRangeDataKeys();
+        },
+        updateRangeDataKeys() {
+            _.forEach(this.colorRangeData, (entry, index) => {
+                entry.key = `${index}-${entry.colorString}`;
+            });
         },
         submitClicked() {
             this.validationErrors = [];
@@ -96,11 +80,11 @@ export default {
                     );
                 }
             }
-            _.each(this.colorObjects, (colorObj, index) => {
-                const isValidColor = tinycolor(colorObj).isValid();
+            _.each(this.colorRangeData, (entry) => {
+                const isValidColor = tinycolor(entry.colorString).isValid();
                 if (!isValidColor) {
                     this.validationErrors.push(
-                        `Invaid color for value ${this.rangeValues[index]}`
+                        `Invaid color for value ${entry.value}`
                     );
                 }
             });
@@ -108,12 +92,7 @@ export default {
         notifySubmit() {
             const propsToSave = {
                 rangeValues: this.colorRangeData.map((entry) => parseFloat(entry.value)),
-                colorRange: this.colorRangeData.map((entry) => tinycolor({
-                    r: entry.r,
-                    b: entry.b,
-                    g: entry.g,
-                    a: entry.a
-                }).toRgbString()),
+                colorRange: this.colorRangeData.map((entry) => entry.colorString),
                 normalizeRange: this.normalizeRange
             };
             if (this.type === 'heatmap') {
@@ -121,8 +100,8 @@ export default {
                 propsToSave['scaleWithZoom'] = this.scaleWithZoom;
             } else {
                 // griddata
-                propsToSave['minColor'] = tinycolor(this.minColor).toRgbString();
-                propsToSave['maxColor'] = tinycolor(this.maxColor).toRgbString();
+                propsToSave['minColor'] = tinycolor(this.minColor).toString();
+                propsToSave['maxColor'] = tinycolor(this.maxColor).toString();
                 if (this.interpretation === 'contour' || this.interpretation === 'chloropleth') {
                     propsToSave['stepped'] = this.stepped;
                 }
@@ -133,25 +112,36 @@ export default {
             this.$emit('cancel');
         }
     },
-    watch: {
-        colorRangeData: {
-            handler() {
-                this.gradientString = this.getGradientString();
-            },
-            deep: true
-        }
-    },
     mounted() {
         if (this.colorRange) {
             _.forEach(this.colorRange, (color, index) => {
-                const entry = tinycolor(color).toRgb();
-                entry['colorString'] = this.getColorString(tinycolor(color).toRgb());
-                entry['value'] = this.rangeValues[index];
-                this.colorRangeData.push(entry);
+                this.colorRangeData.push({
+                    colorString: color,
+                    value: this.rangeValues[index]
+                });
             });
-            this.gradientString = this.getGradientString();
-            this.colorObjects = this.colorRange.map((color) => tinycolor(color).toRgb());
         }
+        this.updateRangeDataKeys();
+        this.$nextTick(() => {
+            _.forEach(this.$refs.colorPickers, (htmlElement, index) => {
+                const picker = Picker.create({
+                    el: htmlElement,
+                    theme: 'classic',
+                    default: this.colorRangeData[index].colorString,
+                    components: {
+                        preview: true,
+                        hue: true,
+                        opacity: true
+                    }
+                });
+                picker.on('change', (color, source, instance) => {
+                    const index = instance.options.el.dataset.index;
+                    this.colorRangeData[index].colorString = tinycolor(color).toRgbString();
+                    instance.setColor(tinycolor(color).toString());
+                });
+                this.pickers.push(picker);
+            });
+        });
     }
 }
 </script>
@@ -183,10 +173,6 @@ export default {
                             <thead>
                                 <tr>
                                     <th>Value</th>
-                                    <th>R</th>
-                                    <th>G</th>
-                                    <th>B</th>
-                                    <th>A</th>
                                     <th>Color</th>
                                     <th></th>
                                 </tr>
@@ -197,45 +183,15 @@ export default {
                                     Min. color
                                 </td>
                                 <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="minColor.r">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="minColor.g">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="minColor.b">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="1" step=".01" v-model="minColor.a">
-                                </td>
-                                <td>
-                                    <span>
-                                        <i :style="{ 'background-color': getColorString(this.minColor), height: '25px', width: '25px', display: 'block' }">
-                                        </i>
-                                    </span>
+                                    <color-picker-input :color="minColor" v-model="minColor"></color-picker-input>
                                 </td>
                             </tr>
-                            <tr v-for="(entry, index) in colorRangeData" :key="index">
+                            <tr v-for="(entry, index) in colorRangeData" :key="entry.key">
                                 <td>
                                     <input class="input-sm form-control" type="number" step="0.1" v-model="entry.value">
                                 </td>
                                 <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="entry.r" @change="updateColorString(index)">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="entry.g" @change="updateColorString(index)">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="entry.b" @change="updateColorString(index)">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="1" step=".01" v-model="entry.a" @change="updateColorString(index)">
-                                </td>
-                                <td>
-                                    <span>
-                                        <i :style="{ 'background-color': entry.colorString, height: '25px', width: '25px', display: 'block' }">
-                                        </i>
-                                    </span>
+                                    <color-picker-input :color="entry.colorString" v-model="entry.colorString"></color-picker-input>
                                 </td>
                                 <td>
                                     <a @click.prevent="addColor(index)">
@@ -251,22 +207,7 @@ export default {
                                     Max. color
                                 </td>
                                 <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="maxColor.r">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="maxColor.g">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="255" step="1" v-model="maxColor.b">
-                                </td>
-                                <td>
-                                    <input class="input-sm form-control" type="number" min="0" max="1" step=".01" v-model="maxColor.a">
-                                </td>
-                                <td>
-                                    <span>
-                                        <i :style="{ 'background-color': getColorString(this.maxColor), height: '25px', width: '25px', display: 'block' }">
-                                        </i>
-                                    </span>
+                                    <color-picker-input :color="maxColor" v-model="maxColor"></color-picker-input>
                                 </td>
                             </tr>
                             </tbody>
