@@ -23,10 +23,11 @@ var EditElement = View.extend({
                 element: this.annotationElement.toJSON()
             })
         ).girderModal(this);
+        this.createVueModal();
         return this;
     },
 
-    afterRender() {
+    createVueModal() {
         const el = this.$('.vue-component-heatmap').get(0);
         const vm = new EditHeatmapOrGridDataContainer({
             el,
@@ -119,7 +120,6 @@ var dialog = new EditElement({
 function show(annotationElement) {
     dialog.annotationElement = annotationElement;
     dialog.setElement('#g-dialog-container').render();
-    dialog.afterRender();
     return dialog;
 }
 
