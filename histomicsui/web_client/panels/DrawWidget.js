@@ -483,8 +483,9 @@ var DrawWidget = Panel.extend({
         this.parentView.trigger('h:highlightAnnotation', this.annotation.id, id);
     },
 
-    _unhighlightElement() {
-        this.parentView.trigger('h:highlightAnnotation');
+    _unhighlightElement(evt) {
+        const id = $(evt.currentTarget).data('id');
+        this.parentView.trigger('h:highlightAnnotation', false, id);
     },
 
     _recalculateGroupAggregation() {

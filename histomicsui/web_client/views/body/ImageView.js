@@ -283,6 +283,8 @@ var ImageView = View.extend({
                     this.drawWidget
                         .setViewer(this.viewerWidget)
                         .setElement('.h-draw-widget').render();
+                    if (this.annotationSelector.interactiveMode())
+                        this.$('.h-draw-widget').find('.h-view-element').removeClass('hidden');
                 }
                 this._orderPanels();
             });
@@ -297,6 +299,8 @@ var ImageView = View.extend({
                 this.drawWidget
                     .setViewer(null)
                     .setElement('.h-draw-widget').render();
+                if (this.annotationSelector.interactiveMode())
+                    this.$('.h-draw-widget').find('.h-view-element').removeClass('hidden');
             }
         }
         this.controlPanel.setElement('#h-analysis-panel').render();
@@ -644,8 +648,11 @@ var ImageView = View.extend({
         if (!this.annotationSelector.interactiveMode()) {
             return;
         }
+        if (element) {
+            $((this.$el.find('.h-element').toArray().filter(el => $(el).attr('data-id') === element))[0]).find('.h-view-element').toggle();
+        }
         this._closeContextMenu();
-        this.viewerWidget.highlightAnnotation(annotation, element);
+        this.viewerWidget.highlightAnnotation(annotation, annotation == false ? undefined : element);
     },
 
     widgetRegion(model) {
