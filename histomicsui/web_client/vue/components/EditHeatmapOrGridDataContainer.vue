@@ -2,7 +2,7 @@
 import _ from 'underscore';
 import Vue from 'vue/dist/vue.js';
 
-import EditHeatmapElementSfc from './EditHeatmapElementSfc.vue';
+import EditHeatmapOrGridData from './EditHeatmapOrGridData.vue';
 export default Vue.extend({
     props: ['element', 'parentView'],
     data() {
@@ -20,18 +20,18 @@ export default Vue.extend({
         }
     },
     components: {
-        EditHeatmapElementSfc
+        EditHeatmapOrGridData
     }
 })
 </script>
 
 <template>
     <div>
-        <edit-heatmap-element-sfc
+        <edit-heatmap-or-grid-data
             :elementData="this.attributes"
             @submit="handleSubmit"
             @cancel="close"
         >
-        </edit-heatmap-element-sfc>
+        </edit-heatmap-or-grid-data>
     </div>
 </template>
