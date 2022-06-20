@@ -47,6 +47,7 @@ var DrawWidget = Panel.extend({
         this.collection = this.annotation.elements();
         this.viewer = settings.viewer;
         this.setViewer(settings.viewer);
+        this.setZoomWidget(settings.zoomWidget);
         this._drawingType = settings.drawingType || null;
 
         this._highlighted = {};
@@ -158,6 +159,14 @@ var DrawWidget = Panel.extend({
     },
 
     /**
+     * Set the image 'zoomWidget' instance.
+     */
+    setZoomWidget(zoomWidget) {
+        this.zoomWidget = zoomWidget;
+        return this;
+    },
+
+    /**
      * Respond to a click on the "edit" button by rendering
      * the EditAnnotation modal dialog.
      */
@@ -230,7 +239,7 @@ var DrawWidget = Panel.extend({
         map.transition({
             center: newView.center,
             duration: ((newView.center.x-map.center().x)**2+(newView.center.y-map.center().y)**2)**0.5,
-            zoom: pointAnnot ? map.zoom() : (newView.zoom > 0 ? newView.zoom*0.4 : newView.zoom*2.5),
+            zoom: pointAnnot ? map.zoom() : this.zoomWidget.magnificationToZoom(this.zoomWidget.zoomToMagnification(newView.zoom)*0.2968 + 1.8666),
         });
         this._skipRenderHTML = true;
     },
