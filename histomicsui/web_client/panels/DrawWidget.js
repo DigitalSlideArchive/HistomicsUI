@@ -240,13 +240,17 @@ var DrawWidget = Panel.extend({
             center: {
                 x: bounds.left,
                 y: bounds.top
-            }
+            },
+            zoom: false
         } : map.zoomAndCenterFromBounds(bounds, map.rotation());
         map.zoomRange(originalZoomRange);
+        if (Math.abs(this.zoomWidget.zoomToMagnification(newView.zoom) * 0.2968 + 1.8666 - this.zoomWidget.zoomToMagnification(map.zoom())) <= 40 && map.zoom() < newView.zoom) {
+            newView.zoom = false;
+        }
         map.transition({
             center: newView.center,
             duration: ((newView.center.x - map.center().x) ** 2 + (newView.center.y - map.center().y) ** 2) ** 0.5,
-            zoom: pointAnnot ?
+            zoom: newView.zoom === false ?
                   map.zoom() :
                   this.zoomWidget.magnificationToZoom(this.zoomWidget.zoomToMagnification(newView.zoom) * 0.2968 + 1.8666)
         });
