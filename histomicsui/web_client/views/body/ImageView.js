@@ -283,8 +283,9 @@ var ImageView = View.extend({
                     this.drawWidget
                         .setViewer(this.viewerWidget)
                         .setElement('.h-draw-widget').render();
-                    if (this.annotationSelector.interactiveMode())
+                    if (this.annotationSelector.interactiveMode()) {
                         this.$('.h-draw-widget').find('.h-view-element').removeClass('hidden');
+                    }
                 }
                 this._orderPanels();
             });
@@ -300,8 +301,9 @@ var ImageView = View.extend({
                     .setViewer(null)
                     .setZoom(this.zoomWidget)
                     .setElement('.h-draw-widget').render();
-                if (this.annotationSelector.interactiveMode())
+                if (this.annotationSelector.interactiveMode()) {
                     this.$('.h-draw-widget').find('.h-view-element').removeClass('hidden');
+                }
             }
         }
         this.controlPanel.setElement('#h-analysis-panel').render();
@@ -649,11 +651,13 @@ var ImageView = View.extend({
         if (!this.annotationSelector.interactiveMode()) {
             return;
         }
+        // If it was a specific annotation that was highlighted, find that annotation's
+        // listing and toggle its zoom button to be hidden or unhidden
         if (element) {
-            $((this.$el.find('.h-element').toArray().filter(el => $(el).attr('data-id') === element))[0]).find('.h-view-element').toggle();
+            $((this.$el.find('.h-element').toArray().filter((el) => $(el).attr('data-id') === element))[0]).find('.h-view-element').toggle();
         }
         this._closeContextMenu();
-        this.viewerWidget.highlightAnnotation(annotation, annotation == false ? undefined : element);
+        this.viewerWidget.highlightAnnotation(annotation, annotation === false ? undefined : element);
     },
 
     widgetRegion(model) {

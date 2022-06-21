@@ -194,7 +194,7 @@ var DrawWidget = Panel.extend({
         switch (annot.get('type')) {
             case 'point':
                 points = [annot.get('center')];
-                pointAnnot = true
+                pointAnnot = true;
                 break;
             case 'polyline':
                 points = annot.get('points');
@@ -210,34 +210,36 @@ var DrawWidget = Panel.extend({
                 break;
         }
         const xCoords = points.map((point) => {
-            return point[0]
+            return point[0];
         });
         const yCoords = points.map((point) => {
-            return point[1]
+            return point[1];
         });
         const bounds = {
-            left: Math.min(... xCoords),
-            top: Math.min(... yCoords),
-            right: Math.max(... xCoords),
-            bottom: Math.max(... yCoords)
-        }
+            left: Math.min(...xCoords),
+            top: Math.min(...yCoords),
+            right: Math.max(...xCoords),
+            bottom: Math.max(...yCoords)
+        };
         const map = this.parentView.viewer;
         const originalZoomRange = map.zoomRange();
         map.zoomRange({
             min: Number.NEGATIVE_INFINITY,
-            max: Number.POSITIVE_INFINITY,
+            max: Number.POSITIVE_INFINITY
         });
         const newView = pointAnnot ? {
             center: {
                 x: bounds.left,
                 y: bounds.top
-            },
+            }
         } : map.zoomAndCenterFromBounds(bounds, map.rotation());
         map.zoomRange(originalZoomRange);
         map.transition({
             center: newView.center,
-            duration: ((newView.center.x-map.center().x)**2+(newView.center.y-map.center().y)**2)**0.5,
-            zoom: pointAnnot ? map.zoom() : this.zoomWidget.magnificationToZoom(this.zoomWidget.zoomToMagnification(newView.zoom)*0.2968 + 1.8666),
+            duration: ((newView.center.x - map.center().x) ** 2 + (newView.center.y - map.center().y) ** 2) ** 0.5,
+            zoom: pointAnnot ?
+                  map.zoom() :
+                  this.zoomWidget.magnificationToZoom(this.zoomWidget.zoomToMagnification(newView.zoom) * 0.2968 + 1.8666)
         });
         this._skipRenderHTML = true;
     },
