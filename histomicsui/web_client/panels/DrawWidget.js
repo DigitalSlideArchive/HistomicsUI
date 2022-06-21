@@ -227,8 +227,6 @@ var DrawWidget = Panel.extend({
             min: Number.NEGATIVE_INFINITY,
             max: Number.POSITIVE_INFINITY,
         });
-        map.clampBoundsX(false);
-        map.clampBoundsY(false);
         const newView = pointAnnot ? {
             center: {
                 x: bounds.left,
