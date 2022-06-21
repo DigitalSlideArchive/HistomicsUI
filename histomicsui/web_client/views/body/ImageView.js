@@ -282,10 +282,8 @@ var ImageView = View.extend({
                     this.$('.h-draw-widget').removeClass('hidden');
                     this.drawWidget
                         .setViewer(this.viewerWidget)
+                        .setAnnotationSelector(this.annotationSelector)
                         .setElement('.h-draw-widget').render();
-                    if (this.annotationSelector.interactiveMode()) {
-                        this.$('.h-draw-widget').find('.h-view-element').removeClass('hidden');
-                    }
                 }
                 this._orderPanels();
             });
@@ -300,10 +298,8 @@ var ImageView = View.extend({
                 this.drawWidget
                     .setViewer(null)
                     .setZoom(this.zoomWidget)
+                    .setAnnotationSelector(this.annotationSelector)
                     .setElement('.h-draw-widget').render();
-                if (this.annotationSelector.interactiveMode()) {
-                    this.$('.h-draw-widget').find('.h-view-element').removeClass('hidden');
-                }
             }
         }
         this.controlPanel.setElement('#h-analysis-panel').render();
@@ -650,11 +646,6 @@ var ImageView = View.extend({
     _highlightAnnotationForInteractiveMode(annotation, element) {
         if (!this.annotationSelector.interactiveMode()) {
             return;
-        }
-        // If it was a specific annotation that was highlighted, find that annotation's
-        // listing and toggle its zoom button to be hidden or unhidden
-        if (element) {
-            $((this.$el.find('.h-element').toArray().filter((el) => $(el).attr('data-id') === element))[0]).find('.h-view-element').toggle();
         }
         this._closeContextMenu();
         this.viewerWidget.highlightAnnotation(annotation, annotation === false ? undefined : element);
@@ -1077,7 +1068,8 @@ var ImageView = View.extend({
                 drawingType: this._lastDrawingType,
                 el: this.$('.h-draw-widget'),
                 viewer: this.viewerWidget,
-                zoomWidget: this.zoomWidget
+                zoomWidget: this.zoomWidget,
+                annotationSelector: this.annotationSelector
             }).render();
             this.listenTo(this.drawWidget, 'h:redraw', this._redrawAnnotation);
             this.listenTo(this.drawWidget, 'h:styleGroupsUpdated', this._updatePixelmapsWithCategories);

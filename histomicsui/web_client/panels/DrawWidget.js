@@ -48,6 +48,7 @@ var DrawWidget = Panel.extend({
         this.viewer = settings.viewer;
         this.setViewer(settings.viewer);
         this.setZoomWidget(settings.zoomWidget);
+        this.setAnnotationSelector(settings.annotationSelector);
         this._drawingType = settings.drawingType || null;
 
         this._highlighted = {};
@@ -163,6 +164,14 @@ var DrawWidget = Panel.extend({
      */
     setZoomWidget(zoomWidget) {
         this.zoomWidget = zoomWidget;
+        return this;
+    },
+
+    /**
+     * Set the image 'annotationSelector' instance.
+     */
+    setAnnotationSelector(annotationSelector) {
+        this.annotationSelector = annotationSelector;
         return this;
     },
 
@@ -489,12 +498,15 @@ var DrawWidget = Panel.extend({
 
     _highlightElement(evt) {
         const id = $(evt.currentTarget).data('id');
+        if (this.annotationSelector._interactiveMode) {
+            $(evt.currentTarget).find('.h-view-element').show();
+        }
         this.parentView.trigger('h:highlightAnnotation', this.annotation.id, id);
     },
 
     _unhighlightElement(evt) {
-        const id = $(evt.currentTarget).data('id');
-        this.parentView.trigger('h:highlightAnnotation', false, id);
+        $(evt.currentTarget).find('.h-view-element').hide();
+        this.parentView.trigger('h:highlightAnnotation');
     },
 
     _recalculateGroupAggregation() {
