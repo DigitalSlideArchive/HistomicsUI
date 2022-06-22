@@ -1,6 +1,4 @@
 <script>
-import '@simonwep/pickr/dist/themes/classic.min.css';
-import  Picker from '@simonwep/pickr/dist/pickr.es5.min.js';
 import tinycolor from 'tinycolor2';
 import _ from 'underscore';
 import ColorPickerInput from './ColorPickerInput.vue';
