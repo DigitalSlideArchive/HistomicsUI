@@ -17,12 +17,11 @@ export default {
             colorRange: _.clone(this.elementData.colorRange),
             colorRangeData: [],
             rangeValues: _.clone(this.elementData.rangeValues),
-            minColor: this.elementData.minColor || 'rgba(0, 0, 0, 0)',
-            maxColor: this.elementData.maxColor || 'rgba(0, 0, 0, 0)',
+            minColor: this.elementData.minColor,
+            maxColor: this.elementData.maxColor,
             stepped: this.elementData.stepped,
             scaleWithZoom: this.elementData.scaleWithZoom,
-            validationErrors: [],
-            testColor: '#ff0000'
+            validationErrors: []
         };
     },
     computed: {
@@ -119,27 +118,16 @@ export default {
                 });
             });
         }
+        if (this.type === 'griddata' && !this.minColor && !this.maxColor) {
+            if (this.colorRange.length > 0) {
+                this.minColor = this.colorRange[0];
+                this.maxColor = this.colorRange[this.colorRange.length - 1];
+            } else {
+                this.minColor = 'rgba(0, 0, 0, 0)';
+                this.maxColor = 'rgba(255, 0, 0, 1)';
+            }
+        }
         this.updateRangeDataKeys();
-        this.$nextTick(() => {
-            _.forEach(this.$refs.colorPickers, (htmlElement, index) => {
-                const picker = Picker.create({
-                    el: htmlElement,
-                    theme: 'classic',
-                    default: this.colorRangeData[index].colorString,
-                    components: {
-                        preview: true,
-                        hue: true,
-                        opacity: true
-                    }
-                });
-                picker.on('change', (color, source, instance) => {
-                    const index = instance.options.el.dataset.index;
-                    this.colorRangeData[index].colorString = tinycolor(color).toRgbString();
-                    instance.setColor(tinycolor(color).toString());
-                });
-                this.pickers.push(picker);
-            });
-        });
     }
 }
 </script>
