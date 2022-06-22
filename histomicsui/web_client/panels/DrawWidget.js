@@ -209,12 +209,8 @@ var DrawWidget = Panel.extend({
                 points = convertCircle(annot.attributes).coordinates[0];
                 break;
         }
-        const xCoords = points.map((point) => {
-            return point[0];
-        });
-        const yCoords = points.map((point) => {
-            return point[1];
-        });
+        const xCoords = points.map((point) => point[0]);
+        const yCoords = points.map((point) => point[1]);
         const bounds = {
             left: Math.min(...xCoords),
             top: Math.min(...yCoords),
