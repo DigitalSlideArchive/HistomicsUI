@@ -175,7 +175,9 @@ var ZoomWidget = Panel.extend({
         if (!this.renderer) {
             return;
         }
+        this._inZoomChange = true;
         this.setMagnification(this.zoomToMagnification(this.renderer.zoom()));
+        this._inZoomChange = false;
     },
 
     /**
@@ -250,7 +252,7 @@ var ZoomWidget = Panel.extend({
      */
     _zoomSliderInput() {
         var val = this._getSliderValue();
-        if (this.renderer) {
+        if (this.renderer && !this._inZoomChange) {
             this.renderer.zoom(this.magnificationToZoom(val));
         }
         this.$('.h-zoom-value').text(val.toFixed(1));
