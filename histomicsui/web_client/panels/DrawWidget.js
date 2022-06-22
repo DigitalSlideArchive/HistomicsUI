@@ -232,7 +232,10 @@ var DrawWidget = Panel.extend({
                         zoom: false
                         } :
                         map.zoomAndCenterFromBounds(bounds, map.rotation());
-        map.zoomRange(originalZoomRange);
+        map.zoomRange({
+            min: originalZoomRange.origMin,
+            max: originalZoomRange.max
+        });
         if (Math.abs(newView.zoom - 1.5 - map.zoom()) <= 0.5 && map.zoom() < newView.zoom) {
             newView.zoom = false;
         }
