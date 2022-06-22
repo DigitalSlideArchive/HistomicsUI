@@ -282,7 +282,6 @@ var ImageView = View.extend({
                     this.$('.h-draw-widget').removeClass('hidden');
                     this.drawWidget
                         .setViewer(this.viewerWidget)
-                        .setZoom(this.zoomWidget)
                         .setAnnotationSelector(this.annotationSelector)
                         .setElement('.h-draw-widget').render();
                 }
@@ -298,7 +297,6 @@ var ImageView = View.extend({
                 this.$('.h-draw-widget').removeClass('hidden');
                 this.drawWidget
                     .setViewer(null)
-                    .setZoom(this.zoomWidget)
                     .setAnnotationSelector(this.annotationSelector)
                     .setElement('.h-draw-widget').render();
             }
@@ -1069,7 +1067,6 @@ var ImageView = View.extend({
                 drawingType: this._lastDrawingType,
                 el: this.$('.h-draw-widget'),
                 viewer: this.viewerWidget,
-                zoomWidget: this.zoomWidget,
                 annotationSelector: this.annotationSelector
             }).render();
             this.listenTo(this.drawWidget, 'h:redraw', this._redrawAnnotation);

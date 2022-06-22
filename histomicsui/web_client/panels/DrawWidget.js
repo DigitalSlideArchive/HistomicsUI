@@ -47,7 +47,6 @@ var DrawWidget = Panel.extend({
         this.collection = this.annotation.elements();
         this.viewer = settings.viewer;
         this.setViewer(settings.viewer);
-        this.setZoomWidget(settings.zoomWidget);
         this.setAnnotationSelector(settings.annotationSelector);
         this._drawingType = settings.drawingType || null;
 
@@ -160,14 +159,6 @@ var DrawWidget = Panel.extend({
     },
 
     /**
-     * Set the image 'zoomWidget' instance.
-     */
-    setZoomWidget(zoomWidget) {
-        this.zoomWidget = zoomWidget;
-        return this;
-    },
-
-    /**
      * Set the image 'annotationSelector' instance.
      */
     setAnnotationSelector(annotationSelector) {
@@ -241,20 +232,18 @@ var DrawWidget = Panel.extend({
                             center: {
                                 x: bounds.left,
                                 y: bounds.top
-                        },
+                            },
                         zoom: false
                         } :
                         map.zoomAndCenterFromBounds(bounds, map.rotation());
         map.zoomRange(originalZoomRange);
-        if (Math.abs(this.zoomWidget.zoomToMagnification(newView.zoom) * 0.2968 + 1.8666 - this.zoomWidget.zoomToMagnification(map.zoom())) <= 40 && map.zoom() < newView.zoom) {
+        if (Math.abs(newView.zoom - 1.5 - map.zoom()) <= 0.5 && map.zoom() < newView.zoom) {
             newView.zoom = false;
         }
         map.transition({
             center: newView.center,
             duration: ((newView.center.x - map.center().x) ** 2 + (newView.center.y - map.center().y) ** 2) ** 0.5,
-            zoom: newView.zoom === false ?
-                map.zoom() :
-                this.zoomWidget.magnificationToZoom(this.zoomWidget.zoomToMagnification(newView.zoom) * 0.2968 + 1.8666)
+            zoom: newView.zoom === false ? map.zoom() : newView.zoom - 1.5
         });
         this._skipRenderHTML = true;
     },
