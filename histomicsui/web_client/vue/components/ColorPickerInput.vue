@@ -9,7 +9,7 @@ export default {
     },
     data() {
         return {
-            colors: this.color,
+            pickerColor: this.color,
             colorValue: this.color,
             displayPicker: false
         }
@@ -19,11 +19,11 @@ export default {
     },
     methods: {
         setColor(color) {
-            this.updateColors(color);
+            this.updatePickerColor(color);
             this.colorValue = color;
         },
-        updateColors(color) {
-            this.colors = color;
+        updatePickerColor(color) {
+            this.pickerColor = color;
         },
         showPicker() {
             document.addEventListener('click', this.documentClick);
@@ -37,14 +37,14 @@ export default {
             this.displayPicker ? this.hidePicker() : this.showPicker();
         },
         updateFromInput() {
-            this.updateColors(this.colorValue);
+            this.updatePickerColor(this.colorValue);
         },
         updateFromPicker(color) {
             this.colorValue = tinycolor(color.rgba).toString();
         },
         documentClick(e) {
             const picker = this.$refs.colorpicker;
-            if (picker !== e.target && !picker.contains(e.target)) {
+            if (picker && picker !== e.target && !picker.contains(e.target)) {
                 this.hidePicker();
             }
         }
@@ -52,7 +52,7 @@ export default {
     watch: {
         colorValue(val) {
             if (val) {
-                this.updateColors(val);
+                this.updatePickerColor(val);
                 this.$emit('input', val);
             }
         }
@@ -77,7 +77,7 @@ export default {
             >
                 <i :style="{ 'background-color': colorValue }"></i>
             </span>
-            <chrome-picker :value="colors" @input="updateFromPicker" v-if="displayPicker" />
+            <chrome-picker :value="pickerColor" @input="updateFromPicker" v-if="displayPicker" />
         </span>
     </div>
 </template>
