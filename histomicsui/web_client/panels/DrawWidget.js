@@ -4,6 +4,7 @@ import $ from 'jquery';
 
 import events from '@girder/core/events';
 import Panel from '@girder/slicer_cli_web/views/Panel';
+import { getCurrentUser } from '@girder/core/auth';
 
 import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/convert';
 import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
@@ -29,9 +30,13 @@ var DrawWidget = Panel.extend({
         'click .h-delete-element': 'deleteElement',
         'click .h-draw': 'drawElement',
         'change .h-style-group': '_setToSelectedStyleGroup',
+        'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
         'click .h-configure-style-group': '_styleGroupEditor',
         'mouseenter .h-element': '_highlightElement',
-        'mouseleave .h-element': '_unhighlightElement'
+        'mouseleave .h-element': '_unhighlightElement',
+        'show.bs.collapse': 'expand',
+        'hide.bs.collapse': 'collapse',
+        'click .h-dropdown-title': '_dropdownControlClick'
     }),
 
     /**
@@ -50,6 +55,10 @@ var DrawWidget = Panel.extend({
         this.setAnnotationSelector(settings.annotationSelector);
         this._drawingType = settings.drawingType || null;
 
+        this._localId = (getCurrentUser() || {}).id || 'local';
+        this._editOptions = this._getEditOptions()[this._localId] || {};
+        this._verifyEditOptions(this._editOptions, false);
+
         this._highlighted = {};
         this._groups = new StyleCollection();
         this._style = new StyleModel({id: 'default'});
@@ -64,6 +73,9 @@ var DrawWidget = Panel.extend({
             } else {
                 this._groups.add(this._style.toJSON());
                 this._groups.get(this._style.id).save();
+            }
+            if (this._editOptions.style && this._groups.get(this._editOptions.style)) {
+                this._setStyleGroup(this._groups.get(this._editOptions.style).toJSON());
             }
         });
         this.on('h:mouseon', (model) => {
@@ -100,8 +112,11 @@ var DrawWidget = Panel.extend({
                 style: this._style.id,
                 highlighted: this._highlighted,
                 name,
+                opts: this._editOptions,
+                drawingType: this._drawingType,
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
             }));
+            this.$('.h-dropdown-content').collapse({toggle: false});
         }
         this.$('button.h-draw[data-type]').removeClass('active');
         if (this._drawingType) {
@@ -285,25 +300,28 @@ var DrawWidget = Panel.extend({
     /**
      * Apply a boolean operation to the existign polygons.
      *
-     * @param {object[]} element A list of elements that were specified.
      * @param {geo.annotation[]} annotations The list of specified geojs
      *      annotations.
      * @param {object} opts An object with the current boolean operation.
      * @returns {boolean} true if the operation was handled.
      */
-    _applyBooleanOp(element, annotations, evtOpts) {
-        if (annotations.length !== 1 || !annotations[0].toPolygonList) {
+    _applyBooleanOp(annotations, evtOpts) {
+        if (!evtOpts.asPolygonList && (annotations.length !== 1 || !annotations[0].toPolygonList)) {
             return false;
         }
         const op = evtOpts.currentBooleanOperation;
         const existing = this.viewer._annotations[this.annotation.id].features.filter((f) => ['polygon', 'marker'].indexOf(f.featureType) >= 0);
-        if (!existing.length) {
+        // optionally add {pixelTolerance: 0.5} to the toPolygonList call
+        let polylist = evtOpts.asPolygonList ? annotations : annotations[0].toPolygonList();
+        if (!existing.length && polylist.length < 2) {
             return false;
         }
+        const searchPoly = [];
+        polylist.forEach((poly) => poly[0].forEach((pt) => searchPoly.push({x: pt[0], y: pt[1]})));
         const near = existing.map((f) => f.polygonSearch(
-            annotations[0].toPolygonList()[0][0].map((pt) => ({x: pt[0], y: pt[1]})),
+            searchPoly,
             {partial: true}, null));
-        if (!near.some((n) => n.found.length)) {
+        if (!near.some((n) => n.found.length) && polylist.length < 2) {
             return false;
         }
         const oldids = {};
@@ -317,7 +335,7 @@ var DrawWidget = Panel.extend({
             geojson.features.push(element);
             oldids[element.id] = true;
         }));
-        if (!geojson.features.length) {
+        if (!geojson.features.length && polylist.length < 2) {
             return false;
         }
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
@@ -327,20 +345,21 @@ var DrawWidget = Panel.extend({
             keepAnnotations: 'exact',
             style: this.viewer.annotationLayer
         };
-        geo.util.polyops[op](this.viewer.annotationLayer, annotations[0], opts);
+        // optionally add {pixelTolerance: 0.5} to the opts
+        geo.util.polyops[op](this.viewer.annotationLayer, polylist, opts);
         const newAnnot = this.viewer.annotationLayer.annotations();
 
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
-        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {silent: true}));
-        element = newAnnot.map((annot) => {
+        const elements = newAnnot.map((annot) => {
             const result = convertAnnotation(annot);
             if (!result.id) {
                 result.id = this.viewer._guid();
             }
             return result;
-        });
+        }).filter((annot) => !annot.points || annot.points.length);
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {silent: elements.length}));
         this.addElements(
-            _.map(element, (el) => {
+            _.map(elements, (el) => {
                 el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
                 if (!this._style.get('group')) {
                     delete el.group;
@@ -351,6 +370,151 @@ var DrawWidget = Panel.extend({
         return true;
     },
 
+    _brushPan() {
+        const zoom = this.viewer.viewer.zoom();
+        if (zoom !== this._brushZoom) {
+            this._brushZoom = zoom;
+            let size = parseFloat(this._editOptions.brush_size) || 50;
+            size *= this.viewer.viewer.unitsPerPixel(this._brushZoom);
+            this._setBrushCoordinates(this.viewer.annotationLayer.annotations()[0], size);
+            this.viewer.viewer.draw();
+        }
+    },
+
+    _setBrushCoordinates(annot, size) {
+        const center = this.viewer.viewer.interactor().mouse().mapgcs || {x: 0, y: 0};
+        annot._coordinates([
+            {x: center.x - size / 2, y: center.y - size / 2},
+            {x: center.x - size / 2, y: center.y + size / 2},
+            {x: center.x + size / 2, y: center.y + size / 2},
+            {x: center.x + size / 2, y: center.y - size / 2}]);
+        annot.modified();
+    },
+
+    _brushAction(evt) {
+        // optionally add {pixelTolerance: 0.5} to the toPolygonList call
+        let annotations = this.viewer.annotationLayer.toPolygonList();
+        let elements = [convertAnnotation(this.viewer.annotationLayer.annotations()[0])];
+        if (!elements[0].id) {
+            elements[0].id = this.viewer._guid();
+        }
+        const opts = {
+            currentBooleanOperation: evt.operation || 'union',
+            asPolygonList: true
+        };
+        if (evt.event === geo.event.annotation.cursor_action) {
+            if (evt.operation && evt.operation !== 'union' && evt.operation !== 'difference') {
+                return;
+            }
+            // if this is the same action as the previous one, "blur" the brush
+            // shapes along the direction of travel
+            if (this._lastBrushState && this._lastBrushState.stateId && this._lastBrushState.stateId === evt.evt.state.stateId) {
+                const shape = this._editOptions.brush_shape || 'square';
+                let size = parseFloat(this._editOptions.brush_size) || 50;
+                if (this._editOptions.brush_screen) {
+                    size *= this.viewer.viewer.unitsPerPixel(this._brushZoom);
+                }
+                const bbox1 = this.viewer.annotationLayer.annotations()[0]._coordinates();
+                const bbox2 = this._lastBrushState.bbox;
+                if (bbox1[0].x !== bbox2[0].x || bbox1[0].y !== bbox2[0].y) {
+                    let blur;
+                    if (shape === 'square') {
+                        const order = (bbox1[0].x - bbox2[0].x) * (bbox1[0].y - bbox2[0].y) < 0 ? 0 : 1;
+                        blur = [[[
+                            [bbox1[order].x, bbox1[order].y],
+                            [bbox1[order + 2].x, bbox1[order + 2].y],
+                            [bbox2[order + 2].x, bbox2[order + 2].y],
+                            [bbox2[order].x, bbox2[order].y]
+                        ]]];
+                    } else {
+                        const c1x = (bbox1[0].x + bbox1[2].x) * 0.5;
+                        const c1y = (bbox1[0].y + bbox1[2].y) * 0.5;
+                        const c2x = (bbox2[0].x + bbox2[2].x) * 0.5;
+                        const c2y = (bbox2[0].y + bbox2[2].y) * 0.5;
+                        const ang = Math.atan2(c2y - c1y, c2x - c1x) + Math.PI / 2;
+                        blur = [[[
+                            [c1x + size / 2 * Math.cos(ang), c1y + size / 2 * Math.sin(ang)],
+                            [c1x - size / 2 * Math.cos(ang), c1y - size / 2 * Math.sin(ang)],
+                            [c2x - size / 2 * Math.cos(ang), c2y - size / 2 * Math.sin(ang)],
+                            [c2x + size / 2 * Math.cos(ang), c2y + size / 2 * Math.sin(ang)]
+                        ]]];
+                    }
+                    annotations = geo.util.polyops.union(annotations, blur);
+                    elements = [{
+                        type: 'polyline',
+                        closed: true,
+                        points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1]})),
+                        id: this.viewer._guid()
+                    }];
+                }
+            }
+            this._lastBrushState = evt.evt.state;
+            this._lastBrushState.bbox = this.viewer.annotationLayer.annotations()[0]._coordinates();
+        } else {
+            this._lastBrushState = null;
+        }
+        this._addDrawnElements(elements, annotations, opts);
+        this._setBrushMode(true);
+        // update sooner so that the hit test will work
+        this.viewer.drawAnnotation(this.annotation);
+    },
+
+    /**
+     * Switch to or update brush mode.
+     *
+     * @param {boolean} [forceRefresh] If true, update the annotation mode even
+     *      if it hasn't changed.
+     */
+    _setBrushMode(forceRefresh) {
+        if (!this._brushPanBound) {
+            this._brushPanBound = _.bind(this._brushPan, this);
+        }
+        this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
+        this.viewer.annotationLayer.geoOff(geo.event.annotation.cursor_click);
+        this.viewer.annotationLayer.geoOff(geo.event.annotation.cursor_action);
+        this.viewer.annotationLayer.geoOff(geo.event.pan, this._brushPanBound);
+        this.viewer.annotationLayer.removeAllAnnotations();
+        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_click, (evt) => this._brushAction(evt));
+        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_action, (evt) => this._brushAction(evt));
+        const shape = this._editOptions.brush_shape || 'square';
+        let size = parseFloat(this._editOptions.brush_size) || 50;
+        const scale = this._editOptions.brush_screen;
+        if (scale) {
+            this.viewer.annotationLayer.geoOn(geo.event.pan, this._brushPanBound);
+            this._brushZoom = this.viewer.viewer.zoom();
+            size *= this.viewer.viewer.unitsPerPixel(this._brushZoom);
+        }
+        const annot = geo.registries.annotations[shape === 'square' ? 'rectangle' : shape].func({layer: this.viewer.annotationLayer});
+        this.viewer.annotationLayer.addAnnotation(annot);
+        this._setBrushCoordinates(annot, size);
+        this.viewer.annotationLayer.mode(this.viewer.annotationLayer.modes.cursor, annot);
+        this._drawingType = 'brush';
+        this.viewer.viewer.draw();
+    },
+
+    _addDrawnElements(element, annotations, opts) {
+        opts = opts || {};
+        if (opts.currentBooleanOperation) {
+            const processed = this._applyBooleanOp(annotations, opts);
+            if (processed || ['difference', 'intersect'].indexOf(opts.currentBooleanOperation) >= 0) {
+                this.drawElement(undefined, this._drawingType);
+                return undefined;
+            }
+        }
+        // add current style group information
+        this.addElements(
+            _.map(element, (el) => {
+                el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
+                if (!this._style.get('group')) {
+                    delete el.group;
+                }
+                return el;
+            })
+        );
+        this.drawElement(undefined, this._drawingType);
+        return undefined;
+    },
+
     /**
      * Respond to clicking an element type by putting the image viewer into
      * "draw" mode.
@@ -359,8 +523,10 @@ var DrawWidget = Panel.extend({
      *      `undefined` to use a passed-in type.
      * @param {string|null} [type] If `evt` is `undefined`, switch to this draw
      *      mode.
+     * @param {boolean} [forceRefresh] If true, update the annotation mode even
+     *      if it hasn't changed.
      */
-    drawElement(evt, type) {
+    drawElement(evt, type, forceRefresh) {
         var $el;
         if (evt) {
             $el = this.$(evt.currentTarget);
@@ -369,44 +535,25 @@ var DrawWidget = Panel.extend({
         } else {
             $el = this.$('button.h-draw[data-type="' + type + '"]');
         }
-        if (this.viewer.annotationLayer.mode() === type && this._drawingType === type && (!type || this.viewer.annotationLayer.currentAnnotation)) {
+        if (this.viewer.annotationLayer.mode() === type && this._drawingType === type && (!type || this.viewer.annotationLayer.currentAnnotation) && !forceRefresh) {
             return;
         }
         if (this.viewer.annotationLayer.mode()) {
             this._drawingType = null;
             this.viewer.annotationLayer.mode(null);
             this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
+            this.viewer.annotationLayer.geoOff(geo.event.pan, this._brushPanBound);
             this.viewer.annotationLayer.removeAllAnnotations();
         }
-        if (type) {
+        if (type === 'brush') {
+            this._setBrushMode(forceRefresh);
+        } else if (type) {
             this.parentView._resetSelection();
             // always show the active annotation when drawing a new element
             this.annotation.set('displayed', true);
-
             this._drawingType = type;
             this.viewer.startDrawMode(type)
-                .then((element, annotations, opts) => {
-                    opts = opts || {};
-                    if (opts.currentBooleanOperation) {
-                        const processed = this._applyBooleanOp(element, annotations, opts);
-                        if (processed || ['difference', 'intersect'].indexOf(opts.currentBooleanOperation) >= 0) {
-                            this.drawElement(undefined, this._drawingType);
-                            return undefined;
-                        }
-                    }
-                    // add current style group information
-                    this.addElements(
-                        _.map(element, (el) => {
-                            el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
-                            if (!this._style.get('group')) {
-                                delete el.group;
-                            }
-                            return el;
-                        })
-                    );
-                    this.drawElement(undefined, this._drawingType);
-                    return undefined;
-                });
+                .then((element, annotations, opts) => this._addDrawnElements(element, annotations, opts));
         }
         this.$('button.h-draw[data-type]').removeClass('active');
         if (this._drawingType) {
@@ -431,6 +578,55 @@ var DrawWidget = Panel.extend({
         return this.$(evt.currentTarget).parent('.h-element').data('id');
     },
 
+    _getEditOptions() {
+        let hui = {};
+        try {
+            hui = JSON.parse(window.localStorage.getItem('histomicsui') || '{}');
+        } catch (err) { }
+        if (!_.isObject(hui)) {
+            hui = {};
+        }
+        return hui;
+    },
+
+    _saveEditOptions(opts) {
+        let update = false;
+        if (opts) {
+            Object.entries(opts).forEach(([key, value]) => {
+                if (this._editOptions[key] !== value) {
+                    this._editOptions[key] = value;
+                    update = true;
+                }
+            });
+        }
+        if (update || !opts) {
+            this._verifyEditOptions(this._editOptions);
+            try {
+                let hui = this._getEditOptions();
+                hui[this._localId] = this._editOptions;
+                window.localStorage.setItem('histomicsui', JSON.stringify(hui));
+            } catch (err) {
+                console.warn('Failed to write localStorage');
+                console.log(err);
+            }
+        }
+    },
+
+    _verifyEditOptions(opts, raiseOnError) {
+        if (raiseOnError && opts.brush_shape && ['square', 'circle'].indexOf(opts.brush_shape) < 0) {
+            throw new Error('Brush is not a valid shape');
+        }
+        if (!opts.brush_shape || ['square', 'circle'].indexOf(opts.brush_shape) < 0) {
+            opts.brush_shape = 'square';
+        }
+        if (raiseOnError && opts.brush_size && !(parseFloat(opts.brush_size) > 0)) {
+            throw new Error('Brush size is not a positive number');
+        }
+        if (!opts.brush_size || !(parseFloat(opts.brush_size) > 0)) {
+            opts.brush_size = 50;
+        }
+    },
+
     _setStyleGroup(group) {
         this._style.set(group);
         if (!this._style.get('group') && this._style.id !== 'default') {
@@ -439,10 +635,45 @@ var DrawWidget = Panel.extend({
             this._style.unset('group');
         }
         this.$('.h-style-group').val(group.id);
+        this._saveEditOptions({style: group.id});
     },
 
     _setToSelectedStyleGroup() {
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
+    },
+
+    _dropdownControlClick(e) {
+        e.stopImmediatePropagation();
+        $(e.target).parent().find('.h-dropdown-content').collapse('toggle');
+    },
+    expand() {
+        this.$('.icon-down-open').attr('class', 'icon-up-open');
+    },
+    collapse() {
+        this.$('.icon-up-open').attr('class', 'icon-down-open');
+    },
+
+    _changeBrush(e) {
+        const opts = {
+            brush_shape: this.$('.h-brush-shape:checked').attr('shape'),
+            brush_size: parseFloat(this.$('.h-brush-size').val()),
+            brush_screen: this.$('.h-brush-screen').is(':checked')
+        };
+        this._saveEditOptions(opts);
+        this.$('.h-draw[data-type="brush"]').attr('shape', this._editOptions.brush_shape);
+        if (this._drawingType === 'brush') {
+            this.drawElement(undefined, 'brush', true);
+        }
+    },
+
+    nextBrushShape() {
+        this.$('.h-brush-shape[name="h-brush-shape"][shape="' + this.$('.h-brush-shape[name="h-brush-shape"]:checked').attr('next_shape') + '"]').prop('checked', true);
+        this._changeBrush();
+    },
+    adjustBrushSize(delta) {
+        let newval = Math.max(1, parseFloat(this.$('.h-brush-size').val()) + delta);
+        this.$('.h-brush-size').val(newval);
+        this._changeBrush();
     },
 
     /**

@@ -1094,6 +1094,15 @@ var ImageView = View.extend({
         if (/^(input|textarea|select)$/.test((document.activeElement.tagName || '').toLowerCase())) {
             return;
         }
+        const drawModes = {
+            o: 'point',
+            r: 'rectangle',
+            i: 'ellipse',
+            c: 'circle',
+            p: 'polygon',
+            l: 'line',
+            b: 'brush'
+        };
         switch (evt.key) {
             case 'a':
                 this._showOrHideAnnotations();
@@ -1111,58 +1120,19 @@ var ImageView = View.extend({
             case ' ': // pressing space bar creates a new annotation
                 this.annotationSelector.createAnnotation();
                 break;
-            case 'o':
+            case 'B':
                 if (this.activeAnnotation) {
-                    if (this.drawWidget._drawingType === 'point') {
-                        this.drawWidget.cancelDrawMode();
-                    } else {
-                        this.drawWidget.drawElement(undefined, 'point');
-                    }
+                    this.drawWidget.nextBrushShape();
                 }
                 break;
-            case 'r':
+            case 'x':
                 if (this.activeAnnotation) {
-                    if (this.drawWidget._drawingType === 'rectangle') {
-                        this.drawWidget.cancelDrawMode();
-                    } else {
-                        this.drawWidget.drawElement(undefined, 'rectangle');
-                    }
+                    this.drawWidget.adjustBrushSize(1);
                 }
                 break;
-            case 'i':
+            case 'z':
                 if (this.activeAnnotation) {
-                    if (this.drawWidget._drawingType === 'ellipse') {
-                        this.drawWidget.cancelDrawMode();
-                    } else {
-                        this.drawWidget.drawElement(undefined, 'ellipse');
-                    }
-                }
-                break;
-            case 'c':
-                if (this.activeAnnotation) {
-                    if (this.drawWidget._drawingType === 'circle') {
-                        this.drawWidget.cancelDrawMode();
-                    } else {
-                        this.drawWidget.drawElement(undefined, 'circle');
-                    }
-                }
-                break;
-            case 'p':
-                if (this.activeAnnotation) {
-                    if (this.drawWidget._drawingType === 'polygon') {
-                        this.drawWidget.cancelDrawMode();
-                    } else {
-                        this.drawWidget.drawElement(undefined, 'polygon');
-                    }
-                }
-                break;
-            case 'l':
-                if (this.activeAnnotation) {
-                    if (this.drawWidget._drawingType === 'line') {
-                        this.drawWidget.cancelDrawMode();
-                    } else {
-                        this.drawWidget.drawElement(undefined, 'line');
-                    }
+                    this.drawWidget.adjustBrushSize(-1);
                 }
                 break;
             case 'q':
@@ -1176,7 +1146,7 @@ var ImageView = View.extend({
                 }
                 break;
             case 'Enter':
-                const drawingType = this.drawWidget._drawingType;
+                const drawingType = this.drawWidget && this.drawWidget._drawingType;
                 if (this.activeAnnotation && ['polygon', 'line'].includes(drawingType)) {
                     const annotation = this.viewerWidget.annotationLayer.annotations()[0];
 
@@ -1195,6 +1165,17 @@ var ImageView = View.extend({
 
                     this.drawWidget.cancelDrawMode();
                 }
+                break;
+            default:
+                if (this.drawWidget && drawModes[evt.key] && this.activeAnnotation) {
+                    let mode = drawModes[evt.key];
+                    if (this.drawWidget._drawingType === mode) {
+                        this.drawWidget.cancelDrawMode();
+                    } else {
+                        this.drawWidget.drawElement(undefined, mode);
+                    }
+                }
+                break;
         }
     },
 
