@@ -489,7 +489,8 @@ var DrawWidget = Panel.extend({
 
     _highlightElement(evt) {
         const id = $(evt.currentTarget).data('id');
-        if (this.annotationSelector._interactiveMode) {
+        const annotType = this.collection._byId[id].get('type');
+        if (this.annotationSelector._interactiveMode && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(annotType)) {
             $(evt.currentTarget).find('.h-view-element').show();
         }
         this.parentView.trigger('h:highlightAnnotation', this.annotation.id, id);
