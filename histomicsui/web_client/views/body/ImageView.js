@@ -282,6 +282,7 @@ var ImageView = View.extend({
                     this.$('.h-draw-widget').removeClass('hidden');
                     this.drawWidget
                         .setViewer(this.viewerWidget)
+                        .setAnnotationSelector(this.annotationSelector)
                         .setElement('.h-draw-widget').render();
                 }
                 this._orderPanels();
@@ -296,6 +297,7 @@ var ImageView = View.extend({
                 this.$('.h-draw-widget').removeClass('hidden');
                 this.drawWidget
                     .setViewer(null)
+                    .setAnnotationSelector(this.annotationSelector)
                     .setElement('.h-draw-widget').render();
             }
         }
@@ -645,7 +647,7 @@ var ImageView = View.extend({
             return;
         }
         this._closeContextMenu();
-        this.viewerWidget.highlightAnnotation(annotation, element);
+        this.viewerWidget.highlightAnnotation(annotation, annotation === false ? undefined : element);
     },
 
     widgetRegion(model) {
@@ -1064,7 +1066,8 @@ var ImageView = View.extend({
                 annotation: this.activeAnnotation,
                 drawingType: this._lastDrawingType,
                 el: this.$('.h-draw-widget'),
-                viewer: this.viewerWidget
+                viewer: this.viewerWidget,
+                annotationSelector: this.annotationSelector
             }).render();
             this.listenTo(this.drawWidget, 'h:redraw', this._redrawAnnotation);
             this.listenTo(this.drawWidget, 'h:styleGroupsUpdated', this._updatePixelmapsWithCategories);

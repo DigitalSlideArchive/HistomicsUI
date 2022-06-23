@@ -6,6 +6,9 @@ import events from '@girder/core/events';
 import Panel from '@girder/slicer_cli_web/views/Panel';
 
 import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/convert';
+import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
+import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
+import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
 
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
@@ -22,6 +25,7 @@ import '../stylesheets/panels/drawWidget.styl';
 var DrawWidget = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .h-edit-element': 'editElement',
+        'click .h-view-element': 'viewElement',
         'click .h-delete-element': 'deleteElement',
         'click .h-draw': 'drawElement',
         'change .h-style-group': '_setToSelectedStyleGroup',
@@ -43,6 +47,7 @@ var DrawWidget = Panel.extend({
         this.collection = this.annotation.elements();
         this.viewer = settings.viewer;
         this.setViewer(settings.viewer);
+        this.setAnnotationSelector(settings.annotationSelector);
         this._drawingType = settings.drawingType || null;
 
         this._highlighted = {};
@@ -154,6 +159,14 @@ var DrawWidget = Panel.extend({
     },
 
     /**
+     * Set the image 'annotationSelector' instance.
+     */
+    setAnnotationSelector(annotationSelector) {
+        this.annotationSelector = annotationSelector;
+        return this;
+    },
+
+    /**
      * Respond to a click on the "edit" button by rendering
      * the EditAnnotation modal dialog.
      */
@@ -168,6 +181,74 @@ var DrawWidget = Panel.extend({
             this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
             this._skipRenderHTML = true;
         });
+    },
+
+    /**
+     * Respond to a click on the "view" button by changing the
+     * viewer location and zoom level to focus on one annotation
+     */
+    viewElement(evt) {
+        const annot = this.collection._byId[$(evt.target).parent().attr('data-id')];
+        let points;
+        let pointAnnot = false;
+        switch (annot.get('type')) {
+            case 'point':
+                points = [annot.get('center')];
+                pointAnnot = true;
+                break;
+            case 'polyline':
+                points = annot.get('points');
+                break;
+            case 'rectangle':
+                points = convertRectangle(annot.attributes).coordinates[0];
+                break;
+            case 'ellipse':
+                points = convertEllipse(annot.attributes).coordinates[0];
+                break;
+            case 'circle':
+                points = convertCircle(annot.attributes).coordinates[0];
+                break;
+        }
+        const xCoords = points.map((point) => point[0]);
+        const yCoords = points.map((point) => point[1]);
+        const bounds = {
+            left: Math.min(...xCoords),
+            top: Math.min(...yCoords),
+            right: Math.max(...xCoords),
+            bottom: Math.max(...yCoords)
+        };
+        const map = this.parentView.viewer;
+        const originalZoomRange = map.zoomRange();
+        map.zoomRange({
+            min: Number.NEGATIVE_INFINITY,
+            max: Number.POSITIVE_INFINITY
+        });
+        const newView = pointAnnot
+            ? {
+                center: {
+                    x: bounds.left,
+                    y: bounds.top
+                },
+                zoom: false
+            }
+            : map.zoomAndCenterFromBounds(bounds, map.rotation());
+        map.zoomRange({
+            min: originalZoomRange.origMin,
+            max: originalZoomRange.max
+        });
+        if (Math.abs(newView.zoom - 1.5 - map.zoom()) <= 0.5 && map.zoom() < newView.zoom) {
+            newView.zoom = false;
+        }
+        const distance = ((newView.center.x - map.center().x) ** 2 + (newView.center.y - map.center().y) ** 2) ** 0.5;
+        map.transition({
+            center: newView.center,
+            zoom: newView.zoom === false ? map.zoom() : newView.zoom - 1.5,
+            duration: Math.min(1000, Math.max(100, distance)),
+            endClamp: false,
+            interp: distance < 500 ? undefined : window.d3.interpolateZoom,
+            ease: window.d3.easeExpInOut
+        });
+        this._skipRenderHTML = true;
     },
 
     /**
@@ -415,10 +496,15 @@ var DrawWidget = Panel.extend({
 
     _highlightElement(evt) {
         const id = $(evt.currentTarget).data('id');
+        const annotType = this.collection._byId[id].get('type');
+        if (this.annotationSelector._interactiveMode && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(annotType)) {
+            $(evt.currentTarget).find('.h-view-element').show();
+        }
         this.parentView.trigger('h:highlightAnnotation', this.annotation.id, id);
     },
 
-    _unhighlightElement() {
+    _unhighlightElement(evt) {
+        $(evt.currentTarget).find('.h-view-element').hide();
         this.parentView.trigger('h:highlightAnnotation');
     },
 
