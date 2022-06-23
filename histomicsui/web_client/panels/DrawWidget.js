@@ -239,10 +239,14 @@ var DrawWidget = Panel.extend({
         if (Math.abs(newView.zoom - 1.5 - map.zoom()) <= 0.5 && map.zoom() < newView.zoom) {
             newView.zoom = false;
         }
+        const distance = ((newView.center.x - map.center().x) ** 2 + (newView.center.y - map.center().y) ** 2) ** 0.5;
         map.transition({
             center: newView.center,
-            duration: ((newView.center.x - map.center().x) ** 2 + (newView.center.y - map.center().y) ** 2) ** 0.5,
-            zoom: newView.zoom === false ? map.zoom() : newView.zoom - 1.5
+            zoom: newView.zoom === false ? map.zoom() : newView.zoom - 1.5,
+            duration: Math.min(1000, Math.max(100, distance)),
+            endClamp: false,
+            interp: distance < 500 ? undefined : window.d3.interpolateZoom,
+            ease: window.d3.easeExpInOut
         });
         this._skipRenderHTML = true;
     },
