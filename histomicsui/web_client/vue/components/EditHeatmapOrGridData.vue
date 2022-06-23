@@ -65,6 +65,12 @@ export default {
             }
         },
         tryValidateForm() {
+            if (this.type === 'heatmap') {
+                const radiusAsFloat = parseFloat(this.radius);
+                if (isNaN(radiusAsFloat) || radiusAsFloat <= 0) {
+                    this.validationErrors.push('Radius must be a positive number');
+                }
+            }
             if (this.normalizeRange) {
                 // check values
                 const invalidRangeValues = this.rangeValues.filter(
@@ -149,7 +155,7 @@ export default {
                             <li v-for="error in this.validationErrors" :key="error">{{ error }}</li>
                         </ul>
                     </div>
-                    <div class="form-group" v-if="this.radius" ref="uniquekey">
+                    <div class="form-group" v-if="this.type === 'heatmap'">
                         <label for="h-griddata-radius">Radius</label>
                         <input id="h-griddata-radius" class="input-sm form-control" type="number" min="1" v-model="radius">
                     </div>
