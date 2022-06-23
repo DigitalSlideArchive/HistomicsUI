@@ -223,15 +223,15 @@ var DrawWidget = Panel.extend({
             min: Number.NEGATIVE_INFINITY,
             max: Number.POSITIVE_INFINITY
         });
-        const newView = pointAnnot ?
-                        {
-                            center: {
-                                x: bounds.left,
-                                y: bounds.top
-                            },
-                        zoom: false
-                        } :
-                        map.zoomAndCenterFromBounds(bounds, map.rotation());
+        const newView = pointAnnot
+            ? {
+                center: {
+                    x: bounds.left,
+                    y: bounds.top
+                },
+                zoom: false
+            }
+            : map.zoomAndCenterFromBounds(bounds, map.rotation());
         map.zoomRange({
             min: originalZoomRange.origMin,
             max: originalZoomRange.max
