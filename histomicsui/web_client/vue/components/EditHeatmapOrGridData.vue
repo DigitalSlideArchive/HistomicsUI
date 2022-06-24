@@ -189,7 +189,7 @@ export default {
                                     <a @click.prevent="addColor(index)">
                                         <span class="icon-plus" title="Add row below"></span>
                                     </a>
-                                    <a @click.prevent="removeColor(index)">
+                                    <a v-if="colorRangeData.length > 1" @click.prevent="removeColor(index)">
                                         <span class="icon-minus" title="Remove this row"></span>
                                     </a>
                                 </td>
