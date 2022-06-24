@@ -65,6 +65,21 @@ export default {
             }
         },
         tryValidateForm() {
+            const indicesByValue = {};
+            _.forEach(this.colorRangeData, (entry, index) => {
+                if (!indicesByValue[entry.value]) {
+                    indicesByValue[entry.value] = [index];
+                } else {
+                    indicesByValue[entry.value].push(index);
+                }
+            });
+            _.forEach(Object.keys(indicesByValue), (value) => {
+                if (indicesByValue[value].length > 1) {
+                    this.validationErrors.push(
+                        'Duplicate value in row(s) ' + indicesByValue[value].map((index) => index + 1).join(', ')
+                    );
+                }
+            });
             if (this.type === 'heatmap') {
                 const radiusAsFloat = parseFloat(this.radius);
                 if (isNaN(radiusAsFloat) || radiusAsFloat <= 0) {
