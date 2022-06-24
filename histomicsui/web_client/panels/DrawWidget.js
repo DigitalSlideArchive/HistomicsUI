@@ -712,6 +712,7 @@ var DrawWidget = Panel.extend({
      * Set the current style group based on the current controls.
      */
     _setToSelectedStyleGroup() {
+        this.$('.h-group-count').html('<b>Count:</b> ' + this.counts[this.$('.h-style-group').val()] + ' ' + this.$('.h-style-group').val());
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
     },
 
