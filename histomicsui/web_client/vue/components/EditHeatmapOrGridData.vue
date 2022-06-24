@@ -99,7 +99,7 @@ export default {
                 normalizeRange: this.normalizeRange
             };
             if (this.type === 'heatmap') {
-                propsToSave['radius'] = parseInt(this.radius);
+                propsToSave['radius'] = parseFloat(this.radius);
                 propsToSave['scaleWithZoom'] = this.scaleWithZoom;
             } else {
                 // griddata
