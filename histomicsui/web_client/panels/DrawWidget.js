@@ -119,7 +119,7 @@ var DrawWidget = Panel.extend({
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
         this.counts = JSON.parse(this.$('.h-group-count-at-render').attr('data-count'));
-        this.$('.h-group-count').html('<b>Count:</b> ' + this.counts[this.$('.h-style-group').val()] + ' ' + this.$('.h-style-group').val()).show();
+        this.$('.h-group-count').html('<b>Count:</b> ' + (this.counts[this.$('.h-style-group').val()] ? this.counts[this.$('.h-style-group').val()] : 0) + ' ' + this.$('.h-style-group').val()).show();
         this.$('button.h-draw[data-type]').removeClass('active');
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
@@ -712,7 +712,7 @@ var DrawWidget = Panel.extend({
      * Set the current style group based on the current controls.
      */
     _setToSelectedStyleGroup() {
-        this.$('.h-group-count').html('<b>Count:</b> ' + this.counts[this.$('.h-style-group').val()] + ' ' + this.$('.h-style-group').val());
+        this.$('.h-group-count').html('<b>Count:</b> ' + (this.counts[this.$('.h-style-group').val()] ? this.counts[this.$('.h-style-group').val()] : 0) + ' ' + this.$('.h-style-group').val());
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
     },
 
