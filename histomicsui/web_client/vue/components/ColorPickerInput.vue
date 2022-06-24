@@ -11,7 +11,8 @@ export default {
         return {
             pickerColor: this.color,
             colorValue: this.color,
-            displayPicker: false
+            displayPicker: false,
+            offsetFromTop: true
         }
     },
     mounted() {
@@ -28,6 +29,15 @@ export default {
         showPicker() {
             document.addEventListener('click', this.documentClick);
             this.displayPicker = true;
+            this.$nextTick(() => {
+                const pickerBox = this.$refs.colorPicker.$el.getBoundingClientRect();
+                const parentBox = this.$root.$el.getBoundingClientRect();
+                if (this.offsetFromTop && pickerBox.bottom > parentBox.bottom) {
+                    this.offsetFromTop = false;
+                } else if (!this.offsetFromTop && pickerBox.top < parentBox.top) {
+                    this.offsetFromTop = true;
+                }
+            })
         },
         hidePicker() {
             document.removeEventListener('click', this.documentClick);
@@ -77,7 +87,13 @@ export default {
             >
                 <i :style="{ 'background-color': colorValue }"></i>
             </span>
-            <chrome-picker :value="pickerColor" @input="updateFromPicker" v-if="displayPicker" />
+            <chrome-picker
+                :class="{ 'picker-offset-from-top': offsetFromTop, 'picker-offset-from-bottom': !offsetFromTop }"
+                ref="colorPicker"
+                :value="pickerColor"
+                @input="updateFromPicker"
+                v-if="displayPicker"
+            />
         </span>
     </div>
 </template>
@@ -93,8 +109,16 @@ export default {
 
 .vc-chrome {
     position: absolute;
-    top: 35px;
     right: 0;
     z-index: 100;
 }
+
+.picker-offset-from-top {
+    top: 35px;
+}
+
+.picker-offset-from-bottom {
+    bottom: 35px;
+}
+
 </style>
