@@ -36,16 +36,46 @@ export default {
         getColorString(color) {
             return tinycolor(color).toString();
         },
-        addColor(index) {
-            const newEntry = {
-                r: 0,
-                g: 0,
-                b: 0,
-                a: 0,
-                colorString: 'rgba(0, 0, 0, 0)',
-                value: 0
+        addNewFirstColor() {
+            let newFirstColor;
+            if (this.colorRangeData.length > 0) {
+                newFirstColor = tinycolor(this.colorRangeData[0].colorString).toRgb();
+            } else {
+                newFirstColor = tinycolor('rgba(0, 0, 0, 0').toRgb();
             }
-            this.colorRangeData.splice(index + 1, 0, newEntry);
+            newFirstColor.a = 0;
+            const newColorEntry = {
+                colorString: tinycolor(newFirstColor).toString(),
+                value: 0
+            };
+            this.colorRangeData.splice(0, 0, newColorEntry);
+        },
+        addColor(index) {
+            const lowerRecord = this.colorRangeData[index];
+            const higherRecord = this.colorRangeData[index + 1] || this.colorRangeData[index];
+            const lowerColorRgb = tinycolor(lowerRecord.colorString).toRgb();
+            const higherColorRgb = tinycolor(higherRecord.colorString).toRgb();
+            if (index < this.colorRangeData.length - 1) {
+                const newColorString = tinycolor({
+                    r: (lowerColorRgb.r + higherColorRgb.r) / 2,
+                    g: (lowerColorRgb.g + higherColorRgb.g) / 2,
+                    b: (lowerColorRgb.b + higherColorRgb.b) / 2,
+                    a: (lowerColorRgb.a + higherColorRgb.a) / 2
+                }).toString();
+                const newEntry = {
+                    colorString: newColorString,
+                    value: (lowerRecord.value + higherRecord.value) / 2
+                }
+                this.colorRangeData.splice(index + 1, 0, newEntry);
+            } else {
+                const newColor = _.clone(lowerColorRgb);
+                newColor.a = 1.0;
+                const newEntry = {
+                    value: lowerRecord.value < 1 ? 1 : lowerRecord.value,
+                    colorString: tinycolor(newColor).toString()
+                }
+                this.colorRangeData.push(newEntry);
+            }
             this.updateRangeDataKeys();
         },
         removeColor(index) {
@@ -182,7 +212,11 @@ export default {
                                 <tr>
                                     <th>Value</th>
                                     <th>Color</th>
-                                    <th></th>
+                                    <th>
+                                        <a @click.prevent="addNewFirstColor">
+                                            <span class="icon-plus" title="Add new first color"></span>
+                                        </a>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
