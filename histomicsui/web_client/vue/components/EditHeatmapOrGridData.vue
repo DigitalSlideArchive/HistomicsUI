@@ -171,8 +171,8 @@ export default {
                             </thead>
                             <tbody>
                             <tr v-if="this.type === 'griddata'">
-                                <td>
-                                    Min. color
+                                <td title="The color of values below the lowest range value">
+                                    Minimum color
                                 </td>
                                 <td>
                                     <color-picker-input :color="minColor" v-model="minColor"></color-picker-input>
@@ -195,8 +195,8 @@ export default {
                                 </td>
                             </tr>
                             <tr v-if="this.type === 'griddata'">
-                                <td>
-                                    Max. color
+                                <td title="The color of values above the highest range value">
+                                    Maximum color
                                 </td>
                                 <td>
                                     <color-picker-input :color="maxColor" v-model="maxColor"></color-picker-input>
