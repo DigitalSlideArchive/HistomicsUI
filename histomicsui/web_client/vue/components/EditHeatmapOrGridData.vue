@@ -108,6 +108,7 @@ export default {
             });
         },
         notifySubmit() {
+            this.colorRangeData.sort((entry1, entry2) => entry1.value - entry2.value);
             const propsToSave = {
                 rangeValues: this.colorRangeData.map((entry) => parseFloat(entry.value)),
                 colorRange: this.colorRangeData.map((entry) => entry.colorString),
