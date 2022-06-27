@@ -119,7 +119,7 @@ var DrawWidget = Panel.extend({
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
-        $('.h-group-count').append($('.h-group-count-option'));
+        this.$('.h-group-count').append(this.$('.h-group-count-option'));
         this._displayCount();
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
