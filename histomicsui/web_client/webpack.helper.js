@@ -1,6 +1,7 @@
 const path = require('path');
 
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { VueLoaderPlugin } = require('vue-loader');
 
 module.exports = function (config) {
     config.plugins.push(
@@ -13,5 +14,14 @@ module.exports = function (config) {
             to: path.join(config.output.path, 'extra', 'sinon.js')
         }])
     );
+    config.module.rules.push({
+        resource: {
+            test: /\.vue$/
+        },
+        use: [
+            require.resolve('vue-loader')
+        ]
+    });
+    config.plugins.push(new VueLoaderPlugin());
     return config;
 };

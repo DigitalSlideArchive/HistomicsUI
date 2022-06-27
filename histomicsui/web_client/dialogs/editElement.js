@@ -2,6 +2,8 @@ import tinycolor from 'tinycolor2';
 
 import View from '@girder/core/views/View';
 
+import EditHeatmapOrGridDataContainer from '../vue/components/EditHeatmapOrGridDataContainer.vue';
+
 import editElement from '../templates/dialogs/editElement.pug';
 import '@girder/core/utilities/jquery/girderModal';
 
@@ -21,8 +23,25 @@ var EditElement = View.extend({
                 element: this.annotationElement.toJSON()
             })
         ).girderModal(this);
-        this.$('.h-colorpicker').colorpicker();
+        this.createVueModal();
         return this;
+    },
+
+    createVueModal() {
+        const el = this.$('.vue-component-heatmap').get(0);
+        const vm = new EditHeatmapOrGridDataContainer({
+            el,
+            propsData: {
+                element: this.annotationElement,
+                parentView: this
+            }
+        });
+        this.vueApp = vm;
+    },
+
+    closeVueModal() {
+        this.$el.modal('hide');
+        this.vueApp.$destroy();
     },
 
     /**
