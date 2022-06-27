@@ -118,9 +118,8 @@ var DrawWidget = Panel.extend({
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
-        this.counts = JSON.parse(this.$('.h-group-count-at-render').attr('data-count'));
-        this.$('.h-group-count').html('<b>Count:</b> ' + (this.counts[this.$('.h-style-group').val()] ? this.counts[this.$('.h-style-group').val()] : 0) + ' ' + this.$('.h-style-group').val()).show();
-        this.$('button.h-draw[data-type]').removeClass('active');
+        $('.h-group-count').append($('.h-group-count-option'));
+        this._displayCount();
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
@@ -689,6 +688,17 @@ var DrawWidget = Panel.extend({
         }
     },
 
+    _displayCount() {
+        this.$('.h-group-count-option').hide();
+        const groupName = this.$('.h-style-group').val();
+        const groupElem = this.$('.h-group-count > [data-group="' + groupName + '"]');
+        if (groupElem.length > 0) {
+            groupElem.html('<b>Count:</b> ' +  groupElem.attr('data-count') + ' ' + groupName).show();
+        } else {
+            this.$('.h-group-count').append('<span class = h-group-count-option data-group="' + groupName + '" data-count=0 style="display: inline;"><b>Count:</b> 0 ' + groupName + '</span>');
+        }
+    },
+
     /**
      * Set the current style group.  This should take a plain object, not a
      * backbone object.  Given a group name, this can be obtained by something
@@ -712,7 +722,7 @@ var DrawWidget = Panel.extend({
      * Set the current style group based on the current controls.
      */
     _setToSelectedStyleGroup() {
-        this.$('.h-group-count').html('<b>Count:</b> ' + (this.counts[this.$('.h-style-group').val()] ? this.counts[this.$('.h-style-group').val()] : 0) + ' ' + this.$('.h-style-group').val());
+        this._displayCount();
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
     },
 
