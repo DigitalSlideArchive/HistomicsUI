@@ -16,5 +16,16 @@ if elements.length
       span.h-element-label(title=label) #{label}
       span.icon-zoom-in.h-view-element(title='View annotation')
       span.icon-cancel.h-delete-element(title='Remove')
-- for (let group in counts)
-  span.h-group-count-option(data-group=group, data-count=counts[group]) <b>Count:</b> #{counts[group]} #{group}
+if firstRender
+  - for (let group in counts)
+    span.h-group-count-option(data-group=group, data-count=counts[group])
+else
+  -
+    for (let group in counts) {
+      groupElem = $('.h-group-count > [data-group="' + group + '"]');
+      if (groupElem.length > 0) {
+        groupElem.attr('data-count', parseInt(groupElem.attr('data-count')) + counts[group]);
+      } else {
+        $('.h-group-count').append('<span class = h-group-count-option data-group="' + group + '" data-count=' + counts[group] + '">');
+      }
+    }

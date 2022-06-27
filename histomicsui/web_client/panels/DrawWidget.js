@@ -114,7 +114,8 @@ var DrawWidget = Panel.extend({
                 name,
                 opts: this._editOptions,
                 drawingType: this._drawingType,
-                collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
+                collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
+                firstRender: true
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
@@ -294,9 +295,11 @@ var DrawWidget = Panel.extend({
             drawWidgetElement({
                 elements: elements,
                 style: this._style.id,
-                highlighted: this._highlighted
+                highlighted: this._highlighted,
+                firstRender: false
             })
         );
+        this._displayCount();
     },
 
     /**
