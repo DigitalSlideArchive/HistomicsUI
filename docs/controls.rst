@@ -81,11 +81,11 @@ Annotation Controls
 
 - **Draw an annotation element**:
 
-  - **o**, **r**, **i**, **c**, **p**, **l**: Switch to point, rectangle,
-    ellipse, circle, polygon, or line drawing mode.  If already in that mode,
-    turn off drawing mode.
-    
-    - **shift**: When drawing a rectanle or an ellipse, after starting to draw 
+  - **o**, **r**, **i**, **c**, **p**, **l**, **b**: Switch to point,
+    rectangle, ellipse, circle, polygon, line, or brush drawing mode.  If
+    already in that mode, turn off drawing mode.
+
+    - **shift**: When drawing a rectangle or an ellipse, after starting to draw
       it, holding down shift will adjust it to a square or circle.
 
   - **enter**: While drawing a line or polygon annotation element, finish
@@ -136,6 +136,15 @@ Annotation Controls
     .. image:: images/xor.gif
        :width: 256
        :alt: Xor operation
+
+- **Brush controls**:
+
+  The brush drawing tool always combines with existing annotation elements in
+  the current annotation and style.
+
+  - **B**: Cycle through the brush shapes (square and circle)
+
+  - **z**, **x**: Change the size of the brush.
 
 - **Change Style Group**:
 
