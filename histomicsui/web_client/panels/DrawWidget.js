@@ -370,6 +370,10 @@ var DrawWidget = Panel.extend({
         return true;
     },
 
+    /**
+     * When the brish is set to a specific screen size, adjust the size on zoom
+     * events.
+     */
     _brushPan() {
         const zoom = this.viewer.viewer.zoom();
         if (zoom !== this._brushZoom) {
@@ -381,6 +385,13 @@ var DrawWidget = Panel.extend({
         }
     },
 
+    /**
+     * Based on the current mouse position, compute the size and position of
+     * the current brush.
+     *
+     * @param {geo.annotation} annot The annotation to adjust.
+     * @param {number} size The size of the brush.
+     */
     _setBrushCoordinates(annot, size) {
         const center = this.viewer.viewer.interactor().mouse().mapgcs || {x: 0, y: 0};
         annot._coordinates([
@@ -391,6 +402,13 @@ var DrawWidget = Panel.extend({
         annot.modified();
     },
 
+    /**
+     * Handle a click or drag action for the current brush.
+     *
+     * @param {geo.event} evt The event that trigger this.  This will either be
+     *    a cursor_action or cursor_click event.  If no boolean operation is
+     *    specified, it is a union operation.
+     */
     _brushAction(evt) {
         // optionally add {pixelTolerance: 0.5} to the toPolygonList call
         let annotations = this.viewer.annotationLayer.toPolygonList();
@@ -492,6 +510,14 @@ var DrawWidget = Panel.extend({
         this.viewer.viewer.draw();
     },
 
+    /**
+     * After determining the elements intended by the current shape, add them
+     * to the existing annotations with the appropriate boolean operation.
+     *
+     * @param {object[]} element An array of elements in our jsonschema format.
+     * @param {geo.annotation[]|geo.polygonList} annotations The annotations to
+     *    add in a geojs format.
+     */
     _addDrawnElements(element, annotations, opts) {
         opts = opts || {};
         if (opts.currentBooleanOperation) {
@@ -578,6 +604,12 @@ var DrawWidget = Panel.extend({
         return this.$(evt.currentTarget).parent('.h-element').data('id');
     },
 
+    /**
+     * Fetch the current edit options from browser local storage.  This is for
+     * all users.
+     *
+     * @returns {object} The current edit options for all users.
+     */
     _getEditOptions() {
         let hui = {};
         try {
@@ -589,6 +621,12 @@ var DrawWidget = Panel.extend({
         return hui;
     },
 
+    /**
+     * Set the current edit options for the current user.
+     *
+     * @param {object} [opts] A dictionary of options to update the existing
+     *      options.  If unspecified, just store the current options.
+     */
     _saveEditOptions(opts) {
         let update = false;
         if (opts) {
@@ -612,6 +650,13 @@ var DrawWidget = Panel.extend({
         }
     },
 
+    /**
+     * Validate a set of edit options.  Optional raise on error.
+     *
+     * @param {object} opts The options to validate and fix.
+     * @param {boolean} [raiseOnError] If true, throw an error if validation
+     *      fails.
+     */
     _verifyEditOptions(opts, raiseOnError) {
         if (raiseOnError && opts.brush_shape && ['square', 'circle'].indexOf(opts.brush_shape) < 0) {
             throw new Error('Brush is not a valid shape');
@@ -627,6 +672,14 @@ var DrawWidget = Panel.extend({
         }
     },
 
+    /**
+     * Set the current style group.  This should take a plain object, not a
+     * backbone object.  Given a group name, this can be obtained by something
+     * like
+     *   this._setStyleGroup(this._groups.get(groupName).toJSON());
+     *
+     * @param {object} group The new group.
+     */
     _setStyleGroup(group) {
         this._style.set(group);
         if (!this._style.get('group') && this._style.id !== 'default') {
@@ -638,21 +691,43 @@ var DrawWidget = Panel.extend({
         this._saveEditOptions({style: group.id});
     },
 
+    /**
+     * Set the current style group based on the current controls.
+     */
     _setToSelectedStyleGroup() {
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
     },
 
+    /**
+     * For a dropdown control widget, handle expanding and collapsing.
+     *
+     * TODO: When we have multiple such widgets, we should close all but the
+     * current widget.
+     *
+     * @param {jquery.Event} e The event that triggered this toggle.
+     */
     _dropdownControlClick(e) {
         e.stopImmediatePropagation();
         $(e.target).parent().find('.h-dropdown-content').collapse('toggle');
     },
+
+    /**
+     * Update the icon when a dropdown control group expands.
+     */
     expand() {
         this.$('.icon-down-open').attr('class', 'icon-up-open');
     },
+
+    /**
+     * Update the icon when a dropdown control group closes.
+     */
     collapse() {
         this.$('.icon-up-open').attr('class', 'icon-down-open');
     },
 
+    /**
+     * Change the size, shape, or screen flag on the current brush.
+     */
     _changeBrush(e) {
         const opts = {
             brush_shape: this.$('.h-brush-shape:checked').attr('shape'),
@@ -666,10 +741,19 @@ var DrawWidget = Panel.extend({
         }
     },
 
+    /**
+     * Cycle through available brush shapes.
+     */
     nextBrushShape() {
         this.$('.h-brush-shape[name="h-brush-shape"][shape="' + this.$('.h-brush-shape[name="h-brush-shape"]:checked').attr('next_shape') + '"]').prop('checked', true);
         this._changeBrush();
     },
+
+    /**
+     * Change the current brush size.
+     *
+     * @param {number} A number to add to the current size.
+     */
     adjustBrushSize(delta) {
         let newval = Math.max(1, parseFloat(this.$('.h-brush-size').val()) + delta);
         this.$('.h-brush-size').val(newval);
