@@ -277,6 +277,8 @@ var DrawWidget = Panel.extend({
         if (evt) {
             id = this._getId(evt);
         }
+        this._updateCount(this.collection.get(id).attributes.group, -1);
+        this._displayCount();
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
         this.collection.remove(id, opts);
