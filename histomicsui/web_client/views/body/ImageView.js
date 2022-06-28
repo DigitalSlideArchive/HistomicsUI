@@ -1125,14 +1125,14 @@ var ImageView = View.extend({
                     this.drawWidget.nextBrushShape();
                 }
                 break;
-            case 'x':
-                if (this.activeAnnotation) {
-                    this.drawWidget.adjustBrushSize(1);
-                }
-                break;
-            case 'z':
+            case '[':
                 if (this.activeAnnotation) {
                     this.drawWidget.adjustBrushSize(-1);
+                }
+                break;
+            case ']':
+                if (this.activeAnnotation) {
+                    this.drawWidget.adjustBrushSize(1);
                 }
                 break;
             case 'q':
