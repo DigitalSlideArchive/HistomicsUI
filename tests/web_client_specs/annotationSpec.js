@@ -538,6 +538,73 @@ girderTest.promise.done(function () {
                     return $('.h-elements-container .h-element').length === annotCount + 1;
                 }, 'two annotations to merge into one');
             });
+            it('test a brush operation', function () {
+                var annotCount, toggle;
+                runs(function () {
+                    annotCount = $('.h-elements-container .h-element').length;
+                    $('.h-draw[data-type="brush"]').click();
+                });
+                waitsFor(function () {
+                    return huiTest.geojsMap().layers()[3].annotations().length === 1;
+                }, 'brush mode to activate');
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousemove', {
+                        map: {x: 90, y: 100}
+                    });
+                    interactor.simulateEvent('mousemove', {
+                        map: {x: 95, y: 100}
+                    });
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 100, y: 100},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 100, y: 100},
+                        button: 'left'
+                    });
+                });
+                waitsFor(function () {
+                    return $('.h-elements-container .h-element').length === annotCount + 1;
+                }, 'one annotation to be added');
+                girderTest.waitForLoad();
+                waitsFor(function () {
+                    return huiTest.geojsMap().layers()[3].annotations().length === 1;
+                }, 'brush mode to activate');
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousemove', {
+                        map: {x: 200, y: 100}
+                    });
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 210, y: 100},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 210, y: 100},
+                        button: 'left'
+                    });
+                });
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousedown', {
+                        map: {x: 140, y: 110},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mousemove', {
+                        map: {x: 180, y: 110},
+                        button: 'left'
+                    });
+                    interactor.simulateEvent('mouseup', {
+                        map: {x: 200, y: 110},
+                        button: 'left'
+                    });
+                });
+                girderTest.waitForLoad();
+                waitsFor(function () {
+                    return $('.h-elements-container .h-element').length === annotCount + 1;
+                }, 'two annotations to merge into one');
+            });
         });
 
         describe('Annotation styles', function () {
