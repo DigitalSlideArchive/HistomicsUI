@@ -144,7 +144,7 @@ Annotation Controls
 
   - **B**: Cycle through the brush shapes (square and circle)
 
-  - **z**, **x**: Change the size of the brush.
+  - **[**, **]**: Change the size of the brush.
 
 - **Change Style Group**:
 
