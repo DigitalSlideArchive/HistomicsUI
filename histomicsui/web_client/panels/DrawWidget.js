@@ -296,7 +296,8 @@ var DrawWidget = Panel.extend({
                 elements: elements,
                 style: this._style.id,
                 highlighted: this._highlighted,
-                firstRender: false
+                firstRender: false,
+                updateCount: this._updateCount
             })
         );
         this._displayCount();
@@ -688,6 +689,15 @@ var DrawWidget = Panel.extend({
         }
         if (!opts.brush_size || !(parseFloat(opts.brush_size) > 0)) {
             opts.brush_size = 50;
+        }
+    },
+    
+    _updateCount(group, change) {
+        const groupElem = $('.h-group-count > [data-group="' + group + '"]');
+        if (groupElem.length > 0) {
+            groupElem.attr('data-count', parseInt(groupElem.attr('data-count')) + change);
+        } else {
+            $('.h-group-count').append('<span class = h-group-count-option data-group="' + group + '" data-count=' + change + '</span>');
         }
     },
 
