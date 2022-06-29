@@ -1260,7 +1260,7 @@ var ImageView = View.extend({
     },
 
     _openContextMenu(element, annotationId, evt) {
-        if (!this._canOpenContextMenu()) {
+        if (!this._canOpenContextMenu() || !element) {
             return;
         }
         if (!this.selectedElements.get(element.id)) {
