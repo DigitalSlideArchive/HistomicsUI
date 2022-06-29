@@ -329,7 +329,7 @@ var AnnotationSelector = Panel.extend({
         }
         model.set('displayed', true);
 
-        if (numElements > MAX_ELEMENTS_LIST_LENGTH) {
+        if (numElements > MAX_ELEMENTS_LIST_LENGTH || model._pageElements) {
             events.trigger('g:alert', {
                 text: 'This annotation has too many elements to be edited.',
                 type: 'warning',

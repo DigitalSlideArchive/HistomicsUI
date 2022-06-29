@@ -1058,8 +1058,10 @@ var ImageView = View.extend({
             return;
         }
         this.activeAnnotation = model;
+        this.annotationSelector.$('.h-annotation').removeClass('h-active-annotation');
         this._removeDrawWidget();
         if (model) {
+            this.annotationSelector.$('.h-annotation[data-id="' + model.id + '"]').addClass('h-active-annotation');
             this.drawWidget = new DrawWidget({
                 parentView: this,
                 image: this.model,
