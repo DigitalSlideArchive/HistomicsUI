@@ -299,6 +299,20 @@ var DrawWidget = Panel.extend({
     },
 
     /**
+     * Specify how precise ellipses are when converted to polygons.
+     */
+    /* eslint-disable underscore/prefer-constant */
+    _pixelTolerance() {
+        /* null : use default,1/10 pixel at max map zoom */
+        // return null;
+        /* number : pixel tolerance at current screen resolution */
+        return 0.25;
+        /* number / unitsPerPixel(zoom) : pixel tolerance on base image */
+        // return 0.5 / this.viewer.viewer.unitsPerPixel(this.viewer.viewer.zoom();
+    },
+    /* eslint-enable underscore/prefer-constant */
+
+    /**
      * Apply a boolean operation to the existign polygons.
      *
      * @param {geo.annotation[]} annotations The list of specified geojs
@@ -312,8 +326,7 @@ var DrawWidget = Panel.extend({
         }
         const op = evtOpts.currentBooleanOperation;
         const existing = this.viewer._annotations[this.annotation.id].features.filter((f) => ['polygon', 'marker'].indexOf(f.featureType) >= 0);
-        // optionally add {pixelTolerance: 0.5} to the toPolygonList call
-        let polylist = evtOpts.asPolygonList ? annotations : annotations[0].toPolygonList();
+        let polylist = evtOpts.asPolygonList ? annotations : annotations[0].toPolygonList({pixelTolerance: this._pixelTolerance()});
         if (!existing.length && polylist.length < 2) {
             return false;
         }
@@ -344,9 +357,9 @@ var DrawWidget = Panel.extend({
         const opts = {
             correspond: {},
             keepAnnotations: 'exact',
-            style: this.viewer.annotationLayer
+            style: this.viewer.annotationLayer,
+            pixelTolerance: this._pixelTolerance()
         };
-        // optionally add {pixelTolerance: 0.5} to the opts
         geo.util.polyops[op](this.viewer.annotationLayer, polylist, opts);
         const newAnnot = this.viewer.annotationLayer.annotations();
 
@@ -411,8 +424,7 @@ var DrawWidget = Panel.extend({
      *    specified, it is a union operation.
      */
     _brushAction(evt) {
-        // optionally add {pixelTolerance: 0.5} to the toPolygonList call
-        let annotations = this.viewer.annotationLayer.toPolygonList();
+        let annotations = this.viewer.annotationLayer.toPolygonList({pixelTolerance: this._pixelTolerance()});
         let elements = [convertAnnotation(this.viewer.annotationLayer.annotations()[0])];
         if (!elements[0].id) {
             elements[0].id = this.viewer._guid();
@@ -569,7 +581,9 @@ var DrawWidget = Panel.extend({
             this._drawingType = null;
             this.viewer.annotationLayer.mode(null);
             this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
-            this.viewer.annotationLayer.geoOff(geo.event.pan, this._brushPanBound);
+            if (this._brushPanBound) {
+                this.viewer.annotationLayer.geoOff(geo.event.pan, this._brushPanBound);
+            }
             this.viewer.annotationLayer.removeAllAnnotations();
         }
         if (type === 'brush') {
