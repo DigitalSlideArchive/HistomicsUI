@@ -26,7 +26,9 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.settings import SettingDefault, SettingKey
-from girder.utility import config, setting_utilities
+from girder.utility import config
+from girder.utility import path as path_util
+from girder.utility import setting_utilities
 from girder.utility.model_importer import ModelImporter
 from girder.utility.webroot import Webroot
 from pkg_resources import DistributionNotFound, get_distribution
@@ -228,10 +230,24 @@ class GirderPlugin(plugin.GirderPlugin):
         rest.addEndpoints(info['apiRoot'])
         info['serverRoot'].updateHtmlVars({
             'brandName': Setting().get(SettingKey.BRAND_NAME)})
-        global originalChildItems
+        # Better virtual folder support
         if not getattr(Folder, '_childItemsBeforeHUI', None):
             Folder._childItemsBeforeHUI = Folder.childItems
             Folder.childItems = childItems
+        # Allow virtual folders to form resource paths.  This could be moved to
+        # the virtual folder plugin's load method.
+        oldLookUpToken = path_util.lookUpToken
+
+        def lookUpToken(token, parentType, parent):
+            if parentType == 'folder' and parent.get('isVirtual') and 'virtualItemsQuery' in parent:
+                q = json_util.loads(parent['virtualItemsQuery'])
+                q = {'$and': [q, {'name': token}]}
+                item = Item().findOne(q)
+                if item:
+                    return item, 'item'
+            return oldLookUpToken(token, parentType, parent)
+
+        path_util.lookUpToken = lookUpToken
 
         girderRoot = info['serverRoot']
         huiRoot = WebrootHistomicsUI(_template)
