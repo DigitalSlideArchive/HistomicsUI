@@ -123,8 +123,9 @@ var DrawWidget = Panel.extend({
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
         }
-        if (this.viewer.annotationLayer && this.viewer.annotationLayer._boundHUIModeChange === undefined) {
-            this.viewer.annotationLayer._boundHUIModeChange = true;
+        if (this.viewer.annotationLayer && this.viewer.annotationLayer._boundHUIModeChange !== this) {
+            this.viewer.annotationLayer._boundHUIModeChange = this;
+            this.viewer.annotationLayer.geoOff(geo.event.annotation.mode);
             this.viewer.annotationLayer.geoOn(geo.event.annotation.mode, (event) => {
                 if (event.mode === this.viewer.annotationLayer.modes.edit || event.oldmode === this.viewer.annotationLayer.modes.edit) {
                     return;
@@ -461,7 +462,7 @@ var DrawWidget = Panel.extend({
                     elements = [{
                         type: 'polyline',
                         closed: true,
-                        points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1]})),
+                        points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1], 'z': 0})),
                         id: this.viewer._guid()
                     }];
                 }
