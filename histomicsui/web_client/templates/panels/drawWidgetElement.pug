@@ -21,4 +21,4 @@ if firstRender
     span.h-group-count-option(data-group=group, data-count=counts[group])
 else
   - for (let group in counts)
-    - updateCount(group, 1);
+    - updateCount(group, counts[group]);
