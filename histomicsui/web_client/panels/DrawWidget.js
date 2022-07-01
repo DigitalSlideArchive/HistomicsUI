@@ -717,7 +717,7 @@ var DrawWidget = Panel.extend({
         const groupName = this.$('.h-style-group').val();
         const groupElem = this.$('.h-group-count > [data-group="' + groupName + '"]');
         if (groupElem.length > 0) {
-            groupElem.html('<b>Count:</b> ' +  groupElem.attr('data-count') + ' ' + groupName).show();
+            groupElem.html('<b>Count:</b> ' + groupElem.attr('data-count') + ' ' + groupName).show();
         } else {
             this.$('.h-group-count').append('<span class = h-group-count-option data-group="' + groupName + '" data-count=0 style="display: inline;"><b>Count:</b> 0 ' + groupName + '</span>');
         }
