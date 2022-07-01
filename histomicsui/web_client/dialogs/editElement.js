@@ -14,7 +14,8 @@ import '@girder/core/utilities/jquery/girderModal';
 var EditElement = View.extend({
     events: {
         'click .h-submit': 'getData',
-        'submit form': 'getData'
+        'submit form': 'getData',
+        'hide.bs.modal ': 'endEdit'
     },
 
     render() {
@@ -84,9 +85,17 @@ var EditElement = View.extend({
             return;
         }
 
-        this.trigger('h:editElement', {element: this.annotationElement, data: data});
+        this.trigger('h:editElement', {element: this.annotationElement, data: data, edited: true});
         this.annotationElement.set(data);
         this.$el.modal('hide');
+    },
+
+    /**
+     * Trigger the draw widget's edit element event listener when the form isn't
+     * submitted, to prevent later edits from being considered multiple times
+     */
+    endEdit() {
+        this.trigger('h:editElement', {edited: false});
     },
 
     /**

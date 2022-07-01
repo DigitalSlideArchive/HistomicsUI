@@ -189,14 +189,23 @@ var DrawWidget = Panel.extend({
      * the EditAnnotation modal dialog.
      */
     editElement(evt) {
+        var origGroup = this.collection.get(this._getId(evt)).attributes.group;
         var dialog = editElement(this.collection.get(this._getId(evt)));
-        this.listenTo(dialog, 'h:editElement', (obj) => {
-            // update the html immediately instead of rerendering it
-            let id = obj.element.id,
-                label = (obj.data.label || {}).value,
-                elemType = obj.element.get('type');
-            label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
-            this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
+        this.listenToOnce(dialog, 'h:editElement', (obj) => {
+            if (obj.edited) {
+                // update the html immediately instead of rerendering it
+                let id = obj.element.id,
+                    label = (obj.data.label || {}).value,
+                    elemType = obj.element.get('type'),
+                    group = obj.data.group;
+                label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
+                this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
+                if (origGroup !== group) {
+                    this._updateCount(origGroup || 'default', -1);
+                    this._updateCount(group || 'default', 1);
+                    this._displayCount();
+                }
+            }
             this._skipRenderHTML = true;
         });
     },
