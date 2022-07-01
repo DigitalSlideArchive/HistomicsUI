@@ -120,7 +120,7 @@ var DrawWidget = Panel.extend({
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
         this.$('.h-group-count').append(this.$('.h-group-count-option'));
-        this._displayCount();
+        this.displayCount();
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
@@ -201,9 +201,9 @@ var DrawWidget = Panel.extend({
                 label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
                 this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
                 if (origGroup !== group) {
-                    this._updateCount(origGroup || 'default', -1);
-                    this._updateCount(group || 'default', 1);
-                    this._displayCount();
+                    this.updateCount(origGroup || 'default', -1);
+                    this.updateCount(group || 'default', 1);
+                    this.displayCount();
                 }
             }
             this._skipRenderHTML = true;
@@ -286,8 +286,8 @@ var DrawWidget = Panel.extend({
         if (evt) {
             id = this._getId(evt);
         }
-        this._updateCount(this.collection.get(id).attributes.group, -1);
-        this._displayCount();
+        this.updateCount(this.collection.get(id).attributes.group, -1);
+        this.displayCount();
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
         this.collection.remove(id, opts);
@@ -308,10 +308,10 @@ var DrawWidget = Panel.extend({
                 style: this._style.id,
                 highlighted: this._highlighted,
                 firstRender: false,
-                updateCount: this._updateCount
+                updateCount: this.updateCount
             })
         );
-        this._displayCount();
+        this.displayCount();
     },
 
     /**
@@ -703,7 +703,7 @@ var DrawWidget = Panel.extend({
         }
     },
     
-    _updateCount(group, change) {
+    updateCount(group, change) {
         const groupElem = $('.h-group-count > [data-group="' + group + '"]');
         if (groupElem.length > 0) {
             groupElem.attr('data-count', parseInt(groupElem.attr('data-count')) + change);
@@ -712,7 +712,7 @@ var DrawWidget = Panel.extend({
         }
     },
 
-    _displayCount() {
+    displayCount() {
         this.$('.h-group-count-option').hide();
         const groupName = this.$('.h-style-group').val();
         const groupElem = this.$('.h-group-count > [data-group="' + groupName + '"]');
@@ -746,7 +746,7 @@ var DrawWidget = Panel.extend({
      * Set the current style group based on the current controls.
      */
     _setToSelectedStyleGroup() {
-        this._displayCount();
+        this.displayCount();
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
     },
 
