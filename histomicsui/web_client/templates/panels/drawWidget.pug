@@ -21,10 +21,50 @@ block content
       button.h-draw.btn.btn-default(
         type='button', data-type='rectangle', title='Draw a new rectangle (keyboard shortcut: r)', class=drawingType === 'rectangle' ? 'active' : null)
         | #[span.icon-check-empty]Rectangle
+      button.btn.btn-default.h-dropdown-title.h-brush-dropdown(type='button', data-target='#h-fixed-shape-controls')
+        i.icon-down-open
+      .h-fixed-shape-controls.h-dropdown-content.collapse
+        .form-group.h-fixed-shape-form-group.input-sm
+          label.radio
+            input.h-fixed-shape.h-brush-square(type="radio", name="h-fixed-shape", checked=opts.size_mode !== 'fixed_aspect_ratio' && opts.size_mode !== 'fixed_size' ? 'checked' : undefined, mode="unconstrained")
+            | Unconstrained
+          label.radio
+            input.h-fixed-shape.h-brush-square(type="radio", name="h-fixed-shape", checked=opts.size_mode === 'fixed_aspect_ratio' ? 'checked' : undefined, mode="fixed_aspect_ratio")
+            | Fixed Aspect Ratio
+          label.radio
+            input.h-fixed-shape.h-brush-circle(type="radio", name="h-fixed-shape", checked=opts.size_mode === 'fixed_size' ? 'checked' : undefined, mode="fixed_size")
+            | Fixed Size
+        .form-group.h-fixed-shape-form-group.h-fixed-values.input-sm
+          label
+            | Width
+            input.h-fixed-width(type="number", min="1", value=opts.fixed_width)
+          label
+            | Height
+            input.h-fixed-height(type="number", min="1", value=opts.fixed_height)
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
         type='button', data-type='ellipse', title='Draw a new ellipse (keyboard shortcut: i)', class=drawingType === 'ellipse' ? 'active' : null)
         | #[span.icon-circle-empty.flattenicon]Ellipse
+      button.btn.btn-default.h-dropdown-title.h-brush-dropdown(type='button', data-target='#h-fixed-shape-controls')
+        i.icon-down-open
+      .h-fixed-shape-controls.h-dropdown-content.collapse
+        .form-group.h-fixed-shape-form-group.input-sm
+          label.radio
+            input.h-fixed-shape.h-brush-square(type="radio", name="h-fixed-shape", checked=opts.size_mode !== 'fixed_aspect_ratio' && opts.size_mode !== 'fixed_size' ? 'checked' : undefined, mode="unconstrained")
+            | Unconstrained
+          label.radio
+            input.h-fixed-shape.h-brush-square(type="radio", name="h-fixed-shape", checked=opts.size_mode === 'fixed_aspect_ratio' ? 'checked' : undefined, mode="fixed_aspect_ratio")
+            | Fixed Aspect Ratio
+          label.radio
+            input.h-fixed-shape.h-brush-circle(type="radio", name="h-fixed-shape", checked=opts.size_mode === 'fixed_size' ? 'checked' : undefined, mode="fixed_size")
+            | Fixed Size
+        .form-group.h-fixed-shape-form-group.h-fixed-values.input-sm
+          label
+            | Width
+            input.h-fixed-width(type="number", min="1", value=opts.fixed_width)
+          label
+            | Height
+            input.h-fixed-height(type="number", min="1", value=opts.fixed_height)
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
         type='button', data-type='circle', title='Draw a new circle (keyboard shortcut: c)', class=drawingType === 'circle' ? 'active' : null)
