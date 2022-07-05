@@ -702,7 +702,7 @@ var DrawWidget = Panel.extend({
             opts.brush_size = 50;
         }
     },
-    
+
     updateCount(group, change) {
         const groupElem = $('.h-group-count > [data-group="' + group + '"]');
         if (groupElem.length > 0) {
