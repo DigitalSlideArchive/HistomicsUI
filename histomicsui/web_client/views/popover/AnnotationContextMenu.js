@@ -36,7 +36,12 @@ const AnnotationContextMenu = View.extend({
     _removeElements(evt) {
         evt.preventDefault();
         evt.stopPropagation();
-
+        this.collection.each((element) => {
+            if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id) {
+                this.parentView.drawWidget.updateCount(element.attributes.group || 'default', -1);
+            }
+        });
+        this.parentView.drawWidget.displayCount();
         this.collection.trigger('h:remove');
         this.trigger('h:close');
     },
