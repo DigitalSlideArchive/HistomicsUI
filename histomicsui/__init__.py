@@ -151,8 +151,17 @@ SettingDefault.defaults.update({
     PluginSettings.HUI_BRAND_NAME: 'HistomicsUI',
     PluginSettings.HUI_BANNER_COLOR: '#f8f8f8',
     PluginSettings.HUI_BRAND_COLOR: '#777777',
+    PluginSettings.HUI_HELP_URL: 'https://github.com/DigitalSlideArchive/HistomicsUI/blob/master/docs/controls.rst',
+    PluginSettings.HUI_HELP_TOOLTIP: 'See viewing and editing controls'
 })
 
+@setting_utilities.validator({
+    PluginSettings.HUI_HELP_URL,
+    PluginSettings.HUI_HELP_TOOLTIP,
+})
+def validateHistomicsUIHelp(doc):
+    if not doc['value']:
+        doc['value'] = False
 
 @setting_utilities.validator({
     PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST,
@@ -199,6 +208,8 @@ class WebrootHistomicsUI(Webroot):
             'huiBrandName': Setting().get(PluginSettings.HUI_BRAND_NAME),
             'huiBrandColor': Setting().get(PluginSettings.HUI_BRAND_COLOR),
             'huiBannerColor': Setting().get(PluginSettings.HUI_BANNER_COLOR),
+            'huiHelpURL': Setting().get(PluginSettings.HUI_HELP_URL),
+            'huiHelpTooltip': Setting().get(PluginSettings.HUI_HELP_TOOLTIP),
         })
         return super()._renderHTML()
 
