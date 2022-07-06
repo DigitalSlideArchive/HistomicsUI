@@ -31,6 +31,18 @@ form#g-hui-form(role="form")
       button#g-hui-banner-default-color.form-control.input-sm(
           type="button", title="Default color") default
   .form-group
+    label(for="g-hui-help-url") Help URL
+    #g-hui-help-url-container
+      input#g-hui-help-url.form-control.input-sm(
+          type="text", value=settings['histomicsui.help_url'] || defaults['histomicsui.help_url'],
+          title="The link for the optional help button in the application.")
+  .form-group
+    label(for="g-hui-help-tooltip") Help Tooltip
+    #g-hui-help-tooltip-container
+      input#g-hui-help-tooltip.form-control.input-sm(
+          type="text", value=settings['histomicsui.help_tooltip'] || defaults['histomicsui.help_tooltip'],
+          title="The tooltip text for the optional help buttion in the application.")
+  .form-group
     label
       | Default styles for drawing annotations
     input#g-hui-default-draw-styles.input-sm.form-control(

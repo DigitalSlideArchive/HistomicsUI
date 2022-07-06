@@ -63,7 +63,9 @@ var ConfigView = View.extend({
             'histomicsui.default_draw_styles',
             'histomicsui.panel_layout',
             'histomicsui.quarantine_folder',
-            'histomicsui.delete_annotations_after_ingest'
+            'histomicsui.delete_annotations_after_ingest',
+            'histomicsui.help_url',
+            'histomicsui.help_tooltip'
         ];
         $.when(
             restRequest({
