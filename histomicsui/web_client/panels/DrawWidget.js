@@ -708,18 +708,18 @@ var DrawWidget = Panel.extend({
         if (groupElem.length > 0) {
             groupElem.attr('data-count', parseInt(groupElem.attr('data-count')) + change);
         } else {
-            $('.h-group-count').append('<span class = h-group-count-option data-group="' + group + '" data-count=' + change + '</span>');
+            $('.h-group-count').append('<div class = h-group-count-option data-group="' + group + '" data-count=' + change + '>' + change + ' ' + group + '</div>');
         }
     },
 
     displayCount() {
-        this.$('.h-group-count-option').hide();
-        const groupName = this.$('.h-style-group').val();
-        const groupElem = this.$('.h-group-count > [data-group="' + groupName + '"]');
-        if (groupElem.length > 0) {
-            groupElem.html('<b>Count:</b> ' + groupElem.attr('data-count') + ' ' + groupName).show();
-        } else {
-            this.$('.h-group-count').append('<span class = h-group-count-option data-group="' + groupName + '" data-count=0 style="display: inline;"><b>Count:</b> 0 ' + groupName + '</span>');
+        const counts = this.$('.h-group-count').children('.h-group-count-option');
+        for (let groupElem of counts) {
+            if (parseInt($(groupElem).attr('data-count')) > 0) {
+                $(groupElem).html($(groupElem).attr('data-count') + ' ' + $(groupElem).attr('data-group')).show();
+            } else {
+                $(groupElem).hide();
+            }
         }
     },
 
@@ -746,7 +746,6 @@ var DrawWidget = Panel.extend({
      * Set the current style group based on the current controls.
      */
     _setToSelectedStyleGroup() {
-        this.displayCount();
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
     },
 
