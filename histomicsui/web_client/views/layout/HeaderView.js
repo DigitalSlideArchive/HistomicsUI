@@ -23,7 +23,9 @@ var HeaderView = View.extend({
         this.$el.html(headerTemplate({
             brandName: this.settings.brandName,
             brandColor: this.settings.brandColor,
-            bannerColor: this.settings.bannerColor
+            bannerColor: this.settings.bannerColor,
+            helpURL: this.settings.helpURL,
+            helpTooltip: this.settings.helpTooltip
         }));
 
         this.$('a[title]').tooltip({
