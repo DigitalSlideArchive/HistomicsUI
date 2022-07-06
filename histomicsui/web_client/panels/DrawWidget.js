@@ -120,7 +120,6 @@ var DrawWidget = Panel.extend({
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
         this.$('.h-group-count').append(this.$('.h-group-count-option'));
-        this.displayCount();
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
@@ -203,7 +202,6 @@ var DrawWidget = Panel.extend({
                 if (origGroup !== group) {
                     this.updateCount(origGroup || 'default', -1);
                     this.updateCount(group || 'default', 1);
-                    this.displayCount();
                 }
             }
             this._skipRenderHTML = true;
@@ -287,7 +285,6 @@ var DrawWidget = Panel.extend({
             id = this._getId(evt);
         }
         this.updateCount(this.collection.get(id).attributes.group || 'default', -1);
-        this.displayCount();
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
         this.collection.remove(id, opts);
@@ -311,7 +308,6 @@ var DrawWidget = Panel.extend({
                 updateCount: this.updateCount
             })
         );
-        this.displayCount();
     },
 
     /**
@@ -707,19 +703,13 @@ var DrawWidget = Panel.extend({
         const groupElem = $('.h-group-count > [data-group="' + group + '"]');
         if (groupElem.length > 0) {
             groupElem.attr('data-count', parseInt(groupElem.attr('data-count')) + change);
+            if (parseInt($(groupElem).attr('data-count')) > 0) {
+                groupElem.html($(groupElem).attr('data-count') + ' ' + $(groupElem).attr('data-group')).show();
+            } else {
+                groupElem.hide();
+            }
         } else {
             $('.h-group-count').append('<div class = h-group-count-option data-group="' + group + '" data-count=' + change + '>' + change + ' ' + group + '</div>');
-        }
-    },
-
-    displayCount() {
-        const counts = this.$('.h-group-count').children('.h-group-count-option');
-        for (let groupElem of counts) {
-            if (parseInt($(groupElem).attr('data-count')) > 0) {
-                $(groupElem).html($(groupElem).attr('data-count') + ' ' + $(groupElem).attr('data-group')).show();
-            } else {
-                $(groupElem).hide();
-            }
         }
     },
 
