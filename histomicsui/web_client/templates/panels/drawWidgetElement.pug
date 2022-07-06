@@ -18,7 +18,7 @@ if elements.length
       span.icon-cancel.h-delete-element(title='Remove')
 if firstRender
   - for (let group in counts)
-    div.h-group-count-option(data-group=group, data-count=counts[group]) #{counts[group]} #{group}
+    .h-group-count-option(data-group=group, data-count=counts[group]) #{counts[group]} #{group}
 else
   - for (let group in counts)
     - updateCount(group, counts[group]);
