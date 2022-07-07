@@ -119,7 +119,7 @@ var DrawWidget = Panel.extend({
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
-        this.$('.h-group-count').append(this.$('.h-group-count-option'));
+        this.$('.h-group-count-options').append(this.$('.h-group-count-option'));
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
@@ -700,7 +700,7 @@ var DrawWidget = Panel.extend({
     },
 
     updateCount(group, change) {
-        const groupElem = $('.h-group-count > [data-group="' + group + '"]');
+        const groupElem = $('.h-group-count-options > [data-group="' + group + '"]');
         if (groupElem.length > 0) {
             groupElem.attr('data-count', parseInt(groupElem.attr('data-count')) + change);
             if (parseInt($(groupElem).attr('data-count')) > 0) {
@@ -709,7 +709,7 @@ var DrawWidget = Panel.extend({
                 groupElem.hide();
             }
         } else {
-            $('.h-group-count').append('<div class = h-group-count-option data-group="' + group + '" data-count=' + change + '>' + change + ' ' + group + '</div>');
+            $('.h-group-count-options').append('<div class = h-group-count-option data-group="' + group + '" data-count=' + change + '>' + change + ' ' + group + '</div>');
         }
     },
 
