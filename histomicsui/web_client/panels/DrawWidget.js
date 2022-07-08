@@ -119,7 +119,11 @@ var DrawWidget = Panel.extend({
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
-        this.$('.h-group-count-options').append(this.$('.h-group-count-option'));
+        if (this.$('.h-group-count-option').length > 0) {
+            this.$('.h-group-count-options').append(this.$('.h-group-count-option'));
+        } else {
+            this.$('.h-group-count').hide();
+        }
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
@@ -284,7 +288,9 @@ var DrawWidget = Panel.extend({
         if (evt) {
             id = this._getId(evt);
         }
-        this.updateCount(this.collection.get(id).attributes.group || 'default', -1);
+        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(this.collection.get(id).attributes.type)) {
+            this.updateCount(this.collection.get(id).attributes.group || 'default', -1);
+        }
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
         this.collection.remove(id, opts);
@@ -706,10 +712,15 @@ var DrawWidget = Panel.extend({
             if (parseInt($(groupElem).attr('data-count')) > 0) {
                 groupElem.html($(groupElem).attr('data-count') + ' ' + $(groupElem).attr('data-group')).show();
             } else {
-                groupElem.hide();
+                groupElem.remove();
             }
-        } else {
+        } else if (change !== 0) {
             $('.h-group-count-options').append('<div class = h-group-count-option data-group="' + group + '" data-count=' + change + '>' + change + ' ' + group + '</div>');
+        }
+        if ($('.h-group-count-option').length === 0) {
+            $('.h-group-count').hide();
+        } else {
+            $('.h-group-count').show();
         }
     },
 

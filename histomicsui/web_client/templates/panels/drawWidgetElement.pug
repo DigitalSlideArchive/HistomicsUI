@@ -5,10 +5,12 @@ if elements.length
       var classes = highlighted[element.id] ? ['h-highlight-element'] : [];
       element = element.toJSON();
       var groupName = element['group'] ? element['group'] : 'default';
-      if (counts[groupName]) {
-        counts[groupName]++;
-      } else {
-        counts[groupName] = 1;
+      if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
+        if (counts[groupName]) {
+          counts[groupName]++;
+        } else {
+          counts[groupName] = 1;
+        }
       }
       var label = (element.label || {}).value || (element.type === 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type);
     .h-element(data-id=element.id, class=classes)
