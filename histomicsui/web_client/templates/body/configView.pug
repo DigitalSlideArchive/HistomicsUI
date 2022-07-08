@@ -42,12 +42,20 @@ form#g-hui-form(role="form")
   .form-group
     label(for="g-hui-help-tooltip") Help Tooltip
     #g-hui-help-tooltip-container
-      input#g-hui-help-tooltip.form-control.input-sm(
-          type="text", value=settings['histomicsui.help_tooltip'],
-          placeholder="The text for the help button's tooltip"
-          title="The tooltip text for the optional help buttion in the application.")
-      button#g-hui-help-default-tooltip.form-control.input-sm(
-          type="button", title="Default text") default
+      - if (settings['histomicsui.help_url'].trim() == '')
+        input#g-hui-help-tooltip.form-control.input-sm(
+            type="text", value=settings['histomicsui.help_tooltip'],
+            placeholder="The text for the help button's tooltip", disabled
+            title="The tooltip text for the optional help buttion in the application.")
+        button#g-hui-help-default-tooltip.form-control.input-sm(
+            type="button", title="Default text", disabled) default
+      - else
+        input#g-hui-help-tooltip.form-control.input-sm(
+            type="text", value=settings['histomicsui.help_tooltip'],
+            placeholder="The text for the help button's tooltip"
+            title="The tooltip text for the optional help buttion in the application.")
+        button#g-hui-help-default-tooltip.form-control.input-sm(
+            type="button", title="Default text") default
   .form-group
     label
       | Default styles for drawing annotations

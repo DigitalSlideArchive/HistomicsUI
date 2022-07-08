@@ -44,8 +44,21 @@ var ConfigView = View.extend({
         'click #g-hui-banner-default-color': function () {
             this.$('#g-hui-banner-color').val(this.defaults['histomicsui.banner_color']);
         },
+        'click #g-hui-help-default-url': function () {
+            this.$('#g-hui-help-url').val(this.defaults['histomicsui.help_url']);
+        },
+        'click #g-hui-help-default-tooltip': function () {
+            this.$('#g-hui-help-tooltip').val(this.defaults['histomicsui.help_tooltip']);
+        },
         'click #g-hui-cancel': function (event) {
             router.navigate('plugins', { trigger: true });
+        },
+        'change #g-hui-help-url': function (event) {
+            if (this.$('#g-hui-help-url').val().trim() == '') {
+                this.$('#g-hui-help-tooltip-container').children().attr('disabled', 'disabled');
+            } else {
+                this.$('#g-hui-help-tooltip-container').children().removeAttr('disabled');
+            }
         },
         'click .g-open-browser': '_openBrowser'
     },
