@@ -34,14 +34,20 @@ form#g-hui-form(role="form")
     label(for="g-hui-help-url") Help URL
     #g-hui-help-url-container
       input#g-hui-help-url.form-control.input-sm(
-          type="text", value=settings['histomicsui.help_url'] || defaults['histomicsui.help_url'],
-          title="The link for the optional help button in the application.")
+          type="text", value=settings['histomicsui.help_url'],
+          placeholder="(Optional) A URL to direct users to to provide help"
+          title="The link that the optional help button in the application should lead to.  If no URL is specified, the help button won't be displayed.")
+      button#g-hui-help-default-url.form-control.input-sm(
+          type="button", title="Default URL") default
   .form-group
     label(for="g-hui-help-tooltip") Help Tooltip
     #g-hui-help-tooltip-container
       input#g-hui-help-tooltip.form-control.input-sm(
-          type="text", value=settings['histomicsui.help_tooltip'] || defaults['histomicsui.help_tooltip'],
+          type="text", value=settings['histomicsui.help_tooltip'],
+          placeholder="The text for the help button's tooltip"
           title="The tooltip text for the optional help buttion in the application.")
+      button#g-hui-help-default-tooltip.form-control.input-sm(
+          type="button", title="Default text") default
   .form-group
     label
       | Default styles for drawing annotations
