@@ -63,5 +63,8 @@ block content
           label(title="If checked, the size is in screen pixels.  If unchecked, the size is in base image pixels")
             input.h-brush-screen(type="checkbox", checked=opts.brush_screen ? 'checked' : undefined)
             | Screen
+  .h-group-count
+    b.h-group-count-label Count:
+    span.h-group-count-options
   .h-elements-container
     include drawWidgetElement.pug

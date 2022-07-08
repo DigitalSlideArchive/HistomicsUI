@@ -114,11 +114,17 @@ var DrawWidget = Panel.extend({
                 name,
                 opts: this._editOptions,
                 drawingType: this._drawingType,
-                collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
+                collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
+                firstRender: true
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
         this.$('button.h-draw[data-type]').removeClass('active');
+        if (this.$('.h-group-count-option').length > 0) {
+            this.$('.h-group-count-options').append(this.$('.h-group-count-option'));
+        } else {
+            this.$('.h-group-count').hide();
+        }
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
@@ -187,14 +193,22 @@ var DrawWidget = Panel.extend({
      * the EditAnnotation modal dialog.
      */
     editElement(evt) {
+        var origGroup = this.collection.get(this._getId(evt)).attributes.group;
         var dialog = editElement(this.collection.get(this._getId(evt)));
-        this.listenTo(dialog, 'h:editElement', (obj) => {
-            // update the html immediately instead of rerendering it
-            let id = obj.element.id,
-                label = (obj.data.label || {}).value,
-                elemType = obj.element.get('type');
-            label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
-            this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
+        this.listenToOnce(dialog, 'h:editElement', (obj) => {
+            if (obj.edited) {
+                // update the html immediately instead of rerendering it
+                let id = obj.element.id,
+                    label = (obj.data.label || {}).value,
+                    elemType = obj.element.get('type'),
+                    group = obj.data.group;
+                label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
+                this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
+                if (origGroup !== group) {
+                    this.updateCount(origGroup || 'default', -1);
+                    this.updateCount(group || 'default', 1);
+                }
+            }
             this._skipRenderHTML = true;
         });
     },
@@ -275,6 +289,9 @@ var DrawWidget = Panel.extend({
         if (evt) {
             id = this._getId(evt);
         }
+        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(this.collection.get(id).attributes.type)) {
+            this.updateCount(this.collection.get(id).attributes.group || 'default', -1);
+        }
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
         this.collection.remove(id, opts);
@@ -293,7 +310,9 @@ var DrawWidget = Panel.extend({
             drawWidgetElement({
                 elements: elements,
                 style: this._style.id,
-                highlighted: this._highlighted
+                highlighted: this._highlighted,
+                firstRender: false,
+                updateCount: this.updateCount
             })
         );
     },
@@ -684,6 +703,25 @@ var DrawWidget = Panel.extend({
         }
         if (!opts.brush_size || !(parseFloat(opts.brush_size) > 0)) {
             opts.brush_size = 50;
+        }
+    },
+
+    updateCount(group, change) {
+        const groupElem = $('.h-group-count-options > [data-group="' + group + '"]');
+        if (groupElem.length > 0) {
+            groupElem.attr('data-count', parseInt(groupElem.attr('data-count')) + change);
+            if (parseInt($(groupElem).attr('data-count')) > 0) {
+                groupElem.html($(groupElem).attr('data-count') + ' ' + $(groupElem).attr('data-group')).show();
+            } else {
+                groupElem.remove();
+            }
+        } else if (change !== 0) {
+            $('.h-group-count-options').append('<div class = h-group-count-option data-group="' + group + '" data-count=' + change + '>' + change + ' ' + group + '</div>');
+        }
+        if ($('.h-group-count-option').length === 0) {
+            $('.h-group-count').hide();
+        } else {
+            $('.h-group-count').show();
         }
     },
 

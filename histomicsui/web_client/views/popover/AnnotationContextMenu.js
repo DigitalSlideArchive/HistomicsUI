@@ -36,7 +36,12 @@ const AnnotationContextMenu = View.extend({
     _removeElements(evt) {
         evt.preventDefault();
         evt.stopPropagation();
-
+        this.collection.each((element) => {
+            if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id &&
+                ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
+                this.parentView.drawWidget.updateCount(element.attributes.group || 'default', -1);
+            }
+        });
         this.collection.trigger('h:remove');
         this.trigger('h:close');
     },
@@ -56,6 +61,11 @@ const AnnotationContextMenu = View.extend({
         const styleAttrs = Object.assign({}, style.toJSON());
         delete styleAttrs.id;
         this.collection.each((element) => { /* eslint-disable backbone/no-silent */
+            if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id &&
+                element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
+                this.parentView.drawWidget.updateCount(element.attributes.group || 'default', -1);
+                this.parentView.drawWidget.updateCount(group || 'default', 1);
+            }
             if (group) {
                 styleAttrs.group = group;
             } else {
