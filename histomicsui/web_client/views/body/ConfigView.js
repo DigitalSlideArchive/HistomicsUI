@@ -33,6 +33,10 @@ var ConfigView = View.extend({
                     case 'histomicsui.delete_annotations_after_ingest':
                         result.value = this.$('.g-hui-delete-annotations-after-ingest').prop('checked');
                         break;
+                    case 'histomicsui.help_url':
+                    case 'histomicsui.help_tooltip':
+                        result.value = result.value === null || !result.value.trim() ? '' : result.value;
+                        break;
                 }
                 return result;
             });

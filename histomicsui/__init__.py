@@ -157,11 +157,10 @@ SettingDefault.defaults.update({
 
 @setting_utilities.validator({
     PluginSettings.HUI_HELP_URL,
-    PluginSettings.HUI_HELP_TOOLTIP,
+    PluginSettings.HUI_HELP_TOOLTIP
 })
 def validateHistomicsUIHelp(doc):
-    if not doc['value']:
-        doc['value'] = False
+    pass
 
 @setting_utilities.validator({
     PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST,

@@ -17,6 +17,7 @@ nav.navbar.navbar-default(style=`color: ${brandColor}; background-color: ${banne
         li.h-image-menu-wrapper.dropdown
         li.h-analyses-wrapper.dropdown
         li.h-current-user-wrapper.dropdown
-        li
-          a.h-help-button(role='button', title=helpTooltip, href=`${helpURL}`, target='_blank')
-            span.icon-help
+        - if (helpURL.trim() !== '')
+          li
+            a.h-help-button(role='button', title=helpTooltip, href=`${helpURL}`, target='_blank')
+              span.icon-help
