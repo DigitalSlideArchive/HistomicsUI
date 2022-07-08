@@ -58,7 +58,7 @@ var ConfigView = View.extend({
             router.navigate('plugins', { trigger: true });
         },
         'change #g-hui-help-url': function (event) {
-            if (this.$('#g-hui-help-url').val().trim() == '') {
+            if (this.$('#g-hui-help-url').val().trim() === '') {
                 this.$('#g-hui-help-tooltip-container').children().attr('disabled', 'disabled');
             } else {
                 this.$('#g-hui-help-tooltip-container').children().removeAttr('disabled');

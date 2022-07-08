@@ -35,7 +35,7 @@ form#g-hui-form(role="form")
     #g-hui-help-url-container
       input#g-hui-help-url.form-control.input-sm(
           type="text", value=settings['histomicsui.help_url'],
-          placeholder="(Optional) A URL to direct users to to provide help"
+          placeholder="(Optional) A URL to direct users to to provide help",
           title="The link that the optional help button in the application should lead to.  If no URL is specified, the help button won't be displayed.")
       button#g-hui-help-default-url.form-control.input-sm(
           type="button", title="Default URL") default
@@ -45,14 +45,14 @@ form#g-hui-form(role="form")
       - if (settings['histomicsui.help_url'].trim() == '')
         input#g-hui-help-tooltip.form-control.input-sm(
             type="text", value=settings['histomicsui.help_tooltip'],
-            placeholder="The text for the help button's tooltip", disabled
+            placeholder="The text for the help button's tooltip", disabled,
             title="The tooltip text for the optional help buttion in the application.")
         button#g-hui-help-default-tooltip.form-control.input-sm(
             type="button", title="Default text", disabled) default
       - else
         input#g-hui-help-tooltip.form-control.input-sm(
             type="text", value=settings['histomicsui.help_tooltip'],
-            placeholder="The text for the help button's tooltip"
+            placeholder="The text for the help button's tooltip",
             title="The tooltip text for the optional help buttion in the application.")
         button#g-hui-help-default-tooltip.form-control.input-sm(
             type="button", title="Default text") default
