@@ -50,6 +50,7 @@ var ConfigView = View.extend({
         },
         'click #g-hui-help-default-url': function () {
             this.$('#g-hui-help-url').val(this.defaults['histomicsui.help_url']);
+            this.$('#g-hui-help-url').trigger('change');
         },
         'click #g-hui-help-default-tooltip': function () {
             this.$('#g-hui-help-tooltip').val(this.defaults['histomicsui.help_tooltip']);
