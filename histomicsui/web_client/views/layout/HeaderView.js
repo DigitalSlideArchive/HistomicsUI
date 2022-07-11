@@ -24,7 +24,7 @@ var HeaderView = View.extend({
             brandName: this.settings.brandName,
             brandColor: this.settings.brandColor,
             bannerColor: this.settings.bannerColor,
-            helpURL: this.settings.helpURL,
+            helpURL: this.settings.helpURL && this.settings.helpURL.trim() === '' ? false : this.settings.helpURL,
             helpTooltip: this.settings.helpTooltip
         }));
 
