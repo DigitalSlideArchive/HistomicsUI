@@ -297,7 +297,7 @@ var DrawWidget = Panel.extend({
             this.updateCount(this.collection.get(id).attributes.group || 'default', -1);
         } else if (this.collection.get(id).attributes.type === 'pixelmap') {
             let toSubtract = {};
-            for (let ix=0; ix < this.collection.get(id).attributes.values.length / 2; ix++) {
+            for (let ix = 0; ix < this.collection.get(id).attributes.values.length / 2; ix++) {
                 let groupName = (this.collection.get(id).attributes.categories[this.collection.get(id).attributes.values[ix]]).label || 'default';
                 if (toSubtract[groupName]) {
                     toSubtract[groupName]--;
@@ -745,8 +745,8 @@ var DrawWidget = Panel.extend({
     countPixelmap() {
         let toAdd = {};
         for (let element of this.collection.models) {
-            if (element.attributes.type == 'pixelmap') {
-                for (let ix=0; ix < element.attributes.values.length / 2; ix++) {
+            if (element.attributes.type === 'pixelmap') {
+                for (let ix = 0; ix < element.attributes.values.length / 2; ix++) {
                     let groupName = (element.attributes.categories[element.attributes.values[ix]]).label || 'default';
                     if (toAdd[groupName]) {
                         toAdd[groupName]++;
