@@ -125,6 +125,10 @@ var DrawWidget = Panel.extend({
         } else {
             this.$('.h-group-count').hide();
         }
+        if (this.$('.h-group-count-option.pixelmap').length > 0) {
+            this.$('.h-group-count-option.pixelmap').remove();
+            this.countPixelmap();
+        }
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
@@ -291,6 +295,19 @@ var DrawWidget = Panel.extend({
         }
         if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(this.collection.get(id).attributes.type)) {
             this.updateCount(this.collection.get(id).attributes.group || 'default', -1);
+        } else if (this.collection.get(id).attributes.type === 'pixelmap') {
+            let toSubtract = {};
+            for (let ix=0; ix < this.collection.get(id).attributes.values.length / 2; ix++) {
+                let groupName = (this.collection.get(id).attributes.categories[this.collection.get(id).attributes.values[ix]]).label || 'default';
+                if (toSubtract[groupName]) {
+                    toSubtract[groupName]--;
+                } else {
+                    toSubtract[groupName] = -1;
+                }
+            }
+            for (let group in toSubtract) {
+                this.updateCount(group, toSubtract[group]);
+            }
         }
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
@@ -722,6 +739,25 @@ var DrawWidget = Panel.extend({
             $('.h-group-count').hide();
         } else {
             $('.h-group-count').show();
+        }
+    },
+
+    countPixelmap() {
+        let toAdd = {};
+        for (let element of this.collection.models) {
+            if (element.attributes.type == 'pixelmap') {
+                for (let ix=0; ix < element.attributes.values.length / 2; ix++) {
+                    let groupName = (element.attributes.categories[element.attributes.values[ix]]).label || 'default';
+                    if (toAdd[groupName]) {
+                        toAdd[groupName]++;
+                    } else {
+                        toAdd[groupName] = 1;
+                    }
+                }
+            }
+        }
+        for (let group in toAdd) {
+            this.updateCount(group, toAdd[group]);
         }
     },
 

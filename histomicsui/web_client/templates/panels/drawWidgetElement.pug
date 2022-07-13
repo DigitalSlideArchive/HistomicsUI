@@ -1,4 +1,5 @@
 - var counts = {};
+- var pixelmap = false;
 if elements.length
   each element in elements
     -
@@ -11,6 +12,8 @@ if elements.length
         } else {
           counts[groupName] = 1;
         }
+      } else if (element.type === 'pixelmap') {
+        pixelmap = true;
       }
       var label = (element.label || {}).value || (element.type === 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type);
     .h-element(data-id=element.id, class=classes)
@@ -19,8 +22,10 @@ if elements.length
       span.icon-zoom-in.h-view-element(title='View annotation')
       span.icon-cancel.h-delete-element(title='Remove')
 if firstRender
+  if pixelmap
+    .h-group-count-option.pixelmap.hidden
   - for (let group in counts)
     .h-group-count-option(data-group=group, data-count=counts[group]) #{counts[group]} #{group}
-else
+else if !pixelmap
   - for (let group in counts)
     - updateCount(group, counts[group]);
