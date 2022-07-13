@@ -127,7 +127,11 @@ var DrawWidget = Panel.extend({
         }
         if (this.$('.h-group-count-option.pixelmap').length > 0) {
             this.$('.h-group-count-option.pixelmap').remove();
-            this.countPixelmap();
+            for (let element of this.collection.models) {
+                if (element.attributes.type === 'pixelmap') {
+                    this.countPixelmap(element, 1);
+                }
+            }
         }
         if (this._drawingType) {
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
@@ -296,18 +300,7 @@ var DrawWidget = Panel.extend({
         if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(this.collection.get(id).attributes.type)) {
             this.updateCount(this.collection.get(id).attributes.group || 'default', -1);
         } else if (this.collection.get(id).attributes.type === 'pixelmap') {
-            let toSubtract = {};
-            for (let ix = 0; ix < this.collection.get(id).attributes.values.length / 2; ix++) {
-                let groupName = (this.collection.get(id).attributes.categories[this.collection.get(id).attributes.values[ix]]).label || 'default';
-                if (toSubtract[groupName]) {
-                    toSubtract[groupName]--;
-                } else {
-                    toSubtract[groupName] = -1;
-                }
-            }
-            for (let group in toSubtract) {
-                this.updateCount(group, toSubtract[group]);
-            }
+            this.countPixelmap(this.collection.get(id), -1);
         }
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
@@ -742,22 +735,18 @@ var DrawWidget = Panel.extend({
         }
     },
 
-    countPixelmap() {
-        let toAdd = {};
-        for (let element of this.collection.models) {
-            if (element.attributes.type === 'pixelmap') {
-                for (let ix = 0; ix < element.attributes.values.length / 2; ix++) {
-                    let groupName = (element.attributes.categories[element.attributes.values[ix]]).label || 'default';
-                    if (toAdd[groupName]) {
-                        toAdd[groupName]++;
-                    } else {
-                        toAdd[groupName] = 1;
-                    }
-                }
+    countPixelmap(pixelmap, operation) {
+        let toChange = {};
+        for (let ix = 0; ix < pixelmap.attributes.values.length / 2; ix++) {
+            let groupName = (pixelmap.attributes.categories[pixelmap.attributes.values[ix]]).label || 'default';
+            if (toChange[groupName]) {
+                toChange[groupName]++;
+            } else {
+                toChange[groupName] = 1;
             }
         }
-        for (let group in toAdd) {
-            this.updateCount(group, toAdd[group]);
+        for (let group in toChange) {
+            this.updateCount(group, operation * toChange[group]);
         }
     },
 
