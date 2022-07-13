@@ -208,7 +208,7 @@ var DrawWidget = Panel.extend({
                     group = obj.data.group;
                 label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
                 this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
-                if (origGroup !== group) {
+                if (origGroup !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
                     this.updateCount(origGroup || 'default', -1);
                     this.updateCount(group || 'default', 1);
                 }
