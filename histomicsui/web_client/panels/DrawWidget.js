@@ -325,6 +325,14 @@ var DrawWidget = Panel.extend({
                 updateCount: this.updateCount
             })
         );
+        if (this.$('.h-group-count-option.pixelmap').length > 0) {
+            this.$('.h-group-count-option.pixelmap').remove();
+            for (let element of this.collection.models) {
+                if (element.attributes.type === 'pixelmap') {
+                    this.countPixelmap(element, 1);
+                }
+            }
+        }
     },
 
     /**

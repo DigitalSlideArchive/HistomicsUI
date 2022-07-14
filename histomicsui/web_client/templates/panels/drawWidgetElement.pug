@@ -21,11 +21,11 @@ if elements.length
       span.h-element-label(title=label) #{label}
       span.icon-zoom-in.h-view-element(title='View annotation')
       span.icon-cancel.h-delete-element(title='Remove')
+if pixelmap
+  .h-group-count-option.pixelmap.hidden
 if firstRender
-  if pixelmap
-    .h-group-count-option.pixelmap.hidden
   - for (let group in counts)
     .h-group-count-option(data-group=group, data-count=counts[group]) #{counts[group]} #{group}
-else if !pixelmap
+else
   - for (let group in counts)
     - updateCount(group, counts[group]);
