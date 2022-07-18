@@ -40,22 +40,23 @@ form#g-hui-form(role="form")
       button#g-hui-help-default-url.form-control.input-sm(
           type="button", title="Default URL") default
   .form-group
+    label(for="g-hui-help-text") Help Text
+    #g-hui-help-text-container
+      input#g-hui-help-text.form-control.input-sm(
+          type="text", value=settings['histomicsui.help_text'],
+          placeholder="The text to display with the help button",
+          title="The text for the optional help buttion in the application.")
+      button#g-hui-help-default-text.form-control.input-sm(
+          type="button", title="Default text") default
+  .form-group
     label(for="g-hui-help-tooltip") Help Tooltip
     #g-hui-help-tooltip-container
-      if settings['histomicsui.help_url'].trim()
-        input#g-hui-help-tooltip.form-control.input-sm(
-            type="text", value=settings['histomicsui.help_tooltip'],
-            placeholder="The text for the help button's tooltip",
-            title="The tooltip text for the optional help buttion in the application.")
-        button#g-hui-help-default-tooltip.form-control.input-sm(
-            type="button", title="Default text") default
-      else
-        input#g-hui-help-tooltip.form-control.input-sm(
-            type="text", value=settings['histomicsui.help_tooltip'],
-            placeholder="The text for the help button's tooltip", disabled,
-            title="The tooltip text for the optional help buttion in the application.")
-        button#g-hui-help-default-tooltip.form-control.input-sm(
-            type="button", title="Default text", disabled) default
+      input#g-hui-help-tooltip.form-control.input-sm(
+          type="text", value=settings['histomicsui.help_tooltip'],
+          placeholder="The text for the help button's tooltip",
+          title="The tooltip text for the optional help buttion in the application.")
+      button#g-hui-help-default-tooltip.form-control.input-sm(
+          type="button", title="Default tooltip") default
   .form-group
     label
       | Default styles for drawing annotations

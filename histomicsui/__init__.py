@@ -153,13 +153,15 @@ SettingDefault.defaults.update({
     PluginSettings.HUI_BRAND_COLOR: '#777777',
     PluginSettings.HUI_HELP_URL:
         'https://github.com/DigitalSlideArchive/HistomicsUI/blob/master/docs/controls.rst',
-    PluginSettings.HUI_HELP_TOOLTIP: 'Mouse and keyboard controls'
+    PluginSettings.HUI_HELP_TOOLTIP: 'Mouse and keyboard controls',
+    PluginSettings.HUI_HELP_TEXT: 'Help'
 })
 
 
 @setting_utilities.validator({
     PluginSettings.HUI_HELP_URL,
-    PluginSettings.HUI_HELP_TOOLTIP
+    PluginSettings.HUI_HELP_TOOLTIP,
+    PluginSettings.HUI_HELP_TEXT
 })
 def validateHistomicsUIHelp(doc):
     pass
@@ -212,6 +214,7 @@ class WebrootHistomicsUI(Webroot):
             'huiBannerColor': Setting().get(PluginSettings.HUI_BANNER_COLOR),
             'huiHelpURL': Setting().get(PluginSettings.HUI_HELP_URL),
             'huiHelpTooltip': Setting().get(PluginSettings.HUI_HELP_TOOLTIP),
+            'huiHelpText': Setting().get(PluginSettings.HUI_HELP_TEXT)
         })
         return super()._renderHTML()
 
