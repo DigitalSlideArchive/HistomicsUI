@@ -19,12 +19,15 @@ import datetime
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import RestException, boundHandler, filtermodel
+from girder.api.v1.item import Item as ItemEndpoint
+from girder_large_image_annotation.rest.annotation import AnnotationResource as AnnotationEndpoint
 from girder.api.v1.resource import Resource as ResourceResource
 from girder.constants import AccessType, TokenScope
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.utility.model_importer import ModelImporter
 from girder_jobs.models.job import Job
+from girder_large_image_annotation.models.annotation import Annotation
 
 
 def addSystemEndpoints(apiRoot):
@@ -42,6 +45,8 @@ def addSystemEndpoints(apiRoot):
     # Added to the job route
     apiRoot.job.route('GET', ('old',), getOldJobs)
     apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
+    # Added to the annotation route
+    apiRoot.annotation.route('GET', ('folder', ':id'), getFolderAnnotations)
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
@@ -249,6 +254,29 @@ def deleteOldJobs(self, age, status):
         count += 1
     return count
 
+@autoDescribeRoute(
+    Description('Get the annotations from the items in a folder')
+    .param('id', 'The ID of the folder', required=True, paramType='path')
+    .param('checkSubfolders', 'Whether or not to recursively check '
+           'subfolders for annotations', required=False, default=False,
+        dataType='boolean')
+    .pagingParams(defaultSort='created', defaultSortDir=-1)
+    .errorResponse()
+)
+@access.public
+@boundHandler()
+def getFolderAnnotations(self, id, checkSubfolders, limit, offset, sort):
+    user = self.getCurrentUser()
+
+    folder = Folder().load(
+        id=id, user=user, level=AccessType.READ, exc=True)
+    items = allChildItems(folder, 'folder', user, sort=sort
+        ) if checkSubfolders else Folder().childItems(folder=folder, sort=sort)
+    for item in items:
+        itemAnnotations = AnnotationEndpoint().find({'itemId': item['_id']})
+        for annotation in itemAnnotations:
+            yield annotation
+            
 
 class HUIResourceResource(ResourceResource):
     def __init__(self, apiRoot):
