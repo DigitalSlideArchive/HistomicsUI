@@ -153,7 +153,7 @@ SettingDefault.defaults.update({
     PluginSettings.HUI_BRAND_COLOR: '#777777',
     PluginSettings.HUI_HELP_URL:
         'https://github.com/DigitalSlideArchive/HistomicsUI/blob/master/docs/controls.rst',
-    PluginSettings.HUI_HELP_TOOLTIP: 'See viewing and editing controls'
+    PluginSettings.HUI_HELP_TOOLTIP: 'Mouse and keyboard controls'
 })
 
 
