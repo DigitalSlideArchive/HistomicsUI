@@ -46,7 +46,7 @@ def addSystemEndpoints(apiRoot):
     apiRoot.job.route('GET', ('old',), getOldJobs)
     apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
     # Added to the annotation route
-    apiRoot.annotation.route('GET', ('folder', ':id'), getFolderAnnotations)
+    apiRoot.annotation.route('GET', ('folder', ':id', 'present'), existFolderAnnotations)
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
@@ -260,22 +260,22 @@ def deleteOldJobs(self, age, status):
     .param('checkSubfolders', 'Whether or not to recursively check '
            'subfolders for annotations', required=False, default=False,
         dataType='boolean')
-    .pagingParams(defaultSort='created', defaultSortDir=-1)
     .errorResponse()
 )
 @access.public
 @boundHandler()
-def getFolderAnnotations(self, id, checkSubfolders, limit, offset, sort):
+def existFolderAnnotations(self, id, checkSubfolders):
     user = self.getCurrentUser()
-
     folder = Folder().load(
         id=id, user=user, level=AccessType.READ, exc=True)
-    items = allChildItems(folder, 'folder', user, sort=sort
-        ) if checkSubfolders else Folder().childItems(folder=folder, sort=sort)
+    items = allChildItems(folder, 'folder', user
+        ) if checkSubfolders else Folder().childItems(folder=folder)
+    
     for item in items:
-        itemAnnotations = AnnotationEndpoint().find({'itemId': item['_id']})
-        for annotation in itemAnnotations:
-            yield annotation
+        if AnnotationEndpoint().find({'itemId': item['_id']}):
+            yield True
+            return
+    yield False
             
 
 class HUIResourceResource(ResourceResource):
