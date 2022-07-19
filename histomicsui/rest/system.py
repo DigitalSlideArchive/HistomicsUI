@@ -29,6 +29,8 @@ from girder.utility.model_importer import ModelImporter
 from girder_jobs.models.job import Job
 from girder_large_image_annotation.models.annotation import Annotation
 
+from bson.objectid import ObjectId
+
 
 def addSystemEndpoints(apiRoot):
     """
@@ -254,29 +256,66 @@ def deleteOldJobs(self, age, status):
         count += 1
     return count
 
+def getFolderAnnotations(id, checkSubfolders, limit=False):
+    recursivePipeline = [
+        {'$graphLookup': {
+            'from': 'folder',
+            'startWith': '$_id',
+            'connectFromField': '_id',
+            'connectToField': 'parentId',
+            'as': '__children'
+        }},
+        {'$unwind': {'path': '$__children'}},
+        {'$replaceRoot': {'newRoot': '$__children'}}] if checkSubfolders else []
+    pipeline = [
+        {'$match': {'_id': 'none'}},
+        {'$unionWith': {
+            'coll': 'folder',
+            'pipeline': [{'$match': {'_id': ObjectId(id)}}] + 
+                recursivePipeline +
+                [{'$unionWith': {
+                    'coll': 'folder',
+                    'pipeline': [{'$match': {'_id': ObjectId(id)}}]
+                }},
+                {'$lookup': {
+                    'from': 'item',
+                    'localField': '_id',
+                    'foreignField': 'folderId',
+                    'as': '__items'
+                }},
+                {'$lookup': {
+                    'from': 'annotation',
+                    'localField': '__items._id',
+                    'foreignField': 'itemId',
+                    'as': '__annotations'
+                }},
+                {'$unwind': '$__annotations'},
+                {'$replaceRoot': {'newRoot': '$__annotations'}},
+            ]
+        }},
+    ]
+    pipeline = pipeline + [{'$limit': limit}] if limit else pipeline
+
+    return Annotation().collection.aggregate(pipeline)
+
 @autoDescribeRoute(
-    Description('Get the annotations from the items in a folder')
+    Description('Check if there are any annotations from the items in a folder')
     .param('id', 'The ID of the folder', required=True, paramType='path')
     .param('checkSubfolders', 'Whether or not to recursively check '
-           'subfolders for annotations', required=False, default=False,
+           'subfolders for annotations', required=False, default=True,
         dataType='boolean')
     .errorResponse()
 )
 @access.public
 @boundHandler()
 def existFolderAnnotations(self, id, checkSubfolders):
-    user = self.getCurrentUser()
-    folder = Folder().load(
-        id=id, user=user, level=AccessType.READ, exc=True)
-    items = allChildItems(folder, 'folder', user
-        ) if checkSubfolders else Folder().childItems(folder=folder)
-    
-    for item in items:
-        if AnnotationEndpoint().find({'itemId': item['_id']}):
-            yield True
-            return
-    yield False
-            
+    annotations = getFolderAnnotations(id, checkSubfolders, 1)
+    try:
+        next(annotations)
+        yield True
+    except StopIteration:
+        yield False
+
 
 class HUIResourceResource(ResourceResource):
     def __init__(self, apiRoot):
