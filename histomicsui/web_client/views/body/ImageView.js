@@ -1216,7 +1216,7 @@ var ImageView = View.extend({
             };
             this._resetSelection();
             const found = this.getElementsInBox(boundingBox);
-            found.forEach(({ element }) => this._selectElement(element));
+            found.forEach(({ element }, idx) => this._selectElement(element, {silent: idx !== found.length - 1}));
             if (this.selectedElements.length > 0 && this._currentMousePosition) {
                 // fake an open context menu
                 const { element, annotationId } = found[0];
@@ -1377,7 +1377,7 @@ var ImageView = View.extend({
         this.viewerWidget.drawAnnotation(this.selectedAnnotation, {fetch: false});
     },
 
-    _selectElement(element) {
+    _selectElement(element, options) {
         // don't allow selecting annotations with no write access or
         // elements not associated with a real annotation.
         const annotation = (element.collection || {}).annotation;
@@ -1385,7 +1385,7 @@ var ImageView = View.extend({
             return;
         }
 
-        var elementModel = this.selectedElements.add(element.attributes);
+        var elementModel = this.selectedElements.add(element.attributes, options);
         elementModel.originalAnnotation = annotation;
         this.viewerWidget.highlightAnnotation(this.selectedAnnotation.id);
     },
