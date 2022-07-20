@@ -288,10 +288,8 @@ girderTest.promise.done(function () {
 
             it('draw another point', function () {
                 runs(function () {
-                    // The draw button must be clicked in the next event loop (not sure why).
-                    window.setTimeout(function () {
-                        $('.h-draw[data-type="point"]').click();
-                    }, 0);
+                    $('.h-draw[data-type="line"]').click();
+                    $('.h-draw[data-type="point"]').click();
                 });
 
                 waitsFor(function () {
@@ -354,6 +352,7 @@ girderTest.promise.done(function () {
                 expect($('.h-elements-container .h-element').length).toBe(1);
 
                 // reset the draw state
+                $('.h-draw[data-type="line"]').click();
                 $('.h-draw[data-type="point"]').click();
             });
 
