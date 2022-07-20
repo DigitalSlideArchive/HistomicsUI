@@ -23,6 +23,7 @@ from girder.api.v1.resource import Resource as ResourceResource
 from girder.constants import AccessType, TokenScope
 from girder.models.folder import Folder
 from girder.models.item import Item
+from girder.models.setting import Setting
 from girder.utility.model_importer import ModelImporter
 from girder_jobs.models.job import Job
 
@@ -39,6 +40,7 @@ def addSystemEndpoints(apiRoot):
     apiRoot.folder.route('GET', ('query',), getFoldersByQuery)
     # Added to the system route
     apiRoot.system.route('PUT', ('restart',), restartServer)
+    apiRoot.system.route('GET', ('setting', 'default'), getSettingDefault)
     # Added to the job route
     apiRoot.job.route('GET', ('old',), getOldJobs)
     apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
@@ -320,3 +322,31 @@ class HUIResourceResource(ResourceResource):
                 # restrictive than we want.
                 modified += model.update({'_id': resource['_id']}, metaUpdate).modified_count
         return modified
+
+
+@access.admin(scope=TokenScope.SETTINGS_READ)
+@autoDescribeRoute(
+    Description('Get the value of a system setting, or a list of them.')
+    .notes('Must be a system administrator to call this.')
+    .param('key', 'The key identifying this setting.', required=False)
+    .jsonParam('list', 'A JSON list of keys representing a set of settings to return.',
+               required=False, requireArray=True)
+    .param('default', 'If "none", return a null value if a setting is '
+           'currently the default value. If "default", return the default '
+           'value of the setting(s).', required=False)
+    .errorResponse('You are not a system administrator.', 403)
+)
+@boundHandler
+def getSettingDefault(self, key, list, default=None):
+    getFunc = Setting().get
+    if default == 'none':
+        getFunc = (lambda k: (Setting()._get(k) or {}).get('value'))
+    elif default == 'default':
+        getFunc = Setting().getDefault
+    elif default:
+        raise RestException("Default was not 'none', 'default', or blank.")
+    if list is not None:
+        return {k: getFunc(k) for k in list}
+    else:
+        self.requireParams({'key': key})
+        return getFunc(key)

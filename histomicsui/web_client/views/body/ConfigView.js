@@ -68,7 +68,7 @@ var ConfigView = View.extend({
         $.when(
             restRequest({
                 method: 'GET',
-                url: 'system/setting',
+                url: 'system/setting/default',
                 data: {
                     list: JSON.stringify(this.settingsKeys),
                     default: 'none'
@@ -78,7 +78,7 @@ var ConfigView = View.extend({
             }),
             restRequest({
                 method: 'GET',
-                url: 'system/setting',
+                url: 'system/setting/default',
                 data: {
                     list: JSON.stringify(this.settingsKeys),
                     default: 'default'
