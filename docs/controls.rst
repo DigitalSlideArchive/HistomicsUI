@@ -150,3 +150,9 @@ Annotation Controls
 
   - **q**, **w**: Change the currently selected style group by cycling though
     available options.
+
+- **Pixelmap controls**
+
+  **Left-click** on a superpixel to change its category to the current style group.
+  Holding **shift** and **left-drag** the mouse to change multiple superpixels as 
+  the mouse passed over them.
