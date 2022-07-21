@@ -747,6 +747,9 @@ var DrawWidget = Panel.extend({
         }
 
         $(e.target).parent().find('.h-dropdown-content').collapse('toggle');
+
+        // Select the corresponding radio button for the current size_mode
+        $(`input[mode="${this._editOptions.size_mode || 'unconstrained'}"]`, $(e.target.parentNode)).trigger('click');
     },
 
     /**
