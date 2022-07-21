@@ -729,13 +729,23 @@ var DrawWidget = Panel.extend({
     /**
      * For a dropdown control widget, handle expanding and collapsing.
      *
-     * TODO: When we have multiple such widgets, we should close all but the
-     * current widget.
-     *
      * @param {jquery.Event} e The event that triggered this toggle.
      */
     _dropdownControlClick(e) {
         e.stopImmediatePropagation();
+
+        // Close any dropdowns that are already open
+        const buttons = $(e.target.parentNode).parent().find('.btn-group');
+        for (let i = 0; i < buttons.length; i++) {
+            const dropdowns = $(buttons[i]).find('.h-dropdown-content');
+            for (let j = 0; j < dropdowns.length; j++) {
+                const dropdown = $(dropdowns[j]);
+                if (dropdown.hasClass('in')) {
+                    dropdown.collapse('toggle');
+                }
+            }
+        }
+
         $(e.target).parent().find('.h-dropdown-content').collapse('toggle');
     },
 
