@@ -724,17 +724,44 @@ var DrawWidget = Panel.extend({
         }
     },
 
-    updateCount(group, change) {
-        const groupElem = $('.h-group-count-options > [data-group="' + group + '"]');
+    updateCount(groupName, change) {
+        const groupElem = $('.h-group-count-options > [data-group="' + groupName + '"]');
         if (groupElem.length > 0) {
-            groupElem.attr('data-count', parseInt(groupElem.attr('data-count')) + change);
-            if (parseInt($(groupElem).attr('data-count')) > 0) {
-                groupElem.html($(groupElem).attr('data-count') + ' ' + $(groupElem).attr('data-group')).show();
+            let newCount =  parseInt(groupElem.attr('data-count')) + change;
+            groupElem.attr('data-count', newCount);
+            if (newCount > 0) {
+                for (let group of $('.h-group-count-option').toArray()) {
+                    let count = parseInt($(group).attr('data-count'));
+                    if (newCount > count) {
+                        $(group).before(groupElem);
+                        break;
+                    } else if (group !== groupElem[0] && newCount === count) {
+                        if ($(group).attr('data-group') < groupName) {
+                            $(group).after(groupElem);
+                        } else {
+                            $(group).before(groupElem);
+                        }
+                        break;
+                    } else if (group === $('.h-group-count-options:last-child')[0]) {
+                        $(group).after(groupElem);
+                    }
+                }
+                groupElem.html(newCount + ' ' + groupName).show();
             } else {
                 groupElem.remove();
             }
         } else if (change !== 0) {
-            $('.h-group-count-options').append('<div class = h-group-count-option data-group="' + group + '" data-count=' + change + '>' + change + ' ' + group + '</div>');
+            for (let group of $('.h-group-count-option').toArray().reverse()) {
+                if ($(group).attr('data-count') > change || ($(group).attr('data-count') === change && $(group).attr('data-group') < groupName)) {
+                    $(group).after('<div class = h-group-count-option data-group="' + groupName + '" data-count=' + change + '>' + change + ' ' + groupName + '</div>');
+                    break;
+                } else if (group === $('.h-group-count-options:first-child')[0]) {
+                    $(group).before('<div class = h-group-count-option data-group="' + groupName + '" data-count=' + change + '>' + change + ' ' + groupName + '</div>');
+                }
+            }
+            if ($('.h-group-count-options > [data-group="' + groupName + '"]').length === 0) {
+                $('.h-group-count-options').append('<div class = h-group-count-option data-group="' + groupName + '" data-count=' + change + '>' + change + ' ' + groupName + '</div>');
+            }
         }
         if ($('.h-group-count-option').length === 0) {
             $('.h-group-count').hide();

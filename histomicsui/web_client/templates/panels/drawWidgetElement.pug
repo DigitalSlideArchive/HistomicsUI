@@ -24,8 +24,18 @@ if elements.length
 if pixelmap
   .h-group-count-option.pixelmap.hidden
 if firstRender
-  - for (let group in counts)
-    .h-group-count-option(data-group=group, data-count=counts[group]) #{counts[group]} #{group}
+  -
+    var order = (Object.entries(counts)).sort((a, b) => {
+      if (a[1] === b[1]) {
+        if (a[0] < b[0]) {
+          return -1;
+        }
+        return 1;
+      }
+      return b[1] - a[1];
+    })
+  - for (let group of order)
+    .h-group-count-option(data-group=group[0], data-count=group[1]) #{group[1]} #{group[0]}
 else
   - for (let group in counts)
     - updateCount(group, counts[group]);
