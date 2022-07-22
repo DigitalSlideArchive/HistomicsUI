@@ -31,11 +31,10 @@ var DrawWidget = Panel.extend({
         'click .h-draw': 'drawElement',
         'change .h-style-group': '_setToSelectedStyleGroup',
         'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
+        'change .h-fixed-shape,.h-fixed-height,.h-fixed-width': '_changeShapeConstraint',
         'click .h-configure-style-group': '_styleGroupEditor',
         'mouseenter .h-element': '_highlightElement',
         'mouseleave .h-element': '_unhighlightElement',
-        'show.bs.collapse': 'expand',
-        'hide.bs.collapse': 'collapse',
         'click .h-dropdown-title': '_dropdownControlClick'
     }),
 
@@ -149,6 +148,7 @@ var DrawWidget = Panel.extend({
                 }
             });
         }
+        this._updateConstraintValueInputs();
         return this;
     },
 
@@ -612,7 +612,15 @@ var DrawWidget = Panel.extend({
             // always show the active annotation when drawing a new element
             this.annotation.set('displayed', true);
             this._drawingType = type;
-            this.viewer.startDrawMode(type)
+
+            const options = { modeOptions: {} };
+            if (this._editOptions.size_mode === 'fixed_aspect_ratio') {
+                options.modeOptions.constraint = this._editOptions.fixed_width / this._editOptions.fixed_height;
+            } else if (this._editOptions.size_mode === 'fixed_size') {
+                options.modeOptions.constraint = { width: this._editOptions.fixed_width, height: this._editOptions.fixed_height };
+            }
+
+            this.viewer.startDrawMode(type, options)
                 .then((element, annotations, opts) => this._addDrawnElements(element, annotations, opts));
         }
         this.$('button.h-draw[data-type]').removeClass('active');
@@ -704,6 +712,9 @@ var DrawWidget = Panel.extend({
         if (!opts.brush_size || !(parseFloat(opts.brush_size) > 0)) {
             opts.brush_size = 50;
         }
+        if (!opts.size_mode) {
+            opts.size_mode = 'unconstrained';
+        }
     },
 
     updateCount(group, change) {
@@ -754,28 +765,26 @@ var DrawWidget = Panel.extend({
     /**
      * For a dropdown control widget, handle expanding and collapsing.
      *
-     * TODO: When we have multiple such widgets, we should close all but the
-     * current widget.
-     *
      * @param {jquery.Event} e The event that triggered this toggle.
      */
     _dropdownControlClick(e) {
         e.stopImmediatePropagation();
-        $(e.target).parent().find('.h-dropdown-content').collapse('toggle');
-    },
-
-    /**
-     * Update the icon when a dropdown control group expands.
-     */
-    expand() {
-        this.$('.icon-down-open').attr('class', 'icon-up-open');
-    },
-
-    /**
-     * Update the icon when a dropdown control group closes.
-     */
-    collapse() {
-        this.$('.icon-up-open').attr('class', 'icon-down-open');
+        const content = $(e.target).parent().find('.h-dropdown-content');
+        const isCollapsed = !content.hasClass('in');
+        const buttons = $(e.target).closest('.h-draw-tools').find('.btn-group');
+        buttons.find('.h-dropdown-content').each((idx, dropdown) => {
+            dropdown = $(dropdown);
+            if (!dropdown.is(content) && dropdown.hasClass('in')) {
+                dropdown.collapse('toggle');
+                dropdown.parent().find('.icon-up-open').removeClass('icon-up-open').addClass('icon-down-open');
+            }
+        });
+        content.collapse('toggle');
+        $(e.target).find('.icon-down-open,.icon-up-open').removeClass(
+            isCollapsed ? 'icon-down-open' : 'icon-up-open').addClass(
+            isCollapsed ? 'icon-up-open' : 'icon-down-open');
+        // Select the corresponding radio button for the current size_mode
+        $(`input[mode="${this._editOptions.size_mode || 'unconstrained'}"]`, $(e.target.parentNode)).trigger('click');
     },
 
     /**
@@ -791,6 +800,40 @@ var DrawWidget = Panel.extend({
         this.$('.h-draw[data-type="brush"]').attr('shape', this._editOptions.brush_shape);
         if (this._drawingType === 'brush') {
             this.drawElement(undefined, 'brush', true);
+        }
+    },
+
+    /**
+     * Show or hide width/height input depending on the currently selected drawing mode.
+     */
+    _updateConstraintValueInputs() {
+        if (['fixed_aspect_ratio', 'fixed_size'].includes(this.$('.h-fixed-shape:checked').attr('mode'))) {
+            this.$('.h-fixed-values').show();
+        } else {
+            this.$('.h-fixed-values').hide();
+        }
+    },
+
+    /**
+     * Update the width/height constraint for a shape being drawn with a fixed
+     * aspect ratio or fixed size.
+     */
+    _changeShapeConstraint(evt) {
+        const opts = {
+            size_mode: this.$('.h-fixed-shape:checked').attr('mode'),
+            fixed_width: parseFloat(this.$('.h-fixed-width').val()),
+            fixed_height: parseFloat(this.$('.h-fixed-height').val())
+        };
+        this._saveEditOptions(opts);
+
+        this._updateConstraintValueInputs();
+
+        if (opts.size_mode === 'fixed_aspect_ratio') {
+            this.viewer.startDrawMode(this._drawingType, { modeOptions: { constraint: opts.fixed_width / opts.fixed_height } });
+        } else if (opts.size_mode === 'fixed_size') {
+            this.viewer.startDrawMode(this._drawingType, { modeOptions: { constraint: { width: opts.fixed_width, height: opts.fixed_height } } });
+        } else {
+            this.viewer.startDrawMode(this._drawingType);
         }
     },
 
