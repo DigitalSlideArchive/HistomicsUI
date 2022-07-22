@@ -35,8 +35,6 @@ var DrawWidget = Panel.extend({
         'click .h-configure-style-group': '_styleGroupEditor',
         'mouseenter .h-element': '_highlightElement',
         'mouseleave .h-element': '_unhighlightElement',
-        'show.bs.collapse': 'expand',
-        'hide.bs.collapse': 'collapse',
         'click .h-dropdown-title': '_dropdownControlClick'
     }),
 
@@ -733,37 +731,22 @@ var DrawWidget = Panel.extend({
      */
     _dropdownControlClick(e) {
         e.stopImmediatePropagation();
-
-        // Close any dropdowns that are already open
-        const buttons = $(e.target.parentNode).parent().find('.btn-group');
-        for (let i = 0; i < buttons.length; i++) {
-            const dropdowns = $(buttons[i]).find('.h-dropdown-content');
-            for (let j = 0; j < dropdowns.length; j++) {
-                const dropdown = $(dropdowns[j]);
-                if (dropdown.hasClass('in')) {
-                    dropdown.collapse('toggle');
-                }
+        const content = $(e.target).parent().find('.h-dropdown-content');
+        const isCollapsed = !content.hasClass('in');
+        const buttons = $(e.target).closest('.h-draw-tools').find('.btn-group');
+        buttons.find('.h-dropdown-content').each((idx, dropdown) => {
+            dropdown = $(dropdown);
+            if (!dropdown.is(content) && dropdown.hasClass('in')) {
+                dropdown.collapse('toggle');
+                dropdown.parent().find('.icon-up-open').removeClass('icon-up-open').addClass('icon-down-open');
             }
-        }
-
-        $(e.target).parent().find('.h-dropdown-content').collapse('toggle');
-
+        });
+        content.collapse('toggle');
+        $(e.target).find('.icon-down-open,.icon-up-open').removeClass(
+            isCollapsed ? 'icon-down-open' : 'icon-up-open').addClass(
+            isCollapsed ? 'icon-up-open' : 'icon-down-open');
         // Select the corresponding radio button for the current size_mode
         $(`input[mode="${this._editOptions.size_mode || 'unconstrained'}"]`, $(e.target.parentNode)).trigger('click');
-    },
-
-    /**
-     * Update the icon when a dropdown control group expands.
-     */
-    expand() {
-        this.$('.icon-down-open').attr('class', 'icon-up-open');
-    },
-
-    /**
-     * Update the icon when a dropdown control group closes.
-     */
-    collapse() {
-        this.$('.icon-up-open').attr('class', 'icon-down-open');
     },
 
     /**
