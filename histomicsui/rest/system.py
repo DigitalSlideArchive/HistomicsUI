@@ -48,6 +48,7 @@ def addSystemEndpoints(apiRoot):
     apiRoot.job.route('GET', ('old',), getOldJobs)
     apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
     # Added to the annotation route
+    apiRoot.annotation.route('GET', ('folder', ':id'), returnFolderAnnotations)
     apiRoot.annotation.route('GET', ('folder', ':id', 'present'), existFolderAnnotations)
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
@@ -256,7 +257,8 @@ def deleteOldJobs(self, age, status):
         count += 1
     return count
 
-def getFolderAnnotations(id, checkSubfolders, limit=False):
+
+def getFolderAnnotations(id, checkSubfolders, limit=False, offset=False, sort=False, sortDir=False):
     recursivePipeline = [
         {'$graphLookup': {
             'from': 'folder',
@@ -295,9 +297,12 @@ def getFolderAnnotations(id, checkSubfolders, limit=False):
             ]
         }},
     ]
+    pipeline = pipeline + [{'$sort': {sort: sortDir}}] if sort else pipeline
+    pipeline = pipeline + [{'$skip': offset}] if offset else pipeline
     pipeline = pipeline + [{'$limit': limit}] if limit else pipeline
 
     return Annotation().collection.aggregate(pipeline)
+
 
 @autoDescribeRoute(
     Description('Check if there are any annotations from the items in a folder')
@@ -316,6 +321,23 @@ def existFolderAnnotations(self, id, checkSubfolders):
         yield True
     except StopIteration:
         yield False
+
+
+@autoDescribeRoute(
+    Description('Get the annotations from the items in a folder')
+    .param('id', 'The ID of the folder', required=True, paramType='path')
+    .param('checkSubfolders', 'Whether or not to retrieve all '
+           'annotations from subfolders', required=False, default=False,
+           dataType='boolean')
+    .pagingParams(defaultSort='created', defaultSortDir=-1)
+    .errorResponse()
+)
+@access.public
+@boundHandler()
+def returnFolderAnnotations(self, id, checkSubfolders, limit, offset, sort):
+    annotations = getFolderAnnotations(id, checkSubfolders, limit, offset, sort[0][0], sort[0][1])
+    for annot in annotations:
+        yield annot
 
 
 class HUIResourceResource(ResourceResource):
