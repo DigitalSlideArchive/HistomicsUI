@@ -33,6 +33,11 @@ var ConfigView = View.extend({
                     case 'histomicsui.delete_annotations_after_ingest':
                         result.value = this.$('.g-hui-delete-annotations-after-ingest').prop('checked');
                         break;
+                    case 'histomicsui.help_url':
+                    case 'histomicsui.help_tooltip':
+                    case 'histomicsui.help_text':
+                        result.value = result.value === null || !result.value.trim() ? '' : result.value;
+                        break;
                 }
                 return result;
             });
@@ -44,8 +49,27 @@ var ConfigView = View.extend({
         'click #g-hui-banner-default-color': function () {
             this.$('#g-hui-banner-color').val(this.defaults['histomicsui.banner_color']);
         },
+        'click #g-hui-help-default-url': function () {
+            this.$('#g-hui-help-url').val(this.defaults['histomicsui.help_url']);
+            this.$('#g-hui-help-url').trigger('change');
+        },
+        'click #g-hui-help-default-text': function () {
+            this.$('#g-hui-help-text').val(this.defaults['histomicsui.help_text']);
+        },
+        'click #g-hui-help-default-tooltip': function () {
+            this.$('#g-hui-help-tooltip').val(this.defaults['histomicsui.help_tooltip']);
+        },
         'click #g-hui-cancel': function (event) {
             router.navigate('plugins', { trigger: true });
+        },
+        'change #g-hui-help-url': function (event) {
+            if (this.$('#g-hui-help-url').val().trim() === '') {
+                this.$('#g-hui-help-text-container').children().attr('disabled', 'disabled');
+                this.$('#g-hui-help-tooltip-container').children().attr('disabled', 'disabled');
+            } else {
+                this.$('#g-hui-help-text-container').children().removeAttr('disabled');
+                this.$('#g-hui-help-tooltip-container').children().removeAttr('disabled');
+            }
         },
         'click .g-open-browser': '_openBrowser'
     },
@@ -63,7 +87,10 @@ var ConfigView = View.extend({
             'histomicsui.default_draw_styles',
             'histomicsui.panel_layout',
             'histomicsui.quarantine_folder',
-            'histomicsui.delete_annotations_after_ingest'
+            'histomicsui.delete_annotations_after_ingest',
+            'histomicsui.help_url',
+            'histomicsui.help_tooltip',
+            'histomicsui.help_text'
         ];
         $.when(
             restRequest({
@@ -125,6 +152,7 @@ var ConfigView = View.extend({
             settings: this.settings,
             defaults: this.defaults
         }));
+        this.$('#g-hui-help-url').trigger('change');
         this.breadcrumb.setElement(this.$('.g-config-breadcrumb-container')).render();
         return this;
     },

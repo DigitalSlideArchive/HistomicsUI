@@ -23,7 +23,10 @@ var HeaderView = View.extend({
         this.$el.html(headerTemplate({
             brandName: this.settings.brandName,
             brandColor: this.settings.brandColor,
-            bannerColor: this.settings.bannerColor
+            bannerColor: this.settings.bannerColor,
+            helpURL: this.settings.helpURL && this.settings.helpURL.trim() === '' ? false : this.settings.helpURL,
+            helpTooltip: this.settings.helpTooltip,
+            helpText: this.settings.helpText
         }));
 
         this.$('a[title]').tooltip({
