@@ -291,6 +291,7 @@ def getFolderAnnotations(id, checkSubfolders, limit=False):
                 }},
                 {'$unwind': '$__annotations'},
                 {'$replaceRoot': {'newRoot': '$__annotations'}},
+                {'$match': {'_active': {'$ne': False}}}
             ]
         }},
     ]
