@@ -772,8 +772,8 @@ var DrawWidget = Panel.extend({
 
     countPixelmap(pixelmap, operation) {
         let toChange = {};
-        for (let ix = 0; ix < pixelmap.attributes.values.length / 2; ix++) {
-            let groupName = (pixelmap.attributes.categories[pixelmap.attributes.values[ix]]).label || 'default';
+        for (let ix = 0; ix < (pixelmap.get('boundaries') ? pixelmap.get('values').length / 2 : pixelmap.get('values').length); ix++) {
+            let groupName = (pixelmap.get('categories')[pixelmap.get('values')[ix]]).label || 'default';
             if (toChange[groupName]) {
                 toChange[groupName]++;
             } else {
