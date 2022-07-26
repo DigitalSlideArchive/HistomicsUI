@@ -258,7 +258,7 @@ def deleteOldJobs(self, age, status):
     return count
 
 
-def getFolderAnnotations(id, checkSubfolders, limit=False, offset=False, sort=False, sortDir=False):
+def getFolderAnnotations(id, checkSubfolders, user, limit=False, offset=False, sort=False, sortDir=False):
     recursivePipeline = [
         {'$graphLookup': {
             'from': 'folder',
@@ -269,6 +269,14 @@ def getFolderAnnotations(id, checkSubfolders, limit=False, offset=False, sort=Fa
         }},
         {'$unwind': {'path': '$__children'}},
         {'$replaceRoot': {'newRoot': '$__children'}}] if checkSubfolders else []
+    accessPipeline = [
+        {'$match': {
+            '$or': [
+                {'access.users': {'$in': user['access']['users']}},
+                {'access.groups.id': {'$in': user['groups']}}
+            ]
+        }}
+    ] if not user['admin'] else []
     pipeline = [
         {'$match': {'_id': 'none'}},
         {'$unionWith': {
@@ -294,7 +302,7 @@ def getFolderAnnotations(id, checkSubfolders, limit=False, offset=False, sort=Fa
                 {'$unwind': '$__annotations'},
                 {'$replaceRoot': {'newRoot': '$__annotations'}},
                 {'$match': {'_active': {'$ne': False}}}
-            ]
+            ] + accessPipeline
         }},
     ]
     pipeline = pipeline + [{'$sort': {sort: sortDir}}] if sort else pipeline
@@ -315,7 +323,7 @@ def getFolderAnnotations(id, checkSubfolders, limit=False, offset=False, sort=Fa
 @access.public
 @boundHandler()
 def existFolderAnnotations(self, id, checkSubfolders):
-    annotations = getFolderAnnotations(id, checkSubfolders, 1)
+    annotations = getFolderAnnotations(id, checkSubfolders, self.getCurrentUser(), 1)
     try:
         next(annotations)
         yield True
@@ -335,7 +343,7 @@ def existFolderAnnotations(self, id, checkSubfolders):
 @access.public
 @boundHandler()
 def returnFolderAnnotations(self, id, checkSubfolders, limit, offset, sort):
-    annotations = getFolderAnnotations(id, checkSubfolders, limit, offset, sort[0][0], sort[0][1])
+    annotations = getFolderAnnotations(id, checkSubfolders, self.getCurrentUser(), limit, offset, sort[0][0], sort[0][1])
     for annot in annotations:
         yield annot
 
