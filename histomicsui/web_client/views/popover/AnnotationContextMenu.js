@@ -37,9 +37,12 @@ const AnnotationContextMenu = View.extend({
         evt.preventDefault();
         evt.stopPropagation();
         this.collection.each((element) => {
-            if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id &&
-                ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
-                this.parentView.drawWidget.updateCount(element.attributes.group || 'default', -1);
+            if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id) {
+                if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
+                    this.parentView.drawWidget.updateCount(element.attributes.group || 'default', -1);
+                } else if (element.attributes.type === 'pixelmap') {
+                    this.parentView.drawWidget.countPixelmap(element, -1);
+                }
             }
         });
         this.collection.trigger('h:remove');
