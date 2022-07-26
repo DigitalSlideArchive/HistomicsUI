@@ -22,7 +22,7 @@ wrap(ItemListWidget, 'render', function (render) {
         root.$el.find('.g-item-list-entry').each(function () {
             var parent = $(this);
             parent.find('.g-hui-quarantine').remove();
-            parent.append($('<a class="g-hui-quarantine"><span>Q</span></a>').attr({
+            parent.find('a[class^=g-]:last').after($('<a class="g-hui-quarantine"><span>Q</span></a>').attr({
                 'g-item-cid': $('[g-item-cid]', parent).attr('g-item-cid'),
                 title: 'Move this item to the quarantine folder'
             }));
@@ -64,11 +64,9 @@ wrap(ItemListWidget, 'render', function (render) {
         const brandName = (settings['histomicsui.brand_name'] || '');
         const webrootPath = (settings['histomicsui.webroot_path'] || '');
         for (let ix = 0; ix < this.collection.length; ix++) {
-            if (!this.$el.find('.g-item-list li:eq(' + ix + ') .g-hui-open-link').length && this.collection.models[ix].attributes.largeImage) {
-                this.$el.find('.g-item-list li:eq(' + ix + ')>.g-item-size').before(
-                    `<a class="g-hui-open-link" title="Open in ${brandName}" href="${webrootPath}#?image=${this.collection.models[ix].id}" target="_blank">
-                            <i class="icon-link-ext"></i>
-                    </a>`
+            if (!this.$el.find('.g-item-list li.g-item-list-entry:eq(' + ix + ') .g-hui-open-link').length && this.collection.models[ix].attributes.largeImage) {
+                this.$el.find('.g-item-list li.g-item-list-entry:eq(' + ix + ') a[class^=g-]:last').after(
+                    `<a class="g-hui-open-link" title="Open in ${brandName}" href="${webrootPath}#?image=${this.collection.models[ix].id}" target="_blank"><i class="icon-link-ext"></i></a>`
                 );
             }
         }
