@@ -49,6 +49,7 @@ var DrawWidget = Panel.extend({
         this.image = settings.image;
         this.annotation = settings.annotation;
         this.collection = this.annotation.elements();
+        this.newElementDisplayIdStart = this.collection.length;
         this.viewer = settings.viewer;
         this.setViewer(settings.viewer);
         this.setAnnotationSelector(settings.annotationSelector);
@@ -114,7 +115,8 @@ var DrawWidget = Panel.extend({
                 opts: this._editOptions,
                 drawingType: this._drawingType,
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
-                firstRender: true
+                firstRender: true,
+                displayIdStart: 0
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
@@ -322,9 +324,11 @@ var DrawWidget = Panel.extend({
                 style: this._style.id,
                 highlighted: this._highlighted,
                 firstRender: false,
-                updateCount: this.updateCount
+                updateCount: this.updateCount,
+                displayIdStart: this.newElementDisplayIdStart
             })
         );
+        this.newElementDisplayIdStart += elements.length;
         if (this.$('.h-group-count-option.pixelmap').length > 0) {
             this.$('.h-group-count-option.pixelmap').remove();
             for (let element of this.collection.models) {
