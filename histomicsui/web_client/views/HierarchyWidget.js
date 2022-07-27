@@ -18,18 +18,37 @@ wrap(HierarchyWidget, 'initialize', function (initialize, settings) {
         url: 'annotation/folder/' + settings.parentModel.id + '/present',
         data: {
             id: settings.parentModel.id,
-            checkSubfolders: true
+            recurse: true
         }
     }).done((resp) => {
         if (resp[0]) {
             this.users = new UserCollection();
+            
+            this.recurseCollection = new AnnotationCollection([], {comparator: null});
+            this.recurseCollection.altUrl = 'annotation/folder/' + settings.parentModel.id;
+            this.recurseCollection.fetch({
+                id: settings.parentModel.id,
+                sort: 'created',
+                sortDir: -1,
+                recurse: true
+            }).done(() => {
+                this.recurseCollection.each((model) => {
+                    this.users.add({'_id': model.get('creatorId')});
+                });
+                $.when.apply($, this.users.map((model) => {
+                    return model.fetch();
+                })).always(() => {
+                    this.render();
+                })
+            });
+
             this.collection = new AnnotationCollection([], {comparator: null});
             this.collection.altUrl = 'annotation/folder/' + settings.parentModel.id;
             this.collection.fetch({
                 id: settings.parentModel.id,
                 sort: 'created',
                 sortDir: -1,
-                checkSubfolders: true
+                recurse: false
             }).done(() => {
                 this.collection.each((model) => {
                     this.users.add({'_id': model.get('creatorId')});
@@ -50,20 +69,29 @@ wrap(HierarchyWidget, 'render', function (render) {
     render.call(this);
 
     function editAnnotAccess(evt) {
-        const model = this.collection.at(0).clone();
+        const model = this.recurseCollection.at(0).clone();
         model.get('annotation').name = 'All Annotations';
         model.save = () => {};
-        model.updateAccess = () => {
+        model.updateAccess = (settings) => {
             const access = {
                 access: model.get('access'),
                 public: model.get('public'),
                 publicFlags: model.get('publicFlags')
             };
-            this.collection.each((loopModel) => {
-                loopModel.set(access);
-                loopModel.updateAccess();
-            });
+            if (settings.recurse) {
+                this.recurseCollection.each((loopModel) => {
+                    loopModel.set(access);
+                    loopModel.updateAccess();
+                });
+            } else {
+                this.collection.each((loopModel) => {
+                    loopModel.set(access);
+                    loopModel.updateAccess();
+                });
+            }
+
             this.collection.fetch(null, true);
+            this.recurseCollection.fetch(null, true);
             model.trigger('g:accessListSaved');
         };
         model.fetchAccess(true)
@@ -72,15 +100,16 @@ wrap(HierarchyWidget, 'render', function (render) {
                     el: $('#g-dialog-container'),
                     modelType: 'annotation',
                     model,
-                    hideRecurseOption: true,
+                    hideRecurseOption: false,
                     parentView: this
                 }).on('g:accessListSaved', () => {
                     this.collection.fetch(null, true);
+                    this.recurseCollection.fetch(null, true);
                 });
             });
     }
 
-    if (this.parentModel.get('_modelType') === 'folder' && this.collection) {
+    if (this.parentModel.get('_modelType') === 'folder' && this.recurseCollection) {
         this.$('.g-folder-actions-menu > .divider').before(
             '<li role="presentation">' +
                 '<a class="g-edit-annotation-access" role="menuitem">' +
