@@ -1,10 +1,11 @@
+import $ from 'jquery';
+
 import { wrap } from '@girder/core/utilities/PluginUtils';
 import { restRequest } from '@girder/core/rest';
 import AccessWidget from '@girder/core/views/widgets/AccessWidget';
 import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
 import ItemCollection from '@girder/core/collections/ItemCollection';
 import UserCollection from '@girder/core/collections/UserCollection';
-import { AccessType } from '@girder/core/constants';
 import AnnotationCollection from '@girder/large_image_annotation/collections/AnnotationCollection';
 
 wrap(HierarchyWidget, 'initialize', function (initialize, settings) {
@@ -35,9 +36,9 @@ wrap(HierarchyWidget, 'initialize', function (initialize, settings) {
                 });
                 $.when.apply($, this.users.map((model) => {
                     return model.fetch();
-                })).then(() => {
+                })).always(() => {
                     this.render();
-                });
+                })
             });
         }
     });
@@ -72,12 +73,11 @@ wrap(HierarchyWidget, 'render', function (render) {
                     modelType: 'annotation',
                     model,
                     hideRecurseOption: true,
-                    parentView: this,
+                    parentView: this
                 }).on('g:accessListSaved', () => {
                     this.collection.fetch(null, true);
                 });
-            }
-        );
+            });
     }
 
     if (this.parentModel.get('_modelType') === 'folder' && this.collection) {
@@ -88,6 +88,6 @@ wrap(HierarchyWidget, 'render', function (render) {
         this.events['click .g-folder-annotation-access-button'] = editAnnotAccess;
         this.delegateEvents();
     }
-})
+});
 
 ItemCollection.prototype.pageLimit = Math.max(250, ItemCollection.prototype.pageLimit);
