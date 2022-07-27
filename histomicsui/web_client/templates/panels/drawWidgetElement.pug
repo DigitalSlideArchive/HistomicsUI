@@ -1,4 +1,5 @@
 - var counts = {};
+- var shapeCounts = {};
 - var pixelmap = false;
 if elements.length
   each element in elements
@@ -15,7 +16,8 @@ if elements.length
       } else if (element.type === 'pixelmap') {
         pixelmap = true;
       }
-      var label = (element.label || {}).value || (element.type === 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type);
+      var type = element.type == 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type;
+      var label = (element.label || {}).value || type;
     .h-element(data-id=element.id, class=classes)
       span.icon-cog.h-edit-element(title='Change style')
       span.h-element-label(title=label) #{label}
