@@ -16,11 +16,10 @@
 
 import datetime
 
+from bson.objectid import ObjectId
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import RestException, boundHandler, filtermodel
-from girder.api.v1.item import Item as ItemEndpoint
-from girder_large_image_annotation.rest.annotation import AnnotationResource as AnnotationEndpoint
 from girder.api.v1.resource import Resource as ResourceResource
 from girder.constants import AccessType, TokenScope
 from girder.models.folder import Folder
@@ -28,8 +27,6 @@ from girder.models.item import Item
 from girder.utility.model_importer import ModelImporter
 from girder_jobs.models.job import Job
 from girder_large_image_annotation.models.annotation import Annotation
-
-from bson.objectid import ObjectId
 
 
 def addSystemEndpoints(apiRoot):
@@ -281,25 +278,22 @@ def getFolderAnnotations(id, recurse, user, limit=False, offset=False, sort=Fals
         {'$match': {'_id': 'none'}},
         {'$unionWith': {
             'coll': 'folder',
-            'pipeline': [{'$match': {'_id': ObjectId(id)}}] + 
-                recursivePipeline +
-                [{'$unionWith': {
-                    'coll': 'folder',
-                    'pipeline': [{'$match': {'_id': ObjectId(id)}}]
-                }},
-                {'$lookup': {
-                    'from': 'item',
-                    'localField': '_id',
-                    'foreignField': 'folderId',
-                    'as': '__items'
-                }},
-                {'$lookup': {
-                    'from': 'annotation',
-                    'localField': '__items._id',
-                    'foreignField': 'itemId',
-                    'as': '__annotations'
-                }},
-                {'$unwind': '$__annotations'},
+            'pipeline': [{'$match': {'_id': ObjectId(id)}}] +
+            recursivePipeline +
+            [{'$unionWith': {
+                'coll': 'folder',
+                'pipeline': [{'$match': {'_id': ObjectId(id)}}]
+            }}, {'$lookup': {
+                'from': 'item',
+                'localField': '_id',
+                'foreignField': 'folderId',
+                'as': '__items'
+            }}, {'$lookup': {
+                'from': 'annotation',
+                'localField': '__items._id',
+                'foreignField': 'itemId',
+                'as': '__annotations'
+            }}, {'$unwind': '$__annotations'},
                 {'$replaceRoot': {'newRoot': '$__annotations'}},
                 {'$match': {'_active': {'$ne': False}}}
             ] + accessPipeline
@@ -316,8 +310,7 @@ def getFolderAnnotations(id, recurse, user, limit=False, offset=False, sort=Fals
     Description('Check if there are any annotations from the items in a folder')
     .param('id', 'The ID of the folder', required=True, paramType='path')
     .param('recurse', 'Whether or not to recursively check '
-           'subfolders for annotations', required=False, default=True,
-        dataType='boolean')
+           'subfolders for annotations', required=False, default=True, dataType='boolean')
     .errorResponse()
 )
 @access.public
@@ -335,15 +328,15 @@ def existFolderAnnotations(self, id, recurse):
     Description('Get the annotations from the items in a folder')
     .param('id', 'The ID of the folder', required=True, paramType='path')
     .param('recurse', 'Whether or not to retrieve all '
-           'annotations from subfolders', required=False, default=False,
-           dataType='boolean')
+           'annotations from subfolders', required=False, default=False, dataType='boolean')
     .pagingParams(defaultSort='created', defaultSortDir=-1)
     .errorResponse()
 )
 @access.public
 @boundHandler()
 def returnFolderAnnotations(self, id, recurse, limit, offset, sort):
-    annotations = getFolderAnnotations(id, recurse, self.getCurrentUser(), limit, offset, sort[0][0], sort[0][1])
+    annotations = getFolderAnnotations(id, recurse, self.getCurrentUser(), limit, offset,
+                                       sort[0][0], sort[0][1])
     for annot in annotations:
         yield annot
 

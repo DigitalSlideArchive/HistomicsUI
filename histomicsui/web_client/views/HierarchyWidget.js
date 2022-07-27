@@ -23,7 +23,7 @@ wrap(HierarchyWidget, 'initialize', function (initialize, settings) {
     }).done((resp) => {
         if (resp[0]) {
             this.users = new UserCollection();
-            
+
             this.recurseCollection = new AnnotationCollection([], {comparator: null});
             this.recurseCollection.altUrl = 'annotation/folder/' + settings.parentModel.id;
             this.recurseCollection.fetch({
@@ -39,7 +39,7 @@ wrap(HierarchyWidget, 'initialize', function (initialize, settings) {
                     return model.fetch();
                 })).always(() => {
                     this.render();
-                })
+                });
             });
 
             this.collection = new AnnotationCollection([], {comparator: null});
@@ -57,7 +57,7 @@ wrap(HierarchyWidget, 'initialize', function (initialize, settings) {
                     return model.fetch();
                 })).always(() => {
                     this.render();
-                })
+                });
             });
         }
     });
@@ -117,7 +117,7 @@ wrap(HierarchyWidget, 'render', function (render) {
                     'Annotation access control' +
                 '</a>' +
             '</li>'
-        )
+        );
         this.events['click .g-edit-annotation-access'] = editAnnotAccess;
         this.delegateEvents();
     }
