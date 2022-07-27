@@ -81,11 +81,15 @@ wrap(HierarchyWidget, 'render', function (render) {
     }
 
     if (this.parentModel.get('_modelType') === 'folder' && this.collection) {
-        this.$('.g-folder-header-buttons > .btn-group').before('<button class="g-folder-annotation-access-button ' +
-            'btn btn-sm btn-warning" title ="Annotation access control"> <i class="icon-pencil"></i>' +
-            '<i class="icon-lock"></i></button>'
-        );
-        this.events['click .g-folder-annotation-access-button'] = editAnnotAccess;
+        this.$('.g-folder-actions-menu > .divider').before(
+            '<li role="presentation">' +
+                '<a class="g-edit-annotation-access" role="menuitem">' +
+                    '<i class="icon-lock"></i>' +
+                    'Annotation access control' +
+                '</a>' +
+            '</li>'
+        )
+        this.events['click .g-edit-annotation-access'] = editAnnotAccess;
         this.delegateEvents();
     }
 });
