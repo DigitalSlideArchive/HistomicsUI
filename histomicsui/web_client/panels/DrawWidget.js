@@ -212,8 +212,17 @@ var DrawWidget = Panel.extend({
                     label = (obj.data.label || {}).value,
                     elemType = obj.element.get('type'),
                     group = obj.data.group;
-                label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
-                this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
+                let newLabel = '';
+                const labelElement = this.$(`.h-element[data-id="${id}"] .h-element-label`);
+                const oldLabel = labelElement.text().split(' ');
+                if (label) {
+                    newLabel = label;
+                } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
+                    newLabel = `${group || 'default'} ${elemType} ${parseInt(oldLabel[oldLabel.length -1] || '')}`;
+                } else {
+                    newLabel = oldLabel;
+                }
+                this.$(`.h-element[data-id="${id}"] .h-element-label`).text(newLabel).attr('title', label);
                 if (origGroup !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
                     this.updateCount(origGroup || 'default', -1);
                     this.updateCount(group || 'default', 1);
