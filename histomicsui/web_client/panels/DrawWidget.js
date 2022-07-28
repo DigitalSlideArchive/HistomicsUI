@@ -218,7 +218,7 @@ var DrawWidget = Panel.extend({
                 if (label) {
                     newLabel = label;
                 } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
-                    newLabel = `${group || 'default'} ${elemType} ${parseInt(oldLabel[oldLabel.length -1] || '')}`;
+                    newLabel = `${group || 'default'} ${elemType} ${parseInt(oldLabel[oldLabel.length - 1] || '')}`;
                 } else {
                     newLabel = oldLabel;
                 }
