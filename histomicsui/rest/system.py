@@ -269,8 +269,16 @@ def getFolderAnnotations(id, recurse, user, limit=False, offset=False, sort=Fals
     accessPipeline = [
         {'$match': {
             '$or': [
-                {'access.users': {'$in': user['access']['users']}},
-                {'access.groups.id': {'$in': user['groups']}}
+                {'access.users':
+                    {'$elemMatch': {
+                        'id': user['_id'],
+                        'level': {'$gte': 2}
+                    }}},
+                {'access.groups':
+                    {'$elemMatch': {
+                        'id': {'$in': user['groups']},
+                        'level': {'$gte': 2}
+                    }}}
             ]
         }}
     ] if not user['admin'] else []

@@ -70,7 +70,7 @@ wrap(HierarchyWidget, 'render', function (render) {
 
     function editAnnotAccess(evt) {
         const model = this.recurseCollection.at(0).clone();
-        model.get('annotation').name = 'All Annotations';
+        model.get('annotation').name = 'Your Annotations';
         model.save = () => {};
         model.updateAccess = (settings) => {
             const access = {
@@ -110,14 +110,26 @@ wrap(HierarchyWidget, 'render', function (render) {
     }
 
     if (this.parentModel.get('_modelType') === 'folder' && this.recurseCollection) {
-        this.$('.g-folder-actions-menu > .divider').before(
-            '<li role="presentation">' +
-                '<a class="g-edit-annotation-access" role="menuitem">' +
-                    '<i class="icon-lock"></i>' +
-                    'Annotation access control' +
-                '</a>' +
-            '</li>'
-        );
+        if (this.$('.g-folder-action-menu > .divider').length > 0) {
+            this.$('.g-folder-actions-menu > .divider').before(
+                '<li role="presentation">' +
+                    '<a class="g-edit-annotation-access" role="menuitem">' +
+                        '<i class="icon-lock"></i>' +
+                        'Annotation access control' +
+                    '</a>' +
+                '</li>'
+            );
+        } else {
+            this.$('.g-folder-actions-menu > .dropdown-header').after(
+                '<li role="presentation">' +
+                    '<a class="g-edit-annotation-access" role="menuitem">' +
+                        '<i class="icon-lock"></i>' +
+                        'Annotation access control' +
+                    '</a>' +
+                '</li>' +
+                '<li class="divider" role="presentation">'
+            );
+        }
         this.events['click .g-edit-annotation-access'] = editAnnotAccess;
         this.delegateEvents();
     }
