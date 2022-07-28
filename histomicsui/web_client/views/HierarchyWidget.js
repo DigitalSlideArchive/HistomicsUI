@@ -110,7 +110,7 @@ wrap(HierarchyWidget, 'render', function (render) {
     }
 
     if (this.parentModel.get('_modelType') === 'folder' && this.recurseCollection) {
-        if (this.$('.g-folder-action-menu > .divider').length > 0) {
+        if (this.$('.g-folder-actions-menu > .divider').length > 0) {
             this.$('.g-folder-actions-menu > .divider').before(
                 '<li role="presentation">' +
                     '<a class="g-edit-annotation-access" role="menuitem">' +
