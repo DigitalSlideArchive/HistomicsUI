@@ -13,126 +13,141 @@ wrap(HierarchyWidget, 'initialize', function (initialize, settings) {
     if (settings.paginated === undefined) {
         settings.paginated = true;
     }
-    restRequest({
-        type: 'GET',
-        url: 'annotation/folder/' + settings.parentModel.id + '/present',
-        data: {
-            id: settings.parentModel.id,
-            recurse: true
-        }
-    }).done((resp) => {
-        if (resp[0]) {
-            this.users = new UserCollection();
 
-            this.recurseCollection = new AnnotationCollection([], {comparator: null});
-            this.recurseCollection.altUrl = 'annotation/folder/' + settings.parentModel.id;
-            this.recurseCollection.fetch({
-                id: settings.parentModel.id,
-                sort: 'created',
-                sortDir: -1,
-                recurse: true
-            }).done(() => {
-                this.recurseCollection.each((model) => {
-                    this.users.add({'_id': model.get('creatorId')});
-                });
-                $.when.apply($, this.users.map((model) => {
-                    return model.fetch();
-                })).always(() => {
-                    this.render();
-                });
-            });
+    initialize.call(this, settings);
 
-            this.collection = new AnnotationCollection([], {comparator: null});
-            this.collection.altUrl = 'annotation/folder/' + settings.parentModel.id;
-            this.collection.fetch({
-                id: settings.parentModel.id,
-                sort: 'created',
-                sortDir: -1,
-                recurse: false
-            }).done(() => {
-                this.collection.each((model) => {
-                    this.users.add({'_id': model.get('creatorId')});
-                });
-                $.when.apply($, this.users.map((model) => {
-                    return model.fetch();
-                })).always(() => {
-                    this.render();
-                });
-            });
-        }
+    if (this.parentModel.get('_modelType') === 'folder') {
+        fetchCollections(this, this.parentModel.id);
+    }
+    this.folderListView.on('g:folderClicked', () => {
+        fetchCollections(this, this.parentModel.id);
+        addAccessControl(this);
     });
-
-    return initialize.call(this, settings);
 });
 
 wrap(HierarchyWidget, 'render', function (render) {
     render.call(this);
 
-    function editAnnotAccess(evt) {
-        const model = this.recurseCollection.at(0).clone();
-        model.get('annotation').name = 'Your Annotations';
-        model.save = () => {};
-        model.updateAccess = (settings) => {
-            const access = {
-                access: model.get('access'),
-                public: model.get('public'),
-                publicFlags: model.get('publicFlags')
-            };
-            if (settings.recurse) {
-                this.recurseCollection.each((loopModel) => {
-                    loopModel.set(access);
-                    loopModel.updateAccess();
-                });
-            } else {
-                this.collection.each((loopModel) => {
-                    loopModel.set(access);
-                    loopModel.updateAccess();
-                });
-            }
-
-            this.collection.fetch(null, true);
-            this.recurseCollection.fetch(null, true);
-            model.trigger('g:accessListSaved');
-        };
-        model.fetchAccess(true)
-            .done(() => {
-                new AccessWidget({
-                    el: $('#g-dialog-container'),
-                    modelType: 'annotation',
-                    model,
-                    hideRecurseOption: false,
-                    parentView: this
-                }).on('g:accessListSaved', () => {
-                    this.collection.fetch(null, true);
-                    this.recurseCollection.fetch(null, true);
-                });
-            });
-    }
-
     if (this.parentModel.get('_modelType') === 'folder' && this.recurseCollection) {
-        if (this.$('.g-folder-actions-menu > .divider').length > 0) {
-            this.$('.g-folder-actions-menu > .divider').before(
-                '<li role="presentation">' +
-                    '<a class="g-edit-annotation-access" role="menuitem">' +
-                        '<i class="icon-lock"></i>' +
-                        'Annotation access control' +
-                    '</a>' +
-                '</li>'
-            );
-        } else {
-            this.$('.g-folder-actions-menu > .dropdown-header').after(
-                '<li role="presentation">' +
-                    '<a class="g-edit-annotation-access" role="menuitem">' +
-                        '<i class="icon-lock"></i>' +
-                        'Annotation access control' +
-                    '</a>' +
-                '</li>' +
-                '<li class="divider" role="presentation">'
-            );
-        }
-        this.events['click .g-edit-annotation-access'] = editAnnotAccess;
-        this.delegateEvents();
+        addAccessControl(this);
     }
 });
+
+function fetchCollections(root, folderId) {
+    restRequest({
+        type: 'GET',
+        url: 'annotation/folder/' + folderId + '/present',
+        data: {
+            id: folderId,
+            recurse: true
+        }
+    }).done((resp) => {
+        if (resp[0]) {
+            root.users = new UserCollection();
+
+            root.recurseCollection = new AnnotationCollection([], {comparator: null});
+            root.recurseCollection.altUrl = 'annotation/folder/' + folderId;
+            root.recurseCollection.fetch({
+                id: folderId,
+                sort: 'created',
+                sortDir: -1,
+                recurse: true
+            }).done(() => {
+                root.recurseCollection.each((model) => {
+                    root.users.add({'_id': model.get('creatorId')});
+                });
+                $.when.apply($, root.users.map((model) => {
+                    return model.fetch();
+                })).always(() => {
+                    root.render();
+                });
+            });
+
+            root.collection = new AnnotationCollection([], {comparator: null});
+            root.collection.altUrl = 'annotation/folder/' + folderId;
+            root.collection.fetch({
+                id: folderId,
+                sort: 'created',
+                sortDir: -1,
+                recurse: false
+            }).done(() => {
+                root.collection.each((model) => {
+                    root.users.add({'_id': model.get('creatorId')});
+                });
+                $.when.apply($, root.users.map((model) => {
+                    return model.fetch();
+                })).always(() => {
+                    root.render();
+                });
+            });
+        }
+    });
+}
+
+function addAccessControl(root) {
+    if (root.$('.g-folder-actions-menu > .divider').length > 0) {
+        root.$('.g-folder-actions-menu > .divider').before(
+            '<li role="presentation">' +
+                '<a class="g-edit-annotation-access" role="menuitem">' +
+                    '<i class="icon-lock"></i>' +
+                    'Annotation access control' +
+                '</a>' +
+            '</li>'
+        );
+    } else {
+        root.$('.g-folder-actions-menu > .dropdown-header').after(
+            '<li role="presentation">' +
+                '<a class="g-edit-annotation-access" role="menuitem">' +
+                    '<i class="icon-lock"></i>' +
+                    'Annotation access control' +
+                '</a>' +
+            '</li>' +
+            '<li class="divider" role="presentation">'
+        );
+    }
+    root.events['click .g-edit-annotation-access'] = editAnnotAccess;
+    root.delegateEvents();
+}
+
+function editAnnotAccess() {
+    const model = this.recurseCollection.at(0).clone();
+    model.get('annotation').name = 'Your Annotations';
+    model.save = () => {};
+    model.updateAccess = (settings) => {
+        const access = {
+            access: model.get('access'),
+            public: model.get('public'),
+            publicFlags: model.get('publicFlags')
+        };
+        if (settings.recurse) {
+            this.recurseCollection.each((loopModel) => {
+                loopModel.set(access);
+                loopModel.updateAccess();
+            });
+        } else {
+            this.collection.each((loopModel) => {
+                loopModel.set(access);
+                loopModel.updateAccess();
+            });
+        }
+
+        this.collection.fetch(null, true);
+        this.recurseCollection.fetch(null, true);
+        model.trigger('g:accessListSaved');
+    };
+    model.fetchAccess(true)
+        .done(() => {
+            new AccessWidget({
+                el: $('#g-dialog-container'),
+                modelType: 'annotation',
+                model,
+                hideRecurseOption: false,
+                parentView: this
+            }).on('g:accessListSaved', () => {
+                this.collection.fetch(null, true);
+                this.recurseCollection.fetch(null, true);
+            });
+        });
+}
 
 ItemCollection.prototype.pageLimit = Math.max(250, ItemCollection.prototype.pageLimit);
