@@ -343,10 +343,8 @@ def existFolderAnnotations(self, id, recurse):
 @access.public
 @boundHandler()
 def returnFolderAnnotations(self, id, recurse, limit, offset, sort):
-    annotations = getFolderAnnotations(id, recurse, self.getCurrentUser(), limit, offset,
-                                       sort[0][0], sort[0][1])
-    for annot in annotations:
-        yield annot
+    return getFolderAnnotations(id, recurse, self.getCurrentUser(), limit, offset,
+                                sort[0][0], sort[0][1])
 
 
 class HUIResourceResource(ResourceResource):
