@@ -221,6 +221,10 @@ var ImageView = View.extend({
                 // store a reference to the underlying viewer
                 this.viewer = this.viewerWidget.viewer;
                 this.viewer.interactor().removeAction(geo.geo_action.zoomselect);
+                
+                let currentOptions = this.viewer.interactor().options();
+                currentOptions.click.cancelOnMove = 10;  // a click can move up to 10 pixels before it is considered a move
+                this.viewer.interactor().options(currentOptions)
 
                 this.imageWidth = this.viewer.maxBounds().right;
                 this.imageHeight = this.viewer.maxBounds().bottom;
