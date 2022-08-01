@@ -85,28 +85,30 @@ function fetchCollections(root, folderId) {
 }
 
 function addAccessControl(root) {
-    if (root.$('.g-folder-actions-menu > .divider').length > 0) {
-        root.$('.g-folder-actions-menu > .divider').before(
-            '<li role="presentation">' +
-                '<a class="g-edit-annotation-access" role="menuitem">' +
-                    '<i class="icon-lock"></i>' +
-                    'Annotation access control' +
-                '</a>' +
-            '</li>'
-        );
-    } else {
-        root.$('.g-folder-actions-menu > .dropdown-header').after(
-            '<li role="presentation">' +
-                '<a class="g-edit-annotation-access" role="menuitem">' +
-                    '<i class="icon-lock"></i>' +
-                    'Annotation access control' +
-                '</a>' +
-            '</li>' +
-            '<li class="divider" role="presentation">'
-        );
+    if (root.$('.g-edit-annotation-access').length === 0) {
+        if (root.$('.g-folder-actions-menu > .divider').length > 0) {
+            root.$('.g-folder-actions-menu > .divider').before(
+                '<li role="presentation">' +
+                    '<a class="g-edit-annotation-access" role="menuitem">' +
+                        '<i class="icon-lock"></i>' +
+                        'Annotation access control' +
+                    '</a>' +
+                '</li>'
+            );
+        } else {
+            root.$('.g-folder-actions-menu > .dropdown-header').after(
+                '<li role="presentation">' +
+                    '<a class="g-edit-annotation-access" role="menuitem">' +
+                        '<i class="icon-lock"></i>' +
+                        'Annotation access control' +
+                    '</a>' +
+                '</li>' +
+                '<li class="divider" role="presentation">'
+            );
+        }
+        root.events['click .g-edit-annotation-access'] = editAnnotAccess;
+        root.delegateEvents();
     }
-    root.events['click .g-edit-annotation-access'] = editAnnotAccess;
-    root.delegateEvents();
 }
 
 function editAnnotAccess() {
