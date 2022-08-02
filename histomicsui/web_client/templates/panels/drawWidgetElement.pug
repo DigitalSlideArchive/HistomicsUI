@@ -1,6 +1,7 @@
 - var counts = {};
 - var displayIdOffset = 0;
 - var pixelmap = false;
+- var typeCounts = {};
 if elements.length
   each element in elements
     -
@@ -9,15 +10,23 @@ if elements.length
       var groupName = element['group'] ? element['group'] : 'default';
       var type = element.type == 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type;
       var displayId = ++displayIdOffset + displayIdStart;
-      var label = ((element.label || {}).value || type) + ' ' + displayId;
+      var label = ((element.label || {}).value || type);
       if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
         if (counts[groupName]) {
           counts[groupName]++;
         } else {
           counts[groupName] = 1;
         }
-        label = groupName + ' ' + label;
-      } else if (element.type === 'pixelmap') {
+        label = groupName + ' ' + label + ' ' + displayId;
+      } else {
+        if (typeCounts[type] > 0) {
+          label = label + ' ' + displayId;
+          typeCounts[type]++;
+        } else {
+          typeCounts[type] = 1;
+        }
+      }
+      if (element.type === 'pixelmap') {
         pixelmap = true;
       }
     .h-element(data-id=element.id, class=classes)
