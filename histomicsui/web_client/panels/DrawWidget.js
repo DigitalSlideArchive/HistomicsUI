@@ -49,6 +49,7 @@ var DrawWidget = Panel.extend({
         this.image = settings.image;
         this.annotation = settings.annotation;
         this.collection = this.annotation.elements();
+        this.newElementDisplayIdStart = this.collection.length;
         this.viewer = settings.viewer;
         this.setViewer(settings.viewer);
         this.setAnnotationSelector(settings.annotationSelector);
@@ -114,7 +115,8 @@ var DrawWidget = Panel.extend({
                 opts: this._editOptions,
                 drawingType: this._drawingType,
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
-                firstRender: true
+                firstRender: true,
+                displayIdStart: 0
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
@@ -210,8 +212,17 @@ var DrawWidget = Panel.extend({
                     label = (obj.data.label || {}).value,
                     elemType = obj.element.get('type'),
                     group = obj.data.group;
-                label = label || (elemType === 'polyline' ? (obj.element.get('closed') ? 'polygon' : 'line') : elemType);
-                this.$(`.h-element[data-id="${id}"] .h-element-label`).text(label).attr('title', label);
+                let newLabel = '';
+                const labelElement = this.$(`.h-element[data-id="${id}"] .h-element-label`);
+                const oldLabel = labelElement.text().split(' ');
+                if (label) {
+                    newLabel = label;
+                } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
+                    newLabel = `${group || 'default'} ${elemType} ${parseInt(oldLabel[oldLabel.length - 1] || '')}`;
+                } else {
+                    newLabel = oldLabel;
+                }
+                this.$(`.h-element[data-id="${id}"] .h-element-label`).text(newLabel).attr('title', label);
                 if (origGroup !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
                     this.updateCount(origGroup || 'default', -1);
                     this.updateCount(group || 'default', 1);
@@ -322,9 +333,11 @@ var DrawWidget = Panel.extend({
                 style: this._style.id,
                 highlighted: this._highlighted,
                 firstRender: false,
-                updateCount: this.updateCount
+                updateCount: this.updateCount,
+                displayIdStart: this.newElementDisplayIdStart
             })
         );
+        this.newElementDisplayIdStart += elements.length;
         if (this.$('.h-group-count-option.pixelmap').length > 0) {
             this.$('.h-group-count-option.pixelmap').remove();
             for (let element of this.collection.models) {

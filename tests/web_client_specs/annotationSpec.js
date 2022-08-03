@@ -221,7 +221,7 @@ girderTest.promise.done(function () {
                     return $('.h-elements-container .h-element').length === 1;
                 }, 'point to be created');
                 runs(function () {
-                    expect($('.h-elements-container .h-element .h-element-label').text()).toBe('point');
+                    expect($('.h-elements-container .h-element .h-element-label').text()).toBe('default point 1');
                     expect($('.h-draw[data-type="point"]').hasClass('active')).toBe(true);
                     // turn off point drawing.
                     $('.h-draw[data-type="point"]').click();
@@ -275,7 +275,7 @@ girderTest.promise.done(function () {
                     return $('.h-elements-container .h-element').length === 2;
                 }, 'point to be created');
                 runs(function () {
-                    expect($('.h-elements-container .h-element:last .h-element-label').text()).toBe('point');
+                    expect($('.h-elements-container .h-element:last .h-element-label').text()).toBe('default point 2');
                 });
                 checkAutoSave('drawn 1', 2, annotationInfo);
             });
@@ -311,7 +311,7 @@ girderTest.promise.done(function () {
                     return $('.h-elements-container .h-element').length === 2;
                 }, 'point to be created');
                 runs(function () {
-                    expect($('.h-elements-container .h-element:last .h-element-label').text()).toBe('point');
+                    expect($('.h-elements-container .h-element:last .h-element-label').text()).toBe('default point 3');
                 });
                 checkAutoSave('drawn 1', 2, annotationInfo);
             });
