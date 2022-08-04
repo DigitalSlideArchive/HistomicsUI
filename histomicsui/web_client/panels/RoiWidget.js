@@ -37,7 +37,7 @@ var RoiWidget = Panel.extend({
         const map = this.parentViewer.viewer;
         const mapSize = map.size();
         const scaleX = Math.abs((2 * roi.radius) / mapSize.width);
-        const scaleY = Math.abs((2 * roi.radius) / mapSize.y);
+        const scaleY = Math.abs((2 * roi.radius) / mapSize.height);
         const zoom = map.zoom() - Math.log2(Math.max(scaleX, scaleY));
         map.zoom(zoom);
         map.center({ x: roi.x, y: roi.y });
