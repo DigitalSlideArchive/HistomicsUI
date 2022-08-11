@@ -1,18 +1,71 @@
 extends ./panel.pug
 
 block title
-  | #[span.icon-tags] ROIs
+  - var panelTitle = expanded ? "Regions of Interest" : "ROIs"
+  | #[span.icon-tags] #{panelTitle}
+
+block controls
+  span.s-no-panel-toggle.h-panel-maximize.roi-expand
+    i.icon-resize-full(title="Maximize")
 
 block content
-  .h-roi-content
-    .h-roi-img-block
-      a.h-roi-img-container.h-roi-img-left(data-value=0)
-      a.h-roi-img-container.h-roi-img-center(data-value=1)
-      a.h-roi-img-container.h-roi-img-right(data-value=2)
-    .h-roi-buttons
-      button.btn.btn-default.btn-sm.h-prev-rois(data-value="prev")
-        i.icon-left-open
-      button.btn.btn-default.btn-sm.h-next-rois(data-value="next")
-        i.icon-right-open
-    .h-roi-footer
-      span.roi-count
+  - var groups = [{ title: 'positive' }, { title: 'negative' }];
+  if expanded
+    .h-roi-content--expanded
+      .h-roi-header
+        h4.h-roi-header-title Epoch ##{epoch}
+        .h-roi-header-buttons
+          button.btn-default.btn-sm.h-roi-workflow-button.h-roi-previous
+            | Previous
+          button.btn-default.btn-sm.h-roi-workflow-button.h-roi-next
+            | Next
+          button.btn-default.btn-sm.h-roi-workflow-button.h-roi-submit-button
+            | Get new data
+          button.btn-primary.btn-sm.h-roi-workflow-button.h-roi-submit-button
+            | Submit
+      .h-roi-image-block--expanded
+        each index in indices
+          - var roi = rois[index];
+          - var radioString = "h-roi-class-agree-" + index;
+          - var roiLabel = categories.filter((cat) => cat.id === roi.machineLabel)[0].label
+          - var reviewed = (roi.agree === true || roi.agree === false);
+          .roi-image-control(data-id=index)
+            .roi-image-control-image.border
+              a.h-roi-img-container-expanded
+            .roi-image-control-options.border
+              label.h-roi-option.border
+                | Prediction: #{roiLabel}
+              label.h-roi-option.border
+                | Confidence: #{roi.confidence}
+              .h-roi-option.h-roi-agree-disagree.border
+                .h-roi-agree-disagree-label
+                  label Agree?
+                  button.btn-default.btn-sm.h-roi-reset-button.h-roi-option(type="button", title="Clear current selection", data-id=index, class=(reviewed ? '' : 'no-disp'))
+                    i.icon-cancel
+                .h-roi-agree-disagree-radion-buttons.border
+                  label.radio-inline(data-id=index, data-agree=true)
+                    input.h-roi-agree-radio.roi-class-agree-yes(type='radio', name=radioString, checked=(reviewed && roi.agree), data-id=index, data-agree="agree")
+                    | Yes
+                  label.radio-inline(data-id=index, data-agree=false)
+                    input.h-roi-agree-radio.roi-class-agree-no(type='radio', name=radioString, checked=(reviewed && !roi.agree), data-id=index, data-agree="disagree")
+                    | No
+              .form-group.h-roi-option.roi-new-category.border.no-disp(class=((reviewed && !roi.agree) ? '' : 'no-disp'))
+                label(title='Select a new category for this patch')
+                  | Actual Class
+                select.form-control.roi-class.h-roi-option
+                  each category in categories.filter((category) => category.id !== roi.machineLabel)
+                    option(value=category.label)
+                      = category.label
+  else
+    .h-roi-content
+      .h-roi-img-block
+        a.h-roi-img-container.h-roi-img-left(data-value=0)
+        a.h-roi-img-container.h-roi-img-center(data-value=1)
+        a.h-roi-img-container.h-roi-img-right(data-value=2)
+      .h-roi-buttons
+        button.btn.btn-default.btn-sm.h-prev-rois(data-value="prev")
+          i.icon-left-open
+        button.btn.btn-default.btn-sm.h-next-rois(data-value="next")
+          i.icon-right-open
+      .h-roi-footer
+        span.roi-count

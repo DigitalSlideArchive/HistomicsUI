@@ -84,23 +84,7 @@ var ImageView = View.extend({
         });
         this.roiWidget = new RoiWidget({
             parentView: this,
-            rois: [{
-                x: 10000,
-                y: 10000,
-                radius: 64
-            }, {
-                x: 20000,
-                y: 10000,
-                radius: 64
-            }, {
-                x: 10000,
-                y: 20000,
-                radius: 64
-            }, {
-                x: 20000,
-                y: 20000,
-                radius: 64
-            }]
+            trainingEpoch: 1
         });
         this.zoomWidget = new ZoomWidget({
             parentView: this
