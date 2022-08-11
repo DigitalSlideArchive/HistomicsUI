@@ -86,6 +86,42 @@ def patchCookieParsing():
         pass
 
 
+def betterInvalidateJSandCSSCaches(root):
+    from girder import constants
+
+    origRenderHTML = root._renderHTML
+
+    def _renderHTML(self):
+        topBuiltDir = os.path.join(constants.STATIC_ROOT_DIR, 'built')
+        result = origRenderHTML()
+        lastUpdate = 0
+        for filename in {
+                'girder_lib.min.js', 'girder_app.min.js', 'girder_lib.min.css',
+                'Girder_Favicon.png'}:
+            filepath = os.path.join(topBuiltDir, filename)
+            if os.path.exists(filepath):
+                lastUpdate = max(lastUpdate, os.path.getmtime(filepath))
+        builtDir = os.path.join(constants.STATIC_ROOT_DIR, 'built', 'plugins')
+        for pluginName in self.vars['plugins']:
+            for filepath in [
+                os.path.join(builtDir, pluginName, 'plugin.min.css'),
+                os.path.join(builtDir, pluginName, 'plugin.min.js'),
+            ]:
+                if os.path.exists(filepath):
+                    lastUpdate = max(lastUpdate, os.path.getmtime(filepath))
+        luParam = '?_=%d' % int(lastUpdate * 1000)
+        while True:
+            match = re.search(
+                r'<(link rel="(icon|stylesheet)" [^>]*href="[^>?"]*\.(css|png)|'
+                r'script src="[^>?"]*.js)">', result)
+            if not match:
+                break
+            result = result[:match.span()[1] - 2] + luParam + result[match.span()[1] - 2:]
+        return result
+
+    root._renderHTML = _renderHTML.__get__(root)
+
+
 @setting_utilities.validator({
     PluginSettings.HUI_DEFAULT_DRAW_STYLES,
     PluginSettings.HUI_PANEL_LAYOUT,
@@ -268,6 +304,9 @@ class GirderPlugin(plugin.GirderPlugin):
         girderRoot = info['serverRoot']
         huiRoot = WebrootHistomicsUI(_template)
         huiRoot.updateHtmlVars(girderRoot.vars)
+
+        betterInvalidateJSandCSSCaches(girderRoot)
+        betterInvalidateJSandCSSCaches(huiRoot)
 
         # The interface is always available under hui and also available
         # under the specified path.
