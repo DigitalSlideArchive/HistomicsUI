@@ -13,7 +13,7 @@ block content
   if expanded
     .h-roi-content--expanded
       .h-roi-header
-        h4.h-roi-header-title Epoch ##{epoch}
+        h4.h-roi-header-title Iteration ##{epoch}
         .h-roi-header-buttons
           button.btn-default.btn-sm.h-roi-workflow-button.h-roi-previous
             | Previous
@@ -49,11 +49,12 @@ block content
                   label.radio-inline(data-id=index, data-agree=false)
                     input.h-roi-agree-radio.roi-class-agree-no(type='radio', name=radioString, checked=(reviewed && !roi.agree), data-id=index, data-agree="disagree")
                     | No
-              .form-group.h-roi-option.roi-new-category.border.no-disp(class=((reviewed && !roi.agree) ? '' : 'no-disp'))
+              - var allowableCategories = categories.filter((category) => category.id !== roi.machineLabel);
+              .form-group.h-roi-option.roi-new-category.border(class=((reviewed && !roi.agree) ? '' : 'no-disp'), disabled=(allowableCategories.length < 3))
                 label(title='Select a new category for this patch')
                   | Actual Class
                 select.form-control.roi-class.h-roi-option
-                  each category in categories.filter((category) => category.id !== roi.machineLabel)
+                  each category in allowableCategories
                     option(value=category.label)
                       = category.label
   else
