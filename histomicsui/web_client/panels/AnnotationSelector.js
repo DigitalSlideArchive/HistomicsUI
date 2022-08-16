@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import $ from 'jquery';
 
+import { restRequest } from '@girder/core/rest';
 import { AccessType } from '@girder/core/constants';
 import eventStream from '@girder/core/utilities/EventStream';
 import { getCurrentUser } from '@girder/core/auth';
@@ -68,8 +69,11 @@ var AnnotationSelector = Panel.extend({
 
     render() {
         this._debounceRenderRequest = null;
-        if (this.parentItem && this.parentItem.id) {
-            this.parentItem.getAccessLevel((imageAccessLevel) => {
+        if (this.parentItem && this.parentItem.get('folderId')) {
+            restRequest({
+                type: 'GET',
+                url: 'annotation/folder/' + this.parentItem.get('folderId') + '/create'
+            }).done((createResp) => {
                 const annotationGroups = this._getAnnotationGroups();
                 if (!this.viewer) {
                     this.$el.empty();
@@ -81,7 +85,7 @@ var AnnotationSelector = Panel.extend({
                     activeAnnotation: this._activeAnnotation ? this._activeAnnotation.id : '',
                     showLabels: this._showLabels,
                     user: getCurrentUser() || {},
-                    accessLevel: imageAccessLevel,
+                    creationAccess: createResp,
                     writeAccessLevel: AccessType.WRITE,
                     writeAccess: this._writeAccess,
                     opacity: this._opacity,
