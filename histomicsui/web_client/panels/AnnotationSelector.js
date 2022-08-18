@@ -212,12 +212,12 @@ var AnnotationSelector = Panel.extend({
             url: 'annotation/folder/' + folderId + '/create'
         }).done((createResp) => {
             root.creationAccess = createResp;
-            if (createResp && root.$('.h-create-annotation').length == 0) {
+            if (createResp && root.$('.h-create-annotation').length === 0) {
                 root.$('.checkbox.h-annotation-toggle > .clearfix').before(
                     '<button class="btn btn-sm btn-primary h-create-annotation" title="Create a new annotation. Keyboard shortcut: space bar">' +
                         '<span class="icon-plus-squared"></span> New' +
                     '</button>'
-                )
+                );
             } else if (!createResp) {
                 root.$('.h-create-annotation').remove();
             }
