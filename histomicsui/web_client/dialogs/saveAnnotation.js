@@ -73,7 +73,8 @@ var SaveAnnotation = View.extend({
             type: 'annotation',
             hideRecurseOption: true,
             parentView: this,
-            model: this.annotation
+            model: this.annotation,
+            noAccessFlag: true
         }).on('g:accessListSaved', () => {
             this.annotation.fetch();
         });
