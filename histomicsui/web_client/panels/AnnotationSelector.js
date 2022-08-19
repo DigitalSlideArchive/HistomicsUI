@@ -209,18 +209,13 @@ var AnnotationSelector = Panel.extend({
     _setCreationAccess(root, folderId) {
         restRequest({
             type: 'GET',
-            url: 'annotation/folder/' + folderId + '/create'
+            url: 'annotation/folder/' + folderId + '/create',
+            error: null
         }).done((createResp) => {
             root.creationAccess = createResp;
-            if (createResp && root.$('.h-create-annotation').length === 0) {
-                root.$('.checkbox.h-annotation-toggle > .clearfix').before(
-                    '<button class="btn btn-sm btn-primary h-create-annotation" title="Create a new annotation. Keyboard shortcut: space bar">' +
-                        '<span class="icon-plus-squared"></span> New' +
-                    '</button>'
-                );
-            } else if (!createResp) {
-                root.$('.h-create-annotation').remove();
-            }
+            root.$('.h-create-annotation').toggleClass('hidden', !createResp);
+        }).fail(() => {
+            root.$('.h-create-annotation').toggleClass('hidden', true);
         });
     },
 
