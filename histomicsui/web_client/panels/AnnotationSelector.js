@@ -70,38 +70,34 @@ var AnnotationSelector = Panel.extend({
     render() {
         this._debounceRenderRequest = null;
         if (this.parentItem && this.parentItem.get('folderId')) {
-            restRequest({
-                type: 'GET',
-                url: 'annotation/folder/' + this.parentItem.get('folderId') + '/create'
-            }).done((createResp) => {
-                const annotationGroups = this._getAnnotationGroups();
-                if (!this.viewer) {
-                    this.$el.empty();
-                    return;
-                }
-                this.$el.html(annotationSelectorWidget({
-                    id: 'annotation-panel-container',
-                    title: 'Annotations',
-                    activeAnnotation: this._activeAnnotation ? this._activeAnnotation.id : '',
-                    showLabels: this._showLabels,
-                    user: getCurrentUser() || {},
-                    creationAccess: createResp,
-                    writeAccessLevel: AccessType.WRITE,
-                    writeAccess: this._writeAccess,
-                    opacity: this._opacity,
-                    fillOpacity: this._fillOpacity,
-                    interactiveMode: this._interactiveMode,
-                    expandedGroups: this._expandedGroups,
-                    annotationGroups,
-                    collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
-                    _
-                }));
-                this._changeGlobalOpacity();
-                this._changeGlobalFillOpacity();
-                if (this._showAllAnnotationsState) {
-                    this.showAllAnnotations();
-                }
-            });
+            const annotationGroups = this._getAnnotationGroups();
+            if (!this.viewer) {
+                this.$el.empty();
+                return;
+            }
+            this.$el.html(annotationSelectorWidget({
+                id: 'annotation-panel-container',
+                title: 'Annotations',
+                activeAnnotation: this._activeAnnotation ? this._activeAnnotation.id : '',
+                showLabels: this._showLabels,
+                user: getCurrentUser() || {},
+                creationAccess: this.creationAccess || this._writeAccess >= AccessType.WRITE,
+                writeAccessLevel: AccessType.WRITE,
+                writeAccess: this._writeAccess,
+                opacity: this._opacity,
+                fillOpacity: this._fillOpacity,
+                interactiveMode: this._interactiveMode,
+                expandedGroups: this._expandedGroups,
+                annotationGroups,
+                collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
+                _
+            }));
+            this._changeGlobalOpacity();
+            this._changeGlobalFillOpacity();
+            if (this._showAllAnnotationsState) {
+                this.showAllAnnotations();
+            }
+            this._setCreationAccess(this, this.parentItem.get('folderId'));
         }
         return this;
     },
@@ -208,6 +204,19 @@ var AnnotationSelector = Panel.extend({
                 });
             }
         );
+    },
+
+    _setCreationAccess(root, folderId) {
+        restRequest({
+            type: 'GET',
+            url: 'annotation/folder/' + folderId + '/create',
+            error: null
+        }).done((createResp) => {
+            root.creationAccess = createResp;
+            root.$('.h-create-annotation').toggleClass('hidden', !createResp);
+        }).fail(() => {
+            root.$('.h-create-annotation').toggleClass('hidden', true);
+        });
     },
 
     _onJobUpdate(evt) {

@@ -5,7 +5,7 @@ executors:
     docker:
       - image: girder/tox-and-node
       - image: memcached
-      - image: mongo:4.0
+      - image: mongo:4.4
         command: bash -c "mkdir /dev/shm/mongo && mongod --nojournal --dbpath=/dev/shm/mongo --noauth --bind_ip_all"
       - image: rabbitmq
 commands:
