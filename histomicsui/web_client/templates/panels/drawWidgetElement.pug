@@ -11,19 +11,21 @@ if elements.length
       var type = element.type == 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type;
       var displayId = ++displayIdOffset + displayIdStart;
       var label = ((element.label || {}).value || type);
-      if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
-        if (counts[groupName]) {
-          counts[groupName]++;
+      if (!element.label) {
+        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
+          if (counts[groupName]) {
+            counts[groupName]++;
+          } else {
+            counts[groupName] = 1;
+          }
+          label = groupName + ' ' + label + ' ' + displayId;
         } else {
-          counts[groupName] = 1;
-        }
-        label = groupName + ' ' + label + ' ' + displayId;
-      } else {
-        if (typeCounts[type] > 0) {
-          label = label + ' ' + displayId;
-          typeCounts[type]++;
-        } else {
-          typeCounts[type] = 1;
+          if (typeCounts[type] > 0) {
+            label = label + ' ' + displayId;
+            typeCounts[type]++;
+          } else {
+            typeCounts[type] = 1;
+          }
         }
       }
       if (element.type === 'pixelmap') {
