@@ -46,6 +46,7 @@ var ImageView = View.extend({
         'mousemove .geojs-map': '_trackMousePosition'
     },
     initialize(settings) {
+        this._defaultGroup = 'default';
         this.viewerWidget = null;
         this._mouseClickQueue = [];
         this._openId = null;
@@ -181,6 +182,7 @@ var ImageView = View.extend({
         this.pixelmapContextMenu.setElement(this.$('#h-pixelmap-context-menu')).render();
 
         if (this.model.id) {
+            this._getConfig(this.model.id);
             this._openId = this.model.id;
             if (this.viewerWidget) {
                 this.viewerWidget.destroy();
@@ -518,11 +520,11 @@ var ImageView = View.extend({
 
     _updatePixelmapElements(pixelmapElements, annotation) {
         const groups = new StyleCollection();
-        const defaultStyle = new StyleModel({ id: 'default' });
+        const defaultStyle = new StyleModel({ id: this._defaultGroup });
         groups.fetch().done(() => {
-            if (!groups.has('default')) {
+            if (!groups.has(this._defaultGroup)) {
                 groups.add(defaultStyle.toJSON());
-                groups.get('default').save();
+                groups.get(this._defaultGroup).save();
             }
             _.each(pixelmapElements, (pixelmap) => {
                 this._reconcilePixelmapCategories(pixelmap.get('id'), groups, annotation);
@@ -583,9 +585,9 @@ var ImageView = View.extend({
         });
 
         // move the default category to index 0 and adjust data array if needed
-        const originalDefaultIndex = _.findIndex(newCategories, { label: 'default' });
-        const updatedCategories = _.where(newCategories, { label: 'default' })
-            .concat(_.reject(newCategories, { label: 'default' }));
+        const originalDefaultIndex = _.findIndex(newCategories, { label: this._defaultGroup });
+        const updatedCategories = _.where(newCategories, { label: this._defaultGroup })
+            .concat(_.reject(newCategories, { label: this._defaultGroup }));
         pixelmap.set('categories', updatedCategories);
         if (originalDefaultIndex !== 0) {
             const originalData = pixelmap.get('values');
@@ -1328,7 +1330,7 @@ var ImageView = View.extend({
     _editElement(element) {
         const annotation = this.annotations.get(element.originalAnnotation);
         this._editAnnotation(annotation);
-        editElement(annotation.elements().get(element.id));
+        editElement(annotation.elements().get(element.id), this._defaultGroup);
     },
 
     _editElementShape(element, annotationId) {
@@ -1500,6 +1502,36 @@ var ImageView = View.extend({
                 }
             });
             return null;
+        });
+    },
+    _getConfig(modelId) {
+        restRequest({
+            url: `folder/${this.model.get('folderId')}/yaml_config/.histomicsui_config.yaml`
+        }).done((val) => {
+            if (!val || this.model.id !== modelId) {
+                return;
+            }
+            if (val.annotationGroups) {
+                let groups = new StyleCollection();
+                groups.fetch().done(() => {
+                    if (!val || this.model.id !== modelId) {
+                        return;
+                    }
+                    this._defaultGroup = val.annotationGroups.defaultGroup || 'default';
+                    if ((val.annotationGroups.groups || []).length) {
+                        if (val.annotationGroups.replaceGroups) {
+                            while (groups.length) {
+                                groups.first().destroy();
+                            }
+                        }
+                        val.annotationGroups.groups.forEach((group) => {
+                            group.label = group.label ? {value: group.label} : undefined;
+                            groups.add(group);
+                        });
+                        groups.each((model) => { model.save(); });
+                    }
+                });
+            }
         });
     }
 });

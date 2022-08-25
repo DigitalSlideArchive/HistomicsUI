@@ -548,7 +548,7 @@ var AnnotationSelector = Panel.extend({
             if (name !== 'Other') {
                 groupCount[name] = annotations.length;
             } else {
-                groupCount.default = annotations.length;
+                groupCount[this.parentView._defaultGroup || 'default'] = annotations.length;
             }
         });
         this.trigger('h:groupCount', groupCount);
