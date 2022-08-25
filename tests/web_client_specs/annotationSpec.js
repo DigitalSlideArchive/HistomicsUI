@@ -538,7 +538,7 @@ girderTest.promise.done(function () {
                 }, 'two annotations to merge into one');
             });
             it('test a brush operation', function () {
-                var annotCount, toggle;
+                var annotCount;
                 runs(function () {
                     annotCount = $('.h-elements-container .h-element').length;
                     $('.h-draw[data-type="brush"]').click();
@@ -1753,6 +1753,51 @@ girderTest.promise.done(function () {
                     expect($('.h-style-group option').map(function () { return $(this).val(); }).get()).toEqual(['Blue 4', 'Red 8', 'default']);
                 });
             });
+        });
+    });
+
+    describe('Effect of config file', function () {
+        it('logout', girderTest.logout());
+        it('login', function () {
+            $('.modal-dialog .modal-footer .btn-default').click();
+            huiTest.login();
+        });
+        it('open image', function () {
+            huiTest.openImage('image.svs', ['subfolder']);
+        });
+        it('create a new annotation', function () {
+            girderTest.waitForLoad();
+            runs(function () {
+                $('.h-create-annotation').click();
+            });
+            girderTest.waitForDialog();
+            runs(function () {
+                var nameInput = $('#h-annotation-name');
+                expect(nameInput.length).toBe(1);
+
+                nameInput.val('drawn c1');
+                $('.h-submit').click();
+            });
+            girderTest.waitForLoad();
+            runs(function () {
+                expect($('.h-style-group option[value="Red"]').length).toBe(1);
+            });
+        });
+        it('delete the annotation we just created', function () {
+            runs(function () {
+                $('.h-annotation-selector .h-annotation:contains("drawn c1") .h-delete-annotation').click();
+            });
+            girderTest.waitForDialog();
+            runs(function () {
+                $('.h-submit').click();
+            });
+            girderTest.waitForLoad();
+            waitsFor(function () {
+                return $('.h-annotation-selector .h-annotation:contains("drawn c1")').length === 0;
+            }, '"drawn c1" to be deleted');
+        });
+        it('open original image', function () {
+            huiTest.openImage('image');
         });
     });
 });

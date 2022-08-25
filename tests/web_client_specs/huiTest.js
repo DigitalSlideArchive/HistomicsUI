@@ -40,7 +40,7 @@
         });
     }
 
-    function openImage(name) {
+    function openImage(name, folders) {
         var imageId;
         var deferred = $.Deferred();
 
@@ -65,9 +65,18 @@
             return $('#g-dialog-container .g-folder-list-link').length > 0;
         }, 'Hierarchy widget to render');
 
-        runs(function () {
-            $('.g-folder-list-link:contains("Public")').click();
-        });
+        if (!folders) {
+            runs(function () {
+                $('.g-folder-list-link:contains("Public")').click();
+            });
+        } else {
+            folders.forEach(function (name) {
+                runs(function () {
+                    $('.g-folder-list-link:contains("' + name + '")').click();
+                });
+                girderTest.waitForDialog();
+            });
+        }
 
         waitsFor(function () {
             return $('.g-item-list-link').length > 0;
