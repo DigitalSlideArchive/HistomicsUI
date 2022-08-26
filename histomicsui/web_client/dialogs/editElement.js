@@ -58,7 +58,7 @@ var EditElement = View.extend({
         var label = this.$('#h-element-label').val();
         data.label = label ? { value: label } : {};
         var group = this.$('#h-group-name').val();
-        data.group = group && group !== 'default' ? group : undefined;
+        data.group = group && group !== this._defaultGroup ? group : undefined;
 
         var lineWidth = this.$('#h-element-line-width').val();
         if (lineWidth) {
@@ -126,8 +126,9 @@ var dialog = new EditElement({
  * @param {ElementModel} annotationElement The element to edit
  * @returns {EditAnnotation} The dialog's view
  */
-function show(annotationElement) {
+function show(annotationElement, defaultGroup) {
     dialog.annotationElement = annotationElement;
+    dialog._defaultGroup = defaultGroup || 'default';
     dialog.setElement('#g-dialog-container').render();
     return dialog;
 }

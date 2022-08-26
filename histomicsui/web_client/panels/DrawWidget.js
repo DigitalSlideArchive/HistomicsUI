@@ -61,15 +61,15 @@ var DrawWidget = Panel.extend({
 
         this._highlighted = {};
         this._groups = new StyleCollection();
-        this._style = new StyleModel({id: 'default'});
+        this._style = new StyleModel({id: this.parentView._defaultGroup});
         this.listenTo(this._groups, 'add change', this._handleStyleGroupsUpdate);
         this.listenTo(this._groups, 'remove', this.render);
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
         this._groups.fetch().done(() => {
             // ensure the default style exists
-            if (this._groups.has('default')) {
-                this._style.set(this._groups.get('default').toJSON());
+            if (this._groups.has(this.parentView._defaultGroup)) {
+                this._style.set(this._groups.get(this.parentView._defaultGroup).toJSON());
             } else {
                 this._groups.add(this._style.toJSON());
                 this._groups.get(this._style.id).save();
@@ -218,14 +218,14 @@ var DrawWidget = Panel.extend({
                 if (label) {
                     newLabel = label;
                 } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
-                    newLabel = `${group || 'default'} ${elemType} ${parseInt(oldLabel[oldLabel.length - 1] || '')}`;
+                    newLabel = `${group || this.parentView._defaultGroup} ${elemType} ${parseInt(oldLabel[oldLabel.length - 1] || '')}`;
                 } else {
                     newLabel = oldLabel;
                 }
                 this.$(`.h-element[data-id="${id}"] .h-element-label`).text(newLabel).attr('title', label);
                 if (origGroup !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
-                    this.updateCount(origGroup || 'default', -1);
-                    this.updateCount(group || 'default', 1);
+                    this.updateCount(origGroup || this.parentView._defaultGroup, -1);
+                    this.updateCount(group || this.parentView._defaultGroup, 1);
                 }
             }
             this._skipRenderHTML = true;
@@ -309,7 +309,7 @@ var DrawWidget = Panel.extend({
             id = this._getId(evt);
         }
         if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(this.collection.get(id).attributes.type)) {
-            this.updateCount(this.collection.get(id).attributes.group || 'default', -1);
+            this.updateCount(this.collection.get(id).attributes.group || this.parentView._defaultGroup, -1);
         } else if (this.collection.get(id).attributes.type === 'pixelmap') {
             this.countPixelmap(this.collection.get(id), -1);
         }
@@ -331,6 +331,7 @@ var DrawWidget = Panel.extend({
             drawWidgetElement({
                 elements: elements,
                 style: this._style.id,
+                defaultGroup: this.parentView._defaultGroup,
                 highlighted: this._highlighted,
                 firstRender: false,
                 updateCount: this.updateCount,
@@ -797,7 +798,7 @@ var DrawWidget = Panel.extend({
     countPixelmap(pixelmap, operation) {
         let toChange = {};
         for (let ix = 0; ix < (pixelmap.get('boundaries') ? pixelmap.get('values').length / 2 : pixelmap.get('values').length); ix++) {
-            let groupName = (pixelmap.get('categories')[pixelmap.get('values')[ix]]).label || 'default';
+            let groupName = (pixelmap.get('categories')[pixelmap.get('values')[ix]]).label || this.parentView._defaultGroup;
             if (toChange[groupName]) {
                 toChange[groupName]++;
             } else {
@@ -819,9 +820,9 @@ var DrawWidget = Panel.extend({
      */
     _setStyleGroup(group) {
         this._style.set(group);
-        if (!this._style.get('group') && this._style.id !== 'default') {
+        if (!this._style.get('group') && this._style.id !== this.parentView._defaultGroup) {
             this._style.set('group', this._style.id);
-        } else if (this._style.get('group') && this._style.id === 'default') {
+        } else if (this._style.get('group') && this._style.id === this.parentView._defaultGroup) {
             this._style.unset('group');
         }
         this.$('.h-style-group').val(group.id);
@@ -966,7 +967,8 @@ var DrawWidget = Panel.extend({
     },
 
     _styleGroupEditor() {
-        var dlg = editStyleGroups(this._style, this._groups);
+        console.log(this);
+        var dlg = editStyleGroups(this._style, this._groups, this.parentView._defaultGroup);
         dlg.$el.on('hidden.bs.modal', () => {
             this.render();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);

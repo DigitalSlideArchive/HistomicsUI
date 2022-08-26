@@ -1,8 +1,12 @@
 import $ from 'jquery';
 import View from '@girder/core/views/View';
 
-export default View.extend({
-    initialize() {
+if (View.__super__ && View.__super__.initialize) {
+    const oldInitialize = View.__super__.initialize;
+
+    View.__super__.initialize = function () {
+        let result = oldInitialize.apply(this, arguments);
+
         // Bootstrap 3's default behavior is to close dialogs when a
         // `click` event occurs outside of it. By using the `click`
         // event, the following scenario could occur -
@@ -31,5 +35,8 @@ export default View.extend({
         $('#g-dialog-container').on('DOMNodeInserted', () => {
             $('.btn', '#g-dialog-container').prop('tabindex', '0');
         });
-    }
-});
+        return result;
+    };
+}
+
+export default View;
