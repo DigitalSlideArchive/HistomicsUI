@@ -42,6 +42,12 @@ def makeResources(server, fsAssetstore, admin, user):
     annotation = Annotation().setAccessList(annotation, {}, force=True, save=False)
     annotation = Annotation().setPublic(annotation, True, save=True)
 
+    Folder().createFolder(user, 'subfolder', parentType='user', public=True, creator=user)
+    utilities.uploadTestFile('.histomicsui_config.yaml', user, fsAssetstore, 'subfolder')
+    utilities.uploadExternalFile(
+        'sample_svs_image.TCGA-DU-6399-01A-01-TS1.e8eb65de-d63e-42db-af6f-14fefbbdf7bd.svs',
+        user, fsAssetstore, folderName='subfolder', name='image.svs')
+
 
 class MockSlicerCLIWebResource(Resource):
     """

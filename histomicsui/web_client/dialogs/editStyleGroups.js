@@ -68,7 +68,7 @@ const EditStyleGroups = View.extend({
         }
         data.label = label ? {value: label} : {};
         const group = data.id;
-        data.group = group && group !== 'default' ? group : undefined;
+        data.group = group && group !== this._defaultGroup ? group : undefined;
 
         const lineWidth = this.$('#h-element-line-width').val();
         if (lineWidth) {
@@ -155,8 +155,8 @@ const EditStyleGroups = View.extend({
             }
             this.collection.reset(styleModels);
             // make sure we have at least a default style
-            if (!this.collection.get('default')) {
-                this.collection.push(new StyleModel({id: 'default'}));
+            if (!this.collection.get(this._defaultGroup)) {
+                this.collection.push(new StyleModel({id: this._defaultGroup}));
             }
             this.model.set(this.collection.at(0).toJSON());
             if (oldid && this.collection.get(oldid)) {
@@ -238,8 +238,8 @@ const EditStyleGroups = View.extend({
                     this.collection.add(styleModels, {merge: true});
                 }
                 // make sure we have at least a default style
-                if (!this.collection.get('default')) {
-                    this.collection.push(new StyleModel({id: 'default'}));
+                if (!this.collection.get(this._defaultGroup)) {
+                    this.collection.push(new StyleModel({id: this._defaultGroup}));
                 }
                 this.model.set(this.collection.at(0).toJSON());
                 this.collection.each((model) => { model.save(); });
@@ -310,13 +310,14 @@ const EditStyleGroupsDialog = View.extend({
  * @param {StyleGroupCollection} collection
  * @returns {EditStyleGroup} The dialog's view
  */
-function show(style, groups) {
+function show(style, groups, defaultGroup) {
     const dialog = new EditStyleGroupsDialog({
         parentView: null,
         collection: groups,
         model: style,
         el: $('#g-dialog-container')
     });
+    dialog.form._defaultGroup = defaultGroup || 'default';
     return dialog.render();
 }
 
