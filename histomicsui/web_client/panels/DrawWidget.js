@@ -797,7 +797,7 @@ var DrawWidget = Panel.extend({
 
     countPixelmap(pixelmap, operation) {
         let toChange = {};
-        for (let ix = 0; ix < (pixelmap.get('boundaries') ? pixelmap.get('values').length / 2 : pixelmap.get('values').length); ix++) {
+        for (let ix = 0; ix < pixelmap.get('values').length; ix++) {
             let groupName = (pixelmap.get('categories')[pixelmap.get('values')[ix]]).label || this.parentView._defaultGroup;
             if (toChange[groupName]) {
                 toChange[groupName]++;
