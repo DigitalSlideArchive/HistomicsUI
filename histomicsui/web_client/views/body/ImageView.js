@@ -405,6 +405,28 @@ var ImageView = View.extend({
             promise = getItemFile(this.model.id);
         }
 
+        // set control panel models that use relative paths
+        this.controlPanel.models().forEach((model) => {
+            if (model.get('defaultRelativePath') && model.get('channel') === 'input') {
+                model.set('defaultRelativePath_id', this.model.id);
+                model.set('defaultRelativePath_type', this.model.get('_modelType'));
+                Object.values((this.controlPanel._panelViews || {})).forEach((panel) => {
+                    if (panel._widgets && panel._widgets[model.id]) {
+                        panel._widgets[model.id]._getDefaultInputResource(model).then((resource) => {
+                            if (!resource) {
+                                return null;
+                            }
+                            panel._widgets[model.id].model.set({
+                                path: resource._path,
+                                value: resource
+                            });
+                            return null;
+                        });
+                    }
+                });
+            }
+        });
+
         return promise.then((file) => {
             _.each(this.controlPanel.models(), (model) => {
                 if (model.get('type') === 'image') {
