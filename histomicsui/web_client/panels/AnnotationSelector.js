@@ -89,6 +89,7 @@ var AnnotationSelector = Panel.extend({
                 interactiveMode: this._interactiveMode,
                 expandedGroups: this._expandedGroups,
                 annotationGroups,
+                annotationAccess: this._annotationAccess,
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 _
             }));
@@ -97,7 +98,9 @@ var AnnotationSelector = Panel.extend({
             if (this._showAllAnnotationsState) {
                 this.showAllAnnotations();
             }
-            this._setCreationAccess(this, this.parentItem.get('folderId'));
+            if (this._annotationAccess === undefined) {
+                this._setCreationAccess(this, this.parentItem.get('folderId'));
+            }
         }
         return this;
     },
@@ -207,15 +210,20 @@ var AnnotationSelector = Panel.extend({
     },
 
     _setCreationAccess(root, folderId) {
-        restRequest({
-            type: 'GET',
-            url: 'annotation/folder/' + folderId + '/create',
-            error: null
-        }).done((createResp) => {
+        if (!this._setCreationRequest) {
+            this._setCreationRequest = restRequest({
+                type: 'GET',
+                url: 'annotation/folder/' + folderId + '/create',
+                error: null
+            });
+        }
+        this._setCreationRequest.done((createResp) => {
             root.creationAccess = createResp;
             root.$('.h-create-annotation').toggleClass('hidden', !createResp);
+            this._annotationAccess = true;
         }).fail(() => {
             root.$('.h-create-annotation').toggleClass('hidden', true);
+            this._annotationAccess = false;
         });
     },
 
