@@ -110,6 +110,7 @@ var DrawWidget = Panel.extend({
                 elements: this.collection.models,
                 groups: this._groups,
                 style: this._style.id,
+                defaultGroup: this.parentView._defaultGroup,
                 highlighted: this._highlighted,
                 name,
                 opts: this._editOptions,
@@ -316,6 +317,7 @@ var DrawWidget = Panel.extend({
         this.$(`.h-element[data-id="${id}"]`).remove();
         this._skipRenderHTML = true;
         this.collection.remove(id, opts);
+        this.newElementDisplayIdStart = +(this.$el.find('.h-element>span.h-element-label[display_id]').last().attr('display_id') || 0);
     },
 
     /**

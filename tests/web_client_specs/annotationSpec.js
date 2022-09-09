@@ -311,7 +311,7 @@ girderTest.promise.done(function () {
                     return $('.h-elements-container .h-element').length === 2;
                 }, 'point to be created');
                 runs(function () {
-                    expect($('.h-elements-container .h-element:last .h-element-label').text()).toBe('default point 3');
+                    expect($('.h-elements-container .h-element:last .h-element-label').text()).toBe('default point 2');
                 });
                 checkAutoSave('drawn 1', 2, annotationInfo);
             });
