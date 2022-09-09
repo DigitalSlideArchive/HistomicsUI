@@ -11,20 +11,25 @@ if elements.length
       var type = element.type == 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type;
       var displayId = ++displayIdOffset + displayIdStart;
       var label = ((element.label || {}).value || type);
-      if (!element.label) {
+      if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
+        if (counts[groupName]) {
+          counts[groupName]++;
+        } else {
+          counts[groupName] = 1;
+        }
+      } else {
+        if (typeCounts[type] > 0) {
+          typeCounts[type]++;
+        } else {
+          typeCounts[type] = 1;
+        }
+      }
+      if (!(element.label || {}).value) {
         if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
-          if (counts[groupName]) {
-            counts[groupName]++;
-          } else {
-            counts[groupName] = 1;
-          }
           label = groupName + ' ' + label + ' ' + displayId;
         } else {
-          if (typeCounts[type] > 0) {
+          if (typeCounts[type] > 1) {
             label = label + ' ' + displayId;
-            typeCounts[type]++;
-          } else {
-            typeCounts[type] = 1;
           }
         }
       }
