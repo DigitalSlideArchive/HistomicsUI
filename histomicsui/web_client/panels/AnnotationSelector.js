@@ -431,9 +431,15 @@ var AnnotationSelector = Panel.extend({
             if (annotation._saveAgain !== 'delete') {
                 annotation._saveAgain = 0;
             }
+            if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
+                this.trigger('h:redraw', annotation);
+            }
         } else {
             annotation._saveAgain = false;
             delete this.viewer._saving[annotation.id];
+            if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
+                this.trigger('h:redraw', annotation);
+            }
             if (Object.keys(this.viewer._saving).length === 1 && this.viewer._saving.refresh) {
                 this._refreshAnnotations();
             }
