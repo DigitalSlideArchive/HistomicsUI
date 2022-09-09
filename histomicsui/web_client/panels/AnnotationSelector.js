@@ -126,6 +126,8 @@ var AnnotationSelector = Panel.extend({
         }
         this.parentItem = item;
         this._parentId = item.id;
+        delete this._setCreationRequest;
+        delete this._annotationAccess;
 
         if (!this._parentId) {
             this.collection.reset();
@@ -220,10 +222,14 @@ var AnnotationSelector = Panel.extend({
         this._setCreationRequest.done((createResp) => {
             root.creationAccess = createResp;
             root.$('.h-create-annotation').toggleClass('hidden', !createResp);
-            this._annotationAccess = true;
+            if (this.parentItem && this.parentItem.get('folderId') === folderId) {
+                this._annotationAccess = true;
+            }
         }).fail(() => {
             root.$('.h-create-annotation').toggleClass('hidden', true);
-            this._annotationAccess = false;
+            if (this.parentItem && this.parentItem.get('folderId') === folderId) {
+                this._annotationAccess = false;
+            }
         });
     },
 
