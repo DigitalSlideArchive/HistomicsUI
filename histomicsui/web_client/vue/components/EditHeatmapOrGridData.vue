@@ -13,10 +13,10 @@ export default {
             type: this.elementData.type,
             interpretation: this.elementData.interpretation,
             radius: this.elementData.radius,
-            normalizeRange: this.elementData.normalizeRange,
-            colorRange: _.clone(this.elementData.colorRange),
+            normalizeRange: this.elementData.normalizeRange === undefined ? true : this.elementData.normalizeRange,
+            colorRange: _.clone(this.elementData.colorRange || []),
             colorRangeData: [],
-            rangeValues: _.clone(this.elementData.rangeValues),
+            rangeValues: _.clone(this.elementData.rangeValues || []),
             minColor: this.elementData.minColor,
             maxColor: this.elementData.maxColor,
             stepped: this.elementData.stepped,
@@ -144,15 +144,17 @@ export default {
                 colorRange: this.colorRangeData.map((entry) => entry.colorString),
                 normalizeRange: this.normalizeRange
             };
+            if (this.colorRangeData.length) {
+            }
             if (this.type === 'heatmap') {
-                propsToSave['radius'] = parseFloat(this.radius);
-                propsToSave['scaleWithZoom'] = this.scaleWithZoom;
+                propsToSave.radius = parseFloat(this.radius);
+                propsToSave.scaleWithZoom = this.scaleWithZoom;
             } else {
                 // griddata
-                propsToSave['minColor'] = tinycolor(this.minColor).toString();
-                propsToSave['maxColor'] = tinycolor(this.maxColor).toString();
+                propsToSave.minColor = tinycolor(this.minColor).toString();
+                propsToSave.maxColor = tinycolor(this.maxColor).toString();
                 if (this.interpretation === 'contour' || this.interpretation === 'chloropleth') {
-                    propsToSave['stepped'] = this.stepped;
+                    propsToSave.stepped = this.stepped;
                 }
             }
             this.$emit('submit', propsToSave);
@@ -205,7 +207,7 @@ export default {
                         <label for="h-griddata-radius">Radius</label>
                         <input id="h-griddata-radius" class="input-sm form-control" type="number" min="1" v-model="radius">
                     </div>
-                    <div class="form-group" v-if="this.colorRangeData.length > 0">
+                    <div class="form-group">
                         <label for="h-griddata-range">Range Colors</label>
                         <table id="h-griddata-range" class="table table-bordered table-condensed">
                             <thead>
@@ -239,7 +241,7 @@ export default {
                                     <a @click.prevent="addColor(index)">
                                         <span class="icon-plus" title="Add row below"></span>
                                     </a>
-                                    <a v-if="colorRangeData.length > 1" @click.prevent="removeColor(index)">
+                                    <a @click.prevent="removeColor(index)">
                                         <span class="icon-minus" title="Remove this row"></span>
                                     </a>
                                 </td>
