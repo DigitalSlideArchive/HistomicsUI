@@ -37,6 +37,16 @@ if (View.__super__ && View.__super__.initialize) {
         });
         return result;
     };
+
+    let oldGirderModal = $.fn.girderModal;
+    $.fn.girderModal = function (view) {
+        let result = oldGirderModal.call(this, view);
+        result.on('shown.bs.modal', () => {
+            result.off('click.dismiss.bs.modal');
+            result.off('mouseup.dismiss.bs.modal');
+        });
+        return result;
+    };
 }
 
 export default View;
