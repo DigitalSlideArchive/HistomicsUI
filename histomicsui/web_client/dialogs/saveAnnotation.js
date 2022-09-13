@@ -5,6 +5,7 @@ import tinycolor from 'tinycolor2';
 import AccessWidget from '@girder/core/views/widgets/AccessWidget';
 import View from '@girder/core/views/View';
 import { AccessType } from '@girder/core/constants';
+import { formatDate, DATE_SECOND } from '@girder/core/misc';
 
 import saveAnnotation from '../templates/dialogs/saveAnnotation.pug';
 import '../stylesheets/dialogs/saveAnnotation.styl';
@@ -57,6 +58,9 @@ var SaveAnnotation = View.extend({
                 title: this.options.title,
                 hasAdmin: this.annotation.get('_accessLevel') >= AccessType.ADMIN,
                 annotation: this.annotation.toJSON().annotation,
+                model: this.annotation,
+                formatDate: formatDate,
+                DATE_SECOND: DATE_SECOND,
                 showStyleEditor,
                 defaultStyles
             })
