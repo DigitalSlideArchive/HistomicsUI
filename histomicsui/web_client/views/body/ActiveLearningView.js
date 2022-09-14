@@ -110,16 +110,15 @@ var ActiveLearningView = View.extend({
     },
 
     getSortedSuperpixelIndices() {
-        console.time("sorting");
         const superPixelConfidenceData = [];
         _.forEach(Object.keys(this.annotationsByImageId), (imageId) => {
             const annotation = this.annotationsByImageId[imageId].predictions;
-            console.log(annotation);
             const userData = annotation.annotation.elements[0].user;
+            const pixelmapValues = annotation.annotation.elements[0].values;
             const superpixelImageId = annotation.annotation.elements[0].girderId;
+            const superpixelCategories = annotation.annotation.elements[0].categories;
             const boundaries = annotation.annotation.elements[0].boundaries;
             const scale = annotation.annotation.elements[0].transform.matrix[0][0];
-            console.log(userData);
             _.forEach(userData.confidence, (score, index) => {
                 const bbox = userData.bbox.slice(index * 4, index * 4 + 4);
                 superPixelConfidenceData.push({
@@ -129,12 +128,13 @@ var ActiveLearningView = View.extend({
                     superpixelImageId: superpixelImageId,
                     boundaries: boundaries,
                     scale: scale,
-                    bbox: bbox
+                    bbox: bbox,
+                    prediction: pixelmapValues[index],
+                    categories: superpixelCategories
                 });
             });
         });
         this.sortedSuperpixelIndices = _.sortBy(superPixelConfidenceData, 'confidence');
-        console.timeEnd("sorting");
     }
 
 });
