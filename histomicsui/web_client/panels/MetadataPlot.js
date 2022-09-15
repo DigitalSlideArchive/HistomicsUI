@@ -29,7 +29,7 @@ var MetadataPlot = Panel.extend({
         },
         'click .h-panel-maximize': function (event) {
             this.$el.html('');
-            this.expand();
+            this.expand(event);
             this.$('.s-panel-content').addClass('in');
             let panelElem = this.$el.closest('.s-panel');
             let maximize = !panelElem.hasClass('h-panel-maximized');

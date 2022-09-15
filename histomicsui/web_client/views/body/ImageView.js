@@ -565,6 +565,9 @@ var ImageView = View.extend({
     },
 
     _reconcilePixelmapCategories(pixelmapId, groups, annotation) {
+        if (!annotation || !annotation.elements()) {
+            return;
+        }
         const pixelmap = annotation.elements().get(pixelmapId);
         const existingCategories = pixelmap.get('categories') || [];
         const newCategories = [];

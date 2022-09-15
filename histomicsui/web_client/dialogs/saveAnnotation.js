@@ -2,13 +2,15 @@ import _ from 'underscore';
 import $ from 'jquery';
 import tinycolor from 'tinycolor2';
 
-import AccessWidget from '@girder/core/views/widgets/AccessWidget';
-import View from '@girder/core/views/View';
 import { AccessType } from '@girder/core/constants';
 import { formatDate, DATE_SECOND } from '@girder/core/misc';
+import AccessWidget from '@girder/core/views/widgets/AccessWidget';
+// import MetadataWidget from '@girder/core/views/widgets/MetadataWidget';
+import View from '@girder/core/views/View';
 
-import saveAnnotation from '../templates/dialogs/saveAnnotation.pug';
+import MetadataWidget from '../panels/MetadataWidget';
 import '../stylesheets/dialogs/saveAnnotation.styl';
+import saveAnnotation from '../templates/dialogs/saveAnnotation.pug';
 
 /**
  * Create a modal dialog with fields to edit the properties of
@@ -40,7 +42,6 @@ var SaveAnnotation = View.extend({
 
         if (showStyleEditor) {
             const elements = this.annotation.get('annotation').elements;
-            console.assert(elements.length > 0); // otherwise we wouldn't show the style editor
             const firstElement = elements[0];
             if (elements.every((d) => d.lineWidth === firstElement.lineWidth)) {
                 defaultStyles.lineWidth = firstElement.lineWidth;
@@ -66,6 +67,28 @@ var SaveAnnotation = View.extend({
             })
         ).girderModal(this);
         this.$('.h-colorpicker').colorpicker();
+
+        if (this.annotation.id) {
+            if (!this.annotation.meta) {
+                this.annotation._meta = Object.assign({}, (this.annotation.get('annotation') || {}).attributes || {});
+            }
+            // copy the metadata to a place that is expected for the widget
+            if (!this.metadataWidget) {
+                this.metadataWidget = new MetadataWidget({
+                    item: this.annotation,
+                    parentView: this,
+                    fieldName: '_meta',
+                    accessLevel: this.annotation.get('_accessLevel'),
+                    panel: false,
+                    noSave: true
+                });
+            }
+            this.metadataWidget.setItem(this.annotation);
+            this.metadataWidget.accessLevel = this.annotation.get('_accessLevel');
+            this.metadataWidget.setElement(this.$('.hui-annotation-metadata')).render();
+        }
+
+        this.$el.find('.modal-dialog').addClass('hui-save-annotation-dialog');
         return this;
     },
 
@@ -85,6 +108,9 @@ var SaveAnnotation = View.extend({
     },
 
     cancel(evt) {
+        if (this.annotation) {
+            delete this.annotation._meta;
+        }
         evt.preventDefault();
         this.$el.modal('hide');
     },
@@ -144,6 +170,8 @@ var SaveAnnotation = View.extend({
             name: this.$('#h-annotation-name').val(),
             description: this.$('#h-annotation-description').val()
         });
+        this.annotation.attributes.annotation.attributes = this.annotation._meta;
+        delete this.annotation._meta;
         this.trigger('g:submit');
         this.$el.modal('hide');
     },
@@ -171,6 +199,7 @@ var dialog = new SaveAnnotation({
  */
 function show(annotation, options) {
     _.defaults(options, { title: 'Create annotation' });
+    delete annotation._meta;
     dialog.annotation = annotation;
     dialog.options = options;
     dialog.setElement('#g-dialog-container').render();

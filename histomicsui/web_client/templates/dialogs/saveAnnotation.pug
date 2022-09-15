@@ -28,9 +28,10 @@
             i.icon-share
             | Unique ID: #{model.id}
             if model.get('_version')
-              |
+              = " "
               i.icon-angle-circled-down
               | Global Version: #{model.get('_version')}
+          .hui-annotation-metadata.hui-annotation-metadata-dialog
         if showStyleEditor
           hr
           h4 Reset the style for all point, line, and polygon elements in this annotation
