@@ -6,6 +6,7 @@ import { AccessType } from '@girder/core/constants';
 import { confirm } from '@girder/core/dialog';
 import events from '@girder/core/events';
 import { localeSort } from '@girder/core/misc';
+import View from '@girder/core/views/View';
 
 import JsonMetadatumEditWidgetTemplate from '@girder/core/templates/widgets/jsonMetadatumEditWidget.pug';
 import JsonMetadatumViewTemplate from '@girder/core/templates/widgets/jsonMetadatumView.pug';
@@ -20,7 +21,21 @@ import 'bootstrap/js/dropdown';
 import metadataWidgetTemplate from '../templates/panels/metadataWidget.pug';
 import '../stylesheets/panels/metadataWidget.styl';
 
-var MetadatumWidget = Panel.extend({
+function getMetadataRecord(item, fieldName) {
+    if (item[fieldName]) {
+        return item[fieldName];
+    }
+    let meta = item.attributes;
+    fieldName.split('.').forEach((part) => {
+        if (!meta[part]) {
+            meta[part] = {};
+        }
+        meta = meta[part];
+    });
+    return meta;
+}
+
+var MetadatumWidget = View.extend({
     className: 'g-widget-metadata-row',
 
     events: {
@@ -38,6 +53,7 @@ var MetadatumWidget = Panel.extend({
         this.parentView = settings.parentView;
         this.fieldName = settings.fieldName;
         this.apiPath = settings.apiPath;
+        this.noSave = settings.noSave;
         this.onMetadataEdited = settings.onMetadataEdited;
         this.onMetadataAdded = settings.onMetadataAdded;
     },
@@ -46,8 +62,8 @@ var MetadatumWidget = Panel.extend({
         var newMode = this.parentView.modes[to];
 
         if (_.has(newMode, 'validation') &&
-            _.has(newMode.validation, 'from') &&
-            _.has(newMode.validation.from, from)) {
+                _.has(newMode.validation, 'from') &&
+                _.has(newMode.validation.from, from)) {
             var validate = newMode.validation.from[from][0];
             var msg = newMode.validation.from[from][1];
 
@@ -85,6 +101,7 @@ var MetadatumWidget = Panel.extend({
             parentView: this,
             fieldName: this.fieldName,
             apiPath: this.apiPath,
+            noSave: this.noSave,
             onMetadataEdited: this.onMetadataEdited,
             onMetadataAdded: this.onMetadataAdded
         }, overrides || {});
@@ -105,6 +122,7 @@ var MetadatumWidget = Panel.extend({
             parentView: this,
             fieldName: this.fieldName,
             apiPath: this.apiPath,
+            noSave: this.noSave,
             onMetadataEdited: this.onMetadataEdited,
             onMetadataAdded: this.onMetadataAdded
         };
@@ -142,7 +160,7 @@ var MetadatumWidget = Panel.extend({
     }
 });
 
-var MetadatumEditWidget = Panel.extend({
+var MetadatumEditWidget = View.extend({
     events: {
         'click .g-widget-metadata-cancel-button': 'cancelEdit',
         'click .g-widget-metadata-save-button': 'save',
@@ -161,6 +179,7 @@ var MetadatumEditWidget = Panel.extend({
                 key: this.$el.find('.g-widget-metadata-key-input').val(),
                 value: this.getCurrentValue()
             });
+            return false;
         }
     },
 
@@ -173,6 +192,7 @@ var MetadatumEditWidget = Panel.extend({
         this.newDatum = settings.newDatum;
         this.fieldName = settings.fieldName;
         this.apiPath = settings.apiPath;
+        this.noSave = settings.noSave;
         this.onMetadataEdited = settings.onMetadataEdited;
         this.onMetadataAdded = settings.onMetadataAdded;
     },
@@ -187,6 +207,11 @@ var MetadatumEditWidget = Panel.extend({
         event.stopImmediatePropagation();
         const target = $(event.currentTarget);
         var metadataList = target.parent().parent();
+        if (this.noSave) {
+            delete getMetadataRecord(this.item, this.fieldName)[this.key];
+            metadataList.remove();
+            return;
+        }
         var params = {
             text: 'Are you sure you want to delete the metadatum <b>' +
                 _.escape(this.key) + '</b>?',
@@ -222,14 +247,14 @@ var MetadatumEditWidget = Panel.extend({
         event.stopImmediatePropagation();
         const target = $(event.currentTarget);
         var curRow = target.parent(),
-            tempKey = curRow.find('.g-widget-metadata-key-input').val(),
+            tempKey = curRow.find('.g-widget-metadata-key-input').val().trim(),
             tempValue = (value !== undefined) ? value : curRow.find('.g-widget-metadata-value-input').val();
         if (this.newDatum && tempKey === '') {
             events.trigger('g:alert', {
                 text: 'A key is required for all metadata.',
                 type: 'warning'
             });
-            return;
+            return false;
         }
         var saveCallback = () => {
             this.key = tempKey;
@@ -260,6 +285,18 @@ var MetadatumEditWidget = Panel.extend({
             if (this.onMetadataAdded) {
                 this.onMetadataAdded(tempKey, tempValue, saveCallback, errorCallback);
             } else {
+                if (this.noSave) {
+                    if (getMetadataRecord(this.item, this.fieldName)[tempKey] !== undefined) {
+                        events.trigger('g:alert', {
+                            text: tempKey + ' is already a metadata key',
+                            type: 'warning'
+                        });
+                        return false;
+                    }
+                    getMetadataRecord(this.item, this.fieldName)[tempKey] = tempValue;
+                    this.parentView.parentView.render();
+                    return;
+                }
                 this.item.addMetadata(tempKey, tempValue, saveCallback, errorCallback, {
                     field: this.fieldName,
                     path: this.apiPath
@@ -269,6 +306,20 @@ var MetadatumEditWidget = Panel.extend({
             if (this.onMetadataEdited) {
                 this.onMetadataEdited(tempKey, this.key, tempValue, saveCallback, errorCallback);
             } else {
+                if (this.noSave) {
+                    tempKey = tempKey === '' ? this.key : tempKey;
+                    if (tempKey !== this.key && getMetadataRecord(this.item, this.fieldName)[tempKey] !== undefined) {
+                        events.trigger('g:alert', {
+                            text: tempKey + ' is already a metadata key',
+                            type: 'warning'
+                        });
+                        return false;
+                    }
+                    delete getMetadataRecord(this.item, this.fieldName)[this.key];
+                    getMetadataRecord(this.item, this.fieldName)[tempKey] = tempValue;
+                    this.parentView.parentView.render();
+                    return;
+                }
                 this.item.editMetadata(tempKey, this.key, tempValue, saveCallback, errorCallback, {
                     field: this.fieldName,
                     path: this.apiPath
@@ -307,6 +358,7 @@ var JsonMetadatumEditWidget = MetadatumEditWidget.extend({
                 text: 'The field contains invalid JSON and can not be saved.',
                 type: 'warning'
             });
+            return false;
         }
     },
 
@@ -345,7 +397,7 @@ var MetadataWidget = Panel.extend({
             this.addMetadata(event, 'simple');
         },
         'click .h-panel-maximize': function (event) {
-            this.expand();
+            this.expand(event);
             this.$('.s-panel-content').addClass('in');
             let panelElem = this.$el.closest('.s-panel');
             let maximize = !panelElem.hasClass('h-panel-maximized');
@@ -382,6 +434,8 @@ var MetadataWidget = Panel.extend({
         this.apiPath = settings.apiPath;
         this.accessLevel = settings.accessLevel;
         this.onMetadataEdited = settings.onMetadataEdited;
+        this.panel = settings.panel === undefined ? true : settings.panel;
+        this.noSave = settings.noSave;
         // the event is created
         this.on('h-metadata-panel-update', (event) => {
             this.renderMetadataWidgetHeader(event);
@@ -456,6 +510,7 @@ var MetadataWidget = Panel.extend({
             apiPath: this.apiPath,
             accessLevel: this.accessLevel,
             parentView: this,
+            noSave: this.noSave,
             onMetadataEdited: this.onMetadataEdited,
             onMetadataAdded: this.onMetadataAdded
         });
@@ -468,6 +523,7 @@ var MetadataWidget = Panel.extend({
             fieldName: this.fieldName,
             apiPath: this.apiPath,
             accessLevel: this.accessLevel,
+            noSave: this.noSave,
             newDatum: true,
             parentView: widget,
             onMetadataEdited: this.onMetadataEdited,
@@ -478,20 +534,32 @@ var MetadataWidget = Panel.extend({
     },
 
     renderMetadataWidgetHeader: function () {
-        // pervent automatically collapse the widget after rendering again
+        // prevent automatically collapsing the widget after rendering again
         this.render();
     },
 
     render: function () {
         if (this.item && this.item.id) {
-            const imageId = this.item.id;
-            const apiPath = `/item/${imageId}/metadata`;
-            this.item.getAccessLevel((accessLevel) => {
-                var metaDict = this.item.get(this.fieldName) || {};
+            let func = this.item.getAccessLevel;
+            if (this.item.get('_modelType') === 'annotation') {
+                func = (callback) => {
+                    const accessLevel = this.item.getAccessLevel();
+                    callback(accessLevel);
+                };
+            }
+            func.call(this.item, (accessLevel) => {
+                const fieldParts = this.fieldName.split('.');
+                let metaDict = this.item.get(fieldParts[0]) || {};
+                fieldParts.slice(1).forEach((part) => {
+                    metaDict = metaDict[part] || {};
+                });
+                if (this.item[this.fieldName]) {
+                    metaDict = this.item[this.fieldName];
+                }
                 var metaKeys = Object.keys(metaDict);
                 metaKeys.sort(localeSort);
-                var firstKey = (metaKeys)[0];
-                var firstValue = metaDict[firstKey];
+                const firstKey = (metaKeys)[0];
+                let firstValue = metaDict[firstKey];
                 if (_.isObject(firstValue)) {
                     // if the value is a json object, JSON.stringify to make it more readable
                     firstValue = JSON.stringify(firstValue);
@@ -503,8 +571,9 @@ var MetadataWidget = Panel.extend({
                     firstValue: firstValue,
                     accessLevel: this.item.attributes._accessLevel,
                     AccessType: AccessType,
+                    panel: this.panel,
                     // if never rendered, the jquery selector will be empty and won't be visible
-                    collapsed: !this.$('.s-panel-content').hasClass('in') && !this.$el.closest('.s-panel').hasClass('h-panel-maximized')
+                    collapsed: this.panel && !this.$('.s-panel-content').hasClass('in') && !this.$el.closest('.s-panel').hasClass('h-panel-maximized')
                 }));
                 // Append each metadatum
                 _.each(metaKeys, function (metaKey) {
@@ -515,7 +584,8 @@ var MetadataWidget = Panel.extend({
                         accessLevel: this.item.attributes._accessLevel,
                         parentView: this,
                         fieldName: this.fieldName,
-                        apiPath: apiPath,
+                        apiPath: this.apiPath,
+                        noSave: this.noSave,
                         onMetadataEdited: this.onMetadataEdited,
                         onMetadataAdded: this.onMetadataAdded
                     }).render().$el);
