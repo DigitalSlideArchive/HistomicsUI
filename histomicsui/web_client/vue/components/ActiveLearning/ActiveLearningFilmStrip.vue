@@ -11,7 +11,6 @@ export default {
     computed: {
         headerStyles() {
             return _.map(this.superpixelsToDisplay, (superpixel) => {
-                console.log(superpixel);
                 return {
                     'font-size': '80%',
                     'background-color': superpixel.categories[superpixel.prediction].fillColor
@@ -116,8 +115,8 @@ export default {
     justify-content: space-evenly;
     bottom: 0px;
     width: 100%;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     background-color: rgba(0, 0, 0, 0.6);
 }
 
