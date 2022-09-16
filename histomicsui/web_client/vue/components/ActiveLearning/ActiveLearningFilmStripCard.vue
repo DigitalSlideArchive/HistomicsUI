@@ -1,9 +1,14 @@
 <script>
-export default {
+import Vue from 'vue';
+import _ from 'underscore';
+
+export default Vue.extend({
     props: ['superpixel', 'apiRoot'],
     data() {
         return {
-            agreeChoice: undefined
+            agreeChoice: undefined,
+            selectedCategory: undefined,
+            predictedCategory: this.superpixel.categories[this.superpixel.prediction]
         };
     },
     computed: {
@@ -11,7 +16,14 @@ export default {
             return {
                 'font-size': '80%',
                 'background-color': this.superpixel.categories[this.superpixel.prediction].fillColor
-            }
+            };
+        },
+        headerTitle() {
+            return `Prediction: ${this.predictedCategory.label}`;
+        },
+        validNewCategories() {
+            const categories = this.superpixel.categories;
+            return _.filter(categories, (c, index) => index !== this.superpixel.prediction);
         }
     },
     methods: {
@@ -57,8 +69,9 @@ export default {
     },
     mounted() {
         console.log('film strip card mounted...');
+        this.selectedCategory = this.validNewCategories[0];
     }
-}
+});
 </script>
 
 <template>
@@ -66,6 +79,7 @@ export default {
         <div
             class="h-superpixel-card-header"
             :style="headerStyle"
+            :title="headerTitle"
         >
             Confidence: {{ superpixel.confidence.toFixed(3) }}
         </div>
@@ -82,29 +96,55 @@ export default {
             </div>
         </div>
         <div class="h-superpixel-card-footer">
-            <label :for="`${key}_radio`">Agree? </label>
+            <div class="h-superpixel-card-agree h-superpixel-card-footer-content">
+                <label>Agree? </label>
+                <label for="radio-yes">Yes</label>
+                <input id="radio-yes" type="radio" value="Yes" v-model="agreeChoice" />
+                <label for="radio-no">No</label>
+                <input id="radio-no" type="radio" value="No" v-model="agreeChoice" />
+            </div>
+            <div
+                v-if="agreeChoice === 'No'"
+                class="h-superpixel-card-footer-content"
+            >
+                <select
+                    v-model="selectedCategory"
+                    class="h-superpixel-card-select"
+                >
+                    <option
+                        v-for="category in validNewCategories"
+                        :key="category.label"
+                        :value="category"
+                    >
+                        Class: {{ category.label }}
+                    </option>
+                </select>
+            </div>
+            <div
+                v-else
+                class="h-superpixel-card-footer-content"
+            >
+                <select
+                    disabled="true"
+                    class="h-superpixel-card-select"
+                >
+                    <option :value="predictedCategory">
+                        Class: {{ predictedCategory.label }}
+                    </option>
+                </select>
+            </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-.h-filmstrip {
-    position: absolute;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    bottom: 0px;
-    width: 100%;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    background-color: rgba(0, 0, 0, 0.6);
-}
-
 .h-superpixel-card {
     display: flex;
     flex-direction: column;
     column-gap: 0px;
     background-color: white;
+    border-radius: 5px;
+    width: 140px;
 }
 
 .h-superpixel-container {
@@ -125,5 +165,37 @@ export default {
     left: 0px;
     top: 0px;
     z-index: 20;
+}
+
+.h-superpixel-card-header {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.h-superpixel-body {
+    display: flex;
+    justify-content: center;
+}
+
+.h-superpixel-card-footer {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+}
+
+.h-superpixel-card-footer > * {
+    font-size: 80%;
+}
+
+.h-superpixel-card-footer-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 2px;
+}
+
+.h-superpixel-card-select {
+    width: 90%;
 }
 </style>
