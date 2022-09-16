@@ -26,18 +26,26 @@ var ActiveLearningView = View.extend({
 
     mountVueComponent() {
         const el = this.$('.h-active-learning-container').get(0);
-        const vm = new ActiveLearningContainer({
-            el,
-            propsData: {
-                router: router,
-                trainingDataFolderId: this.trainingDataFolderId,
-                annotationsByImageId: this.annotationsByImageId,
-                annotationBaseName: this.annotationBaseName,
-                sortedSuperpixelIndices: this.sortedSuperpixelIndices,
-                apiRoot: getApiRoot()
-            }
+        const root = (__webpack_public_path__ || '/status/built').replace(/\/$/, '');
+        const geojsUrl = root + '/plugins/large_image/extra/geojs.js';
+        $.ajax({
+            url: geojsUrl,
+            dataType: 'script',
+            cache: true
+        }).done((resp) => {
+            const vm = new ActiveLearningContainer({
+                el,
+                propsData: {
+                    router: router,
+                    trainingDataFolderId: this.trainingDataFolderId,
+                    annotationsByImageId: this.annotationsByImageId,
+                    annotationBaseName: this.annotationBaseName,
+                    sortedSuperpixelIndices: this.sortedSuperpixelIndices,
+                    apiRoot: getApiRoot()
+                }
+            });
+            this.vueApp = vm;
         });
-        this.vueApp = vm;
     },
 
     render() {
