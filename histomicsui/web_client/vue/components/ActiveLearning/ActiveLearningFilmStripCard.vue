@@ -2,8 +2,10 @@
 import Vue from 'vue';
 import _ from 'underscore';
 
+import store from './store';
+
 export default Vue.extend({
-    props: ['superpixel', 'apiRoot'],
+    props: ['superpixel', 'apiRoot', 'selectedIndex', 'index'],
     data() {
         return {
             agreeChoice: undefined,
@@ -24,8 +26,12 @@ export default Vue.extend({
         validNewCategories() {
             const categories = this.superpixel.categories;
             return _.filter(categories, (c, index) => index !== this.superpixel.prediction);
+        },
+        selectedIndexFromStore() {
+            return store.selectedIndex;
         }
     },
+
     methods: {
         getWsiRegionUrl(superPixel) {
             const imageId = superPixel.imageId;
@@ -64,11 +70,14 @@ export default Vue.extend({
             });
             const functionParam = `&style=${encodeURIComponent(functionJson)}`;
             return `${this.apiRoot}/item/${imageId}/tiles/region${params}${functionParam}`;
+        },
+        selectSuperpixelCard() {
+            console.log('updating selected index');
+            store.selectedIndex = this.index;
         }
 
     },
     mounted() {
-        console.log('film strip card mounted...');
         this.selectedCategory = this.validNewCategories[0];
     }
 });
@@ -84,7 +93,10 @@ export default Vue.extend({
             Confidence: {{ superpixel.confidence.toFixed(3) }}
         </div>
         <div class="h-superpixel-body">
-            <div class="h-superpixel-container">
+            <div
+                class="h-superpixel-container"
+                @click="selectSuperpixelCard"
+            >
                 <img
                     class="h-superpixel-img h-wsi-region"
                     :src="getWsiRegionUrl(superpixel)"

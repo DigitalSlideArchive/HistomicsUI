@@ -7,17 +7,7 @@ export default {
     components: {
         ActiveLearningFilmStripCard
     },
-    props: ['superpixelsToDisplay', 'apiRoot'],
-    computed: {
-        headerStyles() {
-            return _.map(this.superpixelsToDisplay, (superpixel) => {
-                return {
-                    'font-size': '80%',
-                    'background-color': superpixel.categories[superpixel.prediction].fillColor
-                }
-            });
-        }
-    },
+    props: ['superpixelsToDisplay', 'apiRoot', 'selectedIndex'],
     methods: {
         getWsiRegionUrl(superPixel) {
             const imageId = superPixel.imageId;
@@ -60,8 +50,6 @@ export default {
 
     },
     mounted() {
-        console.log('film strip mounted...');
-        console.log({ apiRoot: this.apiRoot, superPixelsToDisplay: this.superPixelsToDisplay });
     }
 }
 </script>
@@ -71,10 +59,12 @@ export default {
         <!-- previous button -->
         <!-- create a component for these, probably -->
         <active-learning-film-strip-card
-            v-for="superpixel in superpixelsToDisplay"
+            v-for="superpixel, index in superpixelsToDisplay"
             :key="`${superpixel.imageId}_${superpixel.index}`"
             :superpixel="superpixel"
             :apiRoot="apiRoot"
+            :selectedIndex="selectedIndex"
+            :index="index"
         />
         <!-- <div
             v-for="superpixel, index in superpixelsToDisplay"
