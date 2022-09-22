@@ -6,5 +6,6 @@ import Vue from 'vue';
 
 export default Vue.observable({
     selectedIndex: 0,
-    apiRoot: ''
+    apiRoot: '',
+    loading: false, // limit how quickly one can switch between images
 });

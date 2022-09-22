@@ -41,7 +41,8 @@ var ActiveLearningView = View.extend({
                     annotationsByImageId: this.annotationsByImageId,
                     annotationBaseName: this.annotationBaseName,
                     sortedSuperpixelIndices: this.sortedSuperpixelIndices,
-                    apiRoot: getApiRoot()
+                    apiRoot: getApiRoot(),
+                    backboneParent: this
                 }
             });
             this.vueApp = vm;
