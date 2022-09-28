@@ -4,6 +4,7 @@ import Vue from 'vue';
 import _ from 'underscore';
 import { restRequest } from '@girder/core/rest';
 import { ViewerWidget } from '@girder/large_image_annotation/views';
+import AnnotationModel from '@girder/large_image_annotation/models/AnnotationModel';
 
 import ActiveLearningFilmStrip from './ActiveLearningFilmStrip.vue';
 
@@ -41,120 +42,13 @@ export default Vue.extend({
     },
     computed: {
         superpixelsToDisplay() {
-            const startIndex = this.page * 8;
-            const endIndex = Math.min(startIndex + 8, this.sortedSuperpixelIndices.length);
-            return this.sortedSuperpixelIndices.slice(startIndex, endIndex);
+            return store.superpixelsToDisplay;
         },
         selectedIndex() {
             return store.selectedIndex;
-        }
+       }
     },
     methods: {
-        updateMapBaseImage() {
-            if (this.map && this.map.exit) {
-                this.map.exit();
-            }
-            restRequest({
-                url: `item/${this.selectedImageId}/tiles`
-            }).done((resp) => {
-                this.currentImageMetadata = resp;
-                const params = geo.util.pixelCoordinateParams(
-                    this.$refs.map,
-                    resp.sizeX,
-                    resp.sizeY,
-                    resp.tileWidth,
-                    resp.tileHeight
-                );
-                this.map = geo.map(params.map);
-                params.layer.url = `${this.apiRoot}/item/${this.selectedImageId}/tiles/zxy/{z}/{x}/{y}`;
-                this.map.createLayer('osm', params.layer);
-                this.featureLayer = this.map.createLayer('feature', { features: ['polygon']})
-                this.boundingBoxFeature = this.featureLayer.createFeature('polygon');
-                this.boundingBoxFeature.style({
-                    fillOpacity: 0,
-                    stroke: true,
-                    strokeWidth: 2,
-                    strokeColor: { r: 0, g: 0, b: 0 }
-                });
-                // add layer for annotation
-                this.drawPixelmapAnnotation(resp);
-                this.updateMapBoundsForSelection();
-            });
-        },
-        drawPixelmapAnnotation(baseImageMetadata) {
-            const annotation = this.annotationsByImageId[this.selectedImageId].predictions;
-            const pixelmapElement = annotation.annotation.elements[0];
-            restRequest({
-                url: `item/${pixelmapElement.girderId}/tiles`
-            }).done((resp) => {
-                const params = geo.util.pixelCoordinateParams(
-                    this.$refs.map,
-                    resp.sizeX,
-                    resp.sizeY,
-                    resp.tileWidth,
-                    resp.tileHeight
-                );
-                params.layer.url = `${this.apiRoot}/item/${pixelmapElement.girderId}/tiles/zxy/{z}/{x}/{y}?encoding=PNG`;
-                params.layer.autoshareRenderer = false;
-                const transformMatrix = (pixelmapElement.transform || {}).matrix || [[1, 0], [0, 1]];
-                let scale = Math.sqrt(Math.abs(transformMatrix[0][0] * transformMatrix[1][1] - transformMatrix[0][1] * transformMatrix[1][0])) || 1;
-                scale = Math.floor(Math.log2(scale));
-                let levelDifference = baseImageMetadata.levels - resp.levels;
-                levelDifference -= scale;
-                if (resp.levels !== baseImageMetadata.levels) {
-                    params.layer.url = (x, y, z) => this.apiRoot + `/item/${pixelmapElement.girderId}/tiles/zxy/${z - levelDifference}/${x}/${y}?encoding=PNG`;
-                    params.layer.minLevel = levelDifference;
-                    params.layer.maxLevel += levelDifference;
-
-                    params.layer.tilesMaxBounds = (level) => {
-                        var scale = Math.pow(2, params.layer.maxLevel - level);
-                        return {
-                            x: Math.floor(resp.sizeX / scale),
-                            y: Math.floor(resp.sizeY / scale)
-                        };
-                    };
-                    params.layer.tilesAtZoom = (level) => {
-                        var scale = Math.pow(2, params.layer.maxLevel - level);
-                        return {
-                            x: Math.ceil(resp.sizeX / resp.tileWidth / scale),
-                            y: Math.ceil(resp.sizeY / resp.tileHeight / scale)
-                        };
-                    };
-                }
-                let pixelmapData = pixelmapElement.values;
-                if (pixelmapElement.boundaries) {
-                    const valuesWithBoundaries = new Array(pixelmapData.length * 2);
-                    for (let i = 0; i < pixelmapData.length; i++) {
-                        valuesWithBoundaries[i * 2] = valuesWithBoundaries[i * 2 + 1] = pixelmapData[i];
-                    }
-                    pixelmapData = valuesWithBoundaries;
-                }
-                params.layer.data = pixelmapData;
-                params.layer.opacity = 1;
-                const categoryMap = pixelmapElement.categories;
-                const boundaries = pixelmapElement.boundaries;
-                params.layer.style = {
-                    color: (d, i) => {
-                        if (d < 0 || d >= categoryMap.length) {
-                            console.warn(`No category found at index ${d} in the category map.`);
-                            return 'rgba(0, 0, 0, 0)';
-                        }
-                        let color;
-                        let category = categoryMap[d];
-                        if (boundaries) {
-                            color = (i % 2 === 0) ? category.fillColor : category.strokeColor;
-                        } else {
-                            color = category.fillColor;
-                        }
-                        return color;
-                    }
-                };
-                const projString = getOverlayTransformProjString(pixelmapElement);
-                console.log(projString);
-                console.log(params.layer);
-                const overlayLayer = this.map.createLayer('pixelmap', Object.assign({}, params.layer)); // , { gcs: projString }));
-            });
-        },
         updateMapBoundsForSelection() {
             const superpixel = this.superpixelsToDisplay[this.selectedIndex];
             const bbox = superpixel.bbox;
@@ -167,14 +61,19 @@ export default Vue.extend({
                 x: (bbox[0] + bbox[2]) / 2,
                 y: (bbox[1] + bbox[3]) / 2
             };
-            // this.map.zoom(zoom - 1);
-            // this.map.center(center);
-            this.viewerWidget.viewer.zoom(zoom);
+            this.viewerWidget.viewer.zoom(zoom - 2);
             this.viewerWidget.viewer.center(center);
             this.boundingBoxFeature.data([[
                 [bbox[0], bbox[1]], [bbox[2], bbox[1]], [bbox[2], bbox[3]], [bbox[0], bbox[3]]
             ]]);
             this.featureLayer.draw();
+        },
+        drawPredictions() {
+            const predictions = this.annotationsByImageId[this.selectedImageId].superpixels;
+            const predictionsModel = new AnnotationModel({ _id: predictions._id });
+            predictionsModel.fetch().done(() => {
+                this.viewerWidget.drawAnnotation(predictionsModel);
+            });
         },
         createImageViewer() {
             this.viewerWidget = new ViewerWidget.geojs({
@@ -196,8 +95,7 @@ export default Vue.extend({
                 });
                 this.initialZoom = this.viewerWidget.viewer.zoom();
                 this.updateMapBoundsForSelection();
-                // this.viewerWidget.viewer.zoom(5);
-                // this.viewerWidget.viewer.center({x: 10000, y:10000});
+                this.drawPredictions();
             });
         }
     },
@@ -206,19 +104,24 @@ export default Vue.extend({
             // see if we need to update which image is displayed
             const newImageId = this.superpixelsToDisplay[this.selectedIndex].imageId;
             if (newImageId !== this.selectedImageId) {
-                // this.updateMapBaseImage();
                 console.log('image id changed');
+                this.selectedImageId = newImageId;
             } else {
-                // same base image, different selection
                 this.updateMapBoundsForSelection();
             }
-            // calculate which bounds to set
-            // draw a new bounding box?
+        },
+        page(arg1, arg2) {
+            console.log(arg1, arg2);
+            const startIndex = this.page;
+            const endIndex = Math.min(startIndex + 8, this.sortedSuperpixelIndices.length);
+            store.superpixelsToDisplay = this.sortedSuperpixelIndices.slice(startIndex, endIndex);
         }
     },
     mounted() {
         store.apiRoot = this.apiRoot;
-        // this.updateMapBaseImage();
+        const startIndex = 0;
+        const endIndex = Math.min(startIndex + 8, this.sortedSuperpixelIndices.length);
+        store.superpixelsToDisplay = this.sortedSuperpixelIndices.slice(startIndex, endIndex);
         restRequest({
             url: `item/${this.selectedImageId}/tiles`
         }).done((resp) => {
@@ -232,9 +135,7 @@ export default Vue.extend({
 <template>
     <div class="h-active-learning-container">
         <div ref="map" class="h-active-learning-map"></div>
-        <active-learning-film-strip
-            :superpixelsToDisplay="this.superpixelsToDisplay"
-        />
+        <active-learning-film-strip />
     </div>
 </template>
 
