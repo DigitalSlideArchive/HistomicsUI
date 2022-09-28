@@ -5,7 +5,7 @@ import _ from 'underscore';
 import store from './store';
 
 export default Vue.extend({
-    props: ['superpixel', 'apiRoot', 'selectedIndex', 'index'],
+    props: ['superpixel', 'index'],
     data() {
         return {
             agreeChoice: undefined,
@@ -14,6 +14,15 @@ export default Vue.extend({
         };
     },
     computed: {
+        apiRoot() {
+            return store.apiRoot;
+        },
+        selectedIndex() {
+            return store.selectedIndex;
+        },
+        isSelected() {
+            return this.selectedIndex === this.index;
+        },
         headerStyle() {
             return {
                 'font-size': '80%',
@@ -84,7 +93,7 @@ export default Vue.extend({
 </script>
 
 <template>
-    <div class="h-superpixel-card">
+    <div :class="{'h-superpixel-card': true, 'h-superpixel-card--selected': isSelected }">
         <div
             class="h-superpixel-card-header"
             :style="headerStyle"
@@ -157,6 +166,10 @@ export default Vue.extend({
     background-color: white;
     border-radius: 5px;
     width: 140px;
+}
+
+.h-superpixel-card--selected {
+    border: 4px solid yellow;
 }
 
 .h-superpixel-container {
