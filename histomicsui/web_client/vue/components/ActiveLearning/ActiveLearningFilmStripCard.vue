@@ -182,14 +182,14 @@ export default Vue.extend({
     position: absolute;
     left: 0px;
     top: 0px;
-    z-index: 10;
+    z-index: 60;
 }
 
 .h-superpixel-region {
     position: absolute;
     left: 0px;
     top: 0px;
-    z-index: 20;
+    z-index: 70;
 }
 
 .h-superpixel-card-header {
