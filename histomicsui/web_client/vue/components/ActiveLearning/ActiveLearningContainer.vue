@@ -234,8 +234,6 @@ export default Vue.extend({
         <div ref="map" class="h-active-learning-map"></div>
         <active-learning-film-strip
             :superpixelsToDisplay="this.superpixelsToDisplay"
-            :apiRoot="this.apiRoot"
-            :selectedIndex="this.selectedIndex"
         />
     </div>
 </template>

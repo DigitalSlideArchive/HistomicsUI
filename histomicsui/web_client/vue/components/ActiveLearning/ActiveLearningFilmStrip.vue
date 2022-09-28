@@ -2,12 +2,21 @@
 import _ from 'underscore';
 
 import ActiveLearningFilmStripCard from './ActiveLearningFilmStripCard.vue';
+import store from './store.js';
 
 export default {
     components: {
         ActiveLearningFilmStripCard
     },
-    props: ['superpixelsToDisplay', 'apiRoot', 'selectedIndex'],
+    props: ['superpixelsToDisplay'],
+    computed: {
+        apiRoot() {
+            return store.apiRoot;
+        },
+        selectedIndex() {
+            return store.selectedIndex;
+        }
+    },
     methods: {
         getWsiRegionUrl(superPixel) {
             const imageId = superPixel.imageId;
@@ -62,8 +71,6 @@ export default {
             v-for="superpixel, index in superpixelsToDisplay"
             :key="`${superpixel.imageId}_${superpixel.index}`"
             :superpixel="superpixel"
-            :apiRoot="apiRoot"
-            :selectedIndex="selectedIndex"
             :index="index"
         />
         <!-- <div
