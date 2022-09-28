@@ -36,15 +36,9 @@ export default Vue.extend({
             const categories = this.superpixel.categories;
             return _.filter(categories, (c, index) => index !== this.superpixel.prediction);
         },
-        selectedIndexFromStore() {
-            return store.selectedIndex;
-        }
-    },
-
-    methods: {
-        getWsiRegionUrl(superPixel) {
-            const imageId = superPixel.imageId;
-            const bbox = superPixel.bbox;
+        wsiRegionUrl() {
+            const imageId = this.superpixel.imageId;
+            const bbox = this.superpixel.bbox;
             const regionWidth = bbox[2] - bbox[0];
             const regionHeight = bbox[3] - bbox[1];
             const scaleFactor = Math.max(regionWidth, regionHeight);
@@ -53,12 +47,12 @@ export default Vue.extend({
             const params = `?left=${bbox[0]}&top=${bbox[1]}&right=${bbox[2]}&bottom=${bbox[3]}&width=${thumbnailWidth}&height=${thumbnailHeight}`;
             return `${this.apiRoot}/item/${imageId}/tiles/region${params}`;
         },
-        getSuperpixelRegionUrl(superPixel) {
-            const imageId = superPixel.superpixelImageId;
-            const index = superPixel.index;
-            const pixelVals = superPixel.boundaries ? [index * 2, index * 2 + 1] : [index];
-            const bbox = superPixel.bbox;
-            const scale = superPixel.scale;
+        superpixelRegionUrl() {
+            const imageId = this.superpixel.superpixelImageId;
+            const index = this.superpixel.index;
+            const pixelVals = this.superpixel.boundaries ? [index * 2, index * 2 + 1] : [index];
+            const bbox = this.superpixel.bbox;
+            const scale = this.superpixel.scale;
             const regionWidth = bbox[2] - bbox[0];
             const regionHeight = bbox[3] - bbox[1];
             const scaleFactor = Math.max(regionWidth, regionHeight);
@@ -79,7 +73,10 @@ export default Vue.extend({
             });
             const functionParam = `&style=${encodeURIComponent(functionJson)}`;
             return `${this.apiRoot}/item/${imageId}/tiles/region${params}${functionParam}`;
-        },
+        }
+    },
+
+    methods: {
         selectSuperpixelCard() {
             console.log('updating selected index');
             store.selectedIndex = this.index;
@@ -108,11 +105,11 @@ export default Vue.extend({
             >
                 <img
                     class="h-superpixel-img h-wsi-region"
-                    :src="getWsiRegionUrl(superpixel)"
+                    :src="wsiRegionUrl"
                 />
                 <img
                     class="h-superpixel-img h-superpixel-region"
-                    :src="getSuperpixelRegionUrl(superpixel)"
+                    :src="superpixelRegionUrl"
                 />
             </div>
         </div>

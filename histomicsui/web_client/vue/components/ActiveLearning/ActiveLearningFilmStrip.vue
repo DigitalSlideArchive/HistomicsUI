@@ -30,9 +30,11 @@ export default {
     methods: {
         previousPage() {
             console.log('prev page clicked');
+            store.page = store.page - 1;
         },
         nextPage() {
             console.log('next page clicked');
+            store.page = store.page + 1;
         }
     },
     mounted() {

@@ -29,12 +29,10 @@ export default Vue.extend({
             currentImageId: '',
             imageItemsById: {},
             annotationsByImage: {},
-            superpixelsToTrain: [],
             currentImageMetadata: {},
             map: null,
             featureLayer: null,
             boundingBoxFeature: null,
-            page: 0,
             selectedImageId: this.sortedSuperpixelIndices[0].imageId,
             viewerWidget: null,
             initialZoom: 1
@@ -46,6 +44,9 @@ export default Vue.extend({
         },
         selectedIndex() {
             return store.selectedIndex;
+       },
+       page() {
+           return store.page;
        }
     },
     methods: {
@@ -101,7 +102,6 @@ export default Vue.extend({
     },
     watch: {
         selectedIndex() {
-            // see if we need to update which image is displayed
             const newImageId = this.superpixelsToDisplay[this.selectedIndex].imageId;
             if (newImageId !== this.selectedImageId) {
                 console.log('image id changed');
@@ -110,11 +110,15 @@ export default Vue.extend({
                 this.updateMapBoundsForSelection();
             }
         },
-        page(arg1, arg2) {
-            console.log(arg1, arg2);
-            const startIndex = this.page;
+        page(newPage, oldPage) {
+            const startIndex = newPage * 8;
             const endIndex = Math.min(startIndex + 8, this.sortedSuperpixelIndices.length);
             store.superpixelsToDisplay = this.sortedSuperpixelIndices.slice(startIndex, endIndex);
+            const oldIndex = this.selectedIndex;
+            store.selectedIndex = (newPage > oldPage) ? 0 : 7;
+            if (oldIndex === this.selectedIndex) {
+                this.updateMapBoundsForSelection();
+            }
         }
     },
     mounted() {
