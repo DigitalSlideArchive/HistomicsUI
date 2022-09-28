@@ -8,4 +8,6 @@ export default Vue.observable({
     selectedIndex: 0,
     apiRoot: '',
     loading: false, // limit how quickly one can switch between images
+    page: 0,
+    superpixelsToDisplay: []
 });
