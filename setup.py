@@ -46,6 +46,7 @@ setup(
         'girder-slicer-cli-web>=1.2.3',
         'cachetools',
         'importlib-metadata<5 ; python_version < "3.8"',
+        'orjson',
     ],
     extras_require={
         'analysis': [

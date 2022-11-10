@@ -2,6 +2,7 @@ import datetime
 import json
 
 import cachetools
+import orjson
 from girder import logger
 from girder.constants import AccessType
 from girder.exceptions import RestException
@@ -119,7 +120,7 @@ def process_annotations(event):
         logger.error('Could not load models from the database')
         return
     try:
-        data = json.loads(b''.join(File().download(file)()).decode())
+        data = orjson.loads(File().open(file).read().decode())
     except Exception:
         logger.error('Could not parse annotation file')
         raise
@@ -233,7 +234,7 @@ def process_metadata(event):
         logger.error('Could not load models from the database')
         return
     try:
-        data = json.loads(b''.join(File().download(file)()).decode())
+        data = orjson.loads(File().open(file).read().decode())
     except Exception:
         logger.error('Could not parse metadata file')
         raise
