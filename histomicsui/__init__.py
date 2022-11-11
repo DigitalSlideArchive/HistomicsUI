@@ -17,11 +17,14 @@
 import json
 import os
 import re
+from functools import wraps
 
 from bson import json_util
 from girder import events, logger, plugin
 from girder.api import access
-from girder.exceptions import ValidationException
+from girder.api.rest import getCurrentToken
+from girder.exceptions import AccessException, ValidationException
+from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
@@ -345,15 +348,19 @@ class GirderPlugin(plugin.GirderPlugin):
             # Change some endpoints to require token access
             endpoints = [
                 ('collection', 'GET', (':id', 'download')),
-                ('file', 'GET', (':id', 'download')),
                 ('file', 'GET', (':id', 'download', ':name')),
                 ('folder', 'GET', (':id', 'download')),
-                ('item', 'GET', (':id', 'download')),
                 ('resource', 'GET', ('download', )),
                 ('resource', 'POST', ('download', )),
 
                 ('item', 'GET', (':itemId', 'tiles', 'images', ':image')),
             ]
+            intEndpoints = [
+                ('file', 'GET', (':id', 'download')),
+                ('item', 'GET', (':id', 'download')),
+            ]
+            if not isinstance(curConfig['restrict_downloads'], int):
+                endpoints += intEndpoints
 
             for resource, method, route in endpoints:
                 cls = getattr(info['apiRoot'], resource)
@@ -373,3 +380,15 @@ class GirderPlugin(plugin.GirderPlugin):
                         setattr(newfunc.__self__, newfunc.__name__, newfunc)
                     cls.removeRoute(method, route)
                     cls.route(method, route, newfunc)
+            if isinstance(curConfig['restrict_downloads'], int):
+                def limitLengthDownload(fun, limit):
+                    @wraps(fun)
+                    def wrapped(*args, **kwargs):
+                        if (not getCurrentToken() and len(args) >= 1 and
+                                args[0] and args[0].get('size', 0) >= limit):
+                            raise AccessException(
+                                'You must be logged in or have a valid auth token.')
+                        return fun(*args, **kwargs)
+                    return wrapped
+                File().download = limitLengthDownload(
+                    File().download, curConfig['restrict_downloads'])
