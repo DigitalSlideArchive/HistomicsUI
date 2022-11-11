@@ -57,3 +57,15 @@ This is used to specify annotation groups available for marking annotations.
           fillColor: rgba(0, 0, 255, 0.25)
           lineColor: rgb(0, 0, 255)
           lineWidth: 2
+
+Girder Configuration
+--------------------
+
+There is a histomicsui section that can be added to the Girder configuration file::
+
+    [histomicsui]
+    # If restrict_downloads is True, only logged-in users can access download
+    # and tiles/images endpoints.  If this is a number, file and item download
+    # endpoints can be used by anonymous users for files up to the specified
+    # size in bytes.  This setting does not affect logged-in users.
+    restrict_downloads = False
