@@ -18,7 +18,7 @@ from .constants import PluginSettings
 _recentIdentifiers = cachetools.TTLCache(maxsize=100, ttl=86400)
 
 
-def _itemFromEvent(event, identifierEnding, itemAccessLevel=AccessType.READ):
+def _itemFromEvent(event, identifierEnding, itemAccessLevel=AccessType.READ):  # noqa
     """
     If an event has a reference and an associated identifier that ends with a
     specific string, return the associated item, user, and image file.
@@ -46,15 +46,27 @@ def _itemFromEvent(event, identifierEnding, itemAccessLevel=AccessType.READ):
         if reprocessFunc:
             reprocessFunc()
     if identifier is not None and identifier.endswith(identifierEnding):
-        if 'userId' not in reference or 'itemId' not in reference or 'fileId' not in reference:
-            logger.error('Reference does not contain required information.')
+        if 'itemId' not in reference and 'fileId' not in reference:
+            logger.error('Reference does not contain at least one of itemId or fileId.')
             return
-
-        userId = reference['userId']
-        imageId = reference['fileId']
-
-        # load models from the database
+        userId = reference.get('userId')
+        if not userId:
+            if 'itemId' in reference:
+                item = Item().load(reference['itemId'], force=True)
+            else:
+                file = File().load(reference['fileId'], force=True)
+                item = Item().load(file['itemId'], force=True)
+            if 'folderId' not in item:
+                logger.error('Reference does not contain userId.')
+                return
+            folder = Folder().load(item['folderId'], force=True)
+            userId = folder['creatorId']
         user = User().load(userId, force=True)
+        imageId = reference.get('fileId')
+        if not imageId:
+            item = Item().load(reference['itemId'], force=True)
+            if 'largeImage' in item and 'fileId' in item['largeImage']:
+                imageId = item['largeImage']['fileId']
         image = File().load(imageId, level=AccessType.READ, user=user)
         item = Item().load(image['itemId'], level=itemAccessLevel, user=user)
         return {'item': item, 'user': user, 'file': image, 'uuid': reference.get('uuid')}
