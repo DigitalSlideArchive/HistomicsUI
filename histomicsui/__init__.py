@@ -23,7 +23,9 @@ from bson import json_util
 from girder import events, logger, plugin
 from girder.api import access
 from girder.api.rest import getCurrentToken
+from girder.constants import AssetstoreType
 from girder.exceptions import AccessException, ValidationException
+from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
@@ -258,6 +260,93 @@ class WebrootHistomicsUI(Webroot):
         return super()._renderHTML()
 
 
+def restrict_downloads(info):
+    """
+    If restrict_downloads is configured, modify endpoints to do that.
+    """
+    curConfig = config.getConfig().get('histomicsui', {})
+    if not curConfig.get('restrict_downloads'):
+        return
+    # Change some endpoints to require token access
+    endpoints = [
+        ('collection', 'GET', (':id', 'download')),
+        ('file', 'GET', (':id', 'download', ':name')),
+        ('folder', 'GET', (':id', 'download')),
+        ('resource', 'GET', ('download', )),
+        ('resource', 'POST', ('download', )),
+
+        ('item', 'GET', (':itemId', 'tiles', 'images', ':image')),
+    ]
+    intEndpoints = [
+        ('file', 'GET', (':id', 'download')),
+        ('item', 'GET', (':id', 'download')),
+    ]
+    if not isinstance(curConfig['restrict_downloads'], int):
+        endpoints += intEndpoints
+
+    for resource, method, route in endpoints:
+        cls = getattr(info['apiRoot'], resource)
+        boundfunc = cls.getRouteHandler(method, route)
+        func = getattr(boundfunc, '__func__', boundfunc)
+        if func.accessLevel == 'public':
+            newfunc = access.token(func)
+            newfunc.requiredScopes = getattr(func, 'requiredScopes', None)
+            if getattr(func, 'requiredScopes', None):
+                del func.requiredScopes
+            if getattr(func, 'cookieAuth', None):
+                newfunc.cookieAuth = True
+                del func.cookieAuth
+            # Rebind new function
+            if boundfunc != func:
+                newfunc = newfunc.__get__(boundfunc.__self__, boundfunc.__class__)
+                setattr(newfunc.__self__, newfunc.__name__, newfunc)
+            cls.removeRoute(method, route)
+            cls.route(method, route, newfunc)
+    if isinstance(curConfig['restrict_downloads'], int):
+        def limitLengthDownload(fun, limit):
+            @wraps(fun)
+            def wrapped(*args, **kwargs):
+                if (not getCurrentToken() and len(args) >= 1 and
+                        args[0] and args[0].get('size', 0) >= limit):
+                    raise AccessException(
+                        'You must be logged in or have a valid auth token.')
+                return fun(*args, **kwargs)
+            return wrapped
+        File().download = limitLengthDownload(
+            File().download, curConfig['restrict_downloads'])
+
+
+def cleanupFSAssetstores():
+    curConfig = config.getConfig().get('histomicsui', {})
+    if not curConfig.get('cleanup_fsassetstore'):
+        return
+    check = curConfig.get('cleanup_fsassetstore') == 'check'
+    for assetstore in Assetstore().find({'type': AssetstoreType.FILESYSTEM}):
+        fullcount = 0
+        count = 0
+        total = 0
+        base = assetstore['root'].rstrip(os.sep) + os.sep
+        logger.info('Checking assetstore if it needs cleanup: %s at %s', assetstore['name'], base)
+        paths = {entry['path'] for entry in File().find({
+            'assetstoreId': assetstore['_id'], 'imported': {'$exists': False}})}
+        for root, _dirs, files in os.walk(base):
+            for file in files:
+                fullcount += 1
+                path = os.path.join(root, file)
+                if path.startswith(base) and path[len(base):] not in paths:
+                    count += 1
+                    total += os.path.getsize(path)
+                    if not check:
+                        logger.info('Unlink unused file: %s (%d)',
+                                    path, os.path.getsize(path))
+                        os.unlink(path)
+                    else:
+                        logger.info('Would unlink unused file: %s (%d)',
+                                    path, os.path.getsize(path))
+        logger.info('Finished checking assetstore: %s (%d/%d file(s), %d byte(s))',
+                    assetstore['name'], count, fullcount, total)
+
+
 class GirderPlugin(plugin.GirderPlugin):
     DISPLAY_NAME = 'HistomicsUI'
     CLIENT_SOURCE_PATH = 'web_client'
@@ -343,52 +432,5 @@ class GirderPlugin(plugin.GirderPlugin):
 
         events.bind('model.setting.save.after', 'histomicsui', updateWebroot)
 
-        curConfig = config.getConfig().get('histomicsui', {})
-        if curConfig.get('restrict_downloads'):
-            # Change some endpoints to require token access
-            endpoints = [
-                ('collection', 'GET', (':id', 'download')),
-                ('file', 'GET', (':id', 'download', ':name')),
-                ('folder', 'GET', (':id', 'download')),
-                ('resource', 'GET', ('download', )),
-                ('resource', 'POST', ('download', )),
-
-                ('item', 'GET', (':itemId', 'tiles', 'images', ':image')),
-            ]
-            intEndpoints = [
-                ('file', 'GET', (':id', 'download')),
-                ('item', 'GET', (':id', 'download')),
-            ]
-            if not isinstance(curConfig['restrict_downloads'], int):
-                endpoints += intEndpoints
-
-            for resource, method, route in endpoints:
-                cls = getattr(info['apiRoot'], resource)
-                boundfunc = cls.getRouteHandler(method, route)
-                func = getattr(boundfunc, '__func__', boundfunc)
-                if func.accessLevel == 'public':
-                    newfunc = access.token(func)
-                    newfunc.requiredScopes = getattr(func, 'requiredScopes', None)
-                    if getattr(func, 'requiredScopes', None):
-                        del func.requiredScopes
-                    if getattr(func, 'cookieAuth', None):
-                        newfunc.cookieAuth = True
-                        del func.cookieAuth
-                    # Rebind new function
-                    if boundfunc != func:
-                        newfunc = newfunc.__get__(boundfunc.__self__, boundfunc.__class__)
-                        setattr(newfunc.__self__, newfunc.__name__, newfunc)
-                    cls.removeRoute(method, route)
-                    cls.route(method, route, newfunc)
-            if isinstance(curConfig['restrict_downloads'], int):
-                def limitLengthDownload(fun, limit):
-                    @wraps(fun)
-                    def wrapped(*args, **kwargs):
-                        if (not getCurrentToken() and len(args) >= 1 and
-                                args[0] and args[0].get('size', 0) >= limit):
-                            raise AccessException(
-                                'You must be logged in or have a valid auth token.')
-                        return fun(*args, **kwargs)
-                    return wrapped
-                File().download = limitLengthDownload(
-                    File().download, curConfig['restrict_downloads'])
+        restrict_downloads(info)
+        cleanupFSAssetstores()
