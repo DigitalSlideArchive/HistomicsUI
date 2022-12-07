@@ -85,7 +85,6 @@ This work was funded in part by the NIH grant U24-CA194362-01_.
 .. _slicer_cli_web: https://github.com/girder/slicer_cli_web
 .. _slicer execution model: https://www.slicer.org/slicerWiki/index.php/Slicer3:Execution_Model_Documentation
 .. _Discourse forum: https://discourse.girder.org/c/histomicstk
-.. _Gitter Chatroom: https://gitter.im/DigitalSlideArchive/HistomicsTK?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. _celery: http://www.celeryproject.org/
 .. _HistomicsTK: https://github.com/DigitalSlideArchive/HistomicsTK
 .. _Digital Slide Archive: https://github.com/DigitalSlideArchive/digital_slide_archive
