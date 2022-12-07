@@ -15,12 +15,15 @@
 #############################################################################
 
 import datetime
+import os
 
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import RestException, boundHandler, filtermodel
 from girder.api.v1.resource import Resource as ResourceResource
-from girder.constants import AccessType, TokenScope
+from girder.constants import AccessType, AssetstoreType, TokenScope
+from girder.models.assetstore import Assetstore
+from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
@@ -44,6 +47,8 @@ def addSystemEndpoints(apiRoot):
     # Added to the job route
     apiRoot.job.route('GET', ('old',), getOldJobs)
     apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
+    # Added to the file route
+    apiRoot.file.route('POST', (':id', 'import', 'adjust_path'), adjustFileImportPath)
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
@@ -350,3 +355,35 @@ def getSettingDefault(self, key, list, default=None):
     else:
         self.requireParams({'key': key})
         return getFunc(key)
+
+
+@access.admin
+@filtermodel(model=File)
+@autoDescribeRoute(
+    Description('Adjust the import path of a file.')
+    .responseClass('File')
+    .modelParam('id', model=File, level=AccessType.ADMIN)
+    .param('path', 'The new import path of the file.')
+    .errorResponse('ID was invalid.')
+    .errorResponse('Write access was denied on the parent folder.', 403)
+
+)
+@boundHandler()
+def adjustFileImportPath(self, file, path):
+    assetstore = Assetstore().load(file['assetstoreId'])
+    if assetstore['type'] != AssetstoreType.FILESYSTEM or not file.get('path'):
+        raise RestException('The file must be on a filesystem assetstore')
+    if not os.path.exists(path):
+        raise RestException('The new import path does not exist or is unreachable')
+    File().getAssetstoreAdapter(file).deleteFile(file)
+    file['size'] = os.path.getsize(path)
+    file['imported'] = True
+    file['path'] = path
+    file = File().save(file)
+    try:
+        import girder_hashsum_download as hashsum_download
+
+        hashsum_download._computeHash(file)
+    except ImportError:
+        pass
+    return file
