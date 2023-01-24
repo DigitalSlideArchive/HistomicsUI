@@ -2,7 +2,7 @@
   - var annotationCount = 0;
     each annotation in annotations
 
-      // show at most 4 annotations
+      //- show at most 4 annotations
       if annotationCount < 4
         - annotationCount += 1;
           - var id = annotation.id;
@@ -23,15 +23,18 @@
             - var elementCount = 0;
               each element in elements[id]
 
-                // show at most 10 elements per annotation
+                //- show at most 10 elements per annotation
                 if elementCount < 10
                   - elementCount += 1;
-                    - var type = element.get('type');
-                    - var props = elementProperties(element);
-                    .h-element-type
-                      = type
-                    table
-                      for value, key in props
-                        tr
-                          td #{key}
-                            td #{value}
+                  - var type = element.get('type');
+                  - var props = elementProperties(element);
+                  .h-element-type
+                    = type
+                  table
+                    for value, key in props
+                      tr
+                        td #{key}
+                          td #{value}
+                  - var add = elementAdditionalValues(element, annotation)
+                  if add
+                    | !{add}
