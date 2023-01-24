@@ -19,14 +19,16 @@ wrap(ItemListWidget, 'render', function (render) {
         if (!settings || !settings['histomicsui.quarantine_folder']) {
             return;
         }
-        root.$el.find('.g-item-list-entry').each(function () {
-            var parent = $(this);
-            parent.find('.g-hui-quarantine').remove();
-            parent.find('a[class^=g-]:last').after($('<a class="g-hui-quarantine"><span>Q</span></a>').attr({
-                'g-item-cid': $('[g-item-cid]', parent).attr('g-item-cid'),
-                title: 'Move this item to the quarantine folder'
-            }));
-        });
+        for (let ix = 0; ix < this.collection.length; ix++) {
+            if (!this.$el.find('.g-item-list li.g-item-list-entry:eq(' + ix + ') .g-hui-quarantine').length) {
+                this.$el.find('.g-item-list li.g-item-list-entry:eq(' + ix + ') a[class^=g-]:last').after(
+                    $('<a class="g-hui-quarantine"><span>Q</span></a>').attr({
+                        'g-item-cid': this.collection.models[ix].cid,
+                        title: 'Move this item to the quarantine folder'
+                    })
+                );
+            }
+        }
     }
 
     function quarantine(event) {
@@ -73,7 +75,7 @@ wrap(ItemListWidget, 'render', function (render) {
             }
         }
         if (this.accessLevel >= AccessType.WRITE) {
-            adjustView(settings);
+            adjustView.call(this, settings);
         }
         return settings;
     });
