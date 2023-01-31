@@ -106,7 +106,8 @@ var AnnotationPopover = View.extend({
                     elements: {[annotation.id]: [element]},
                     formatDate,
                     users: this._users,
-                    elementProperties: (element) => this._elementProperties(element)
+                    elementProperties: (element) => this._elementProperties(element),
+                    elementAdditionalValues: (element, annotation) => this._elementAdditionalValues(element, annotation)
                 })
             );
         }
@@ -158,10 +159,9 @@ var AnnotationPopover = View.extend({
     },
 
     /**
-     * Get an object containing elements that are to be
-     * displayed to the user in a popover.  This object is
-     * cached on the model to avoid recomputing these properties
-     * every time they are displayed.
+     * Get an object containing elements that are to be displayed to the user
+     * in a popover.  This object is cached on the model to avoid recomputing
+     * these properties every time they are displayed.
      */
     _elementProperties(element) {
         // cache the popover properties to reduce
@@ -238,6 +238,17 @@ var AnnotationPopover = View.extend({
         }
 
         return props;
+    },
+
+    /**
+     * Return additional HTML to add to element popovers.
+     *a
+     * @param {object} element The annotation element under the cursor.
+     * @param {object} annotation The backbone annotation model.
+     * @returns {string} An HTML string that will be added to the popover or
+     *   undefined.
+     */
+    _elementAdditionalValues(element, annotation) {
     },
 
     /**
