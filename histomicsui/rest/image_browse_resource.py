@@ -1,7 +1,7 @@
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.v1.item import Item as ItemResource
-from girder.constants import AccessType
+from girder.constants import AccessType, TokenScope
 from girder.exceptions import RestException
 from girder.models.folder import Folder
 
@@ -49,7 +49,7 @@ class ImageBrowseResource(ItemResource):
             'count': len(allImages),
         }
 
-    @access.public
+    @access.public(scope=TokenScope.DATA_READ)
     @autoDescribeRoute(
         Description('Get the next image in the same folder as the given item.')
         .modelParam('id', 'The current image ID',
@@ -63,7 +63,7 @@ class ImageBrowseResource(ItemResource):
     def getNextImage(self, image, folder):
         return self.getAdjacentImages(image, folder)['next']
 
-    @access.public
+    @access.public(scope=TokenScope.DATA_READ)
     @autoDescribeRoute(
         Description('Get the previous image in the same folder as the given item.')
         .modelParam('id', 'The current item ID',
@@ -77,7 +77,7 @@ class ImageBrowseResource(ItemResource):
     def getPreviousImage(self, image, folder):
         return self.getAdjacentImages(image, folder)['previous']
 
-    @access.public
+    @access.public(scope=TokenScope.DATA_READ)
     @autoDescribeRoute(
         Description('Get the previous and next image in the same folder as the given item.')
         .modelParam('id', 'The current item ID',

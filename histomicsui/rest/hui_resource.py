@@ -42,7 +42,7 @@ class HistomicsUIResource(Resource):
     @describeRoute(
         Description('Get public settings for HistomicsUI.')
     )
-    @access.public
+    @access.public(scope=TokenScope.DATA_READ)
     def getPublicSettings(self, params):
         keys = [
             PluginSettings.HUI_BRAND_NAME,
@@ -101,7 +101,7 @@ class HistomicsUIResource(Resource):
         .errorResponse('Access was denied for the resource.', 403)
     )
     # This makes the endpoint accessible without logging in.
-    @access.public
+    @access.public(scope=TokenScope.DATA_READ)
     def getChildMetadata(self, id, params):
         # The `autoDescribeRoute` decorator processes the incoming request and
         # populates the function arguments.  Path parameters are added as
@@ -155,7 +155,7 @@ class HistomicsUIResource(Resource):
         .errorResponse('Required parameters were not provided.')
         .errorResponse('Invalid value provided.')
     )
-    @access.public
+    @access.public(scope=TokenScope.DATA_READ)
     def findItemsByMetadata(self, key, value, limit, offset, sort):
         # Construct a mongo query from the parameters given.  Developers should
         # be careful when constructing these queries to ensure that private
