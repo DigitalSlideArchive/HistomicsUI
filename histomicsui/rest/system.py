@@ -273,7 +273,7 @@ class HUIResourceResource(ResourceResource):
         .errorResponse('ID was invalid.')
         .errorResponse('Access was denied for the resource.', 403)
     )
-    @access.public
+    @access.public(scope=TokenScope.DATA_READ)
     def getResourceItems(self, id, params):
         user = self.getCurrentUser()
         modelType = params['type']
@@ -302,7 +302,7 @@ class HUIResourceResource(ResourceResource):
         .errorResponse('Resource not found.')
         .errorResponse('Write access was denied for a resource.', 403)
     )
-    @access.public
+    @access.public(scope=TokenScope.DATA_WRITE)
     def putResourceMetadata(self, resources, metadata, allowNull):
         user = self.getCurrentUser()
         self._validateResourceSet(resources)
