@@ -25,7 +25,7 @@ def prerelease_local_scheme(version):
 
 setup(
     name='histomicsui',
-    use_scm_version={'local_scheme': prerelease_local_scheme, 'fallback_version': 'development'},
+    use_scm_version={'local_scheme': prerelease_local_scheme, 'fallback_version': '0.0.0'},
     setup_requires=['setuptools-scm'],
     description='Organize, visualize, and analyze histology images.',
     author='Kitware, Inc.',
