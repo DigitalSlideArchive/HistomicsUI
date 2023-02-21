@@ -75,17 +75,31 @@ var MetadataPlot = Panel.extend({
         }, this);
         if (this.parentFolderId !== item.get('folderId')) {
             this.parentFolderId = null;
+            this.parentMeta = null;
+            if (this.parentFolderPromise) {
+                this.parentFolderPromise.abort();
+            }
             if (this.siblingItemPromise) {
                 this.siblingItemPromise.abort();
             }
-            const plotOptions = this.getPlotOptions();
             this.siblingItems = [];
             this.collectedPlotData = null;
-            if (plotOptions.filter((v) => v.type === 'number').length >= 2) {
-                this.parentFolderId = item.get('folderId');
-                this.siblingItemsPromise = $.Deferred();
-                this.getSiblingItems(item.get('folderId'));
-            }
+            const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number').length >= 2);
+            this.siblingItemsPromise = $.Deferred();
+            this.parentFolderPromise = restRequest({url: `folder/${item.get('folderId')}`, error: null}).done((result) => {
+                this.parentFolderPromise = null;
+                this.parentMeta = (result || {}).meta;
+                const plotOptions = this.getPlotOptions();
+                if (plotOptions.filter((v) => v.type === 'number').length >= 2) {
+                    if (!hasPlot) {
+                        this.render();
+                    }
+                    this.parentFolderId = item.get('folderId');
+                    this.getSiblingItems(item.get('folderId'));
+                } else {
+                    this.siblingItemsPromise.resolve(this.siblingItems);
+                }
+            });
         }
         this.render();
         return this;
@@ -102,22 +116,24 @@ var MetadataPlot = Panel.extend({
      *   is an object with 'root', 'key' and 'type'.
      */
     getPlotOptions: function () {
-        if (!this.item || !this.item.id || !this.item.get('meta')) {
+        if (!this.item || !this.item.id || (!this.item.get('meta') && !this.parentMeta)) {
             return [];
         }
-        var meta = this.item.get('meta');
         var results = [{root: 'Item', key: 'name', type: 'string', sort: '_name'}];
-        for (const [root, entry] of Object.entries(meta)) {
-            if (_.isArray(entry) && entry.length >= 1 && _.isObject(entry[0])) {
-                for (const [key, value] of Object.entries(entry[0])) {
-                    let type;
-                    if (_.isFinite(value)) {
-                        type = 'number';
-                    } else if (_.isString(value)) {
-                        type = 'string';
-                    }
-                    if (type) {
-                        results.push({root: root, key: key, type: type, sort: `${root}.${key}`.toLowerCase()});
+        for (let midx = 0; midx < 2; midx += 1) {
+            var meta = (!midx ? this.item.get('meta') : this.parentMeta) || {};
+            for (const [root, entry] of Object.entries(meta)) {
+                if (_.isArray(entry) && entry.length >= 1 && _.isObject(entry[0])) {
+                    for (const [key, value] of Object.entries(entry[0])) {
+                        let type;
+                        if (_.isFinite(value)) {
+                            type = 'number';
+                        } else if (_.isString(value)) {
+                            type = 'string';
+                        }
+                        if (type) {
+                            results.push({root: root, key: key, type: type, sort: `${root}.${key}`.toLowerCase()});
+                        }
                     }
                 }
             }
@@ -154,11 +170,14 @@ var MetadataPlot = Panel.extend({
             items = this.siblingItems.filter((d) => d.largeImage && !d.largeImage.expected && d.meta && d._id !== this.item.id);
         }
         items.unshift(this.item.toJSON());
+        if (this.parentMeta) {
+            items.unshift({meta: this.parentMeta});
+        }
         items.forEach((item, itemIdx) => {
-            let meta = item.meta;
+            let meta = item.meta || {};
             let end = false;
             for (let idx = 0; !end; idx += 1) {
-                let entry = {};
+                let entry = {_roots: {}};
                 usedOptions.forEach((opt) => {
                     plotData.fieldToPlot[opt.sort].forEach((key) => {
                         let value;
@@ -166,6 +185,7 @@ var MetadataPlot = Panel.extend({
                             value = item.name;
                         } else if (meta[opt.root] && meta[opt.root][idx]) {
                             value = meta[opt.root][idx][opt.key];
+                            entry._roots[opt.root] = entry._roots[opt.root] || meta[opt.root][idx];
                         }
                         if (value === undefined || (opt.type === 'number' && !_.isFinite(value))) {
                             end = true;
@@ -183,6 +203,9 @@ var MetadataPlot = Panel.extend({
         });
         plotData.data.forEach((entry, idx) => {
             Object.entries(entry).forEach(([key, value]) => {
+                if (key === '_roots') {
+                    return;
+                }
                 if (!plotData.ranges[key]) {
                     if (_.isFinite(value)) {
                         plotData.ranges[key] = {min: value, max: value};
@@ -207,6 +230,13 @@ var MetadataPlot = Panel.extend({
         return plotData;
     },
 
+    onHover: function (evt) {
+        // this is a stub for wrapping.
+    },
+
+    adjustHoverText: function (d, parts) {
+    },
+
     plotDataToPlotly: function (plotData) {
         let colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
         let viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
@@ -224,7 +254,8 @@ var MetadataPlot = Panel.extend({
                         parts.push(`${plotData.plotToOpt[series].root} - ${plotData.plotToOpt[series].key}: ${d[series]}`);
                     }
                 });
-                return '<span style="font-size: 9px">' + parts.join('<br>') + '</span>';
+                this.adjustHoverText(d, parts);
+                return '<span class="hui-plotly-hover" style="font-size: 9px">' + parts.join('<br>') + '</span>';
             }),
             hoverinfo: 'text',
             marker: {
@@ -263,6 +294,7 @@ var MetadataPlot = Panel.extend({
                 })
             ).done(() => {
                 let plotData = this.getPlotData(this.plotConfig);
+                this.lastPlotData = plotData;
                 this.$el.html(metadataPlotTemplate({}));
                 const elem = this.$el.find('.h-metadata-plot-area');
                 if (!plotData.ranges.x || !plotData.ranges.y || plotData.data.length < 2) {
@@ -281,6 +313,7 @@ var MetadataPlot = Panel.extend({
                     plotOptions.yaxis = {title: {text: `${plotData.plotToOpt.y.root} - ${plotData.plotToOpt.y.key}`}};
                 }
                 window.Plotly.newPlot(elem[0], this.plotDataToPlotly(plotData), plotOptions);
+                elem[0].on('plotly_hover', (evt) => this.onHover(evt));
             });
         }
         return this;
