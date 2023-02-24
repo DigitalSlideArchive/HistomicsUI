@@ -34,7 +34,7 @@ To use Girder Worker:
 .. code-block:: bash
 
   pip install girder_slicer_cli_web[worker]
-  GW_DIRECT_PATHS=true girder_worker -l info -Ofair --prefetch-multiplier=1
+  GW_DIRECT_PATHS=true girder-worker -l info -Ofair --prefetch-multiplier=1
 
 The first time you start HistomicsUI, you'll also need to configure Girder with at least one user and one assetstore (see the Girder_ documentation).  Additionally, it is recommended that you install the HistomicsTK_ algorithms.  This can be done going to the Admin Console, Plugins, Slicer CLI Web settings.  Set a default task upload folder, then import the ``dsarchive/histomicstk:latest`` docker image.
 
