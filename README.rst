@@ -23,11 +23,27 @@ Prerequisites:
 - MongoDB must be installed and running.
 - An appropriate version of Python must be installed.
 
+HistomicsUI uses large_image sources to read different image file formats.  You need to install appropriate sources for the files that will be used.
+
 .. code-block:: bash
 
-  pip install histomicsui[analysis] --find-links https://girder.github.io/large_image_wheels
+  # install all sources from the main repo
+  pip install large-image[sources] --find-links https://girder.github.io/large_image_wheels 
+
+or 
+
+.. code-block:: bash
+
+  # install openslide and tiff sources
+  pip install large-image-source-tiff large-image-source-openslide --find-links https://girder.github.io/large_image_wheels  
+
+Now install the histomicsui package, have Girder build its UI, and start the Girder server.  Note that at Girder may still require an old verison of node (12.x) to build correctly.
+
+.. code-block:: bash
+
+  pip install histomicsui[analysis]
   girder build
-  girder serve
+  girder serve  
 
 To use Girder Worker:
 
