@@ -28,22 +28,22 @@ HistomicsUI uses large_image sources to read different image file formats.  You 
 .. code-block:: bash
 
   # install all sources from the main repo
-  pip install large-image[sources] --find-links https://girder.github.io/large_image_wheels 
+  pip install large-image[sources] --find-links https://girder.github.io/large_image_wheels
 
-or 
+or
 
 .. code-block:: bash
 
   # install openslide and tiff sources
-  pip install large-image-source-tiff large-image-source-openslide --find-links https://girder.github.io/large_image_wheels  
+  pip install large-image-source-tiff large-image-source-openslide --find-links https://girder.github.io/large_image_wheels
 
-Now install the histomicsui package, have Girder build its UI, and start the Girder server.  Note that at Girder may still require an old verison of node (12.x) to build correctly.
+Now install the histomicsui package, have Girder build its UI, and start the Girder server.  Note that at Girder may still require an old version of node (12.x) to build correctly -- nvm can be used to manage multiple versions of node.
 
 .. code-block:: bash
 
   pip install histomicsui[analysis]
   girder build
-  girder serve  
+  girder serve
 
 To use Girder Worker:
 
