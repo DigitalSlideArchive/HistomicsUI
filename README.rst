@@ -54,6 +54,24 @@ To use Girder Worker:
 
 The first time you start HistomicsUI, you'll also need to configure Girder with at least one user and one assetstore (see the Girder_ documentation).  Additionally, it is recommended that you install the HistomicsTK_ algorithms.  This can be done going to the Admin Console, Plugins, Slicer CLI Web settings.  Set a default task upload folder, then import the ``dsarchive/histomicstk:latest`` docker image.
 
+Mac with Homebrew
+=================
+
+Use the Linux instructions but to install the openslide and tiff sources do the following:
+
+.. code-block:: bash
+
+  brew install miniconda
+  conda install -c conda-forge large-image-source-tiff
+  conda install -c conda-forge openslide
+
+You must also make the miniconda lib path available for dynamic library loading. The least intrusive way to do this is to set ``DYLD_LIBRARY_PATH`` when starting Girder:
+
+.. code-block:: bash
+
+  DYLD_LIBRARY_PATH=/opt/homebrew/Caskroom/miniconda/base/lib girder serve
+
+
 Reference Deployment
 ====================
 
