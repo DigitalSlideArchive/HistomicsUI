@@ -199,14 +199,12 @@ var AnnotationSelector = Panel.extend({
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
         const model = this.collection.get(id);
         this.listenToOnce(
-            showSaveAnnotationDialog(model, {title: 'Edit annotation'}),
+            showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer}),
             'g:submit',
             () => {
-                model.save().done(() => {
-                    if (model.get('displayed')) {
-                        this.trigger('h:redraw', model);
-                    }
-                });
+                if (model.get('displayed')) {
+                    this.trigger('h:redraw', model);
+                }
             }
         );
     },
