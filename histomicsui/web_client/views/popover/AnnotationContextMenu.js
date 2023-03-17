@@ -63,11 +63,13 @@ const AnnotationContextMenu = View.extend({
         const style = this.styles.get({ id: group }) || this.styles.get({ id: this.parentView._defaultGroup });
         const styleAttrs = Object.assign({}, style.toJSON());
         delete styleAttrs.id;
+        let refresh = false;
         this.collection.each((element) => { /* eslint-disable backbone/no-silent */
             if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id &&
-                element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
+                    element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
                 this.parentView.drawWidget.updateCount(element.attributes.group || this.parentView._defaultGroup, -1);
                 this.parentView.drawWidget.updateCount(group || this.parentView._defaultGroup, 1);
+                refresh = true;
             }
             if (group) {
                 styleAttrs.group = group;
@@ -78,6 +80,9 @@ const AnnotationContextMenu = View.extend({
         });
         this.collection.trigger('h:save');
         this.trigger('h:close');
+        if (this.parentView.drawWidget && refresh) {
+            this.parentView.drawWidget.render();
+        }
     },
     _getAnnotationGroups() {
         const groups = this.styles.map((style) => style.id);
