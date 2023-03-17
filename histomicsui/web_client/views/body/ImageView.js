@@ -1020,6 +1020,8 @@ var ImageView = View.extend({
                     this._openContextMenu(element.annotation.elements().get(element.id), annotationId, evt);
                 } else if (evt.mouse.modifiers.ctrl && !this.viewerWidget.annotationLayer.mode()) {
                     this._toggleSelectElement(element.annotation.elements().get(element.id));
+                } else if (evt.mouse.buttonsDown.left && !this.viewerWidget.annotationLayer.mode() && this.allowClickSelection) {
+                    this._selectSingleElement(element.annotation.elements().get(element.id));
                 }
             }
         });
@@ -1426,6 +1428,13 @@ var ImageView = View.extend({
         if (!this.selectedElements.length) {
             this.viewerWidget.highlightAnnotation();
         }
+    },
+
+    _selectSingleElement(element) {
+        if ((this.selectedElements.length > (element ? 1 : 0)) || (this.selectedElements.length === 1 && !this.selectedElements.get(element.id))) {
+            this._resetSelection();
+        }
+        this._toggleSelectElement(element);
     },
 
     _toggleSelectElement(element) {
