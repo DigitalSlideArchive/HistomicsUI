@@ -287,11 +287,13 @@ var MetadataPlot = Panel.extend({
             }
             $.when(
                 this.siblingItemsPromise,
-                $.ajax({ // like $.getScript, but allow caching
-                    url: 'https://cdn.plot.ly/plotly-latest.min.js',
-                    dataType: 'script',
-                    cache: true
-                })
+                !window.Plotly
+                    ? $.ajax({ // like $.getScript, but allow caching
+                        url: 'https://cdn.plot.ly/plotly-latest.min.js',
+                        dataType: 'script',
+                        cache: true
+                    })
+                    : null
             ).done(() => {
                 let plotData = this.getPlotData(this.plotConfig);
                 this.lastPlotData = plotData;
