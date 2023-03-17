@@ -1152,6 +1152,27 @@ var ImageView = View.extend({
             case 's':
                 this.annotationSelector.selectAnnotationByRegion();
                 break;
+            case 'S':
+                this.annotationSelector.selectAnnotationByRegion(true);
+                break;
+            case 'C':
+                this._resetSelection();
+                break;
+            case 'm':
+                if (this._currentMousePosition && (this.selectedElements.length > 0 || this._lastMouseOnElement)) {
+                    let annotationId, element;
+                    if (this.selectedElements.length > 0) {
+                        element = this.selectedElements.models[0];
+                        annotationId = element.originalAnnotation.id;
+                    } else {
+                        annotationId = this._lastMouseOnElement.annotationId;
+                        element = this.annotations.get(annotationId).elements().get(this._lastMouseOnElement.element.id);
+                    }
+                    this._openContextMenu(element, annotationId, {
+                        mouse: this._currentMousePosition
+                    });
+                }
+                break;
             case ' ': // pressing space bar creates a new annotation
                 this.annotationSelector.createAnnotation();
                 break;
@@ -1235,27 +1256,33 @@ var ImageView = View.extend({
         }
     },
 
-    _selectElementsByRegion() {
+    _selectElementsByRegion(evt) {
         this._selectElementsByRegionCanceled = false;
-        this.viewerWidget.drawRegion().then((coord) => {
+        this.viewerWidget.drawRegion(undefined, evt && evt.polygon ? 'polygon' : undefined).then((coord) => {
             if (this._selectElementsByRegionCanceled) {
                 return this;
             }
-            const boundingBox = {
-                left: coord[0],
-                top: coord[1],
-                width: coord[2],
-                height: coord[3]
-            };
             this._resetSelection();
-            const found = this.getElementsInBox(boundingBox);
+            let found;
+            if (coord.length === 4) {
+                const boundingBox = {
+                    left: coord[0],
+                    top: coord[1],
+                    width: coord[2],
+                    height: coord[3]
+                };
+                found = this.getElementsInBox(boundingBox);
+            } else {
+                const polygon = coord.slice(0, coord.length / 2).map((c, idx) => ({x: coord[idx * 2], y: coord[idx * 2 + 1], z: 0}));
+                found = this.getElementsInPolygon(polygon);
+            }
             found.forEach(({ element }, idx) => this._selectElement(element, {silent: idx !== found.length - 1}));
-            if (this.selectedElements.length > 0 && this._currentMousePosition) {
+            if (this.selectedElements.length > 0 && this._currentMousePosition && this.autoRegionContextMenu) {
                 // fake an open context menu
                 const { element, annotationId } = found[0];
                 this._openContextMenu(element, annotationId, {
                     mouse: this._currentMousePosition
-                });
+                }, true);
             }
             this.trigger('h:selectedElementsByRegion', this.selectedElements);
             return this;
@@ -1269,12 +1296,19 @@ var ImageView = View.extend({
     },
 
     getElementsInBox(boundingBox) {
-        const lowerLeft = { x: boundingBox.left, y: boundingBox.top + boundingBox.height };
-        const upperRight = { x: boundingBox.left + boundingBox.width, y: boundingBox.top };
+        const poly = [
+            {x: boundingBox.left, y: boundingBox.top + boundingBox.height},
+            {x: boundingBox.left + boundingBox.width, y: boundingBox.top + boundingBox.height},
+            {x: boundingBox.left + boundingBox.width, y: boundingBox.top},
+            {x: boundingBox.left, y: boundingBox.top}
+        ];
+        return this.getElementsInPolygon(poly);
+    },
 
+    getElementsInPolygon(poly) {
         const results = [];
         this.viewerWidget.featureLayer.features().forEach((feature) => {
-            const r = feature.boxSearch(lowerLeft, upperRight, { partial: false });
+            const r = feature.polygonSearch(poly, { partial: false });
             r.found.forEach((feature) => {
                 const annotationId = feature.properties ? feature.properties.annotation : null;
                 const element = feature.properties ? feature.properties.element : null;
@@ -1294,8 +1328,8 @@ var ImageView = View.extend({
         return !this._contextMenuActive && !this._pixelmapContextMenuActive;
     },
 
-    _openContextMenu(element, annotationId, evt) {
-        if (!this._canOpenContextMenu() || !element) {
+    _openContextMenu(element, annotationId, evt, force) {
+        if (!this._canOpenContextMenu() || !element || (!force && this.annotationSelector.selectAnnotationByRegionActive())) {
             return;
         }
         if (!this.selectedElements.get(element.id)) {

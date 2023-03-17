@@ -68,8 +68,17 @@ Annotation Controls
     element is selected, the context menu will be applied to all selected
     elements.
 
+  - **m**: Show the context menu for the currently selected annotations, if
+    any.  If no annotations are selected, show the context menu for the
+    annotation under the mouse cursor.
+
   - **s**: Switch to area select mode.  Left-drag a rectangle around a group of
-    annotation elements to show the context menu for the whole group at once.
+    annotation elements to select them.
+
+  - **S**: Switch to area select polygon mode.  Draw a polygon around a group of
+    annotation elements to select them.
+
+  - **C**: Clear current selection.
 
   - **Ctrl-left click**: toggle whether an individual annotation element is
     selected.
