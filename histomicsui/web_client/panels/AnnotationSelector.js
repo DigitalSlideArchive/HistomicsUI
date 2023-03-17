@@ -473,7 +473,12 @@ var AnnotationSelector = Panel.extend({
         });
     },
 
-    selectAnnotationByRegion() {
+    selectAnnotationByRegionActive() {
+        const btn = this.$('.h-annotation-select-by-region');
+        return !!btn.hasClass('active');
+    },
+
+    selectAnnotationByRegion(polygon) {
         const btn = this.$('.h-annotation-select-by-region');
         // listen to escape key
         $(document).on('keydown.h-annotation-select-by-region', (evt) => {
@@ -490,7 +495,7 @@ var AnnotationSelector = Panel.extend({
 
         if (!btn.hasClass('active')) {
             btn.addClass('active');
-            this.parentView.trigger('h:selectElementsByRegion');
+            this.parentView.trigger('h:selectElementsByRegion', {polygon});
         } else {
             btn.removeClass('active');
             $(document).off('keydown.h-annotation-select-by-region');
