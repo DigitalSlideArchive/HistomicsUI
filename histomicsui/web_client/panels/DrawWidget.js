@@ -219,7 +219,11 @@ var DrawWidget = Panel.extend({
                 if (label) {
                     newLabel = label;
                 } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
-                    newLabel = `${group || this.parentView._defaultGroup} ${elemType} ${parseInt(oldLabel[oldLabel.length - 1] || '')}`;
+                    let oldnum = parseInt(oldLabel[oldLabel.length - 1] || '');
+                    if (!_.isFinite(oldnum)) {
+                        oldnum = '';
+                    }
+                    newLabel = `${group || this.parentView._defaultGroup} ${elemType} ${oldnum}`;
                 } else {
                     newLabel = oldLabel;
                 }
