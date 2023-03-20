@@ -171,6 +171,7 @@ girderTest.promise.done(function () {
                 waitsFor(function () {
                     return $('body.modal-open').length === 0;
                 });
+                girderTest.waitForLoad();
             });
         });
 

@@ -8,7 +8,7 @@ if elements.length
       var classes = highlighted[element.id] ? ['h-highlight-element'] : [];
       element = element.toJSON();
       var groupName = element['group'] ? element['group'] : defaultGroup;
-      var type = element.type == 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type;
+      var type = element.type === 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type;
       var displayId = ++displayIdOffset + displayIdStart;
       var label = ((element.label || {}).value || type);
       if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
