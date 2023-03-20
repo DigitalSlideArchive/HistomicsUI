@@ -973,7 +973,6 @@ var DrawWidget = Panel.extend({
     },
 
     _styleGroupEditor() {
-        console.log(this);
         var dlg = editStyleGroups(this._style, this._groups, this.parentView._defaultGroup);
         dlg.$el.on('hidden.bs.modal', () => {
             this.render();
