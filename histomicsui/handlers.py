@@ -1,5 +1,6 @@
 import datetime
 import json
+import time
 
 import cachetools
 import orjson
@@ -123,10 +124,14 @@ def process_annotations(event):  # noqa
     item = results['item']
     user = results['user']
 
+    startTime = time.time()
     file = File().load(
         event.info.get('file', {}).get('_id'),
         level=AccessType.READ, user=user
     )
+    if time.time() - startTime > 10:
+        logger.info('Loaded annotation file in %5.3fs', time.time() - startTime)
+    startTime = time.time()
 
     if not file:
         logger.error('Could not load models from the database')
@@ -145,6 +150,8 @@ def process_annotations(event):  # noqa
     except Exception:
         logger.error('Could not parse annotation file')
         raise
+    if time.time() - startTime > 10:
+        logger.info('Decoded json in %5.3fs', time.time() - startTime)
 
     if not isinstance(data, list):
         data = [data]
