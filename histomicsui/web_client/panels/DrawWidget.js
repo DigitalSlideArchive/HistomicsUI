@@ -29,6 +29,7 @@ var DrawWidget = Panel.extend({
         'click .h-view-element': 'viewElement',
         'click .h-delete-element': 'deleteElement',
         'click .h-draw': 'drawElement',
+        'click .h-group-count-option .h-group-count-select': 'selectElementsInGroup',
         'change .h-style-group': '_setToSelectedStyleGroup',
         'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
         'change .h-fixed-shape,.h-fixed-height,.h-fixed-width': '_changeShapeConstraint',
@@ -843,6 +844,11 @@ var DrawWidget = Panel.extend({
      */
     _setToSelectedStyleGroup() {
         this._setStyleGroup(this._groups.get(this.$('.h-style-group').val()).toJSON());
+    },
+
+    selectElementsInGroup(evt) {
+        const group = $(evt.target).closest('[data-group]').attr('data-group');
+        this.parentView._selectElementsByGroup(group);
     },
 
     /**
