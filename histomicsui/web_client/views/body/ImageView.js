@@ -1257,6 +1257,9 @@ var ImageView = View.extend({
     },
 
     _selectElementsByRegion(evt) {
+        if (this.drawWidget && this.drawWidget.drawingType()) {
+            this.drawWidget.cancelDrawMode();
+        }
         this._selectElementsByRegionCanceled = false;
         this.viewerWidget.drawRegion(undefined, evt && evt.polygon ? 'polygon' : undefined).then((coord) => {
             if (this._selectElementsByRegionCanceled) {
