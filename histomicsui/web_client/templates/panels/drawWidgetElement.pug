@@ -56,6 +56,7 @@ if firstRender
     })
   - for (let group of order)
     .h-group-count-option(data-group=group[0], data-count=group[1]) #{group[1]} #{group[0]}
+      span.icon-marquee.h-group-count-select(title="Select all elements in this group")
 else
   - for (let group in counts)
     - updateCount(group, counts[group]);

@@ -1493,6 +1493,25 @@ var ImageView = View.extend({
         }
     },
 
+    _selectElementsByGroup(group) {
+        if (!this.activeAnnotation) {
+            return;
+        }
+        this._resetSelection();
+        let last;
+        this.activeAnnotation.elements().forEach((element) => {
+            if (element.get('group') === group || (group === this._defaultGroup && element.get('group') === undefined)) {
+                if (last !== undefined) {
+                    this._selectElement(last, {silent: true});
+                }
+                last = element;
+            }
+        });
+        if (last !== undefined) {
+            this._selectElement(last);
+        }
+    },
+
     _saveSelection() {
         const groupedAnnotations = this.selectedElements.groupBy((element) => element.originalAnnotation.id);
         _.each(groupedAnnotations, (elements, annotationId) => {
