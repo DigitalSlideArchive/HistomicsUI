@@ -481,9 +481,7 @@ var AnnotationSelector = Panel.extend({
         // listen to escape key
         $(document).on('keydown.h-annotation-select-by-region', (evt) => {
             if (evt.keyCode === 27) {
-                btn.removeClass('active');
-                $(document).off('keydown.h-annotation-select-by-region');
-                this.parentView.trigger('h:selectElementsByRegionCancel');
+                this.selectAnnotationByRegionCancel();
             }
         });
         this.listenToOnce(this.parentView, 'h:selectedElementsByRegion', () => {
@@ -495,6 +493,13 @@ var AnnotationSelector = Panel.extend({
             btn.addClass('active');
             this.parentView.trigger('h:selectElementsByRegion', {polygon});
         } else {
+            this.selectAnnotationByRegionCancel();
+        }
+    },
+
+    selectAnnotationByRegionCancel() {
+        const btn = this.$('.h-annotation-select-by-region');
+        if (btn.hasClass('active')) {
             btn.removeClass('active');
             $(document).off('keydown.h-annotation-select-by-region');
             this.parentView.trigger('h:selectElementsByRegionCancel');

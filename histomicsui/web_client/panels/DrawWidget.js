@@ -663,6 +663,9 @@ var DrawWidget = Panel.extend({
         }
         this.$('button.h-draw[data-type]').removeClass('active');
         if (this._drawingType) {
+            if (this.parentView.annotationSelector) {
+                this.parentView.annotationSelector.selectAnnotationByRegionCancel();
+            }
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
         }
     },
