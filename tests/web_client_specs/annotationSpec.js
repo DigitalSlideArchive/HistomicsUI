@@ -1079,8 +1079,21 @@ girderTest.promise.done(function () {
             });
 
             it('close the open draw panel', function () {
-                $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-annotation-name').click();
+                runs(function () {
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-annotation-name').click();
+                });
+                waitsFor(function () {
+                    return $('.h-elements-container').length;
+                }, 'the panel to be shown');
                 girderTest.waitForLoad();
+                runs(function () {
+                    expect($('.h-elements-container').length).toBe(1);
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-annotation-name').click();
+                });
+                girderTest.waitForLoad();
+                waitsFor(function () {
+                    return !$('.h-elements-container').length;
+                }, 'the panel to be hidden');
                 runs(function () {
                     expect($('.h-elements-container').length).toBe(0);
                 });
