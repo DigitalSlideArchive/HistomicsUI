@@ -164,6 +164,7 @@ var AnnotationSelector = Panel.extend({
         model.set('displayed', !model.get('displayed'));
         if (!model.get('displayed')) {
             model.unset('highlight');
+            this._deselectAnnotationElements(model);
             this._deactivateAnnotation(model);
         }
     },
@@ -259,17 +260,23 @@ var AnnotationSelector = Panel.extend({
                 if (!_.has(models, model.id)) {
                     model.set('displayed', true);
                 } else {
+                    let refreshed = false;
                     if (models[model.id].get('displayed')) {
                         if (model.get('_version') !== models[model.id].get('_version')) {
                             model.refresh(true);
                             model.set('displayed', true);
+                            refreshed = true;
                         } else {
                             model._centroids = models[model.id]._centroids;
+                            model._elements = models[model.id]._elements;
                         }
                     }
-                    // set without triggering a change; a change reloads and
-                    // rerenders, which is only done if it has changed (above)
-                    model.attributes.displayed = models[model.id].get('displayed');
+                    if (!refreshed) {
+                        // set without triggering a change; a change reloads
+                        // and rerenders, which is only done if it has changed
+                        // (above)
+                        model.attributes.displayed = models[model.id].get('displayed');
+                    }
                 }
             });
             this._debounceRender();
@@ -330,7 +337,10 @@ var AnnotationSelector = Panel.extend({
     },
 
     _setActiveAnnotation(model) {
-        this._activeAnnotation = model;
+        this._activeAnnotation = model || null;
+        if (this._activeAnnotation === null) {
+            return;
+        }
 
         if (!((model.get('annotation') || {}).elements || []).length) {
             // Only load the annotation if it hasn't already been loaded.
@@ -466,6 +476,10 @@ var AnnotationSelector = Panel.extend({
         }
     },
 
+    _deselectAnnotationElements(model) {
+        this.parentView.trigger('h:deselectAnnotationElements', {model: model});
+    },
+
     showAllAnnotations() {
         this._showAllAnnotationsState = true;
         this.collection.each((model) => {
@@ -477,6 +491,7 @@ var AnnotationSelector = Panel.extend({
         this._showAllAnnotationsState = false;
         this.collection.each((model) => {
             model.set('displayed', false);
+            this._deselectAnnotationElements(model);
             this._deactivateAnnotation(model);
         });
     },
