@@ -138,6 +138,7 @@ var ImageView = View.extend({
         this.listenTo(this.pixelmapContextMenu, 'h:close', this._closePixelmapContextMenu);
         this.listenTo(this.selectedElements, 'h:save', this._saveSelection);
         this.listenTo(this.selectedElements, 'h:remove', this._removeSelection);
+        this.listenTo(this, 'h:deselectAnnotationElements', this._deselectAnnotationElements);
 
         this.listenTo(events, 's:widgetChanged:region', this.widgetRegion);
         this.listenTo(events, 'g:login g:logout.success g:logout.error', () => {
@@ -1114,6 +1115,7 @@ var ImageView = View.extend({
         if (this.activeAnnotation && this.activeAnnotation.id === model.id) {
             this._removeDrawWidget();
         }
+        this.annotationSelector._deselectAnnotationElements(model);
     },
 
     _setAnnotationOpacity(opacity) {
@@ -1532,7 +1534,6 @@ var ImageView = View.extend({
             annotation.set('annotation', annotationData);
         });
     },
-
     _removeSelection() {
         const groupedAnnotations = this.selectedElements.groupBy((element) => element.originalAnnotation.id);
         _.each(groupedAnnotations, (elements, annotationId) => { /* eslint-disable backbone/no-silent */
@@ -1541,6 +1542,21 @@ var ImageView = View.extend({
             elementsCollection.remove(elements, { silent: true });
             elementsCollection.trigger('reset', elementsCollection);
         });
+    },
+    _deselectAnnotationElements(evt) {
+        let model = (evt || {}).model;
+        if (this.selectedElements && this.selectedElements.length) {
+            let elements = this.selectedElements.models.filter((el) => el.originalAnnotation.id === model.id);
+            if (elements.length) {
+                if (elements.length === this.selectedElements.length) {
+                    this._resetSelection();
+                } else {
+                    elements.forEach((el, idx) => {
+                        this.selectedElements.remove(el.id, {silent: idx !== elements.length - 1});
+                    });
+                }
+            }
+        }
     },
     _orderPanels() {
         if (!this._knownPanels) {
