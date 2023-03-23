@@ -181,7 +181,7 @@ var AnnotationPopover = View.extend({
         const props = {};
         element._popover = props;
 
-        if (element.get('label')) {
+        if (element.get('label') && element.get('label').value) {
             props.label = element.get('label').value;
         }
         if (element.get('group')) {

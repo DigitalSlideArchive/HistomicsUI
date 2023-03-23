@@ -164,6 +164,7 @@ var AnnotationSelector = Panel.extend({
         model.set('displayed', !model.get('displayed'));
         if (!model.get('displayed')) {
             model.unset('highlight');
+            this._deactivateAnnotation(model);
         }
     },
 
@@ -457,6 +458,14 @@ var AnnotationSelector = Panel.extend({
         return annotation.get('_accessLevel') >= AccessType.ADMIN;
     },
 
+    _deactivateAnnotation(model) {
+        if (this._activeAnnotation && this._activeAnnotation.id === model.id) {
+            this._activeAnnotation = null;
+            this.trigger('h:editAnnotation', null);
+            this._debounceRender();
+        }
+    },
+
     showAllAnnotations() {
         this._showAllAnnotationsState = true;
         this.collection.each((model) => {
@@ -468,6 +477,7 @@ var AnnotationSelector = Panel.extend({
         this._showAllAnnotationsState = false;
         this.collection.each((model) => {
             model.set('displayed', false);
+            this._deactivateAnnotation(model);
         });
     },
 
@@ -491,7 +501,7 @@ var AnnotationSelector = Panel.extend({
 
         if (!btn.hasClass('active')) {
             btn.addClass('active');
-            this.parentView.trigger('h:selectElementsByRegion', {polygon});
+            this.parentView.trigger('h:selectElementsByRegion', {polygon: polygon === true});
         } else {
             this.selectAnnotationByRegionCancel();
         }

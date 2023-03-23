@@ -1,9 +1,7 @@
 mixin functional(name, key, title, color)
   .form-group.h-functional-value
     label(for='h-annotation-' + name) #{title}
-    - console.log(styleableFuncs);
     - let anyFuncs = !!Object.keys(styleableFuncs || {}).length;
-    - console.log(anyFuncs);
     if !anyFuncs
       .input-group.h-colorpicker(id="h-annotation-colorpicker-" + name)
         input.input-sm.form-control(id="h-annotation-" + name, type='text', value=defaultStyles[key])
