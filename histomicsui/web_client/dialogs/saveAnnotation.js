@@ -216,14 +216,14 @@ var SaveAnnotation = View.extend({
         'click .h-access': 'access',
         'click .h-cancel': 'cancel',
 
-        'input #h-annotation-fill-color': () => $('.h-functional-value #h-annotation-fill-color-fixed').prop('checked', true),
-        'changeColor #h-annotation-colorpicker-fill-color': () => $('.h-functional-value #h-annotation-fill-color-fixed').prop('checked', true),
+        'input #h-annotation-fill-color': 'checkFixedIfPresent',
+        'changeColor #h-annotation-colorpicker-fill-color': 'checkFixedIfPresent',
         'change #h-annotation-fill-color-func-list': 'changeFillColorFunc',
         'input #h-annotation-fill-color-min-val': () => $('.h-functional-value #h-annotation-fill-color-min-setval').prop('checked', true),
         'input #h-annotation-fill-color-max-val': () => $('.h-functional-value #h-annotation-fill-color-max-setval').prop('checked', true),
 
-        'input #h-annotation-line-color': () => $('.h-functional-value #h-annotation-line-color-fixed').prop('checked', true),
-        'changeColor #h-annotation-colorpicker-line-color': () => $('.h-functional-value #h-annotation-line-color-fixed').prop('checked', true),
+        'input #h-annotation-line-color': 'checkFixedIfPresent',
+        'changeColor #h-annotation-colorpicker-line-color': 'checkFixedIfPresent',
         'change #h-annotation-line-color-func-list': 'changeLineColorFunc',
         'input #h-annotation-line-color-min-val': () => $('.h-functional-value #h-annotation-line-color-min-setval').prop('checked', true),
         'input #h-annotation-line-color-max-val': () => $('.h-functional-value #h-annotation-line-color-max-setval').prop('checked', true),
@@ -367,6 +367,13 @@ var SaveAnnotation = View.extend({
     changeLineColorFunc() {
         $('.h-functional-value #h-annotation-line-color-func').prop('checked', true);
         this._updateFuncValues();
+    },
+
+    checkFixedIfPresent(evt) {
+        let val = $(evt.target).closest('.row').find('input[type="text"]').val();
+        if ((val || '').trim().length) {
+            $(evt.target).closest('.row').find('input[type="radio"]').prop('checked', true);
+        }
     },
 
     _updateFuncValues() {
