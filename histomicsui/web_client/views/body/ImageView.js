@@ -324,6 +324,7 @@ var ImageView = View.extend({
     },
     openImage(id) {
         /* eslint-disable backbone/no-silent */
+        this._resetSelection();
         this.model.clear({silent: true});
         delete this.model.parent;
         if (id) {
@@ -1487,10 +1488,10 @@ var ImageView = View.extend({
     },
 
     _resetSelection() {
-        if (this.viewerWidget._highlightAnnotation) {
+        if (this.viewerWidget && this.viewerWidget._highlightAnnotation) {
             this.viewerWidget.highlightAnnotation();
         }
-        if (this.selectedElements.length) {
+        if (this.selectedElements && this.selectedElements.length) {
             this.selectedElements.reset();
         }
     },

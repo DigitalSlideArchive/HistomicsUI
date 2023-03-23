@@ -287,6 +287,7 @@ var AnnotationSelector = Panel.extend({
             // remove annotations that are displayed but have been deleted
             Object.keys(models).forEach((id) => {
                 if (!this.collection.get(id) && models[id].get('displayed')) {
+                    this._deselectAnnotationElements(models[id]);
                     this.viewer.removeAnnotation(models[id]);
                 }
             });
