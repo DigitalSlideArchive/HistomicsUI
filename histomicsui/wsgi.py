@@ -80,13 +80,12 @@ def create_wsgi_app(info: dict) -> cherrypy._cptree.Tree:
 # TODO database configuration? Other env vars?
 # TODO log configuration?
 
-# Set the broker from the environment
-broker = os.getenv('GIRDER_BROKER_URI')
-if broker and Setting().get('worker.broker') != broker:
-    Setting().set('worker.broker', broker)
-    # We actually want backend to be null, but girder_worker doesn't allow that right now
-    Setting().set('worker.backend', broker)
-
 info = configure(mode=os.environ.get('GIRDER_SERVER_MODE', constants.ServerMode.PRODUCTION))
 app = create_wsgi_app(info)
 plugin._loadPlugins(info)
+
+# Set the broker from the environment (must be done after plugins load)
+if broker := os.getenv('GIRDER_BROKER_URI'):
+    Setting().set('worker.broker', broker)
+    # We actually want backend to be null, but girder_worker doesn't allow that right now
+    Setting().set('worker.backend', broker)
