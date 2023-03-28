@@ -1,8 +1,9 @@
 import os
 
 import cherrypy
-from girder import constants, plugin, __version__, logStdoutStderr
+from girder import constants, plugin, __version__
 from girder.constants import ServerMode
+from girder.models.setting import Setting
 from girder.utility import config, server, webroot
 
 
@@ -78,7 +79,14 @@ def create_wsgi_app(info: dict) -> cherrypy._cptree.Tree:
 
 # TODO do we need to call _setupCache for HistomicsUI?
 # TODO database configuration? Other env vars?
-logStdoutStderr()
+# TODO log configuration?
+
+# Set the broker from the environment
+broker = os.getenv('GIRDER_BROKER_URI')
+if broker and Setting.get('worker.broker') != broker:
+    Setting().set('worker.broker', broker)
+    Setting().set('worker.backend', broker)  # We actually want this to be null, but girder_worker doesn't allow that right now
+
 info = configure(mode=os.environ.get('GIRDER_SERVER_MODE', ServerMode.PRODUCTION))
 app = create_wsgi_app(info)
 plugin._loadPlugins(info)
