@@ -1,8 +1,7 @@
 import os
 
 import cherrypy
-from girder import constants, plugin, __version__
-from girder.constants import ServerMode
+from girder import __version__, constants, plugin
 from girder.models.setting import Setting
 from girder.utility import config, server, webroot
 
@@ -13,7 +12,7 @@ def configure(mode: str) -> dict:
     appconf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'request.show_tracebacks': mode == ServerMode.TESTING,
+            'request.show_tracebacks': mode == constants.ServerMode.TESTING,
             'request.methods_with_bodies': ('POST', 'PUT', 'PATCH'),
             'response.headers.server': 'Girder %s' % __version__,
             'error_page.default': server._errorDefault
@@ -85,8 +84,9 @@ def create_wsgi_app(info: dict) -> cherrypy._cptree.Tree:
 broker = os.getenv('GIRDER_BROKER_URI')
 if broker and Setting.get('worker.broker') != broker:
     Setting().set('worker.broker', broker)
-    Setting().set('worker.backend', broker)  # We actually want this to be null, but girder_worker doesn't allow that right now
+    # We actually want backend to be null, but girder_worker doesn't allow that right now
+    Setting().set('worker.backend', broker)
 
-info = configure(mode=os.environ.get('GIRDER_SERVER_MODE', ServerMode.PRODUCTION))
+info = configure(mode=os.environ.get('GIRDER_SERVER_MODE', constants.ServerMode.PRODUCTION))
 app = create_wsgi_app(info)
 plugin._loadPlugins(info)
