@@ -1,5 +1,5 @@
-import { cancelRestRequests, getApiRoot, staticRoot } from '@girder/core/rest';
-import { getCurrentUser } from '@girder/core/auth';
+import {cancelRestRequests, getApiRoot, staticRoot} from '@girder/core/rest';
+import {getCurrentUser} from '@girder/core/auth';
 import * as version from '@girder/core/version';
 import GirderFrontPageView from '@girder/core/views/body/FrontPageView';
 

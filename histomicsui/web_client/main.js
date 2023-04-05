@@ -1,8 +1,8 @@
 import events from '@girder/core/events';
 import router from '@girder/core/router';
 
-import { registerPluginNamespace } from '@girder/core/pluginUtils';
-import { exposePluginConfig } from '@girder/core/utilities/PluginUtils';
+import {registerPluginNamespace} from '@girder/core/pluginUtils';
+import {exposePluginConfig} from '@girder/core/utilities/PluginUtils';
 
 // expose symbols under girder.plugins
 import * as histomicsui from '@girder/histomicsui';

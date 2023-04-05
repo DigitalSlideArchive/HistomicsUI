@@ -42,8 +42,8 @@ function createDialog(item, itemParent) {
             folderId = widget.root.id;
         }
         // reset image bounds when opening a new image
-        router.setQuery('bounds', null, { trigger: false });
-        router.setQuery('folder', folderId, { trigger: false });
+        router.setQuery('bounds', null, {trigger: false});
+        router.setQuery('folder', folderId, {trigger: false});
         router.setQuery('image', model.id, {trigger: true});
         $('.modal').girderModal('close');
     });
@@ -54,11 +54,11 @@ events.on('h:openImageUi', function () {
     var itemId = router.getQuery('image');
     if (itemId) {
         var item = new ItemModel();
-        item.set({ _id: router.getQuery('image') }).once('g:fetched', () => {
+        item.set({_id: router.getQuery('image')}).once('g:fetched', () => {
             if (router.getQuery('folder')) {
                 var folder = new FolderModel();
                 var folderId = router.getQuery('folder');
-                folder.set({ _id: folderId }).once('g:fetched', () => {
+                folder.set({_id: folderId}).once('g:fetched', () => {
                     dialog = createDialog(item, folder);
                     dialog.setElement($('#g-dialog-container')).render();
                 }).fetch();

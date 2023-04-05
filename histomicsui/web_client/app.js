@@ -6,8 +6,8 @@ import '@girder/fontello/dist/css/fontello.css';
 
 import GirderApp from '@girder/core/views/App';
 import eventStream from '@girder/core/utilities/EventStream';
-import { getCurrentUser } from '@girder/core/auth';
-import { splitRoute } from '@girder/core/misc';
+import {getCurrentUser} from '@girder/core/auth';
+import {splitRoute} from '@girder/core/misc';
 
 import router from './router';
 import HeaderView from './views/layout/HeaderView';
@@ -32,7 +32,7 @@ var App = GirderApp.extend({
         }).render();
 
         /* Only show job progress */
-        let plv = this.progressListView;
+        const plv = this.progressListView;
         if (!plv._origHandleProgress) {
             plv._origHandleProgress = plv._handleProgress;
             plv._handleProgress = function (progress) {
@@ -73,7 +73,7 @@ var App = GirderApp.extend({
         return GirderApp.prototype.navigateTo.apply(this, arguments);
     },
 
-    bindRoutes: bindRoutes
+    bindRoutes
 });
 
 export default App;

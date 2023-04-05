@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import $ from 'jquery';
-import { restRequest } from '@girder/core/rest';
+import {restRequest} from '@girder/core/rest';
 
 import events from '../../events';
 import router from '../../router';

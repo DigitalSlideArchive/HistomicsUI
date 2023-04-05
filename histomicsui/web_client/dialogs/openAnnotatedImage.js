@@ -2,7 +2,7 @@ import $ from 'jquery';
 import _ from 'underscore';
 import backbone from 'backbone';
 
-import { restRequest } from '@girder/core/rest';
+import {restRequest} from '@girder/core/rest';
 import ItemCollection from '@girder/core/collections/ItemCollection';
 import UserCollection from '@girder/core/collections/UserCollection';
 import View from '@girder/core/views/View';

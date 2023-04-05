@@ -60,7 +60,7 @@ const AnnotationContextMenu = View.extend({
         this.trigger('h:close');
     },
     _setStyleDefinition(group) {
-        const style = this.styles.get({ id: group }) || this.styles.get({ id: this.parentView._defaultGroup });
+        const style = this.styles.get({id: group}) || this.styles.get({id: this.parentView._defaultGroup});
         const styleAttrs = Object.assign({}, style.toJSON());
         delete styleAttrs.id;
         let refresh = false;

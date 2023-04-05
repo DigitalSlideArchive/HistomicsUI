@@ -4,8 +4,8 @@ import $ from 'jquery';
 
 import View from '@girder/core/views/View';
 import events from '@girder/core/events';
-import { restRequest } from '@girder/core/rest';
-import { getCurrentUser } from '@girder/core/auth';
+import {restRequest} from '@girder/core/rest';
+import {getCurrentUser} from '@girder/core/auth';
 
 import StyleModel from '../models/StyleModel';
 import editStyleGroups from '../templates/dialogs/editStyleGroups.pug';

@@ -74,14 +74,14 @@ var ZoomWidget = Panel.extend({
             title: 'Zoom',
             title_download_view: 'Download View',
             title_download_area: 'Download Area',
-            min: min,
-            max: max,
+            min,
+            max,
             maxNaturalMag: this._maxNaturalMag + 0.01,
             minMag: this.zoomToMagnification(this._minZoom),
-            step: step,
+            step,
             value: Math.log2(value) - Math.log2(this._maxMag),
             disabled: !this.renderer,
-            buttons: buttons,
+            buttons,
             collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
         }));
 
@@ -121,7 +121,7 @@ var ZoomWidget = Panel.extend({
      */
     setMaxMagnification(magnification, increase, increaseRange) {
         this._increaseZoom2x = increase || 0;
-        this._increaseZoom2xRange = increaseRange || { min: this._increaseZoom2x, max: this._increaseZoom2x };
+        this._increaseZoom2xRange = increaseRange || {min: this._increaseZoom2x, max: this._increaseZoom2x};
         this._maxNaturalMag = magnification;
         this._maxMag = magnification * Math.pow(2, this._increaseZoom2x);
         this._zoomRangeControls();
@@ -235,8 +235,8 @@ var ZoomWidget = Panel.extend({
                     width: coord[2],
                     height: coord[3],
                     magnification: mag,
-                    maxZoom: maxZoom,
-                    maxMag: maxMag,
+                    maxZoom,
+                    maxMag,
                     frameAndUrl: this.viewer.getFrameAndUrl()
                 };
                 this._cancelSelection = false;
@@ -270,7 +270,7 @@ var ZoomWidget = Panel.extend({
             this._increaseZoom2x += 1;
             var oldmax = parseInt(this.$('.h-zoom-slider').attr('max'), 10);
             this.$('.h-zoom-slider').attr('max', oldmax + 1);
-            this.renderer.zoomRange({ max: this.renderer.zoomRange().max + 1 });
+            this.renderer.zoomRange({max: this.renderer.zoomRange().max + 1});
         }
         this._zoomRangeControls();
     },
@@ -280,7 +280,7 @@ var ZoomWidget = Panel.extend({
             this._increaseZoom2x -= 1;
             var oldmax = parseInt(this.$('.h-zoom-slider').attr('max'), 10);
             this.$('.h-zoom-slider').attr('max', oldmax - 1);
-            this.renderer.zoomRange({ max: this.renderer.zoomRange().max - 1 });
+            this.renderer.zoomRange({max: this.renderer.zoomRange().max - 1});
         }
         this._zoomRangeControls();
     }

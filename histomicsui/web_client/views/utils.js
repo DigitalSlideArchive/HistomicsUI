@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-import { restRequest } from '@girder/core/rest';
+import {restRequest} from '@girder/core/rest';
 import convert from '@girder/large_image_annotation/annotations/convert';
 
 /* Utility items for HistomicUI views
@@ -41,18 +41,18 @@ class HuiSettings {
  * @returns {object} An area and edge length; may be undefined.
  */
 function elementAreaAndEdgeLength(element) {
-    let geojson = convert(element, {}).features[0];
-    let geogeom = geojson.geometry;
+    const geojson = convert(element, {}).features[0];
+    const geogeom = geojson.geometry;
     let area, edge;
     if (geogeom.type === 'Polygon') {
         area = edge = 0;
-        let lens = [];
+        const lens = [];
         for (let j = 0; j < geogeom.coordinates.length; j += 1) {
             for (let i = 0; i < geogeom.coordinates[j].length - 1; i += 1) {
-                let v0 = geogeom.coordinates[j][i];
-                let v1 = geogeom.coordinates[j][i + 1];
+                const v0 = geogeom.coordinates[j][i];
+                const v1 = geogeom.coordinates[j][i + 1];
                 area += (v1[1] - v0[1]) * (v0[0] + v1[0]) / 2 * (!j ? 1 : -1);
-                let len = ((v1[0] - v0[0]) ** 2 + (v1[1] - v0[1]) ** 2) ** 0.5;
+                const len = ((v1[0] - v0[0]) ** 2 + (v1[1] - v0[1]) ** 2) ** 0.5;
                 edge += len;
                 lens.push(len);
             }
@@ -71,12 +71,12 @@ function elementAreaAndEdgeLength(element) {
     if (geogeom.type === 'LineString') {
         edge = 0;
         for (let i = 0; i < geogeom.coordinates.length - 1; i += 1) {
-            let v0 = geogeom.coordinates[i];
-            let v1 = geogeom.coordinates[i + 1];
+            const v0 = geogeom.coordinates[i];
+            const v1 = geogeom.coordinates[i + 1];
             edge += ((v1[0] - v0[0]) ** 2 + (v1[1] - v0[1]) ** 2) ** 0.5;
         }
     }
     return {area, edge};
 }
 
-export { HuiSettings, elementAreaAndEdgeLength };
+export {HuiSettings, elementAreaAndEdgeLength};

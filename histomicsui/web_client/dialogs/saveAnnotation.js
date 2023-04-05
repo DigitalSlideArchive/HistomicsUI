@@ -2,8 +2,8 @@ import _ from 'underscore';
 import $ from 'jquery';
 import tinycolor from 'tinycolor2';
 
-import { AccessType } from '@girder/core/constants';
-import { formatDate, DATE_SECOND } from '@girder/core/misc';
+import {AccessType} from '@girder/core/constants';
+import {formatDate, DATE_SECOND} from '@girder/core/misc';
 import AccessWidget from '@girder/core/views/widgets/AccessWidget';
 // import MetadataWidget from '@girder/core/views/widgets/MetadataWidget';
 import View from '@girder/core/views/View';
@@ -11,7 +11,7 @@ import View from '@girder/core/views/View';
 import MetadataWidget from '../panels/MetadataWidget';
 import '../stylesheets/dialogs/saveAnnotation.styl';
 import saveAnnotation from '../templates/dialogs/saveAnnotation.pug';
-import { elementAreaAndEdgeLength } from '../views/utils';
+import {elementAreaAndEdgeLength} from '../views/utils';
 
 /**
  * Collect styleable properties from user parameters in elements.
@@ -25,7 +25,7 @@ import { elementAreaAndEdgeLength } from '../views/utils';
 function collectStyleableProps(styleableFuncs, elements, root) {
     const maxCategories = 20;
 
-    let children = {};
+    const children = {};
     root = root || [];
     let key = 'user';
     for (let j = 0; j < root.length; j += 1) {
@@ -42,8 +42,8 @@ function collectStyleableProps(styleableFuncs, elements, root) {
             if (proplist.substring || (proplist.toFixed && _.isFinite(proplist))) {
                 if (styleableFuncs[key] === undefined) {
                     styleableFuncs[key] = {
-                        root: root,
-                        key: key,
+                        root,
+                        key,
                         name: root.map((k) => k.replace('_', ' ')).join(' - '),
                         categoric: !proplist.toFixed
                     };
@@ -79,7 +79,7 @@ function collectStyleableProps(styleableFuncs, elements, root) {
         }
     }
     Object.keys(children).forEach((subkey) => {
-        let subroot = root.slice();
+        const subroot = root.slice();
         subroot.push(subkey);
         collectStyleableProps(styleableFuncs, elements, subroot);
     });
@@ -104,7 +104,7 @@ function rangeStyleableProps(styleableFuncs, elements) {
             return;
         }
         for (let i = 0; i < elements.length; i += 1) {
-            let d = elements[i];
+            const d = elements[i];
             if (d[key] !== undefined) {
                 if (func.min === undefined) {
                     func.min = func.max = d[key];
@@ -120,8 +120,8 @@ function rangeStyleableProps(styleableFuncs, elements) {
     });
     if (needsArea) {
         for (let i = 0; i < elements.length; i += 1) {
-            let element = elements[i];
-            const { area, edge } = elementAreaAndEdgeLength({el: element});
+            const element = elements[i];
+            const {area, edge} = elementAreaAndEdgeLength({el: element});
             if (styleableFuncs.area && area) {
                 if (styleableFuncs.area.min === undefined) {
                     styleableFuncs.area.min = styleableFuncs.area.max = area;
@@ -198,7 +198,7 @@ function colorFromFunc(element, idx, colorParam, funcInfo) {
     if (colorParam.maxColor.a === undefined) {
         colorParam.maxColor.a = 1;
     }
-    let clr = {
+    const clr = {
         r: val * (colorParam.maxColor.r - colorParam.minColor.r) + colorParam.minColor.r,
         g: val * (colorParam.maxColor.g - colorParam.minColor.g) + colorParam.minColor.g,
         b: val * (colorParam.maxColor.b - colorParam.minColor.b) + colorParam.minColor.b,
@@ -264,7 +264,7 @@ var SaveAnnotation = View.extend({
             }
             elementTypes.forEach((type) => {
                 (elementTypeProps[type] || []).forEach((key) => {
-                    styleableFuncs[key] = {calc: true, key: key, scale: scale, name: key};
+                    styleableFuncs[key] = {calc: true, key, scale, name: key};
                 });
             });
             const elements = this.annotation.get('annotation').elements;
@@ -299,8 +299,8 @@ var SaveAnnotation = View.extend({
                 hasAdmin: this.annotation.get('_accessLevel') >= AccessType.ADMIN,
                 annotation: this.annotation.toJSON().annotation,
                 model: this.annotation,
-                formatDate: formatDate,
-                DATE_SECOND: DATE_SECOND,
+                formatDate,
+                DATE_SECOND,
                 showStyleEditor,
                 styleableFuncs,
                 styleFuncs: this.annotation._styleFuncs,
@@ -370,7 +370,7 @@ var SaveAnnotation = View.extend({
     },
 
     checkFixedIfPresent(evt) {
-        let val = $(evt.target).closest('.row').find('input[type="text"]').val();
+        const val = $(evt.target).closest('.row').find('input[type="text"]').val();
         if ((val || '').trim().length) {
             $(evt.target).closest('.row').find('input[type="radio"]').prop('checked', true);
         }
@@ -379,7 +379,7 @@ var SaveAnnotation = View.extend({
     _updateFuncValues() {
         var names = ['fill-color', 'line-color'];
         names.forEach((name) => {
-            let curfunc = this.$el.find('#h-annotation-' + name + '-func-list').val();
+            const curfunc = this.$el.find('#h-annotation-' + name + '-func-list').val();
             let mintext = '';
             let maxtext = '';
             if (this._styleableFuncs[curfunc]) {
@@ -398,7 +398,7 @@ var SaveAnnotation = View.extend({
     _getFunctionalProps(name, key, valueParam, setValue, color) {
         var geo = window.geo;
 
-        let valueFunc = this.annotation._styleFuncs[key];
+        const valueFunc = this.annotation._styleFuncs[key];
         valueFunc.useFunc = this.$('#h-annotation-' + name + '-func').prop('checked');
         valueFunc.key = this.$('#h-annotation-' + name + '-func-list').val();
         valueFunc.minColor = tinycolor(this.$('#h-annotation-' + name + '-min').val()).toRgbString();
@@ -451,8 +451,8 @@ var SaveAnnotation = View.extend({
             this.$('#h-annotation-line-width').parent().addClass('has-error');
         }
 
-        let fillColorParam = {};
-        let lineColorParam = {};
+        const fillColorParam = {};
+        const lineColorParam = {};
         if (this._showStyleEditor && Object.keys(this._styleableFuncs || {}).length) {
             // get functional values
             setFillColor = this._getFunctionalProps('fill-color', 'fillColor', fillColorParam, fillColor, setFillColor, true);
@@ -524,7 +524,7 @@ var dialog = new SaveAnnotation({
  * @returns {SaveAnnotation} The dialog's view
  */
 function show(annotation, options) {
-    _.defaults(options, { title: 'Create annotation' });
+    _.defaults(options, {title: 'Create annotation'});
     delete annotation._meta;
     dialog.annotation = annotation;
     dialog.options = options;

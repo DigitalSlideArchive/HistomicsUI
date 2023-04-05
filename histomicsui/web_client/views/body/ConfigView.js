@@ -4,11 +4,11 @@ import View from '@girder/core/views/View';
 
 import PluginConfigBreadcrumbWidget from '@girder/core/views/widgets/PluginConfigBreadcrumbWidget';
 import BrowserWidget from '@girder/core/views/widgets/BrowserWidget';
-import { restRequest } from '@girder/core/rest';
+import {restRequest} from '@girder/core/rest';
 import events from '@girder/core/events';
 import router from '@girder/core/router';
 
-import { HuiSettings } from '../utils';
+import {HuiSettings} from '../utils';
 
 import ConfigViewTemplate from '../../templates/body/configView.pug';
 import '../../stylesheets/body/configView.styl';
@@ -60,7 +60,7 @@ var ConfigView = View.extend({
             this.$('#g-hui-help-tooltip').val(this.defaults['histomicsui.help_tooltip']);
         },
         'click #g-hui-cancel': function (event) {
-            router.navigate('plugins', { trigger: true });
+            router.navigate('plugins', {trigger: true});
         },
         'change #g-hui-help-url': function (event) {
             if (this.$('#g-hui-help-url').val().trim() === '') {
@@ -123,7 +123,7 @@ var ConfigView = View.extend({
             helpText: 'Browse to a location to select it as the destination.',
             submitText: 'Select Destination',
             validate: function (model) {
-                let isValid = $.Deferred();
+                const isValid = $.Deferred();
                 if (!model || model.get('_modelType') !== 'folder') {
                     isValid.reject('Please select a folder.');
                 } else {
@@ -137,7 +137,7 @@ var ConfigView = View.extend({
             restRequest({
                 url: `resource/${val.id}/path`,
                 method: 'GET',
-                data: { type: val.get('_modelType') }
+                data: {type: val.get('_modelType')}
             }).done((result) => {
                 // Only add the resource path if the value wasn't altered
                 if (this.$('#g-hui-quarantine-folder').val() === val.id) {

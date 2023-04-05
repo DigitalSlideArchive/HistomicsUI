@@ -19,7 +19,7 @@ const PixelmapContextMenu = View.extend({
     },
 
     render() {
-        this.$el.html(template({ categories: this.styles.map((style) => style.id) }));
+        this.$el.html(template({categories: this.styles.map((style) => style.id)}));
         return this;
     },
 

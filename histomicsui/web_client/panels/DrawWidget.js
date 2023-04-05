@@ -4,7 +4,7 @@ import $ from 'jquery';
 
 import events from '@girder/core/events';
 import Panel from '@girder/slicer_cli_web/views/Panel';
-import { getCurrentUser } from '@girder/core/auth';
+import {getCurrentUser} from '@girder/core/auth';
 
 import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/convert';
 import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
@@ -130,7 +130,7 @@ var DrawWidget = Panel.extend({
         }
         if (this.$('.h-group-count-option.pixelmap').length > 0) {
             this.$('.h-group-count-option.pixelmap').remove();
-            for (let element of this.collection.models) {
+            for (const element of this.collection.models) {
                 if (element.attributes.type === 'pixelmap') {
                     this.countPixelmap(element, 1);
                 }
@@ -210,7 +210,7 @@ var DrawWidget = Panel.extend({
         this.listenToOnce(dialog, 'h:editElement', (obj) => {
             if (obj.edited) {
                 // update the html immediately instead of rerendering it
-                let id = obj.element.id,
+                const id = obj.element.id,
                     label = (obj.data.label || {}).value,
                     elemType = obj.element.get('type'),
                     group = obj.data.group;
@@ -336,7 +336,7 @@ var DrawWidget = Panel.extend({
         elements = this.collection.add(elements);
         this.$el.find('.h-elements-container').append(
             drawWidgetElement({
-                elements: elements,
+                elements,
                 style: this._style.id,
                 defaultGroup: this.parentView._defaultGroup,
                 highlighted: this._highlighted,
@@ -348,7 +348,7 @@ var DrawWidget = Panel.extend({
         this.newElementDisplayIdStart += elements.length;
         if (this.$('.h-group-count-option.pixelmap').length > 0) {
             this.$('.h-group-count-option.pixelmap').remove();
-            for (let element of this.collection.models) {
+            for (const element of this.collection.models) {
                 if (element.attributes.type === 'pixelmap') {
                     this.countPixelmap(element, 1);
                 }
@@ -359,7 +359,6 @@ var DrawWidget = Panel.extend({
     /**
      * Specify how precise ellipses are when converted to polygons.
      */
-    /* eslint-disable underscore/prefer-constant */
     _pixelTolerance() {
         /* null : use default,1/10 pixel at max map zoom */
         // return null;
@@ -368,7 +367,6 @@ var DrawWidget = Panel.extend({
         /* number / unitsPerPixel(zoom) : pixel tolerance on base image */
         // return 0.5 / this.viewer.viewer.unitsPerPixel(this.viewer.viewer.zoom();
     },
-    /* eslint-enable underscore/prefer-constant */
 
     /**
      * Apply a boolean operation to the existign polygons.
@@ -384,7 +382,7 @@ var DrawWidget = Panel.extend({
         }
         const op = evtOpts.currentBooleanOperation;
         const existing = this.viewer._annotations[this.annotation.id].features.filter((f) => ['polygon', 'marker'].indexOf(f.featureType) >= 0);
-        let polylist = evtOpts.asPolygonList ? annotations : annotations[0].toPolygonList({pixelTolerance: this._pixelTolerance()});
+        const polylist = evtOpts.asPolygonList ? annotations : annotations[0].toPolygonList({pixelTolerance: this._pixelTolerance()});
         if (!existing.length && polylist.length < 2) {
             return false;
         }
@@ -532,7 +530,7 @@ var DrawWidget = Panel.extend({
                     elements = [{
                         type: 'polyline',
                         closed: true,
-                        points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1], 'z': 0})),
+                        points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1], z: 0})),
                         id: this.viewer._guid()
                     }];
                 }
@@ -652,11 +650,11 @@ var DrawWidget = Panel.extend({
             this.annotation.set('displayed', true);
             this._drawingType = type;
 
-            const options = { modeOptions: {} };
+            const options = {modeOptions: {}};
             if (this._editOptions.size_mode === 'fixed_aspect_ratio') {
                 options.modeOptions.constraint = this._editOptions.fixed_width / this._editOptions.fixed_height;
             } else if (this._editOptions.size_mode === 'fixed_size') {
-                options.modeOptions.constraint = { width: this._editOptions.fixed_width, height: this._editOptions.fixed_height };
+                options.modeOptions.constraint = {width: this._editOptions.fixed_width, height: this._editOptions.fixed_height};
             }
 
             this.viewer.startDrawMode(type, options)
@@ -724,7 +722,7 @@ var DrawWidget = Panel.extend({
         if (update || !opts) {
             this._verifyEditOptions(this._editOptions);
             try {
-                let hui = this._getEditOptions();
+                const hui = this._getEditOptions();
                 hui[this._localId] = this._editOptions;
                 window.localStorage.setItem('histomicsui', JSON.stringify(hui));
             } catch (err) {
@@ -762,11 +760,11 @@ var DrawWidget = Panel.extend({
     updateCount(groupName, change) {
         const groupElem = $('.h-group-count-options > [data-group="' + groupName + '"]');
         if (groupElem.length > 0) {
-            let newCount =  parseInt(groupElem.attr('data-count')) + change;
+            const newCount =  parseInt(groupElem.attr('data-count')) + change;
             groupElem.attr('data-count', newCount);
             if (newCount > 0) {
-                for (let group of $('.h-group-count-option').toArray()) {
-                    let count = parseInt($(group).attr('data-count'));
+                for (const group of $('.h-group-count-option').toArray()) {
+                    const count = parseInt($(group).attr('data-count'));
                     if (newCount > count) {
                         $(group).before(groupElem);
                         break;
@@ -786,7 +784,7 @@ var DrawWidget = Panel.extend({
                 groupElem.remove();
             }
         } else if (change !== 0) {
-            for (let group of $('.h-group-count-option').toArray().reverse()) {
+            for (const group of $('.h-group-count-option').toArray().reverse()) {
                 if ($(group).attr('data-count') > change || ($(group).attr('data-count') === change && $(group).attr('data-group') < groupName)) {
                     $(group).after('<div class = h-group-count-option data-group="' + groupName + '" data-count=' + change + '>' + change + ' ' + groupName + '</div>');
                     break;
@@ -806,16 +804,16 @@ var DrawWidget = Panel.extend({
     },
 
     countPixelmap(pixelmap, operation) {
-        let toChange = {};
+        const toChange = {};
         for (let ix = 0; ix < pixelmap.get('values').length; ix++) {
-            let groupName = (pixelmap.get('categories')[pixelmap.get('values')[ix]]).label || this.parentView._defaultGroup;
+            const groupName = (pixelmap.get('categories')[pixelmap.get('values')[ix]]).label || this.parentView._defaultGroup;
             if (toChange[groupName]) {
                 toChange[groupName]++;
             } else {
                 toChange[groupName] = 1;
             }
         }
-        for (let group in toChange) {
+        for (const group in toChange) {
             this.updateCount(group, operation * toChange[group]);
         }
     },
@@ -918,9 +916,9 @@ var DrawWidget = Panel.extend({
         this._updateConstraintValueInputs();
 
         if (opts.size_mode === 'fixed_aspect_ratio') {
-            this.viewer.startDrawMode(this._drawingType, { modeOptions: { constraint: opts.fixed_width / opts.fixed_height } });
+            this.viewer.startDrawMode(this._drawingType, {modeOptions: {constraint: opts.fixed_width / opts.fixed_height}});
         } else if (opts.size_mode === 'fixed_size') {
-            this.viewer.startDrawMode(this._drawingType, { modeOptions: { constraint: { width: opts.fixed_width, height: opts.fixed_height } } });
+            this.viewer.startDrawMode(this._drawingType, {modeOptions: {constraint: {width: opts.fixed_width, height: opts.fixed_height}}});
         } else {
             this.viewer.startDrawMode(this._drawingType);
         }
@@ -940,7 +938,7 @@ var DrawWidget = Panel.extend({
      * @param {number} A number to add to the current size.
      */
     adjustBrushSize(delta) {
-        let newval = Math.max(1, parseFloat(this.$('.h-brush-size').val()) + delta);
+        const newval = Math.max(1, parseFloat(this.$('.h-brush-size').val()) + delta);
         this.$('.h-brush-size').val(newval);
         this._changeBrush();
     },

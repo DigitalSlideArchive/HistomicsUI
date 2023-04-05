@@ -1,10 +1,10 @@
 import _ from 'underscore';
 import $ from 'jquery';
 
-import { restRequest } from '@girder/core/rest';
-import { AccessType } from '@girder/core/constants';
+import {restRequest} from '@girder/core/rest';
+import {AccessType} from '@girder/core/constants';
 import eventStream from '@girder/core/utilities/EventStream';
-import { getCurrentUser } from '@girder/core/auth';
+import {getCurrentUser} from '@girder/core/auth';
 import Panel from '@girder/slicer_cli_web/views/Panel';
 import AnnotationModel from '@girder/large_image_annotation/models/AnnotationModel';
 import {events as girderEvents} from '@girder/core';
@@ -406,7 +406,7 @@ var AnnotationSelector = Panel.extend({
         if (!annotation._saving && !annotation._inFetch && !annotation.get('loading')) {
             this.viewer._saving[annotation.id] = true;
             this.$el.addClass('saving');
-            let lastSaveAgain = annotation._saveAgain;
+            const lastSaveAgain = annotation._saveAgain;
             annotation._saving = true;
             annotation._saveAgain = false;
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
@@ -478,7 +478,7 @@ var AnnotationSelector = Panel.extend({
     },
 
     _deselectAnnotationElements(model) {
-        this.parentView.trigger('h:deselectAnnotationElements', {model: model});
+        this.parentView.trigger('h:deselectAnnotationElements', {model});
     },
 
     showAllAnnotations() {

@@ -5,7 +5,7 @@ if (View.__super__ && View.__super__.initialize) {
     const oldInitialize = View.__super__.initialize;
 
     View.__super__.initialize = function () {
-        let result = oldInitialize.apply(this, arguments);
+        const result = oldInitialize.apply(this, arguments);
 
         // Bootstrap 3's default behavior is to close dialogs when a
         // `click` event occurs outside of it. By using the `click`
@@ -38,9 +38,9 @@ if (View.__super__ && View.__super__.initialize) {
         return result;
     };
 
-    let oldGirderModal = $.fn.girderModal;
+    const oldGirderModal = $.fn.girderModal;
     $.fn.girderModal = function (view) {
-        let result = oldGirderModal.call(this, view);
+        const result = oldGirderModal.call(this, view);
         result.on('shown.bs.modal', () => {
             result.off('click.dismiss.bs.modal');
             result.off('mouseup.dismiss.bs.modal');
