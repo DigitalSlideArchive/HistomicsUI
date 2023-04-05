@@ -2,20 +2,20 @@
 import _ from 'underscore';
 import $ from 'jquery';
 
-import { restRequest } from '@girder/core/rest';
-import { getCurrentUser } from '@girder/core/auth';
-import { AccessType } from '@girder/core/constants';
+import {restRequest} from '@girder/core/rest';
+import {getCurrentUser} from '@girder/core/auth';
+import {AccessType} from '@girder/core/constants';
 import ItemModel from '@girder/core/models/ItemModel';
 import FileModel from '@girder/core/models/FileModel';
 import FolderCollection from '@girder/core/collections/FolderCollection';
-import { ViewerWidget } from '@girder/large_image_annotation/views';
+import {ViewerWidget} from '@girder/large_image_annotation/views';
 
 import SlicerPanelGroup from '@girder/slicer_cli_web/views/PanelGroup';
 import AnnotationModel from '@girder/large_image_annotation/models/AnnotationModel';
 import AnnotationCollection from '@girder/large_image_annotation/collections/AnnotationCollection';
 
-import { convert as convertToGeojson } from '@girder/large_image_annotation/annotations';
-import { convert as convertFromGeojson } from '@girder/large_image_annotation/annotations/geojs';
+import {convert as convertToGeojson} from '@girder/large_image_annotation/annotations';
+import {convert as convertFromGeojson} from '@girder/large_image_annotation/annotations/geojs';
 
 import StyleCollection from '../../collections/StyleCollection';
 import StyleModel from '../../models/StyleModel';
@@ -32,7 +32,7 @@ import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
 import router from '../../router';
 import events from '../../events';
-import { HuiSettings } from '../utils';
+import {HuiSettings} from '../utils';
 import View from '../View';
 
 import imageTemplate from '../../templates/body/image.pug';
@@ -41,7 +41,7 @@ import '../../stylesheets/body/image.styl';
 var ImageView = View.extend({
     events: {
         'keydown .h-image-body': '_onKeyDown',
-        'click': '_clearTooltips',
+        click: '_clearTooltips',
         'click .h-control-panel-container .s-close-panel-group': '_closeAnalysis',
         'mousemove .geojs-map': '_trackMousePosition'
     },
@@ -55,7 +55,7 @@ var ImageView = View.extend({
         this._selectElementsByRegionCanceled = false;
         this._debounceUpdatePixelmapValues = _.debounce(this._updatePixelmapValues, 500);
         this._overlayLayers = {};
-        this.selectedAnnotation = new AnnotationModel({ _id: 'selected' });
+        this.selectedAnnotation = new AnnotationModel({_id: 'selected'});
         this.selectedElements = this.selectedAnnotation.elements();
 
         // Allow zooming this many powers of 2 more than native pixel resolution
@@ -116,7 +116,7 @@ var ImageView = View.extend({
         });
         this.listenTo(events, 'h:submit', (data) => {
             this.$('.s-jobs-panel .s-panel-controls .icon-down-open').click();
-            events.trigger('g:alert', { type: 'success', text: 'Analysis job submitted.' });
+            events.trigger('g:alert', {type: 'success', text: 'Analysis job submitted.'});
         });
         this.listenTo(events, 'h:select-region', this.showRegion);
         this.listenTo(this.annotationSelector.collection, 'add update change:displayed', this.toggleAnnotation);
@@ -143,7 +143,7 @@ var ImageView = View.extend({
         this.listenTo(events, 's:widgetChanged:region', this.widgetRegion);
         this.listenTo(events, 'g:login g:logout.success g:logout.error', () => {
             this._openId = null;
-            this.model.set({ _id: null });
+            this.model.set({_id: null});
             this._knownPanels = {};
             HuiSettings.clearSettingsCache();
         });
@@ -197,7 +197,7 @@ var ImageView = View.extend({
                 // it is very confusing if this value is smaller than the
                 // AnnotationSelector MAX_ELEMENTS_LIST_LENGTH
                 highlightFeatureSizeLimit: 5000,
-                scale: { position: { bottom: 20, right: 10 } }
+                scale: {position: {bottom: 20, right: 10}}
             });
             // Don't unclamp bounds for the image even if image overlays are present.
             if (this.viewerWidget.setUnclampBoundsForOverlay) {
@@ -225,7 +225,7 @@ var ImageView = View.extend({
                 this.viewer = this.viewerWidget.viewer;
                 this.viewer.interactor().removeAction(geo.geo_action.zoomselect);
 
-                let currentOptions = this.viewer.interactor().options();
+                const currentOptions = this.viewer.interactor().options();
                 currentOptions.click.cancelOnMove = 10; // a click can move up to 10 pixels before it is considered a move
                 this.viewer.interactor().options(currentOptions);
 
@@ -247,7 +247,7 @@ var ImageView = View.extend({
                 this.setBoundsQuery();
 
                 this.viewer._originalZoomRange = this.viewer.zoomRange().max;
-                this.viewer.zoomRange({ max: this.viewer.zoomRange().max + this._increaseZoom2x });
+                this.viewer.zoomRange({max: this.viewer.zoomRange().max + this._increaseZoom2x});
 
                 // update the query string on pan events
                 this.viewer.geoOn(geo.event.pan, () => {
@@ -328,12 +328,12 @@ var ImageView = View.extend({
         this.model.clear({silent: true});
         delete this.model.parent;
         if (id) {
-            this.model.set({ _id: id }).fetch().then(() => {
+            this.model.set({_id: id}).fetch().then(() => {
                 this._setImageInput();
                 return null;
             });
         } else {
-            this.model.set({ _id: null });
+            this.model.set({_id: null});
             this.render();
             this._openId = null;
             events.trigger('h:imageOpened', null);
@@ -432,7 +432,7 @@ var ImageView = View.extend({
         return promise.then((file) => {
             _.each(this.controlPanel.models(), (model) => {
                 if (model.get('type') === 'image') {
-                    model.set('value', file, { trigger: true });
+                    model.set('value', file, {trigger: true});
                 }
             });
             return null;
@@ -499,7 +499,7 @@ var ImageView = View.extend({
 
     _closeAnalysis(evt) {
         evt.preventDefault();
-        router.setQuery('analysis', null, { trigger: false });
+        router.setQuery('analysis', null, {trigger: false});
         this.controlPanel.$el.addClass('hidden');
         events.trigger('query:analysis', null);
     },
@@ -519,7 +519,7 @@ var ImageView = View.extend({
             bottom = bounds.bottom.toFixed();
             router.setQuery('bounds', [
                 left, top, right, bottom, rotation
-            ].join(','), { replace: true });
+            ].join(','), {replace: true});
         }
     },
 
@@ -544,7 +544,7 @@ var ImageView = View.extend({
 
     _updatePixelmapElements(pixelmapElements, annotation) {
         const groups = new StyleCollection();
-        const defaultStyle = new StyleModel({ id: this._defaultGroup });
+        const defaultStyle = new StyleModel({id: this._defaultGroup});
         groups.fetch().done(() => {
             if (!groups.has(this._defaultGroup)) {
                 groups.add(defaultStyle.toJSON());
@@ -612,9 +612,9 @@ var ImageView = View.extend({
         });
 
         // move the default category to index 0 and adjust data array if needed
-        const originalDefaultIndex = _.findIndex(newCategories, { label: this._defaultGroup });
-        const updatedCategories = _.where(newCategories, { label: this._defaultGroup })
-            .concat(_.reject(newCategories, { label: this._defaultGroup }));
+        const originalDefaultIndex = _.findIndex(newCategories, {label: this._defaultGroup});
+        const updatedCategories = _.where(newCategories, {label: this._defaultGroup})
+            .concat(_.reject(newCategories, {label: this._defaultGroup}));
         pixelmap.set('categories', updatedCategories);
         if (originalDefaultIndex !== 0) {
             const originalData = pixelmap.get('values');
@@ -653,7 +653,7 @@ var ImageView = View.extend({
                     return null;
                 }
                 // update pixelmaps based on styles
-                const pixelmapElements = annotation.elements().where({ type: 'pixelmap' });
+                const pixelmapElements = annotation.elements().where({type: 'pixelmap'});
                 if (pixelmapElements.length > 0) {
                     this._updatePixelmapElements(pixelmapElements, annotation);
                     return null;
@@ -705,7 +705,7 @@ var ImageView = View.extend({
                 bottom: parseFloat(value[1]) + parseFloat(value[4])
             });
         } else if (value.length >= 8) {
-            let points = [[]];
+            const points = [[]];
             for (let idx = 0; idx < value.length - 1; idx += 2) {
                 if (parseFloat(value[idx]) === -1 && parseFloat(value[idx + 1]) === -1) {
                     points.push([]);
@@ -747,7 +747,7 @@ var ImageView = View.extend({
         }
 
         this.viewerWidget.removeAnnotation(
-            new AnnotationModel({ _id: 'region-selection' })
+            new AnnotationModel({_id: 'region-selection'})
         );
         if (!region) {
             return;
@@ -795,7 +795,7 @@ var ImageView = View.extend({
                 }
             });
         }
-        this.viewerWidget.drawAnnotation(annotation, { fetch: false });
+        this.viewerWidget.drawAnnotation(annotation, {fetch: false});
     },
 
     showCoordinates(evt) {
@@ -811,7 +811,7 @@ var ImageView = View.extend({
         if (annotationId === 'region-selection' || annotationId === 'selected') {
             return;
         }
-        this._lastMouseOnElement = {element: element, annotationId: annotationId};
+        this._lastMouseOnElement = {element, annotationId};
         if (!this.annotationSelector.interactiveMode()) {
             return;
         }
@@ -874,7 +874,7 @@ var ImageView = View.extend({
     _getCategoryIndexFromStyleGroup(annotationElement, styleGroup) {
         const categories = annotationElement.get('categories');
         const groupId = styleGroup.get('id');
-        const newIndex = _.findIndex(categories, { label: groupId });
+        const newIndex = _.findIndex(categories, {label: groupId});
         return (newIndex < 0) ? 0 : newIndex;
     },
 
@@ -899,7 +899,7 @@ var ImageView = View.extend({
     },
 
     _handlePixelmapContextMenu(pixelmap, dataIndex, group) {
-        const categoryIndex = _.findIndex(pixelmap.get('categories'), { label: group });
+        const categoryIndex = _.findIndex(pixelmap.get('categories'), {label: group});
         const pixelmapLayer = this.viewer.layers().find((layer) => layer.id() === pixelmap.get('id'));
         if (!pixelmapLayer || dataIndex < 0) {
             return;
@@ -960,7 +960,7 @@ var ImageView = View.extend({
                     }
                     left = Math.max(left, 0);
 
-                    menu.css({ left, top });
+                    menu.css({left, top});
                     this._pixelmapContextMenuActive = true;
                 }, 1);
             });
@@ -986,8 +986,8 @@ var ImageView = View.extend({
 
     overlayLayerDrawn(element, layer) {
         this._overlayLayers[element.id] = {
-            layer: layer,
-            element: element
+            layer,
+            element
         };
     },
 
@@ -1016,7 +1016,7 @@ var ImageView = View.extend({
         }
 
         window.requestAnimationFrame(() => {
-            const { element, annotationId } = this._processMouseClickQueue();
+            const {element, annotationId} = this._processMouseClickQueue();
             if (!evt.mouse.modifiers.shift) {
                 if (evt.mouse.buttonsDown.right) {
                     this._openContextMenu(element.annotation.elements().get(element.id), annotationId, evt);
@@ -1052,7 +1052,7 @@ var ImageView = View.extend({
                 }
             }
         }
-        this._mouseClickQueue.push({ element, annotationId, value: minimumDistance });
+        this._mouseClickQueue.push({element, annotationId, value: minimumDistance});
     },
 
     _processMouseClickQueue(evt) {
@@ -1205,29 +1205,31 @@ var ImageView = View.extend({
                 }
                 break;
             case 'Enter':
-                const drawingType = this.drawWidget && this.drawWidget._drawingType;
-                if (this.activeAnnotation && ['polygon', 'line'].includes(drawingType)) {
-                    const annotation = this.viewerWidget.annotationLayer.annotations()[0];
+                {
+                    const drawingType = this.drawWidget && this.drawWidget._drawingType;
+                    if (this.activeAnnotation && ['polygon', 'line'].includes(drawingType)) {
+                        const annotation = this.viewerWidget.annotationLayer.annotations()[0];
 
-                    // The current mouse position is included as the last vertex, so remove
-                    // it before saving it
-                    annotation.options('vertices').pop();
+                        // The current mouse position is included as the last vertex, so remove
+                        // it before saving it
+                        annotation.options('vertices').pop();
 
-                    // Only save the annotation if there are enough vertices for it to form
-                    // a line or polygon
-                    if (
-                        (drawingType === 'polygon' && annotation.options('vertices').length > 2) ||
+                        // Only save the annotation if there are enough vertices for it to form
+                        // a line or polygon
+                        if (
+                            (drawingType === 'polygon' && annotation.options('vertices').length > 2) ||
                         (drawingType === 'line' && annotation.options('vertices').length > 1)
-                    ) {
-                        annotation.state(geo.annotation.state.done).modified().draw();
-                    }
+                        ) {
+                            annotation.state(geo.annotation.state.done).modified().draw();
+                        }
 
-                    this.drawWidget.cancelDrawMode();
+                        this.drawWidget.cancelDrawMode();
+                    }
                 }
                 break;
             default:
                 if (this.drawWidget && drawModes[evt.key] && this.activeAnnotation) {
-                    let mode = drawModes[evt.key];
+                    const mode = drawModes[evt.key];
                     if (this.drawWidget._drawingType === mode) {
                         this.drawWidget.cancelDrawMode();
                     } else {
@@ -1282,10 +1284,10 @@ var ImageView = View.extend({
                 const polygon = coord.slice(0, coord.length / 2).map((c, idx) => ({x: coord[idx * 2], y: coord[idx * 2 + 1], z: 0}));
                 found = this.getElementsInPolygon(polygon);
             }
-            found.forEach(({ element }, idx) => this._selectElement(element, {silent: idx !== found.length - 1}));
+            found.forEach(({element}, idx) => this._selectElement(element, {silent: idx !== found.length - 1}));
             if (this.selectedElements.length > 0 && this._currentMousePosition && this.autoRegionContextMenu) {
                 // fake an open context menu
-                const { element, annotationId } = found[0];
+                const {element, annotationId} = found[0];
                 this._openContextMenu(element, annotationId, {
                     mouse: this._currentMousePosition
                 }, true);
@@ -1314,7 +1316,7 @@ var ImageView = View.extend({
     getElementsInPolygon(poly) {
         const results = [];
         this.viewerWidget.featureLayer.features().forEach((feature) => {
-            const r = feature.polygonSearch(poly, { partial: false });
+            const r = feature.polygonSearch(poly, {partial: false});
             r.found.forEach((feature) => {
                 const annotationId = feature.properties ? feature.properties.annotation : null;
                 const element = feature.properties ? feature.properties.element : null;
@@ -1373,7 +1375,7 @@ var ImageView = View.extend({
             }
             left = Math.max(left, 0);
 
-            menu.css({ left, top });
+            menu.css({left, top});
             if (this.popover.collection.length) {
                 this.popover.collection.reset();
             }
@@ -1405,7 +1407,7 @@ var ImageView = View.extend({
         this._editAnnotation(annotation);
         const geojson = convertToGeojson(element);
         this._currentAnnotationEditShape = {
-            annotation: annotation,
+            annotation,
             element: annotation.elements().get(element.id)
         };
         this.viewerWidget.hideAnnotation(annotation.id, element.id);
@@ -1522,9 +1524,9 @@ var ImageView = View.extend({
             _.each(elements, (element) => { /* eslint-disable backbone/no-silent */
                 const annotationElement = annotation.elements().get(element.id);
                 // silence the event because we want to make one save call for each annotation.
-                annotationElement.set(element.toJSON(), { silent: true });
+                annotationElement.set(element.toJSON(), {silent: true});
                 if (!element.get('group')) {
-                    annotationElement.unset('group', { silent: true });
+                    annotationElement.unset('group', {silent: true});
                 }
             });
             if (!elements.length) {
@@ -1540,14 +1542,14 @@ var ImageView = View.extend({
         _.each(groupedAnnotations, (elements, annotationId) => { /* eslint-disable backbone/no-silent */
             // silence the event because we want to make one save call for each annotation.
             const elementsCollection = this.annotations.get(annotationId).elements();
-            elementsCollection.remove(elements, { silent: true });
+            elementsCollection.remove(elements, {silent: true});
             elementsCollection.trigger('reset', elementsCollection);
         });
     },
     _deselectAnnotationElements(evt) {
-        let model = (evt || {}).model;
+        const model = (evt || {}).model;
         if (this.selectedElements && this.selectedElements.length) {
-            let elements = this.selectedElements.models.filter((el) => el.originalAnnotation.id === model.id);
+            const elements = this.selectedElements.models.filter((el) => el.originalAnnotation.id === model.id);
             if (elements.length) {
                 if (elements.length === this.selectedElements.length) {
                     this._resetSelection();
@@ -1572,7 +1574,7 @@ var ImageView = View.extend({
             const panels = this.$('[id^=h-][id$=-panel]');
             panels.each((idx, panel) => {
                 panel = $(panel);
-                let info = {
+                const info = {
                     name: panel.attr('id').substr(2, panel.attr('id').length - 8),
                     position: 'left',
                     state: 'open'
@@ -1587,8 +1589,8 @@ var ImageView = View.extend({
             });
             layout = layout.filter((spec) => this.$(`#h-${spec.name}-panel`).length).reverse();
             layout.forEach((spec) => {
-                let panel = this.$(`#h-${spec.name}-panel`);
-                let info = this._knownPanels[spec.name];
+                const panel = this.$(`#h-${spec.name}-panel`);
+                const info = this._knownPanels[spec.name];
 
                 if (spec.position === 'hidden') {
                     panel.addClass('hidden');
@@ -1619,7 +1621,7 @@ var ImageView = View.extend({
                 return;
             }
             if (val.annotationGroups) {
-                let groups = new StyleCollection();
+                const groups = new StyleCollection();
                 groups.fetch().done(() => {
                     if (!val || this.model.id !== modelId) {
                         return;

@@ -2,10 +2,10 @@ import $ from 'jquery';
 import _ from 'underscore';
 
 import Panel from '@girder/slicer_cli_web/views/Panel';
-import { AccessType } from '@girder/core/constants';
-import { confirm } from '@girder/core/dialog';
+import {AccessType} from '@girder/core/constants';
+import {confirm} from '@girder/core/dialog';
 import events from '@girder/core/events';
-import { localeSort } from '@girder/core/misc';
+import {localeSort} from '@girder/core/misc';
 import View from '@girder/core/views/View';
 
 import JsonMetadatumEditWidgetTemplate from '@girder/core/templates/widgets/jsonMetadatumEditWidget.pug';
@@ -153,7 +153,7 @@ var MetadatumWidget = View.extend({
             key: this.key,
             value: _.bind(this.parentView.modes[this.mode].displayValue, this)(),
             accessLevel: this.accessLevel,
-            AccessType: AccessType
+            AccessType
         }));
 
         return this;
@@ -335,7 +335,7 @@ var MetadatumEditWidget = View.extend({
             value: this.value,
             accessLevel: this.accessLevel,
             newDatum: this.newDatum,
-            AccessType: AccessType
+            AccessType
         }));
         this.$el.find('.g-widget-metadata-key-input').trigger('focus');
         return this;
@@ -399,8 +399,8 @@ var MetadataWidget = Panel.extend({
         'click .h-panel-maximize': function (event) {
             this.expand(event);
             this.$('.s-panel-content').addClass('in');
-            let panelElem = this.$el.closest('.s-panel');
-            let maximize = !panelElem.hasClass('h-panel-maximized');
+            const panelElem = this.$el.closest('.s-panel');
+            const maximize = !panelElem.hasClass('h-panel-maximized');
             panelElem.toggleClass('h-panel-maximized', maximize);
             panelElem.toggleClass('s-no-panel-toggle', maximize);
         }
@@ -502,9 +502,9 @@ var MetadataWidget = Panel.extend({
         this.$('.s-panel-content').collapse('show');
         var widget = new MetadatumWidget({
             className: 'g-widget-metadata-row editing',
-            mode: mode,
+            mode,
             key: '',
-            value: value,
+            value,
             item: this.item,
             fieldName: this.fieldName,
             apiPath: this.apiPath,
@@ -519,7 +519,7 @@ var MetadataWidget = Panel.extend({
         new EditWidget({
             item: this.item,
             key: '',
-            value: value,
+            value,
             fieldName: this.fieldName,
             apiPath: this.apiPath,
             accessLevel: this.accessLevel,
@@ -567,10 +567,10 @@ var MetadataWidget = Panel.extend({
                 this.$el.html(metadataWidgetTemplate({
                     item: this.item,
                     title: this.title,
-                    firstKey: firstKey,
-                    firstValue: firstValue,
+                    firstKey,
+                    firstValue,
                     accessLevel: this.item.attributes._accessLevel,
-                    AccessType: AccessType,
+                    AccessType,
                     panel: this.panel,
                     // if never rendered, the jquery selector will be empty and won't be visible
                     collapsed: this.panel && !this.$('.s-panel-content').hasClass('in') && !this.$el.closest('.s-panel').hasClass('h-panel-maximized')

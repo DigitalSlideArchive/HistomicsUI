@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
-import { restRequest } from '@girder/core/rest';
+import {restRequest} from '@girder/core/rest';
 
 import Panel from '@girder/slicer_cli_web/views/Panel';
 // import events from '@girder/core/events';
@@ -31,8 +31,8 @@ var MetadataPlot = Panel.extend({
             this.$el.html('');
             this.expand(event);
             this.$('.s-panel-content').addClass('in');
-            let panelElem = this.$el.closest('.s-panel');
-            let maximize = !panelElem.hasClass('h-panel-maximized');
+            const panelElem = this.$el.closest('.s-panel');
+            const maximize = !panelElem.hasClass('h-panel-maximized');
             panelElem.toggleClass('h-panel-maximized', maximize);
             panelElem.toggleClass('s-no-panel-toggle', maximize);
             this.render();
@@ -55,7 +55,7 @@ var MetadataPlot = Panel.extend({
         if (folderId !== this.parentFolderId) {
             return null;
         }
-        return restRequest({url: 'item', data: {folderId: folderId, offset: this.siblingItems.length, limit: chunk + 1}}).done((result) => {
+        return restRequest({url: 'item', data: {folderId, offset: this.siblingItems.length, limit: chunk + 1}}).done((result) => {
             if (folderId !== this.parentFolderId) {
                 return null;
             }
@@ -132,7 +132,7 @@ var MetadataPlot = Panel.extend({
                             type = 'string';
                         }
                         if (type) {
-                            results.push({root: root, key: key, type: type, sort: `${root}.${key}`.toLowerCase()});
+                            results.push({root, key, type, sort: `${root}.${key}`.toLowerCase()});
                         }
                     }
                 }
@@ -152,7 +152,7 @@ var MetadataPlot = Panel.extend({
         const plotOptions = this.getPlotOptions();
         const optDict = {};
         plotOptions.forEach((opt) => { optDict[opt.sort] = opt; });
-        let plotData = {data: [], fieldToPlot: {}, plotToOpt: {}, ranges: {}};
+        const plotData = {data: [], fieldToPlot: {}, plotToOpt: {}, ranges: {}};
         const usedFields = ['x', 'y', 'r', 'c', 's'].filter((series) => plotConfig[series] && optDict[plotConfig[series]]).map((series) => {
             if (!plotData.fieldToPlot[plotConfig[series]]) {
                 plotData.fieldToPlot[plotConfig[series]] = [];
@@ -174,10 +174,10 @@ var MetadataPlot = Panel.extend({
             items.unshift({meta: this.parentMeta});
         }
         items.forEach((item, itemIdx) => {
-            let meta = item.meta || {};
+            const meta = item.meta || {};
             let end = false;
             for (let idx = 0; !end; idx += 1) {
-                let entry = {_roots: {}};
+                const entry = {_roots: {}};
                 usedOptions.forEach((opt) => {
                     plotData.fieldToPlot[opt.sort].forEach((key) => {
                         let value;
@@ -238,17 +238,17 @@ var MetadataPlot = Panel.extend({
     },
 
     plotDataToPlotly: function (plotData) {
-        let colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
-        let viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
+        const colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
+        const viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
         let colorScale;
         if (plotData.ranges.c && !plotData.ranges.c.count) {
             colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * (plotData.ranges.c.max - plotData.ranges.c.min) + plotData.ranges.c.min)).range(viridis);
         }
-        let plotlyData = {
+        const plotlyData = {
             x: plotData.data.map((d) => d.x),
             y: plotData.data.map((d) => d.y),
             hovertext: plotData.data.map((d) => {
-                let parts = [];
+                const parts = [];
                 ['x', 'y', 'r', 'c', 's'].forEach((series) => {
                     if (d[series] !== undefined) {
                         parts.push(`${plotData.plotToOpt[series].root} - ${plotData.plotToOpt[series].key}: ${d[series]}`);
@@ -260,16 +260,20 @@ var MetadataPlot = Panel.extend({
             hoverinfo: 'text',
             marker: {
                 symbol: plotData.ranges.s && plotData.ranges.s.count ? plotData.data.map((d) => plotData.ranges.s.list.indexOf(d.s)) : 0,
-                size: plotData.ranges.r ? (
-                    !plotData.ranges.r.count
-                        ? plotData.data.map((d) => (d.r - plotData.ranges.r.min) / (plotData.ranges.r.max - plotData.ranges.r.min) * 10 + 5)
-                        : plotData.data.map((d) => plotData.ranges.r.list.indexOf(d.r) / plotData.ranges.r.count * 10 + 5)
-                ) : 10,
-                color: plotData.ranges.c ? (
-                    !plotData.ranges.c.count
-                        ? plotData.data.map((d) => colorScale(d.c))
-                        : plotData.data.map((d) => colorBrewerPaired12[plotData.ranges.c.list.indexOf(d.c)] || '#000000')
-                ) : '#000000',
+                size: plotData.ranges.r
+                    ? (
+                        !plotData.ranges.r.count
+                            ? plotData.data.map((d) => (d.r - plotData.ranges.r.min) / (plotData.ranges.r.max - plotData.ranges.r.min) * 10 + 5)
+                            : plotData.data.map((d) => plotData.ranges.r.list.indexOf(d.r) / plotData.ranges.r.count * 10 + 5)
+                    )
+                    : 10,
+                color: plotData.ranges.c
+                    ? (
+                        !plotData.ranges.c.count
+                            ? plotData.data.map((d) => colorScale(d.c))
+                            : plotData.data.map((d) => colorBrewerPaired12[plotData.ranges.c.list.indexOf(d.c)] || '#000000')
+                    )
+                    : '#000000',
                 opacity: 0.5
             },
             type: plotData.data.length > 100 ? 'scattergl' : 'scatter',
@@ -295,7 +299,7 @@ var MetadataPlot = Panel.extend({
                     })
                     : null
             ).done(() => {
-                let plotData = this.getPlotData(this.plotConfig);
+                const plotData = this.getPlotData(this.plotConfig);
                 this.lastPlotData = plotData;
                 this.$el.html(metadataPlotTemplate({}));
                 const elem = this.$el.find('.h-metadata-plot-area');
@@ -304,7 +308,7 @@ var MetadataPlot = Panel.extend({
                     return;
                 }
                 const maximized = this.$el.closest('.h-panel-maximized').length > 0;
-                let plotOptions = {
+                const plotOptions = {
                     margin: {t: 0, l: 40, r: 0, b: 20},
                     hovermode: 'closest'
                 };

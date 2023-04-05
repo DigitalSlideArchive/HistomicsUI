@@ -50,5 +50,6 @@ venv/
 ENV/
 
 node_modules/
+.eslintcache
 
 .pre-commit-config.yaml

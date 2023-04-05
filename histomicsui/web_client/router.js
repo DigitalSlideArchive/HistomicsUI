@@ -1,7 +1,7 @@
 import _ from 'underscore';
 import $ from 'jquery';
 import Backbone from 'backbone';
-import { splitRoute, parseQueryString } from '@girder/core/misc';
+import {splitRoute, parseQueryString} from '@girder/core/misc';
 
 import events from './events';
 

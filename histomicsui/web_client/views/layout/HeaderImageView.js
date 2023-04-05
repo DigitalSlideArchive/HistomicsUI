@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-import { restRequest } from '@girder/core/rest';
+import {restRequest} from '@girder/core/rest';
 
 import events from '../../events';
 import router from '../../router';
@@ -45,9 +45,9 @@ var HeaderImageView = View.extend({
         this.$el.html(headerImageTemplate({
             image: this.imageModel,
             parentChain: this.parentChain,
-            previousImageLink: previousImageLink,
+            previousImageLink,
             previousImageName: this._previousName,
-            nextImageLink: nextImageLink,
+            nextImageLink,
             nextImageName: this._nextName
         }));
         return this;

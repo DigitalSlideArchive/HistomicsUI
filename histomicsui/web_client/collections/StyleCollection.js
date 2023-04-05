@@ -1,5 +1,5 @@
 import Backbone from 'backbone';
-import { LocalStorage } from 'backbone.localstorage';
+import {LocalStorage} from 'backbone.localstorage';
 
 import StyleModel from '../models/StyleModel';
 

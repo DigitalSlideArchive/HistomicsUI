@@ -1,4 +1,4 @@
-import { wrap } from '@girder/core/utilities/PluginUtils';
+import {wrap} from '@girder/core/utilities/PluginUtils';
 import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
 import ItemCollection from '@girder/core/collections/ItemCollection';
 

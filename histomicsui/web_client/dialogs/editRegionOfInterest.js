@@ -2,7 +2,7 @@ import $ from 'jquery';
 import 'url-search-params-polyfill';
 
 import View from '@girder/core/views/View';
-import { formatSize } from '@girder/core/misc';
+import {formatSize} from '@girder/core/misc';
 
 import editRegionOfInterest from '../templates/dialogs/editRegionOfInterest.pug';
 import '../stylesheets/panels/zoomWidget.styl';
@@ -64,7 +64,7 @@ var EditRegionOfInterest = View.extend({
         var factor = Math.pow(2, zoom - this.areaElement.maxZoom);
         var scaleWidth = Math.round(factor * this.areaElement.width);
         var scaleHeight = Math.round(factor * this.areaElement.height);
-        return { 'width': scaleWidth, 'height': scaleHeight };
+        return {width: scaleWidth, height: scaleHeight};
     },
 
     /**
@@ -155,16 +155,16 @@ var EditRegionOfInterest = View.extend({
         const params = {
             regionWidth: this.areaElement.width,
             regionHeight: this.areaElement.height,
-            left: left,
-            top: top,
-            right: right,
-            bottom: bottom,
+            left,
+            top,
+            right,
+            bottom,
             encoding: this._format,
             contentDisposition: 'attachment',
-            magnification: magnification
+            magnification
         };
         let urlView = this.areaElement.frameAndUrl.url.replace('/zxy/{z}/{x}/{y}', '/region');
-        for (let [key, value] of new URLSearchParams(urlView.replace(/[^?]*(\?|$)/, ''))) {
+        for (const [key, value] of new URLSearchParams(urlView.replace(/[^?]*(\?|$)/, ''))) {
             if (params[key] === undefined) {
                 params[key] = value;
             }

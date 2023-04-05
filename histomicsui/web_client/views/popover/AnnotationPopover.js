@@ -1,7 +1,7 @@
 import _ from 'underscore';
 import $ from 'jquery';
 
-import { restRequest } from '@girder/core/rest';
+import {restRequest} from '@girder/core/rest';
 import ElementCollection from '@girder/large_image_annotation/collections/ElementCollection';
 import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
 import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
@@ -11,7 +11,7 @@ import events from '../../events';
 import View from '../View';
 import annotationPopover from '../../templates/popover/annotationPopover.pug';
 import '../../stylesheets/popover/annotationPopover.styl';
-import { elementAreaAndEdgeLength } from '../utils';
+import {elementAreaAndEdgeLength} from '../utils';
 
 /**
  * Format a point as a string for the user.
@@ -25,9 +25,9 @@ function point(p) {
  */
 function length(p, scale) {
     let result = `${Math.ceil(p)} px`;
-    let scaleWidget = window.geo.gui.scaleWidget;
+    const scaleWidget = window.geo.gui.scaleWidget;
     if (scale && scaleWidget && scaleWidget.formatUnit) {
-        let scaleresult = scaleWidget.formatUnit(p * scale, 'si', undefined, 4);
+        const scaleresult = scaleWidget.formatUnit(p * scale, 'si', undefined, 4);
         if (scaleresult) {
             result += ` (${scaleresult})`;
         }
@@ -40,9 +40,9 @@ function length(p, scale) {
  */
 function areaStr(p, scale) {
     let result = `${Math.ceil(p)} px\xB2`;
-    let scaleWidget = window.geo.gui.scaleWidget;
+    const scaleWidget = window.geo.gui.scaleWidget;
     if (scale && scaleWidget && scaleWidget.formatUnit) {
-        let scaleresult = scaleWidget.formatUnit(p * scale * scale, 'si', scaleWidget.areaUnitsTable, 4);
+        const scaleresult = scaleWidget.formatUnit(p * scale * scale, 'si', scaleWidget.areaUnitsTable, 4);
         if (scaleresult) {
             result += ` (${scaleresult})`;
         }
@@ -173,7 +173,7 @@ var AnnotationPopover = View.extend({
         function setIf(key, func = (v) => v) {
             const value = element.get(key);
             if (value) {
-                let args = [value].concat(Array.prototype.slice.call(arguments, 2));
+                const args = [value].concat(Array.prototype.slice.call(arguments, 2));
                 props[key] = func.apply(this, args);
             }
         }
@@ -187,7 +187,7 @@ var AnnotationPopover = View.extend({
         if (element.get('group')) {
             props.group = element.get('group');
         }
-        const { area, edge } = elementAreaAndEdgeLength(element);
+        const {area, edge} = elementAreaAndEdgeLength(element);
         let scale;
         if (this && this.parentView && this.parentView.viewerWidget && this.parentView.viewerWidget._scale) {
             scale = this.parentView.viewerWidget._scale.scale;

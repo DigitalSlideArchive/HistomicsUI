@@ -1,9 +1,9 @@
-import { wrap } from '@girder/core/utilities/PluginUtils';
-import { restRequest } from '@girder/core/rest';
+import {wrap} from '@girder/core/utilities/PluginUtils';
+import {restRequest} from '@girder/core/rest';
 import events from '@girder/core/events';
 import ItemView from '@girder/core/views/body/ItemView';
 
-import { HuiSettings } from './utils';
+import {HuiSettings} from './utils';
 
 import '../stylesheets/views/itemList.styl';
 
@@ -22,7 +22,7 @@ wrap(ItemView, 'render', function (render) {
                 timeout: 4000
             });
             delete this.model.parent;
-            this.model.fetch({ success: () => this.render() });
+            this.model.fetch({success: () => this.render()});
         }).fail((resp) => {
             events.trigger('g:alert', {
                 icon: 'cancel',

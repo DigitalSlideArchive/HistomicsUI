@@ -29,7 +29,7 @@ const MetadataPlotDialog = View.extend({
             folder: this.$('#h-plot-folder').is(':checked')
         };
         ['x', 'y', 'r', 'c', 's'].forEach((series) => {
-            let val = this.$('#h-plot-series-' + series).val();
+            const val = this.$('#h-plot-series-' + series).val();
             if (val !== '_none_' && val !== undefined) {
                 configOptions[series] = val;
             }

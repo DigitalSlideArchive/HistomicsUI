@@ -52,9 +52,9 @@ var OverviewWidget = Panel.extend({
             }
             return;
         }
-        let tiles = this._tiles;
+        const tiles = this._tiles;
 
-        let params = geo.util.pixelCoordinateParams(
+        const params = geo.util.pixelCoordinateParams(
             this.$el.find('.h-overview-image'), tiles.sizeX, tiles.sizeY, tiles.tileWidth, tiles.tileHeight);
         params.layer.useCredentials = true;
         params.layer.url = this.parentViewer.getFrameAndUrl().url;
@@ -100,12 +100,14 @@ var OverviewWidget = Panel.extend({
             this._tileLayer.setFrameQuad(0);
         }
         this._featureLayer = this.viewer.createLayer('feature', {features: ['polygon']});
-        this._outlineFeature = this._featureLayer.createFeature('polygon', {style: {
-            stroke: true,
-            strokeColor: 'black',
-            strokeWidth: 2,
-            fill: false
-        }});
+        this._outlineFeature = this._featureLayer.createFeature('polygon', {
+            style: {
+                stroke: true,
+                strokeColor: 'black',
+                strokeWidth: 2,
+                fill: false
+            }
+        });
         this._panOutlineDistance = 5;
         /* Clicking in the overview recenters to that spot */
         this._featureLayer.geoOn(geo.event.mouseclick, (evt) => {
@@ -123,15 +125,15 @@ var OverviewWidget = Panel.extend({
         });
         this._featureLayer.geoOn(geo.event.actionmove, (evt) => {
             switch (evt.state.action) {
-                case 'overview_pan':
+                case 'overview_pan': {
                     if (!this._downState || this._downState.distanceToOutline < -this._panOutlineDistance) {
                         return;
                     }
-                    let delta = {
+                    const delta = {
                         x: evt.mouse.geo.x - this._downState.mouse.geo.x,
                         y: evt.mouse.geo.y - this._downState.mouse.geo.y
                     };
-                    let center = this.parentViewer.viewer.center();
+                    const center = this.parentViewer.viewer.center();
                     delta.x -= center.x - this._downState.center.x;
                     delta.y -= center.y - this._downState.center.y;
                     if (delta.x || delta.y) {
@@ -140,6 +142,7 @@ var OverviewWidget = Panel.extend({
                             y: center.y + delta.y
                         });
                     }
+                }
                     break;
             }
         });
@@ -147,19 +150,19 @@ var OverviewWidget = Panel.extend({
             if (evt.lowerLeft.x === evt.upperRight.x || evt.lowerLeft.y === evt.upperRight.y) {
                 return;
             }
-            let map = this.parentViewer.viewer;
-            let mapsize = map.size();
-            let lowerLeft = map.gcsToDisplay(this.viewer.displayToGcs(evt.lowerLeft));
-            let upperRight = map.gcsToDisplay(this.viewer.displayToGcs(evt.upperRight));
-            let scaling = {
+            const map = this.parentViewer.viewer;
+            const mapsize = map.size();
+            const lowerLeft = map.gcsToDisplay(this.viewer.displayToGcs(evt.lowerLeft));
+            const upperRight = map.gcsToDisplay(this.viewer.displayToGcs(evt.upperRight));
+            const scaling = {
                 x: Math.abs((upperRight.x - lowerLeft.x) / mapsize.width),
                 y: Math.abs((upperRight.y - lowerLeft.y) / mapsize.height)
             };
-            let center = map.displayToGcs({
+            const center = map.displayToGcs({
                 x: (lowerLeft.x + upperRight.x) / 2,
                 y: (lowerLeft.y + upperRight.y) / 2
             }, null);
-            let zoom = map.zoom() - Math.log2(Math.max(scaling.x, scaling.y));
+            const zoom = map.zoom() - Math.log2(Math.max(scaling.x, scaling.y));
             map.zoom(zoom);
             map.center(center, null);
         });
@@ -176,12 +179,12 @@ var OverviewWidget = Panel.extend({
     },
 
     _onParentPan() {
-        let parent = this.parentViewer.viewer;
+        const parent = this.parentViewer.viewer;
         if (parent.rotation() !== this.viewer.rotation()) {
             this.viewer.rotation(parent.rotation());
             this.viewer.zoom(this.viewer.zoom() - 1);
         }
-        let size = parent.size();
+        const size = parent.size();
         this._outlineFeature.data([[
             parent.displayToGcs({x: 0, y: 0}),
             parent.displayToGcs({x: size.width, y: 0}),
