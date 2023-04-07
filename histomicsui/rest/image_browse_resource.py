@@ -1,3 +1,4 @@
+import girder_large_image
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.v1.item import Item as ItemResource
@@ -31,10 +32,22 @@ class ImageBrowseResource(ItemResource):
             folder = folderModel.load(
                 currentImage['folderId'], user=self.getCurrentUser(), level=AccessType.READ)
 
+        sort = [('name', 1)]
+        try:
+            conf = girder_large_image.YAMLConfigFile(
+                folder, '.large_image_config.yaml', self.getCurrentUser())
+            if conf['itemList']['defaultSort']:
+                sort = [(
+                    ('meta.' if entry['type'] == 'metadata' else '') + entry['value'],
+                    1 if entry['dir'] == 'down' else -1)
+                    for entry in conf['itemList']['defaultSort']]
+        except Exception:
+            pass
+
         if folder.get('isVirtual'):
-            children = folderModel.childItems(folder, sort=[('name', 1)], includeVirtual=True)
+            children = folderModel.childItems(folder, sort=sort, includeVirtual=True)
         else:
-            children = folderModel.childItems(folder, sort=[('name', 1)])
+            children = folderModel.childItems(folder, sort=sort)
 
         allImages = [item for item in children if _isLargeImageItem(item)]
         try:
