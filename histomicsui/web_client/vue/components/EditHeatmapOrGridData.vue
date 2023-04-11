@@ -1,13 +1,14 @@
 <script>
 import tinycolor from 'tinycolor2';
 import _ from 'underscore';
+
 import ColorPickerInput from './ColorPickerInput.vue';
 export default {
-    props: ['elementData'],
-    emits: ['submit', 'cancel'],
     components: {
         ColorPickerInput
     },
+    props: ['elementData'],
+    emits: ['submit', 'cancel'],
     data() {
         return {
             type: this.elementData.type,
@@ -31,6 +32,26 @@ export default {
             }
             return 'Edit Grid Data Element';
         }
+    },
+    mounted() {
+        if (this.colorRange) {
+            _.forEach(this.colorRange, (color, index) => {
+                this.colorRangeData.push({
+                    colorString: color,
+                    value: this.rangeValues[index]
+                });
+            });
+        }
+        if (this.type === 'griddata' && !this.minColor && !this.maxColor) {
+            if (this.colorRange.length > 0) {
+                this.minColor = this.colorRange[0];
+                this.maxColor = this.colorRange[this.colorRange.length - 1];
+            } else {
+                this.minColor = 'rgba(0, 0, 0, 0)';
+                this.maxColor = 'rgba(255, 0, 0, 1)';
+            }
+        }
+        this.updateRangeDataKeys();
     },
     methods: {
         getColorString(color) {
@@ -65,7 +86,7 @@ export default {
                 const newEntry = {
                     colorString: newColorString,
                     value: (lowerRecord.value + higherRecord.value) / 2
-                }
+                };
                 this.colorRangeData.splice(index + 1, 0, newEntry);
             } else {
                 const newColor = _.clone(lowerColorRgb);
@@ -73,7 +94,7 @@ export default {
                 const newEntry = {
                     value: lowerRecord.value < 1 ? 1 : lowerRecord.value,
                     colorString: tinycolor(newColor).toString()
-                }
+                };
                 this.colorRangeData.push(newEntry);
             }
             this.updateRangeDataKeys();
@@ -144,8 +165,6 @@ export default {
                 colorRange: this.colorRangeData.map((entry) => entry.colorString),
                 normalizeRange: this.normalizeRange
             };
-            if (this.colorRangeData.length) {
-            }
             if (this.type === 'heatmap') {
                 propsToSave.radius = parseFloat(this.radius);
                 propsToSave.scaleWithZoom = this.scaleWithZoom;
@@ -162,120 +181,178 @@ export default {
         cancelDialog() {
             this.$emit('cancel');
         }
-    },
-    mounted() {
-        if (this.colorRange) {
-            _.forEach(this.colorRange, (color, index) => {
-                this.colorRangeData.push({
-                    colorString: color,
-                    value: this.rangeValues[index]
-                });
-            });
-        }
-        if (this.type === 'griddata' && !this.minColor && !this.maxColor) {
-            if (this.colorRange.length > 0) {
-                this.minColor = this.colorRange[0];
-                this.maxColor = this.colorRange[this.colorRange.length - 1];
-            } else {
-                this.minColor = 'rgba(0, 0, 0, 0)';
-                this.maxColor = 'rgba(255, 0, 0, 1)';
-            }
-        }
-        this.updateRangeDataKeys();
     }
-}
+};
 </script>
 
 <template>
-    <div class="modal-dialog" v-if="this.colorRangeData">
-        <div class="modal-content">
-            <form class="modal-form">
-                <div class="modal-header">
-                    <button type="button" class="close"  @click="cancelDialog()" ref="close">
-                        <span>&times;</span>
-                    </button>
-                    <h4>{{ headerMessage }}</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="errors" v-if="validationErrors.length > 0">
-                        <p>Errors</p>
-                        <ul>
-                            <li v-for="error in this.validationErrors" :key="error">{{ error }}</li>
-                        </ul>
-                    </div>
-                    <div class="form-group" v-if="this.type === 'heatmap'">
-                        <label for="h-griddata-radius">Radius</label>
-                        <input id="h-griddata-radius" class="input-sm form-control" type="number" min="1" v-model="radius">
-                    </div>
-                    <div class="form-group">
-                        <label for="h-griddata-range">Range Colors</label>
-                        <table id="h-griddata-range" class="table table-bordered table-condensed">
-                            <thead>
-                                <tr>
-                                    <th>Value</th>
-                                    <th>Color</th>
-                                    <th>
-                                        <a @click.prevent="addNewFirstColor">
-                                            <span class="icon-plus" title="Add new first color"></span>
-                                        </a>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            <tr v-if="this.type === 'griddata'">
-                                <td title="The color of values below the lowest range value">
-                                    Minimum color
-                                </td>
-                                <td>
-                                    <color-picker-input :color="minColor" v-model="minColor"></color-picker-input>
-                                </td>
-                            </tr>
-                            <tr v-for="(entry, index) in colorRangeData" :key="entry.key">
-                                <td>
-                                    <input class="input-sm form-control" type="number" step="0.1" v-model="entry.value">
-                                </td>
-                                <td>
-                                    <color-picker-input :color="entry.colorString" v-model="entry.colorString"></color-picker-input>
-                                </td>
-                                <td>
-                                    <a @click.prevent="addColor(index)">
-                                        <span class="icon-plus" title="Add row below"></span>
-                                    </a>
-                                    <a @click.prevent="removeColor(index)">
-                                        <span class="icon-minus" title="Remove this row"></span>
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr v-if="this.type === 'griddata'">
-                                <td title="The color of values above the highest range value">
-                                    Maximum color
-                                </td>
-                                <td>
-                                    <color-picker-input :color="maxColor" v-model="maxColor"></color-picker-input>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="checkbox">
-                        <label><input type="checkbox" v-model="normalizeRange"> <b>Normalize Range</b></label>
-                    </div>
-                    <div v-if="this.type === 'heatmap'" class="checkbox">
-                        <label><input type="checkbox" v-model="scaleWithZoom"> <b>Scale With Zoom</b></label>
-                    </div>
-                    <div v-if="this.interpretation === 'contour' || this.interpretation === 'chloropleth'" class="checkbox">
-                        <label><input type="checkbox" v-model="stepped"> <b>Stepped</b></label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" @click.prevent="cancelDialog()" id="close">
-                        Cancel
-                    </button>
-                    <button type="button" class="btn btn-primary" @click.prevent="submitClicked()">
-                        Submit
-                    </button>
-                </div>
-            </form>
+  <div
+    v-if="colorRangeData"
+    class="modal-dialog"
+  >
+    <div class="modal-content">
+      <form class="modal-form">
+        <div class="modal-header">
+          <button
+            ref="close"
+            type="button"
+            class="close"
+            @click="cancelDialog()"
+          >
+            <span>&times;</span>
+          </button>
+          <h4>{{ headerMessage }}</h4>
         </div>
+        <div class="modal-body">
+          <div
+            v-if="validationErrors.length > 0"
+            class="errors"
+          >
+            <p>Errors</p>
+            <ul>
+              <li
+                v-for="error in validationErrors"
+                :key="error"
+              >
+                {{ error }}
+              </li>
+            </ul>
+          </div>
+          <div
+            v-if="type === 'heatmap'"
+            class="form-group"
+          >
+            <label for="h-griddata-radius">Radius</label>
+            <input
+              id="h-griddata-radius"
+              v-model="radius"
+              class="input-sm form-control"
+              type="number"
+              min="1"
+            >
+          </div>
+          <div class="form-group">
+            <label for="h-griddata-range">Range Colors</label>
+            <table
+              id="h-griddata-range"
+              class="table table-bordered table-condensed"
+            >
+              <thead>
+                <tr>
+                  <th>Value</th>
+                  <th>Color</th>
+                  <th>
+                    <a @click.prevent="addNewFirstColor">
+                      <span
+                        class="icon-plus"
+                        title="Add new first color"
+                      />
+                    </a>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="type === 'griddata'">
+                  <td title="The color of values below the lowest range value">
+                    Minimum color
+                  </td>
+                  <td>
+                    <color-picker-input
+                      v-model="minColor"
+                      :color="minColor"
+                    />
+                  </td>
+                </tr>
+                <tr
+                  v-for="(entry, index) in colorRangeData"
+                  :key="entry.key"
+                >
+                  <td>
+                    <input
+                      v-model="entry.value"
+                      class="input-sm form-control"
+                      type="number"
+                      step="0.1"
+                    >
+                  </td>
+                  <td>
+                    <color-picker-input
+                      v-model="entry.colorString"
+                      :color="entry.colorString"
+                    />
+                  </td>
+                  <td>
+                    <a @click.prevent="addColor(index)">
+                      <span
+                        class="icon-plus"
+                        title="Add row below"
+                      />
+                    </a>
+                    <a @click.prevent="removeColor(index)">
+                      <span
+                        class="icon-minus"
+                        title="Remove this row"
+                      />
+                    </a>
+                  </td>
+                </tr>
+                <tr v-if="type === 'griddata'">
+                  <td title="The color of values above the highest range value">
+                    Maximum color
+                  </td>
+                  <td>
+                    <color-picker-input
+                      v-model="maxColor"
+                      :color="maxColor"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="checkbox">
+            <label><input
+              v-model="normalizeRange"
+              type="checkbox"
+            > <b>Normalize Range</b></label>
+          </div>
+          <div
+            v-if="type === 'heatmap'"
+            class="checkbox"
+          >
+            <label><input
+              v-model="scaleWithZoom"
+              type="checkbox"
+            > <b>Scale With Zoom</b></label>
+          </div>
+          <div
+            v-if="interpretation === 'contour' || interpretation === 'chloropleth'"
+            class="checkbox"
+          >
+            <label><input
+              v-model="stepped"
+              type="checkbox"
+            > <b>Stepped</b></label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="close"
+            type="button"
+            class="btn btn-default"
+            @click.prevent="cancelDialog()"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click.prevent="submitClicked()"
+          >
+            Submit
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 </template>

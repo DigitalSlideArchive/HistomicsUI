@@ -4,6 +4,9 @@ import Vue from 'vue';
 
 import EditHeatmapOrGridData from './EditHeatmapOrGridData.vue';
 export default Vue.extend({
+    components: {
+        EditHeatmapOrGridData
+    },
     props: ['element', 'parentView'],
     data() {
         return {
@@ -18,20 +21,16 @@ export default Vue.extend({
         close() {
             this.parentView.closeVueModal();
         }
-    },
-    components: {
-        EditHeatmapOrGridData
     }
-})
+});
 </script>
 
 <template>
-    <div>
-        <edit-heatmap-or-grid-data
-            :elementData="this.attributes"
-            @submit="handleSubmit"
-            @cancel="close"
-        >
-        </edit-heatmap-or-grid-data>
-    </div>
+  <div>
+    <edit-heatmap-or-grid-data
+      :element-data="attributes"
+      @submit="handleSubmit"
+      @cancel="close"
+    />
+  </div>
 </template>
