@@ -26,6 +26,7 @@ import PixelmapContextMenu from '../popover/PixelmapContextMenu';
 import AnnotationSelector from '../../panels/AnnotationSelector';
 import OverviewWidget from '../../panels/OverviewWidget';
 import ZoomWidget from '../../panels/ZoomWidget';
+import FrameSelectorWidget from '../../panels/FrameSelectorWidget';
 import MetadataWidget from '../../panels/MetadataWidget';
 import MetadataPlot from '../../panels/MetadataPlot';
 import DrawWidget from '../../panels/DrawWidget';
@@ -83,6 +84,9 @@ var ImageView = View.extend({
             parentView: this
         });
         this.zoomWidget = new ZoomWidget({
+            parentView: this
+        });
+        this.frameSelectorWidget = new FrameSelectorWidget({
             parentView: this
         });
         this.metadataWidget = new MetadataWidget({
@@ -273,6 +277,10 @@ var ImageView = View.extend({
                     .setViewer(this.viewerWidget)
                     .setElement('.h-zoom-widget').render();
 
+                this.frameSelectorWidget
+                    .setViewer(this.viewerWidget)
+                    .setElement('.h-frame-selector-widget').render();
+
                 this.metadataWidget
                     .setItem(this.model)
                     .setElement('.h-metadata-widget').render();
@@ -383,6 +391,7 @@ var ImageView = View.extend({
                 this.zoomWidget.setMaxMagnification(tiles.magnification || 20, this._increaseZoom2x, this._increaseZoom2xRange);
                 this.zoomWidget.render();
                 this.overviewWidget.setImage(tiles);
+                this.frameSelectorWidget.setImage(tiles);
                 return null;
             });
         };
