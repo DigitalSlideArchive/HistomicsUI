@@ -7,3 +7,5 @@
 
 # PR 287: Add a tox command to fix client formatting
 b566911831095bb4c161e2161e2d1a33cf3f4f18
+# PR 289: Lint vue files
+f1c2190ab04ab867c655b4217f807e9f567772c8
