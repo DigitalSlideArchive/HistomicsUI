@@ -37,13 +37,6 @@ commands:
           command: for i in $(seq 1 10); do [ $i -gt 1 ] && echo "retrying $i" && sleep 5; ./codecov --disable search pycov gcov --file .tox/coverage/py_coverage.xml .tox/coverage/cobertura-coverage.xml && s=0 && break || s=$?; done; (exit $s)
 
 jobs:
-  py36:
-    executor: toxandnode
-    steps:
-      - checkout
-      - tox:
-          env: py36
-      - coverage
   py37:
     executor: toxandnode
     steps:
@@ -71,6 +64,13 @@ jobs:
       - checkout
       - tox:
           env: py310
+      - coverage
+  py311:
+    executor: toxandnode
+    steps:
+      - checkout
+      - tox:
+          env: py311
       - coverage
   noanalysis:
     executor: toxandnode
@@ -100,13 +100,6 @@ workflows:
   version: 2
   ci:
     jobs:
-      - py36:
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore:
-                - gh-pages
       - py37:
           filters:
             tags:
@@ -135,6 +128,13 @@ workflows:
             branches:
               ignore:
                 - gh-pages
+      - py311:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore:
+                - gh-pages
       - noanalysis:
           filters:
             tags:
@@ -151,11 +151,11 @@ workflows:
                 - gh-pages
       - release:
           requires:
-            - py36
             - py37
             - py38
             - py39
             - py310
+            - py311
             - lint_and_docs
           filters:
             tags:
