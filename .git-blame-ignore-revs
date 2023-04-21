@@ -9,3 +9,5 @@
 b566911831095bb4c161e2161e2d1a33cf3f4f18
 # PR 289: Lint vue files
 f1c2190ab04ab867c655b4217f807e9f567772c8
+# PR 296: Use stylus-supremacy for linting and reformating stylus files
+9475b89640a6de84788b79ba68d5ed9aeb1a9ff4
