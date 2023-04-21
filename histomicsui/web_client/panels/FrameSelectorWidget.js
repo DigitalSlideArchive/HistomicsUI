@@ -28,9 +28,7 @@ var FrameSelectorWidget = Panel.extend({
             propsData: {
                 imageMetadata: this._tiles,
                 frameUpdate: (frame, style) => {
-                    console.log(this.viewer, arguments, this, Array.from(arguments), frame);
                     this.viewer.frameUpdate(frame, style);
-                    console.log('Z');
                 }
             }
         });
