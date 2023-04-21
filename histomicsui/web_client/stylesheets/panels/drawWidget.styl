@@ -1,45 +1,47 @@
 .h-elements-container
-    width 100%
-    max-height 300px
-    overflow-y auto
-    margin-top 5px
-    padding 3px 5px
+  width 100%
+  max-height 300px
+  overflow-y auto
+  margin-top 5px
+  padding 3px 5px
 
-    .h-element
-        border-radius 3px
-        span
-            cursor pointer
+  .h-element
+    border-radius 3px
 
-        .h-element-label
-            margin-left 5px
-            white-space nowrap
-            overflow hidden
-            display inline-block
-            vertical-align top
-            max-width calc(100% - 75px)
-            text-overflow ellipsis
+    span
+      cursor pointer
 
-        .h-view-element
-            margin-left 3px
-            display none
+    .h-element-label
+      margin-left 5px
+      white-space nowrap
+      overflow hidden
+      display inline-block
+      vertical-align top
+      max-width calc(100% - 75px)
+      text-overflow ellipsis
 
-        .h-delete-element
-            float right
+    .h-view-element
+      margin-left 3px
+      display none
 
-    .h-element.h-highlight-element
-        background-color #ccc
+    .h-delete-element
+      float right
 
-    .h-element:hover
-        background-color #eee
+  .h-element.h-highlight-element
+    background-color #ccc
+
+  .h-element:hover
+    background-color #eee
 
 .h-save-annotation
-    float right
+  float right
 
 .h-draw-widget
   .h-draw-tools
     .btn-group-sm>.btn
       padding-left 3px
       padding-right 7px
+
     .btn-group-sm>.btn.h-brush-dropdown
       padding-left 0
       padding-right 0
@@ -69,11 +71,13 @@
         white-space nowrap
         overflow hidden
         text-overflow ellipsis
+
     .h-group-count-select
       padding-left 10px
 
   .btn-default.active
     background-color #5790ff
+
     &:focus, &:hover
       background-color #4672cc
 
@@ -90,10 +94,12 @@
   button[data-type="brush"]
     span.shape
       display none
+
   button[data-type="brush"][shape="square"]
     span.shape
       &.square
         display inline
+
   button[data-type="brush"][shape="circle"]
     span.shape
       &.circle
@@ -101,6 +107,7 @@
 
   .h-dropdown-title i
     pointer-events none
+
   .h-dropdown-content
     position absolute
     background white
@@ -109,29 +116,39 @@
     right 0
     top 30px
     padding 5px 10px
+
     .form-group
       margin-bottom 0
       padding 0
+
       input[type="radio"]
         margin-top 2px
+
       input[type="number"]
         margin-left 5px
+
       input[type="checkbox"]
         margin-right 5px
+
   .h-brush-controls
     width 165px
+
   .h-brush-size
     width 60px
+
   .h-fixed-shape-controls
     @extend .h-brush-controls
     z-index 10
     padding 0 25%
+
   .h-fixed-shape-form-group
     height 100%
+
   .h-fixed-width
     width 50%
+
   .h-fixed-height
     width 50%
 
 .flattenicon:before
-  transform: scale(1, 0.67)
+  transform scale(1, 0.67)
