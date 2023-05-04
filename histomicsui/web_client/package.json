@@ -27,8 +27,8 @@
         "webpack": "webpack.helper"
     },
     "scripts": {
-        "lint": "eslint --cache . && pug-lint . && stylus-supremacy format --compare ./**/*.styl --options package.json",
-        "format": "eslint --cache --fix . && stylus-supremacy format ./**/*.styl --replace --options package.json"
+        "lint": "eslint --cache . && eslint --no-eslintrc -c ./package.json --cache ../../tests && pug-lint . && stylus-supremacy format --compare ./**/*.styl --options package.json",
+        "format": "eslint --cache --fix . && eslint --no-eslintrc -c ./package.json --cache --fix ../../tests && stylus-supremacy format ./**/*.styl --replace --options package.json"
     },
     "dependencies": {
         "@vue/compiler-sfc": "^3.2.33",

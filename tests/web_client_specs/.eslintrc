@@ -1,5 +1,5 @@
 {
-  "extends": "girder",
+  "extends": "@girder",
   "rules": {
     "no-template-curly-in-string": 0
   },

@@ -1,4 +1,4 @@
-/* global huiTest */
+/* global huiTest girderTest describe it runs $ expect waitsFor */
 
 girderTest.importPlugin('jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui');
 girderTest.addScript('/static/built/plugins/histomicsui/huiTest.js');

@@ -1,4 +1,4 @@
-/* global huiTest */
+/* global huiTest girderTest describe it runs expect waitsFor */
 
 girderTest.importPlugin('jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui');
 girderTest.addScript('/static/built/plugins/histomicsui/huiTest.js');
@@ -58,18 +58,18 @@ girderTest.promise.done(function () {
             });
             it('click pan', function () {
                 var center = main.center();
-                simulateAndWait('mousedown', { map: { x: 100, y: 100 }, button: 'left' });
-                simulateAndWait('mouseup', { map: { x: 100, y: 100 }, button: 'left' });
+                simulateAndWait('mousedown', {map: {x: 100, y: 100}, button: 'left'});
+                simulateAndWait('mouseup', {map: {x: 100, y: 100}, button: 'left'});
                 runs(function () {
                     expect(main.center()).not.toEqual(center);
                 });
             });
             it('click drag back to start', function () {
                 var center = main.center();
-                simulateAndWait('mousedown', { map: { x: 140, y: 120 }, button: 'left' });
-                simulateAndWait('mousemove', { map: { x: 140, y: 140 }, button: 'left' });
-                simulateAndWait('mousemove', { map: { x: 140, y: 120 }, button: 'left' });
-                simulateAndWait('mouseup', { map: { x: 140, y: 120 }, button: 'left' });
+                simulateAndWait('mousedown', {map: {x: 140, y: 120}, button: 'left'});
+                simulateAndWait('mousemove', {map: {x: 140, y: 140}, button: 'left'});
+                simulateAndWait('mousemove', {map: {x: 140, y: 120}, button: 'left'});
+                simulateAndWait('mouseup', {map: {x: 140, y: 120}, button: 'left'});
                 runs(function () {
                     expect(main.center().x).toBeCloseTo(center.x);
                     expect(main.center().y).toBeCloseTo(center.y);
@@ -77,10 +77,10 @@ girderTest.promise.done(function () {
             });
             it('click drag', function () {
                 var center = main.center();
-                simulateAndWait('mousedown', { map: { x: 140, y: 120 }, button: 'left' });
-                simulateAndWait('mousemove', { map: { x: 140, y: 140 }, button: 'left' });
-                simulateAndWait('mousemove', { map: { x: 140, y: 150 }, button: 'left' });
-                simulateAndWait('mouseup', { map: { x: 140, y: 150 }, button: 'left' });
+                simulateAndWait('mousedown', {map: {x: 140, y: 120}, button: 'left'});
+                simulateAndWait('mousemove', {map: {x: 140, y: 140}, button: 'left'});
+                simulateAndWait('mousemove', {map: {x: 140, y: 150}, button: 'left'});
+                simulateAndWait('mouseup', {map: {x: 140, y: 150}, button: 'left'});
                 runs(function () {
                     expect(main.center().x).toBeCloseTo(center.x);
                     expect(main.center().y).not.toBeCloseTo(center.y);
@@ -88,10 +88,10 @@ girderTest.promise.done(function () {
             });
             it('click drag outside of zone', function () {
                 var center = main.center();
-                simulateAndWait('mousedown', { map: { x: 40, y: 20 }, button: 'left' });
-                simulateAndWait('mousemove', { map: { x: 40, y: 40 }, button: 'left' });
-                simulateAndWait('mousemove', { map: { x: 40, y: 50 }, button: 'left' });
-                simulateAndWait('mouseup', { map: { x: 40, y: 50 }, button: 'left' });
+                simulateAndWait('mousedown', {map: {x: 40, y: 20}, button: 'left'});
+                simulateAndWait('mousemove', {map: {x: 40, y: 40}, button: 'left'});
+                simulateAndWait('mousemove', {map: {x: 40, y: 50}, button: 'left'});
+                simulateAndWait('mouseup', {map: {x: 40, y: 50}, button: 'left'});
                 runs(function () {
                     expect(main.center().x).toBeCloseTo(center.x);
                     expect(main.center().y).toBeCloseTo(center.y);
@@ -100,10 +100,10 @@ girderTest.promise.done(function () {
             it('left-click drag zero area', function () {
                 var center = main.center();
                 var zoom = main.zoom();
-                simulateAndWait('mousedown', { map: { x: 40, y: 20 }, button: 'left', modifiers: 'shift' });
-                simulateAndWait('mousemove', { map: { x: 40, y: 20 }, button: 'left', modifiers: 'shift' });
-                simulateAndWait('mousemove', { map: { x: 40, y: 40 }, button: 'left', modifiers: 'shift' });
-                simulateAndWait('mouseup', { map: { x: 40, y: 40 }, button: 'left', modifiers: 'shift' });
+                simulateAndWait('mousedown', {map: {x: 40, y: 20}, button: 'left', modifiers: 'shift'});
+                simulateAndWait('mousemove', {map: {x: 40, y: 20}, button: 'left', modifiers: 'shift'});
+                simulateAndWait('mousemove', {map: {x: 40, y: 40}, button: 'left', modifiers: 'shift'});
+                simulateAndWait('mouseup', {map: {x: 40, y: 40}, button: 'left', modifiers: 'shift'});
                 runs(function () {
                     expect(main.center()).toEqual(center);
                     expect(main.zoom()).toEqual(zoom);
@@ -112,10 +112,10 @@ girderTest.promise.done(function () {
             it('left-click drag', function () {
                 var center = main.center();
                 var zoom = main.zoom();
-                simulateAndWait('mousedown', { map: { x: 40, y: 20 }, button: 'left', modifiers: 'shift' });
-                simulateAndWait('mousemove', { map: { x: 40, y: 40 }, button: 'left', modifiers: 'shift' });
-                simulateAndWait('mousemove', { map: { x: 60, y: 40 }, button: 'left', modifiers: 'shift' });
-                simulateAndWait('mouseup', { map: { x: 60, y: 40 }, button: 'left', modifiers: 'shift' });
+                simulateAndWait('mousedown', {map: {x: 40, y: 20}, button: 'left', modifiers: 'shift'});
+                simulateAndWait('mousemove', {map: {x: 40, y: 40}, button: 'left', modifiers: 'shift'});
+                simulateAndWait('mousemove', {map: {x: 60, y: 40}, button: 'left', modifiers: 'shift'});
+                simulateAndWait('mouseup', {map: {x: 60, y: 40}, button: 'left', modifiers: 'shift'});
                 runs(function () {
                     expect(main.center()).not.toEqual(center);
                     expect(main.zoom()).not.toEqual(zoom);

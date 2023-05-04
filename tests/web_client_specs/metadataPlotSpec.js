@@ -1,4 +1,4 @@
-/* global huiTest */
+/* global huiTest girderTest describe it runs $ expect girder waitsFor */
 
 girderTest.importPlugin('jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui');
 girderTest.addScript('/static/built/plugins/histomicsui/huiTest.js');
@@ -27,28 +27,30 @@ girderTest.promise.done(function () {
                         contentType: 'application/json',
                         processData: false,
                         method: 'PUT',
-                        data: JSON.stringify({gloms: [{
-                            Label: 'Old',
-                            pas: 2680.166436339452,
-                            area: 783.110155889082,
-                            aspect: 2.9080459770114944,
-                            average: 164.37993900822062,
-                            std: 26.010079499756575
-                        }, {
-                            Label: 'Old',
-                            pas: 12980.996970666974,
-                            area: 1496.7676319940551,
-                            aspect: 1.9185185185185185,
-                            average: 155.27579392594646,
-                            std: 28.416844030625626
-                        }, {
-                            Label: 'Young',
-                            pas: 8402.006745559294,
-                            area: 1788.302533363278,
-                            aspect: 1.019704433497537,
-                            average: 159.67405227626796,
-                            std: 33.87920305083972
-                        }]}),
+                        data: JSON.stringify({
+                            gloms: [{
+                                Label: 'Old',
+                                pas: 2680.166436339452,
+                                area: 783.110155889082,
+                                aspect: 2.9080459770114944,
+                                average: 164.37993900822062,
+                                std: 26.010079499756575
+                            }, {
+                                Label: 'Old',
+                                pas: 12980.996970666974,
+                                area: 1496.7676319940551,
+                                aspect: 1.9185185185185185,
+                                average: 155.27579392594646,
+                                std: 28.416844030625626
+                            }, {
+                                Label: 'Young',
+                                pas: 8402.006745559294,
+                                area: 1788.302533363278,
+                                aspect: 1.019704433497537,
+                                average: 159.67405227626796,
+                                std: 33.87920305083972
+                            }]
+                        }),
                         async: false
                     });
                 });
@@ -59,29 +61,31 @@ girderTest.promise.done(function () {
                         contentType: 'application/json',
                         processData: false,
                         method: 'PUT',
-                        data: JSON.stringify({gloms: [{
-                            Label: 'Young',
-                            pas: 11851.975039865125,
-                            area: 2360.3514018844844,
-                            aspect: 1.0686695278969958,
-                            average: 156.98394786336002,
-                            std: 31.21637278966411
-                        }, {
-                            Label: 'Old',
-                            pas: 14936.277054529173,
-                            area: 3136.911379889736,
-                            aspect: 1.0586080586080586,
-                            average: 156.36041872733267,
-                            std: 25.653667101657856
-                        }, {
-                            Label: 'Old',
-                            pas: 16794.292195370363,
-                            area: 3383.7387179248767,
-                            aspect: 1.08,
-                            average: 162.33947155279122,
-                            std: 29.727093069010945
+                        data: JSON.stringify({
+                            gloms: [{
+                                Label: 'Young',
+                                pas: 11851.975039865125,
+                                area: 2360.3514018844844,
+                                aspect: 1.0686695278969958,
+                                average: 156.98394786336002,
+                                std: 31.21637278966411
+                            }, {
+                                Label: 'Old',
+                                pas: 14936.277054529173,
+                                area: 3136.911379889736,
+                                aspect: 1.0586080586080586,
+                                average: 156.36041872733267,
+                                std: 25.653667101657856
+                            }, {
+                                Label: 'Old',
+                                pas: 16794.292195370363,
+                                area: 3383.7387179248767,
+                                aspect: 1.08,
+                                average: 162.33947155279122,
+                                std: 29.727093069010945
 
-                        }]}),
+                            }]
+                        }),
                         async: false
                     });
                 });

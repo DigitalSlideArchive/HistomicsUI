@@ -1,3 +1,5 @@
+/* global waitsFor girderTest $ girder runs expect */
+
 (function (global) {
     global.huiTest = {};
 

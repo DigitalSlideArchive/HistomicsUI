@@ -1,4 +1,4 @@
-/* globals girder, girderTest, describe, it, expect, waitsFor, runs */
+/* globals girder, girderTest, describe, it, expect, waitsFor, runs, _, $ */
 
 girderTest.importPlugin('jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui');
 

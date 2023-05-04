@@ -1,3 +1,5 @@
+/* global girderTest describe it waitsFor runs $ expect _ */
+
 girderTest.importPlugin('jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui');
 
 girderTest.startApp();
