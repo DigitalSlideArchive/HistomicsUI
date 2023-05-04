@@ -1,4 +1,4 @@
-/* global huiTest */
+/* global huiTest girderTest beforeEach girder describe it waitsFor runs $ afterEach expect waits _ */
 
 girderTest.importPlugin('jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui');
 girderTest.addScript('/static/built/plugins/histomicsui/huiTest.js');
@@ -888,15 +888,15 @@ girderTest.promise.done(function () {
                 $('.h-annotation-select-by-region').click();
 
                 interactor.simulateEvent('mousedown', {
-                    map: { x: 100, y: 100 },
+                    map: {x: 100, y: 100},
                     button: 'left'
                 });
                 interactor.simulateEvent('mousemove', {
-                    map: { x: 200, y: 200 },
+                    map: {x: 200, y: 200},
                     button: 'left'
                 });
                 interactor.simulateEvent('mouseup', {
-                    map: { x: 200, y: 200 },
+                    map: {x: 200, y: 200},
                     button: 'left'
                 });
 
@@ -1205,19 +1205,19 @@ girderTest.promise.done(function () {
 
                 runs(function () {
                     var rect = {
-                        'name': 'rectangle',
-                        'description': 'the description',
-                        'elements': [
+                        name: 'rectangle',
+                        description: 'the description',
+                        elements: [
                             {
-                                'center': [
+                                center: [
                                     2000,
                                     2000,
                                     0
                                 ],
-                                'height': 4000,
-                                'rotation': 0,
-                                'type': 'rectangle',
-                                'width': 4000
+                                height: 4000,
+                                rotation: 0,
+                                type: 'rectangle',
+                                width: 4000
                             }
                         ]
                     };

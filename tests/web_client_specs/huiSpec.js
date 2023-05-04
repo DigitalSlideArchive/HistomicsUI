@@ -1,4 +1,4 @@
-/* globals girder, girderTest, describe, it, expect, waitsFor, runs */
+/* globals girder, girderTest, describe, it, expect, waitsFor, runs, $ */
 
 girderTest.importPlugin('jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui');
 
@@ -6,7 +6,7 @@ girderTest.startApp();
 
 describe('Test the HistomicsUI plugin', function () {
     it('change the HistomicsUI settings', function () {
-        var styles = [{'lineWidth': 8, 'id': 'Sample Group'}];
+        var styles = [{lineWidth: 8, id: 'Sample Group'}];
         var styleJSON = JSON.stringify(styles);
 
         girderTest.login('admin', 'Admin', 'Admin', 'password')();
