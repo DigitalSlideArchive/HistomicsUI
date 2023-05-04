@@ -10,7 +10,7 @@ module.exports = function (config) {
             to: config.output.path,
             toType: 'dir'
         }, {
-            from: path.join(path.resolve(__dirname), 'node_modules', 'sinon', 'pkg', 'sinon.js'),
+            from: require.resolve('sinon/pkg/sinon.js'),
             to: path.join(config.output.path, 'extra', 'sinon.js')
         }])
     );
