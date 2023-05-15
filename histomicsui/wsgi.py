@@ -77,8 +77,6 @@ def create_wsgi_app(info: dict) -> cherrypy._cptree.Tree:
 
 
 # TODO do we need to call _setupCache for HistomicsUI?
-# TODO database configuration? Other env vars?
-# TODO log configuration?
 
 info = configure(mode=os.environ.get('GIRDER_SERVER_MODE', constants.ServerMode.PRODUCTION))
 app = create_wsgi_app(info)
@@ -89,3 +87,9 @@ if broker := os.getenv('GIRDER_BROKER_URI'):
     Setting().set('worker.broker', broker)
     # We actually want backend to be null, but girder_worker doesn't allow that right now
     Setting().set('worker.backend', broker)
+
+if sentry_frontend_dsn := os.getenv('SENTRY_FRONTEND_DSN'):
+    Setting().set('sentry.frontend_dsn', sentry_frontend_dsn)
+
+if sentry_backend_dsn := os.getenv('SENTRY_BACKEND_DSN'):
+    Setting().set('sentry.backend_dsn', sentry_backend_dsn)
