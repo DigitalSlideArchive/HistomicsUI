@@ -61,7 +61,7 @@ const AnnotationContextMenu = View.extend({
     },
     _setStyleDefinition(group) {
         const style = this.styles.get({id: group}) || this.styles.get({id: this.parentView._defaultGroup});
-        const styleAttrs = Object.assign({}, style.toJSON());
+        const styleAttrs = Object.assign({}, style ? style.toJSON() : {});
         delete styleAttrs.id;
         let refresh = false;
         this.collection.each((element) => { /* eslint-disable backbone/no-silent */
