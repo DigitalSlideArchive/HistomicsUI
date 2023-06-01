@@ -9,7 +9,7 @@ Basic Image Controls
   - **Left-drag**: Hold down the left mouse button and drag the image to change
     the area that is in view.
 
-  - **Middle-drag**: Hold down the middle mouse button and drag the image to 
+  - **Middle-drag**: Hold down the middle mouse button and drag the image to
     change the area that is in view.  This works even when editing annotations.
 
   - **Single touch drag**
