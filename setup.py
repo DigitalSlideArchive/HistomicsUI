@@ -65,6 +65,9 @@ setup(
     entry_points={
         'girder.plugin': [
             'histomicsui = histomicsui:GirderPlugin'
+        ],
+        'girder_worker_plugins': [
+            'slicer_cli_web = histomicsui.girder_worker_plugin:HistomicsUIWorkerPlugin'
         ]
     },
 )
