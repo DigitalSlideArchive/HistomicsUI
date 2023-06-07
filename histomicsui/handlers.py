@@ -109,14 +109,12 @@ def process_annotations_task(info: dict) -> None:
 
 def process_annotations(event):  # noqa
     """Add annotations to an image on a ``data.process`` event"""
-    results = _itemFromEvent(event.info, 'AnnotationFile')
-    if not results:
+    if not _itemFromEvent(event.info, 'AnnotationFile'):
         return
-    file = results['file']
 
     process_annotations_task.delay(
         event.info,
-        girder_job_title=f"Processing annotation results for {file['name']}",
+        girder_job_title=f"Processing annotation results from {event.info['file']['name']}",
     )
 
 
