@@ -65,7 +65,7 @@ def _itemFromEvent(info, identifierEnding, itemAccessLevel=AccessType.READ):  # 
         return {'item': item, 'user': user, 'file': image, 'uuid': reference.get('uuid')}
 
 
-@app.task
+@app.task(girder_job_title='Processing annotation results')
 def process_annotations_task(info: dict) -> None:
     results = _itemFromEvent(info, 'AnnotationFile')
     if not results:
@@ -80,8 +80,14 @@ def process_annotations_task(info: dict) -> None:
         logger.error('Could not load models from the database')
         return
 
-    with File().open(file) as fptr:
-        data = orjson.loads(fptr.read().decode())
+    def read_entire_file():
+        with File().open(file) as fptr:
+            while chunk := fptr.read(1048576):
+                yield chunk
+
+    contents = b''.join(chunk for chunk in read_entire_file())
+    data = orjson.loads(contents.decode())
+    del contents
 
     if time.time() - startTime > 10:
         logger.info('Decoded json in %5.3fs', time.time() - startTime)
