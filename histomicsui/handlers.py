@@ -65,7 +65,7 @@ def _itemFromEvent(info, identifierEnding, itemAccessLevel=AccessType.READ):  # 
         return {'item': item, 'user': user, 'file': image, 'uuid': reference.get('uuid')}
 
 
-@app.task(girder_job_title='Processing annotation results')
+@app.task
 def process_annotations_task(info: dict) -> None:
     results = _itemFromEvent(info, 'AnnotationFile')
     if not results:
@@ -109,7 +109,15 @@ def process_annotations_task(info: dict) -> None:
 
 def process_annotations(event):  # noqa
     """Add annotations to an image on a ``data.process`` event"""
-    process_annotations_task.delay(event.info)
+    results = _itemFromEvent(event.info, 'AnnotationFile')
+    if not results:
+        return
+    file = results['file']
+
+    process_annotations_task.delay(
+        event.info,
+        girder_job_title=f"Processing annotation results for {file['name']}",
+    )
 
 
 def quarantine_item(item, user, makePlaceholder=True):
