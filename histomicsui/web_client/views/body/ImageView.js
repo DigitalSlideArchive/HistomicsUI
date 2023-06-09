@@ -392,7 +392,7 @@ var ImageView = View.extend({
                 this.zoomWidget.setMaxMagnification(tiles.magnification || 20, this._increaseZoom2x, this._increaseZoom2xRange);
                 this.zoomWidget.render();
                 this.overviewWidget.setImage(tiles);
-                this.frameSelectorWidget.setImage(tiles);
+                this.frameSelectorWidget.setImage(itemId, tiles);
                 return null;
             });
         };

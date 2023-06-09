@@ -26,6 +26,7 @@ var FrameSelectorWidget = Panel.extend({
         const vm = new FrameSelector({
             el,
             propsData: {
+                itemId: this._itemId,
                 imageMetadata: this._tiles,
                 frameUpdate: (frame, style) => {
                     this.viewer.frameUpdate(frame, style);
@@ -36,8 +37,9 @@ var FrameSelectorWidget = Panel.extend({
         return this;
     },
 
-    setImage(tiles) {
-        if (!_.isEqual(tiles, this._tiles)) {
+    setImage(itemId, tiles) {
+        if (!_.isEqual(tiles, this._tiles) || this._itemId !== itemId) {
+            this._itemId = itemId;
             this._tiles = tiles;
             this.render();
         }
