@@ -269,31 +269,31 @@ def restrict_downloads(info):
         return
     # Change some endpoints to require token access
     endpoints = [
-        ('collection', 'GET', (':id', 'download')),
-        ('file', 'GET', (':id', 'download', ':name')),
-        ('folder', 'GET', (':id', 'download')),
-        ('resource', 'GET', ('download', )),
-        ('resource', 'POST', ('download', )),
+        ('collection', 'GET', (':id', 'download'), True),
+        ('file', 'GET', (':id', 'download', ':name'), True),
+        ('folder', 'GET', (':id', 'download'), True),
+        ('resource', 'GET', ('download', ), False),
+        ('resource', 'POST', ('download', ), True),
 
-        ('item', 'GET', (':itemId', 'tiles', 'images', ':image')),
+        ('item', 'GET', (':itemId', 'tiles', 'images', ':image'), True),
     ]
     intEndpoints = [
-        ('file', 'GET', (':id', 'download')),
-        ('item', 'GET', (':id', 'download')),
+        ('file', 'GET', (':id', 'download'), True),
+        ('item', 'GET', (':id', 'download'), True),
     ]
     if not isinstance(curConfig['restrict_downloads'], int):
         endpoints += intEndpoints
 
-    for resource, method, route in endpoints:
+    for resource, method, route, clrScope in endpoints:
         cls = getattr(info['apiRoot'], resource)
         boundfunc = cls.getRouteHandler(method, route)
         func = getattr(boundfunc, '__func__', boundfunc)
         if func.accessLevel == 'public':
             newfunc = access.token(func)
             newfunc.requiredScopes = getattr(func, 'requiredScopes', None)
-            if getattr(func, 'requiredScopes', None):
+            if getattr(func, 'requiredScopes', None) and clrScope:
                 del func.requiredScopes
-            if getattr(func, 'cookieAuth', None):
+            if getattr(func, 'cookieAuth', None) and clrScope:
                 newfunc.cookieAuth = True
                 del func.cookieAuth
             # Rebind new function
