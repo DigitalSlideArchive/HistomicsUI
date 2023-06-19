@@ -55,7 +55,7 @@
         "eslint-plugin-import": "^2.25.3",
         "eslint-plugin-n": "^15.2.4",
         "eslint-plugin-promise": "^6.0.0",
-        "eslint-plugin-vue": "^9.10.0",
+        "eslint-plugin-vue": "~9.14.0",
         "pug-lint": "^2",
         "stylus-supremacy": "^2.17.5"
     },
@@ -94,6 +94,9 @@
         },
         "root": true
     },
+    "eslintIgnore": [
+        "**/node_modules/**"
+    ],
     "pugLintConfig": {
         "extends": "@girder/pug-lint-config"
     },
