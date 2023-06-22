@@ -10,6 +10,9 @@
       flex-direction column
       padding 0
 
+      &.invisible
+        display none
+
   .image-frame-simple-control
     padding 0
 
@@ -19,14 +22,27 @@
   table
     margin-bottom 0
 
+  .table-container
+    max-height unset
+    overflow-y unset
+
   .table-container td, .table-container th
     padding 0 5px 0 0
 
   td
     padding 2px
 
-  .current-color
-    width 40px
+  .current-color, .color-col
+    width 25px
+
+  .enable-col
+    width initial
+
+  .name-col
+    display flex
+    flex-direction column
+    width 125px
+    overflow hidden
 
   .picker-offset
     margin-right 50px
@@ -39,6 +55,46 @@
   input[type=checkbox]
     width 20px
 
-  input[type=number]
+  #composite-layer-table input[type="number"]
     padding 0
+    width 60px
+
+  .range-editor
+    input[type=number]
+      padding 0
+      width 60px
+
+    .handles-svg
+      left 60px
+      width calc(100% - 120px)
+
+    .canvas
+      width calc(100% - 120px)
+
+    .percentage-input
+      width unset
+
+    .percentage-input input
+      width 60px
+
+    .percentage-input:after
+      left 42px
+
+  .auto-range-label > .small-text
+    display none
+
+  .auto-range-toggle
+    min-width 60px
+    display block
+
+    .percentage-input input
+      width 60px
+
+    .percentage-input:after
+      left 42px
+
+  .expand-btn
+    right 0
+
+  #composite-layer-table .auto-range-col .percentage-input input
     width 60px
