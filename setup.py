@@ -43,7 +43,7 @@ setup(
         'Programming Language :: Python :: 3.11',
     ],
     install_requires=[
-        'girder-large-image-annotation>=1.22.4',
+        'girder-large-image-annotation>=1.23.0',
         'girder-slicer-cli-web>=1.2.3',
         'cachetools',
         'importlib-metadata<5 ; python_version < "3.8"',
