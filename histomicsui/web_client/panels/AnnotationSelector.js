@@ -60,6 +60,8 @@ var AnnotationSelector = Panel.extend({
         this.listenTo(this.collection, 'change:highlight', this._changeAnnotationHighlight);
         this.listenTo(eventStream, 'g:event.job_status', _.debounce(this._onJobUpdate, 500));
         this.listenTo(eventStream, 'g:eventStream.start', this._refreshAnnotations);
+        this.listenTo(eventStream, 'g:event.large_image_annotation.create', this._refreshAnnotations);
+        this.listenTo(eventStream, 'g:event.large_image_annotation.remove', this._refreshAnnotations);
         this.listenTo(this.collection, 'change:annotation change:groups', this._saveAnnotation);
         this.listenTo(girderEvents, 'g:login', () => {
             this.collection.reset();
@@ -240,6 +242,10 @@ var AnnotationSelector = Panel.extend({
     },
 
     _refreshAnnotations() {
+        if (this._norefresh) {
+            delete this._norefresh;
+            return;
+        }
         if (!this.parentItem || !this.parentItem.id || !this.viewer) {
             return;
         }
@@ -289,6 +295,9 @@ var AnnotationSelector = Panel.extend({
                 if (!this.collection.get(id) && models[id].get('displayed')) {
                     this._deselectAnnotationElements(models[id]);
                     this.viewer.removeAnnotation(models[id]);
+                }
+                if (activeId === id) {
+                    this.trigger('h:deleteAnnotation', models[id]);
                 }
             });
             return null;
@@ -389,6 +398,7 @@ var AnnotationSelector = Panel.extend({
             showSaveAnnotationDialog(model, {title: 'Create annotation'}),
             'g:submit',
             () => {
+                this._norefresh = true;
                 model.save().done(() => {
                     model.set('displayed', true);
                     this.collection.add(model);
