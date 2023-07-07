@@ -168,3 +168,15 @@ Annotation Controls
   **Left-click** on a superpixel to change its category to the current style group.
   Holding **shift** and **left-drag** the mouse to change multiple superpixels as
   the mouse passed over them.
+
+Frame Selector Controls
+-----------------------
+
+- **Channel/band controls**:
+
+  When compositing channels or bands, the visibility of individual channels or
+  bands can be toggled.
+
+  - **ctrl+<number>** toggles the visibility of channels / bands 1 through 10.
+
+  - **alt+ctrl+<number>** toggles the visibility of channels / bands 11 through 20.
