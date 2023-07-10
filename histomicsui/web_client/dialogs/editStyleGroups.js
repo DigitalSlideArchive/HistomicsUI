@@ -300,6 +300,7 @@ const EditStyleGroupsDialog = View.extend({
         this.collection.reset(styleModels, {merge: true});
         this.model.set(this.originalModelData);
         this.collection.each((model) => { model.save(); });
+        this.$el.modal('hide');
     }
 });
 
