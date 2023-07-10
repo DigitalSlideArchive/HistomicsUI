@@ -1,6 +1,7 @@
 import json
 import time
 
+import filelock
 import pytest
 from girder.exceptions import ValidationException
 from girder.models.collection import Collection
@@ -17,6 +18,13 @@ from histomicsui.models.meta import pruneNoneValues, updateDict
 from histomicsui.models.slide import Slide
 
 from . import girder_utilities as utilities
+
+
+@pytest.fixture
+def singular(tmp_path_factory):
+    root_tmp_dir = tmp_path_factory.getbasetemp().parent
+    with filelock.FileLock(root_tmp_dir / '.test_tcga.lock'):
+        yield
 
 
 def createFileItem(name, creator, parent):
@@ -174,7 +182,7 @@ class TestTCGAModel:
         Cohort().updateTCGAMeta(doc, {'name': None, 'other': 'new'})
         assert Cohort().getTCGAMeta(doc) == {'other': 'new'}
 
-    def testLoadDocument(self, server, admin, user):
+    def testLoadDocument(self, server, admin, user, singular):
         makeResources(self, admin, user)
         with pytest.raises(ValidationException):
             Cohort().loadDocument('')
@@ -187,7 +195,7 @@ class TestTCGAModel:
         assert Cohort().loadDocument(
             self.publicFolder['_id'], user=admin)['_id'] == self.publicFolder['_id']
 
-    def testCohortModel(self, server, admin, user):
+    def testCohortModel(self, server, admin, user, singular):
         makeResources(self, admin, user)
         doc = Folder().createFolder(
             self.tcgaCollection, 'ucec', parentType='collection',
@@ -206,7 +214,7 @@ class TestTCGAModel:
         Cohort().importDocument(doc, user=admin, recurse=True)
         assert Cohort().findOne({}).get('_id') == doc['_id']
 
-    def testCaseModel(self, server, admin, user):
+    def testCaseModel(self, server, admin, user, singular):
         makeResources(self, admin, user)
         cohort = Folder().createFolder(
             self.tcgaCollection, 'ucec', parentType='collection',
@@ -236,7 +244,7 @@ class TestTCGAModel:
         with pytest.raises(ValidationException):
             Case().importDocument(invaliddoc, user=admin)
 
-    def testSlideModel(self, server, admin, user):
+    def testSlideModel(self, server, admin, user, singular):
         makeResources(self, admin, user)
 
         cohort = Folder().createFolder(
@@ -261,7 +269,7 @@ class TestTCGAModel:
         Cohort().importDocument(cohort, user=admin, recurse=True)
         assert Slide().findOne({'_id': doc['_id']}).get('_id') == doc['_id']
 
-    def testImageModel(self, server, admin, user):
+    def testImageModel(self, server, admin, user, singular):
         makeResources(self, admin, user)
 
         cohort = Folder().createFolder(
@@ -328,7 +336,7 @@ class TestTCGARest:
         job = resp.json
 
         # loop until it is done
-        for _idx in range(100):
+        for _idx in range(200):
             time.sleep(0.1)
 
             resp = server.request(
@@ -345,7 +353,7 @@ class TestTCGARest:
 
         raise Exception('TCGA import did not finish in time')
 
-    def testTCGACollection(self, server, admin, user):
+    def testTCGACollection(self, server, admin, user, singular):
         makeResources(self, admin, user)
         resp = server.request(
             path='/tcga'
@@ -393,13 +401,13 @@ class TestTCGARest:
         assert utilities.respStatus(resp) == 200
         assert resp.json['_id'] == str(self.tcgaCollection['_id'])
 
-    def testRecursiveImport(self, server, admin, user):
+    def testRecursiveImport(self, server, admin, user, singular):
         makeResources(self, admin, user)
         self.runRecursiveImport(server, admin)
         images = list(Image().find({}))
         assert len(images) == 3
 
-    def testCohortEndpoints(self, server, admin, user):
+    def testCohortEndpoints(self, server, admin, user, singular):
         makeResources(self, admin, user)
         resp = server.request(
             path='/tcga/cohort'
@@ -462,7 +470,7 @@ class TestTCGARest:
         assert len(resp.json['data']) == 3
         assert resp.json['data'][0]['tcga']['type'] == 'image'
 
-    def testCaseEndpoints(self, server, admin, user):
+    def testCaseEndpoints(self, server, admin, user, singular):
         makeResources(self, admin, user)
         self.runRecursiveImport(server, admin)
 
@@ -527,7 +535,7 @@ class TestTCGARest:
         )
         assert utilities.respStatus(resp) == 400
 
-    def testCaseMetadata(self, server, admin, user):
+    def testCaseMetadata(self, server, admin, user, singular):
         makeResources(self, admin, user)
         id1 = str(self.case1['_id'])
         id2 = str(self.case2['_id'])
@@ -664,7 +672,7 @@ class TestTCGARest:
         assert utilities.respStatus(resp) == 200
         assert resp.json == []
 
-    def testSlideEndpoints(self, server, admin, user):
+    def testSlideEndpoints(self, server, admin, user, singular):
         makeResources(self, admin, user)
         case1 = str(self.case1['_id'])
         slide1 = str(self.slide1['_id'])
@@ -723,7 +731,7 @@ class TestTCGARest:
         )
         assert utilities.respStatus(resp) == 200
 
-    def testImageEndpoints(self, server, admin, user):
+    def testImageEndpoints(self, server, admin, user, singular):
         makeResources(self, admin, user)
         slide1 = str(self.slide1['_id'])
         image1 = str(self.image1['_id'])
@@ -790,7 +798,7 @@ class TestTCGARest:
         )
         assert utilities.respStatus(resp) == 200
 
-    def testPathologyEndpoints(self, server, admin, user):
+    def testPathologyEndpoints(self, server, admin, user, singular):
         makeResources(self, admin, user)
         case1 = str(self.case1['_id'])
         pathology1 = str(self.pathology1['_id'])
@@ -881,7 +889,7 @@ class TestTCGARest:
         )
         assert utilities.respStatus(resp) == 200
 
-    def testAperioEndpoints(self, server, admin, user):
+    def testAperioEndpoints(self, server, admin, user, singular):
         makeResources(self, admin, user)
         aperio1 = str(self.aperio1['_id'])
         aperio2 = str(self.aperio2['_id'])
@@ -971,7 +979,7 @@ class TestTCGARest:
         assert utilities.respStatus(resp) == 200
         assert len(resp.json) == 0
 
-    def testPagingParams(self, server, admin, user):
+    def testPagingParams(self, server, admin, user, singular):
         makeResources(self, admin, user)
         cohort1 = str(self.cohort['_id'])
         self.runRecursiveImport(server, admin)

@@ -1577,6 +1577,7 @@ girderTest.promise.done(function () {
                 waitsFor(function () {
                     return $('#h-element-label').val() === '';
                 }, 'label to reset');
+                girderTest.waitForDialog();
                 runs(function () {
                     expect($('#h-element-line-width').val()).toBe('2');
                 });
