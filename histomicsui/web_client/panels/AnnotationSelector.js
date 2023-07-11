@@ -410,7 +410,7 @@ var AnnotationSelector = Panel.extend({
     },
 
     _saveAnnotation(annotation) {
-        if (!this.viewer._saving) {
+        if (this.viewer !== null && this.viewer !== undefined && !this.viewer._saving) {
             this.viewer._saving = {};
         }
         if (!annotation._saving && !annotation._inFetch && !annotation.get('loading')) {
@@ -428,8 +428,11 @@ var AnnotationSelector = Panel.extend({
                  * of retries. */
                 annotation._saveAgain = Math.min(lastSaveAgain ? lastSaveAgain * 2 : 5, 300);
             }).always(() => {
-                delete this.viewer._saving[annotation.id];
                 annotation._saving = false;
+                if (this.viewer === null || this.viewer === undefined) {
+                    return;
+                }
+                delete this.viewer._saving[annotation.id];
                 if (annotation._saveAgain !== undefined && annotation._saveAgain !== false) {
                     if (annotation._saveAgain === 'delete') {
                         annotation.destroy();

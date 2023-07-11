@@ -476,7 +476,7 @@ girderTest.promise.done(function () {
                 girderTest.waitForLoad();
                 waitsFor(function () {
                     return $('.geojs-map.annotation-input').length > 0;
-                }, 'rectangle mode to activate');
+                }, 'rectangle mode to activate again');
                 runs(function () {
                     var interactor = huiTest.geojsMap().interactor();
                     interactor.simulateEvent('mousedown', {
@@ -502,7 +502,7 @@ girderTest.promise.done(function () {
                 girderTest.waitForLoad();
                 waitsFor(function () {
                     return $('.geojs-map.annotation-input').length > 0;
-                }, 'rectangle mode to activate');
+                }, 'rectangle mode to activate a third time');
                 waitsFor(function () {
                     var interactor = huiTest.geojsMap().interactor();
                     toggle = toggle ? 0 : 1;

@@ -103,6 +103,9 @@
         waitsFor(function () {
             return $('.geojs-layer.active').length > 0;
         }, 'image to load');
+        waitsFor(function () {
+            return $('span.g-item-breadcrumb-link[data-id="' + imageId + '"]').length === 1;
+        }, 'viewer to be set');
         girderTest.waitForLoad();
         runs(function () {
             expect(girder.plugins.histomicsui.router.getQuery('image')).toBe(imageId);
