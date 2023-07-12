@@ -410,11 +410,12 @@ var AnnotationSelector = Panel.extend({
     },
 
     _saveAnnotation(annotation) {
-        if (this.viewer !== null && this.viewer !== undefined && !this.viewer._saving) {
+        if (this.viewer && !this.viewer._saving) {
             this.viewer._saving = {};
         }
+        const vsaving = (this.viewer || {})._saving;
         if (!annotation._saving && !annotation._inFetch && !annotation.get('loading')) {
-            this.viewer._saving[annotation.id] = true;
+            vsaving[annotation.id] = true;
             this.$el.addClass('saving');
             const lastSaveAgain = annotation._saveAgain;
             annotation._saving = true;
@@ -429,17 +430,14 @@ var AnnotationSelector = Panel.extend({
                 annotation._saveAgain = Math.min(lastSaveAgain ? lastSaveAgain * 2 : 5, 300);
             }).always(() => {
                 annotation._saving = false;
-                if (this.viewer === null || this.viewer === undefined) {
-                    return;
-                }
-                delete this.viewer._saving[annotation.id];
+                delete vsaving[annotation.id];
                 if (annotation._saveAgain !== undefined && annotation._saveAgain !== false) {
                     if (annotation._saveAgain === 'delete') {
                         annotation.destroy();
                     } else if (!annotation._saveAgain) {
                         this._saveAnnotation(annotation);
                     } else {
-                        this.viewer._saving[annotation.id] = true;
+                        vsaving[annotation.id] = true;
                         window.setTimeout(() => {
                             if (annotation._saveAgain !== undefined && annotation._saveAgain !== false) {
                                 this._saveAnnotation(annotation);
@@ -447,10 +445,10 @@ var AnnotationSelector = Panel.extend({
                         }, annotation._saveAgain * 1000);
                     }
                 }
-                if (Object.keys(this.viewer._saving).length === 1 && this.viewer._saving.refresh) {
+                if (Object.keys(vsaving).length === 1 && vsaving.refresh) {
                     this._refreshAnnotations();
                 }
-                if (!Object.keys(this.viewer._saving).length || (Object.keys(this.viewer._saving).length === 1 && this.viewer._saving.refresh)) {
+                if (!Object.keys(vsaving).length || (Object.keys(vsaving).length === 1 && vsaving.refresh)) {
                     this.$el.removeClass('saving');
                 }
             });
@@ -465,14 +463,14 @@ var AnnotationSelector = Panel.extend({
             }
         } else {
             annotation._saveAgain = false;
-            delete this.viewer._saving[annotation.id];
+            delete vsaving[annotation.id];
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
                 this.trigger('h:redraw', annotation);
             }
-            if (Object.keys(this.viewer._saving).length === 1 && this.viewer._saving.refresh) {
+            if (Object.keys(vsaving).length === 1 && vsaving.refresh) {
                 this._refreshAnnotations();
             }
-            if (!Object.keys(this.viewer._saving).length || (Object.keys(this.viewer._saving).length === 1 && this.viewer._saving.refresh)) {
+            if (!Object.keys(vsaving).length || (Object.keys(vsaving).length === 1 && vsaving.refresh)) {
                 this.$el.removeClass('saving');
             }
         }
