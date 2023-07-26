@@ -413,7 +413,7 @@ var AnnotationSelector = Panel.extend({
         if (this.viewer && !this.viewer._saving) {
             this.viewer._saving = {};
         }
-        const vsaving = (this.viewer || {})._saving;
+        const vsaving = (this.viewer || {})._saving || {};
         if (!annotation._saving && !annotation._inFetch && !annotation.get('loading')) {
             vsaving[annotation.id] = true;
             this.$el.addClass('saving');
