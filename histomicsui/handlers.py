@@ -3,6 +3,7 @@ import json
 import time
 
 import cachetools
+import large_image.config
 import orjson
 from girder import logger
 from girder.constants import AccessType
@@ -134,7 +135,8 @@ def process_annotations(event):  # noqa
         logger.error('Could not load models from the database')
         return
     try:
-        if file['size'] > 1 * 1024 ** 3:
+        if file['size'] > int(large_image.config.getConfig(
+                'max_annotation_input_file_length', 1024 ** 3)):
             raise Exception('File is larger than will be read into memory.')
         data = []
         with File().open(file) as fptr:
