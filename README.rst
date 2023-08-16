@@ -10,6 +10,16 @@ Girder provides authentication, access control, and diverse storage options, inc
 
 A set of common algorithms are provided by HistomicsTK_.
 
+License
+-----------------------------------------------------------
+
+HistomicsUI is made available under the Apache License, Version 2.0. For more details, see `LICENSE <https://github.com/DigitalSlideArchive/HistomicsUI/blob/master/LICENSE>`_
+
+Community
+-----------------------------------------------------------
+
+`Discussions <https://github.com/DigitalSlideArchive/digital_slide_archive/discussions>`_ | `Issues <https://github.com/DigitalSlideArchive/HistomicsUI/issues>`_ | `Contact Us <https://www.kitware.com/contact-us/>`_
+
 Installation
 ------------
 
@@ -100,7 +110,6 @@ This work was funded in part by the NIH grant U24-CA194362-01_.
 .. _large_image: https://github.com/girder/large_image
 .. _slicer_cli_web: https://github.com/girder/slicer_cli_web
 .. _slicer execution model: https://www.slicer.org/slicerWiki/index.php/Slicer3:Execution_Model_Documentation
-.. _Discourse forum: https://discourse.girder.org/c/histomicstk
 .. _celery: http://www.celeryproject.org/
 .. _HistomicsTK: https://github.com/DigitalSlideArchive/HistomicsTK
 .. _Digital Slide Archive: https://github.com/DigitalSlideArchive/digital_slide_archive
