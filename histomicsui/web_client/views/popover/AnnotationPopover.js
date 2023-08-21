@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import $ from 'jquery';
 
+import {getCurrentUser} from '@girder/core/auth';
 import {restRequest} from '@girder/core/rest';
 import ElementCollection from '@girder/large_image_annotation/collections/ElementCollection';
 import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
@@ -86,6 +87,10 @@ var AnnotationPopover = View.extend({
 
         this._hidden = !settings.visible;
         this._users = {};
+        const user = getCurrentUser();
+        if (user) {
+            this._users[user.id] = user.toJSON();
+        }
         this.collection = new ElementCollection();
         this.listenTo(this.collection, 'add', this._getUser);
         this.listenTo(this.collection, 'all', this.render);
@@ -156,6 +161,15 @@ var AnnotationPopover = View.extend({
                 this.render();
             });
         }
+        var uid = model.get('annotation').get('updatedId');
+        if (uid && uid !== id && !_.has(this._users, uid)) {
+            restRequest({
+                url: 'user/' + uid
+            }).done((user) => {
+                this._users[uid] = user;
+                this.render();
+            });
+        }
     },
 
     /**
@@ -209,7 +223,7 @@ var AnnotationPopover = View.extend({
 
     /**
      * Return additional HTML to add to element popovers.
-     *a
+     *
      * @param {object} element The annotation element under the cursor.
      * @param {object} annotation The backbone annotation model.
      * @returns {string} An HTML string that will be added to the popover or
