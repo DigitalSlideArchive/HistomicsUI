@@ -11,6 +11,7 @@ import convertCircle from '@girder/large_image_annotation/annotations/geometry/c
 import events from '../../events';
 import View from '../View';
 import annotationPopover from '../../templates/popover/annotationPopover.pug';
+import annotationPopoverMetadata from '../../templates/popover/annotationPopoverMetadata.pug';
 import '../../stylesheets/popover/annotationPopover.styl';
 import {elementAreaAndEdgeLength} from '../utils';
 
@@ -230,6 +231,12 @@ var AnnotationPopover = View.extend({
      *   undefined.
      */
     _elementAdditionalValues(element, annotation) {
+        if (element && element.toJSON && annotation && annotation.toJSON) {
+            return annotationPopoverMetadata({
+                annotation: annotation.toJSON(),
+                element: element.toJSON()
+            });
+        }
     },
 
     /**
