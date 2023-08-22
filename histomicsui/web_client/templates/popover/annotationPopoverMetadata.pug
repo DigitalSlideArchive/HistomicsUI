@@ -1,0 +1,13 @@
+if element.user
+  .annotation-element-metadata-table
+    table
+      for entry in Object.entries(element.user)
+        if typeof entry[1] === 'string' || typeof entry[1] === 'number' || entry[1] instanceof String
+          tr
+            td
+              = entry[0]
+            td
+              if typeof entry[1] === 'number'
+                = parseFloat(entry[1].toPrecision(6))
+              else
+                = entry[1]
