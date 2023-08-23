@@ -828,10 +828,13 @@ var DrawWidget = Panel.extend({
      */
     _setStyleGroup(group) {
         this._style.set(group);
-        if (!this._style.get('group') && this._style.id !== this.parentView._defaultGroup) {
+        if (!group.group && this._style.id !== this.parentView._defaultGroup) {
             this._style.set('group', this._style.id);
         } else if (this._style.get('group') && this._style.id === this.parentView._defaultGroup) {
             this._style.unset('group');
+        }
+        if (!group.label && this._style.get('label')) {
+            this._style.unset('label');
         }
         this.$('.h-style-group').val(group.id);
         this._saveEditOptions({style: group.id});
