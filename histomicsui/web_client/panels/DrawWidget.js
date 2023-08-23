@@ -779,21 +779,24 @@ var DrawWidget = Panel.extend({
                         $(group).after(groupElem);
                     }
                 }
-                groupElem.html(newCount + ' ' + groupName).show();
+                groupElem.find('.h-group-count-value').html(newCount + ' ' + groupName).show();
             } else {
                 groupElem.remove();
             }
         } else if (change !== 0) {
+            const span = ($('.h-group-count-option:first span.h-group-count-select')[0] || {}).outerHTML || '';
+            const newrecord = '<div class="h-group-count-option" data-group="' + groupName + '" data-count=' + change + '><span class="h-group-count-value">' + change + ' ' + groupName + '</span>' + span + '</div>';
+            console.log(newrecord);
             for (const group of $('.h-group-count-option').toArray().reverse()) {
                 if ($(group).attr('data-count') > change || ($(group).attr('data-count') === change && $(group).attr('data-group') < groupName)) {
-                    $(group).after('<div class = h-group-count-option data-group="' + groupName + '" data-count=' + change + '>' + change + ' ' + groupName + '</div>');
+                    $(group).after(newrecord);
                     break;
                 } else if (group === $('.h-group-count-options:first-child')[0]) {
-                    $(group).before('<div class = h-group-count-option data-group="' + groupName + '" data-count=' + change + '>' + change + ' ' + groupName + '</div>');
+                    $(group).before(newrecord);
                 }
             }
             if ($('.h-group-count-options > [data-group="' + groupName + '"]').length === 0) {
-                $('.h-group-count-options').append('<div class = h-group-count-option data-group="' + groupName + '" data-count=' + change + '>' + change + ' ' + groupName + '</div>');
+                $('.h-group-count-options').append(newrecord);
             }
         }
         if ($('.h-group-count-option').length === 0) {
