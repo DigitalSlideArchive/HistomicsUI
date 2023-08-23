@@ -55,7 +55,8 @@ if firstRender
       return b[1] - a[1];
     })
   - for (let group of order)
-    .h-group-count-option(data-group=group[0], data-count=group[1]) #{group[1]} #{group[0]}
+    .h-group-count-option(data-group=group[0], data-count=group[1])
+      span.h-group-count-value #{group[1]} #{group[0]}
       span.icon-marquee.h-group-count-select(title="Select all elements in this group")
 else
   - for (let group in counts)
