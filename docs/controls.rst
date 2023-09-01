@@ -55,6 +55,24 @@ Basic Image Controls
 
   - **0**: 0 returns the image to the default orientation.
 
+Overview Image Controls
+-----------------------
+
+- **Pan**:
+
+  - **Left-drag**: Hold down the left mouse button and drag anywhere inside the
+    view rectangle to change the area that is in view.
+
+  - **Left-click**: Left click anywhere in the overview window to recenter the
+    main image around that point.
+
+- **Zoom**:
+
+  - **Shift-left-drag**: Draw a rectangle on the overview and the entire area
+    selected area will be shown in the main image.  If shift is held
+    throughout, the selection is constrained to a square.  If shift is released
+    after start, the selection can be any rectangle.
+
 Annotation Controls
 -------------------
 
