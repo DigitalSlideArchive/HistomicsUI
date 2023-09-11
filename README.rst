@@ -47,7 +47,7 @@ or
   # install openslide and tiff sources
   pip install large-image-source-tiff large-image-source-openslide --find-links https://girder.github.io/large_image_wheels
 
-Now install the histomicsui package, have Girder build its UI, and start the Girder server.  Note that at Girder may still require an old version of node (12.x) to build correctly -- nvm can be used to manage multiple versions of node.
+Now install the histomicsui package, have Girder build its UI, and start the Girder server.  Note that at Girder may still require an old version of node (14.x) to build correctly -- nvm can be used to manage multiple versions of node.
 
 .. code-block:: bash
 
@@ -61,6 +61,8 @@ To use Girder Worker:
 
   pip install girder_slicer_cli_web[worker]
   GW_DIRECT_PATHS=true girder-worker -l info -Ofair --prefetch-multiplier=1
+
+Girder Worker needs the rabbitmq message service to be running to communicate with Girder.  Both Girder and Girder Worker should be run as a user that is a member of the docker group.
 
 The first time you start HistomicsUI, you'll also need to configure Girder with at least one user and one assetstore (see the Girder_ documentation).  Additionally, it is recommended that you install the HistomicsTK_ algorithms.  This can be done going to the Admin Console, Plugins, Slicer CLI Web settings.  Set a default task upload folder, then import the ``dsarchive/histomicstk:latest`` docker image.
 
