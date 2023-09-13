@@ -83,7 +83,7 @@ var AnnotationSelector = Panel.extend({
                 activeAnnotation: this._activeAnnotation ? this._activeAnnotation.id : '',
                 showLabels: this._showLabels,
                 user: getCurrentUser() || {},
-                creationAccess: this.creationAccess || this._writeAccess >= AccessType.WRITE,
+                creationAccess: this.creationAccess,
                 writeAccessLevel: AccessType.WRITE,
                 writeAccess: this._writeAccess,
                 opacity: this._opacity,
@@ -476,8 +476,11 @@ var AnnotationSelector = Panel.extend({
         }
     },
 
-    _writeAccess(annotation) {
-        return annotation.get('_accessLevel') >= AccessType.ADMIN;
+    _writeAccess(annotation, needsOwn) {
+        if (needsOwn) {
+            return annotation.get('_accessLevel') >= AccessType.ADMIN;
+        }
+        return annotation.get('_accessLevel') >= AccessType.WRITE;
     },
 
     _deactivateAnnotation(model) {

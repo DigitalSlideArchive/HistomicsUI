@@ -35,7 +35,6 @@ block content
           i.icon-folder
         = groupName
       if expanded
-        - var admin = user && user.get && user.get('admin');
         each annotation in annotations
           - var name = annotation.get('annotation').name;
           - var displayed = annotation.get('displayed');
@@ -58,9 +57,10 @@ block content
             span.h-annotation-name(title=name) #{name}
 
             span.h-annotation-right
-              if writeAccess(annotation)
+              if writeAccess(annotation, true)
                 span.icon-cancel.h-delete-annotation(
                     title='Remove annotation')
+              if writeAccess(annotation)
                 span.icon-cog.h-edit-annotation-metadata(
                     title='Edit annotation')
               a(href=annotation.downloadUrl().replace(/\/download$/, ''),
