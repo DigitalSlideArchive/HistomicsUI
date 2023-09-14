@@ -489,10 +489,20 @@ var SaveAnnotation = View.extend({
             this.annotation.set('annotation', annotationData, {silent: true});
         }
 
+        const visible = this.$('#h-annotation-visible').prop('checked');
+        const display = this.annotation.get('annotation').display || {};
+        if (visible) {
+            display.visible = true;
+        } else if (display.visible === true) {
+            display.visible = false;
+        }
         _.extend(this.annotation.get('annotation'), {
             name: this.$('#h-annotation-name').val(),
             description: this.$('#h-annotation-description').val()
         });
+        if (display !== {}) {
+            this.annotation.get('annotation').display = display;
+        }
         this.annotation.attributes.annotation.attributes = Object.assign({}, this.annotation._meta);
         this.annotation.attributes.annotation.attributes._styleFuncs = this.annotation._styleFuncs;
         delete this.annotation._meta;
