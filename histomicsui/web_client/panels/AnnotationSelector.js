@@ -138,8 +138,19 @@ var AnnotationSelector = Panel.extend({
         }
         this.collection.offset = 0;
         this.collection.reset();
-        this.collection.fetch({itemId: this._parentId});
-
+        this.collection.fetch({itemId: this._parentId}).then(() => {
+            let update;
+            this.collection.each((model) => {
+                if (((model.get('annotation') || {}).display || {}).visible === true) {
+                    model.set('displayed', true);
+                    update = true;
+                }
+            });
+            if (update) {
+                this._debounceRender();
+            }
+            return null;
+        });
         return this;
     },
 
@@ -264,7 +275,9 @@ var AnnotationSelector = Panel.extend({
             var activeId = (this._activeAnnotation || {}).id;
             this.collection.each((model) => {
                 if (!_.has(models, model.id)) {
-                    model.set('displayed', true);
+                    if (((model.get('annotation') || {}).display || {}).visible !== false) {
+                        model.set('displayed', true);
+                    }
                 } else {
                     let refreshed = false;
                     if (models[model.id].get('displayed')) {

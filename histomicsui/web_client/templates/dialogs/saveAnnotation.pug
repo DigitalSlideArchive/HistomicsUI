@@ -3,26 +3,26 @@ mixin functional(name, key, title, color)
     label(for='h-annotation-' + name) #{title}
     - let anyFuncs = !!Object.keys(styleableFuncs || {}).length;
     if !anyFuncs
-      .input-group.h-colorpicker(id="h-annotation-colorpicker-" + name)
-        input.input-sm.form-control(id="h-annotation-" + name, type='text', value=defaultStyles[key])
+      .input-group.h-colorpicker(id='h-annotation-colorpicker-' + name)
+        input.input-sm.form-control(id='h-annotation-' + name, type='text', value=defaultStyles[key])
         span.input-group-addon
           i
     else
       .row
         .col-sm-2
-          input(id="h-annotation-" + name + "-fixed", type="radio", name=name + "-set", checked=styleFuncs[key].useFunc ? undefined : 'checked')
+          input(id='h-annotation-' + name + '-fixed', type='radio', name=name + '-set', checked=styleFuncs[key].useFunc ? undefined : 'checked')
           label.unstyled(for='h-annotation-' + name + '-fixed') Constant
         .col-sm-10
-          .input-group.h-colorpicker(id="h-annotation-colorpicker-" + name)
-            input.input-sm.form-control(id="h-annotation-" + name, type='text', value=defaultStyles[key])
+          .input-group.h-colorpicker(id='h-annotation-colorpicker-' + name)
+            input.input-sm.form-control(id='h-annotation-' + name, type='text', value=defaultStyles[key])
             span.input-group-addon
               i
       .row
         .col-sm-2
-          input(id="h-annotation-" + name + "-func", type="radio", name=name + "-set", checked=styleFuncs[key].useFunc ? 'checked' : undefined)
+          input(id='h-annotation-' + name + '-func', type='radio', name=name + '-set', checked=styleFuncs[key].useFunc ? 'checked' : undefined)
           label.unstyled(for='h-annotation-' + name + '-func') From
         .col-sm-10
-          select.format-control.input-sm(id="h-annotation-" + name + "-func-list")
+          select.format-control.input-sm(id='h-annotation-' + name + '-func-list')
             each sfunc in styleableFuncs
               if !sfunc.categoric
                 option(value=sfunc.key, selected=styleFuncs[key].key === sfunc.key) #{sfunc.name}
@@ -31,29 +31,29 @@ mixin functional(name, key, title, color)
         .col-sm-3
           | minimum
           .input-group.h-colorpicker
-            input.input-sm.form-control(id="h-annotation-" + name + "-min", type='text', value=styleFuncs[key].minColor || defaultStyles[key])
+            input.input-sm.form-control(id='h-annotation-' + name + '-min', type='text', value=styleFuncs[key].minColor || defaultStyles[key])
             span.input-group-addon
               i
         .col-sm-2
           div
-            input(id="h-annotation-" + name + "-min-auto", type="radio", name=name + "-min-set", checked=styleFuncs[key].minSet ? undefined : 'checked')
+            input(id='h-annotation-' + name + '-min-auto', type='radio', name=name + '-min-set', checked=styleFuncs[key].minSet ? undefined : 'checked')
             label.unstyled(for='h-annotation-' + name + '-min-auto') auto
           div
-            input(id="h-annotation-" + name + "-min-setval", type="radio", name=name + "-min-set", checked=styleFuncs[key].minSet ? 'checked' : undefined)
-            input(id="h-annotation-" + name + "-min-val", type="number", step="any", value=styleFuncs[key].minValue)
+            input(id='h-annotation-' + name + '-min-setval', type='radio', name=name + '-min-set', checked=styleFuncs[key].minSet ? 'checked' : undefined)
+            input(id='h-annotation-' + name + '-min-val', type='number', step='any', value=styleFuncs[key].minValue)
         .col-sm-3
           | maximum
           .input-group.h-colorpicker
-            input.input-sm.form-control(id="h-annotation-" + name + "-max", type='text', value=styleFuncs[key].maxColor || defaultStyles[key])
+            input.input-sm.form-control(id='h-annotation-' + name + '-max', type='text', value=styleFuncs[key].maxColor || defaultStyles[key])
             span.input-group-addon
               i
         .col-sm-2
           div
-            input(id="h-annotation-" + name + "-max-auto", type="radio", name=name + "-max-set", checked=styleFuncs[key].maxSet ? undefined : 'checked')
+            input(id='h-annotation-' + name + '-max-auto', type='radio', name=name + '-max-set', checked=styleFuncs[key].maxSet ? undefined : 'checked')
             label.unstyled(for='h-annotation-' + name + '-max-auto') auto
           div
-            input(id="h-annotation-" + name + "-max-setval", type="radio", name=name + "-max-set", checked=styleFuncs[key].maxSet ? 'checked' : undefined)
-            input(id="h-annotation-" + name + "-max-val", type="number", step="any", value=styleFuncs[key].maxValue)
+            input(id='h-annotation-' + name + '-max-setval', type='radio', name=name + '-max-set', checked=styleFuncs[key].maxSet ? 'checked' : undefined)
+            input(id='h-annotation-' + name + '-max-val', type='number', step='any', value=styleFuncs[key].maxValue)
 
 - var timestamp = moment().format('YYYY-MM-DD HH:mm')
 - var defaultName = 'Annotation '+ timestamp
@@ -72,8 +72,11 @@ mixin functional(name, key, title, color)
         .form-group
           label(for='h-annotation-description') Description
           textarea#h-annotation-description.form-control.input-sm(
-            rows='4', placeholder='Enter an optional description')
+            rows=annotation.description ? '4' : '2', placeholder='Enter an optional description')
             | #{annotation.description}
+        .form-group(title='If checked, this annotation will be shown when the image is first loaded.')
+          label(for='h-annotation-visible') Show on first load
+          input#h-annotation-visible(type='checkbox', checked=(annotation.display || {}).visible === true ? 'checked' : undefined)
         if model && model.id
           .g-item-created.hui-info-list-entry
             i.icon-clock
@@ -85,7 +88,7 @@ mixin functional(name, key, title, color)
             i.icon-share
             | Unique ID: #{model.id}
             if model.get('_version')
-              = " "
+              = ' '
               i.icon-angle-circled-down
               | Global Version: #{model.get('_version')}
           .hui-annotation-metadata.hui-annotation-metadata-dialog
