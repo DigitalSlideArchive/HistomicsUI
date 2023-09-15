@@ -95,6 +95,9 @@ var MetadataWidgetPanel = Panel.extend({
             title: this.title,
             collapsed: this.panel && !this.$('.s-panel-content').hasClass('in') && !this.$el.closest('.s-panel').hasClass('h-panel-maximized')
         }));
+        if (this.parentView && this.parentView._orderPanels) {
+            this.parentView._orderPanels();
+        }
     }
 });
 

@@ -9,7 +9,7 @@ See the `large_image <https://github.com/girder/large_image/blob/master/docs/gir
 .histomicsui_config.yaml
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is used to specify annotation groups available for marking annotations.
+This is used to specify annotation groups available for marking annotations.  It can also be used to rearrange the various tool panels on the UI.
 
 ::
 
@@ -57,6 +57,33 @@ This is used to specify annotation groups available for marking annotations.
           fillColor: rgba(0, 0, 255, 0.25)
           lineColor: rgb(0, 0, 255)
           lineWidth: 2
+    panelLayout:
+      # Each panel listed here must have a name.  The vertical order is the
+      # order of this list; panels that are not listed will appear after these
+      # "name" is the name of the panel.  There are plugins that can add
+      # additional panels, so this list is not exhaustive.  The default panels
+      # are
+      #   overview
+      #   frame-selector
+      #   zoom
+      #   metadata
+      #   metadataplot
+      #   annotation
+      #   draw
+      #   analysis
+      # where analysis is the entire analysis panel set.
+      -
+        # name is required.  If no panel of that name exists, the entry is
+        # ignored.
+        name: overview
+        # position is one of "default", "left", "right", "hidden"
+        position: right
+        # state is one of "default", "open", "closed"
+        state: open
+      - name: metadata
+        state: open
+      - name: zoom
+        state: closed
 
 Girder Configuration
 --------------------
