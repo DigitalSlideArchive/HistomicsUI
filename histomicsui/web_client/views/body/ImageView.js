@@ -1577,10 +1577,15 @@ var ImageView = View.extend({
         }
         HuiSettings.getSettings().then((settings) => {
             let layout = settings['histomicsui.panel_layout'];
+            if (this._folderConfig && this._folderConfig.panelLayout && this._folderConfig.panelLayout !== 'default') {
+                layout = this._folderConfig.panelLayout;
+            }
             if (!layout) {
                 return null;
             }
-            layout = JSON.parse(layout);
+            if (typeof layout === 'string') {
+                layout = JSON.parse(layout);
+            }
             const panels = this.$('[id^=h-][id$=-panel]');
             panels.each((idx, panel) => {
                 panel = $(panel);
@@ -1624,12 +1629,17 @@ var ImageView = View.extend({
         });
     },
     _getConfig(modelId) {
+        if (modelId !== this._folderConfigId) {
+            this._folderConfigId = modelId;
+            this._folderConfig = {};
+        }
         restRequest({
             url: `folder/${this.model.get('folderId')}/yaml_config/.histomicsui_config.yaml`
         }).done((val) => {
             if (!val || this.model.id !== modelId) {
                 return;
             }
+            this._folderConfig = val;
             if (val.annotationGroups) {
                 const groups = new StyleCollection();
                 groups.fetch().done(() => {
