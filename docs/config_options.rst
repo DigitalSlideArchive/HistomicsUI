@@ -84,6 +84,12 @@ This is used to specify annotation groups available for marking annotations.  It
         state: open
       - name: zoom
         state: closed
+    # The default mode in HistomicsUI is "light mode".  When viewing images
+    # that are predominantly dark, it may be desirable to be in "dark mode".
+    # Note that dark mode is a synthetic style and not the primary view mode.
+    # Some elements may not have as much contrast or have their color shifted
+    # in surprising ways.
+    viewMode: dark
 
 Girder Configuration
 --------------------

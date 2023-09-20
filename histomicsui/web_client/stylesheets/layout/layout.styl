@@ -4,6 +4,23 @@ body.hui-body
   user-select none
   overflow hidden
 
+body.hui-body[view-mode="dark"]
+  position absolute
+  width 100vw
+  height 100vh
+  background-color #000
+
+  #g-app-header-container, .h-panel-group-right, .h-panel-group-left, #h-annotation-popover-container, #h-annotation-context-menu, #h-pixelmap-context-menu, #g-app-progress-container, #g-dialog-container, #g-alerts-container
+    filter invert(100%) hue-rotate(180deg)
+    color #111
+
+    img, video, iframe, .geojs-map, .h-colorpicker>.input-group-addon>i
+      filter invert(100%) hue-rotate(180deg)
+
+  .h-image-coordinates-container
+    background #111
+    color #DDD
+
 .h-header-wrapper
   height $headerHeight
   padding-right 20px
