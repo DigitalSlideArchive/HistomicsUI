@@ -69,7 +69,25 @@ var AnnotationSelector = Panel.extend({
         });
     },
 
+    _settingsFromConfig() {
+        if (!this.parentView || !this.parentView._folderConfig || !this.parentView._folderConfig.settings) {
+            return;
+        }
+        const settings = this.parentView._folderConfig.settings;
+        if (this._showLabels === undefined && settings.annotationLabels !== undefined) {
+            if (this._showLabels !== (settings.annotationLabels === true)) {
+                this.toggleLabels();
+            }
+        }
+        if (this._interactiveMode === undefined && settings.interactiveHover !== undefined) {
+            if (this._interactiveMode !== (settings.interactiveHover === true)) {
+                this.toggleInteractiveMode();
+            }
+        }
+    },
+
     render() {
+        this._settingsFromConfig();
         this._debounceRenderRequest = null;
         if (this.parentItem && this.parentItem.get('folderId')) {
             const annotationGroups = this._getAnnotationGroups();
