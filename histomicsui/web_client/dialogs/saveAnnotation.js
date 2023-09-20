@@ -455,8 +455,8 @@ var SaveAnnotation = View.extend({
         const lineColorParam = {};
         if (this._showStyleEditor && Object.keys(this._styleableFuncs || {}).length) {
             // get functional values
-            setFillColor = this._getFunctionalProps('fill-color', 'fillColor', fillColorParam, fillColor, setFillColor, true);
-            setLineColor = this._getFunctionalProps('line-color', 'lineColor', lineColorParam, lineColor, setLineColor, true);
+            setFillColor = this._getFunctionalProps('fill-color', 'fillColor', fillColorParam, setFillColor, true);
+            setLineColor = this._getFunctionalProps('line-color', 'lineColor', lineColorParam, setLineColor, true);
         }
 
         if (validation) {
