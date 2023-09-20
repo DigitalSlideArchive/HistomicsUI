@@ -1636,6 +1636,7 @@ var ImageView = View.extend({
         restRequest({
             url: `folder/${this.model.get('folderId')}/yaml_config/.histomicsui_config.yaml`
         }).done((val) => {
+            $('body').attr('view-mode', (val || {}).viewMode || '');
             if (!val || this.model.id !== modelId) {
                 return;
             }
