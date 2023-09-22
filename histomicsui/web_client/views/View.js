@@ -30,11 +30,6 @@ if (View.__super__ && View.__super__.initialize) {
             }
         });
 
-        // Whenever a new dialog is rendered in the DOM, set the tabindex
-        // of its buttons to 0 so they can be selected with the Tab key.
-        $('#g-dialog-container').on('DOMNodeInserted', () => {
-            $('.btn', '#g-dialog-container').prop('tabindex', '0');
-        });
         return result;
     };
 
@@ -44,6 +39,7 @@ if (View.__super__ && View.__super__.initialize) {
         result.on('shown.bs.modal', () => {
             result.off('click.dismiss.bs.modal');
             result.off('mouseup.dismiss.bs.modal');
+            $('.btn', '#g-dialog-container').prop('tabindex', '0');
         });
         return result;
     };
