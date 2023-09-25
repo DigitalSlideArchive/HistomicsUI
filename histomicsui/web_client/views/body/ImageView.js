@@ -72,6 +72,9 @@ var ImageView = View.extend({
         this.listenTo(events, 'h:analysis:rendered', this._setDefaultFileOutputs);
         this.listenTo(events, 'h:analysis:rendered', this._resetRegion);
         this.listenTo(this.selectedElements, 'add remove reset', this._redrawSelection);
+        this.listenTo(events, 's:widgetDrawRegionEvent', this._widgetDrawRegion);
+        this.listenTo(events, 'li:drawRegionUpdate', this._drawRegionUpdate);
+        this.listenTo(events, 'li:drawModeChange', this._drawModeChange);
         events.trigger('h:imageOpened', null);
         this.listenTo(events, 'query:image', this.openImage);
         this.annotations = new AnnotationCollection();
@@ -714,7 +717,7 @@ var ImageView = View.extend({
                 top: parseFloat(value[1]) - parseFloat(value[4]),
                 bottom: parseFloat(value[1]) + parseFloat(value[4])
             });
-        } else if (value.length >= 8) {
+        } else if (value.length >= 2) {
             const points = [[]];
             for (let idx = 0; idx < value.length - 1; idx += 2) {
                 if (parseFloat(value[idx]) === -1 && parseFloat(value[idx + 1]) === -1) {
@@ -723,13 +726,23 @@ var ImageView = View.extend({
                     points[points.length - 1].push([parseFloat(value[idx]), parseFloat(value[idx + 1])]);
                 }
             }
-            this.showRegion({
-                elements: points.map((pts) => ({
-                    type: 'polyline',
-                    closed: true,
-                    points: pts
-                }))
+            const elements = [];
+            points.forEach((pts) => {
+                if (!pts.length) {
+                    return;
+                }
+                let closed = true;
+                while (pts[pts.length - 1][0] === -2 && pts[pts.length - 1][1] === -2) {
+                    pts = pts.slice(0, pts.length - 1);
+                    closed = false;
+                }
+                if (pts.length === 1) {
+                    elements.push({type: 'point', center: pts[0]});
+                } else {
+                    elements.push({type: 'polyline', closed: closed, points: pts});
+                }
             });
+            this.showRegion({elements: elements});
         }
     },
 
@@ -1663,6 +1676,34 @@ var ImageView = View.extend({
                 });
             }
         });
+    },
+
+    _widgetDrawRegion(evt) {
+        if (evt.model && evt.event) {
+            const target = $(evt.event.target).closest('.s-select-region-button');
+            target.closest('.input-group-btn').find('.s-select-region-button').removeClass('active');
+            if (evt.mode) {
+                target.addClass('active');
+            }
+        }
+    },
+
+    _drawModeChange(evt) {
+        if (this._drawingType) {
+            this.viewer.annotationLayer.mode(null);
+            this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
+        }
+        this._drawingType = null;
+        $('#h-analysis-panel .input-group-btn').find('.s-select-region-button').removeClass('active');
+    },
+
+    _drawRegionUpdate(evt) {
+        if (evt.submit && evt.submit.hasClass('enabled')) {
+            $('#h-analysis-panel .s-info-panel-submit').trigger('click');
+            if (evt.originalEvent) {
+                $(`#h-analysis-panel .s-select-region-button[shape="${$(evt.originalEvent.target).attr('shape')}"][multi="${$(evt.originalEvent.target).attr('multi')}"][parent-id="${$(evt.originalEvent.target).attr('parent-id')}"]`).eq(0).trigger('click');
+            }
+        }
     }
 });
 export default ImageView;

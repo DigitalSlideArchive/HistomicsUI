@@ -171,6 +171,10 @@ var DrawWidget = Panel.extend({
      * @param {event} Girder event that triggered drawing a region.
      */
     _widgetDrawRegion(evt) {
+        if (this._drawingType) {
+            this.viewer.annotationLayer.mode(null);
+            this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
+        }
         this._drawingType = null;
         this.$('button.h-draw').removeClass('active');
     },
@@ -183,11 +187,11 @@ var DrawWidget = Panel.extend({
     setViewer(viewer) {
         this.viewer = viewer;
         // make sure our listeners are in the correct order.
-        this.stopListening(events, 's:widgetDrawRegion', this._widgetDrawRegion);
+        this.stopListening(events, 's:widgetDrawRegionEvent', this._widgetDrawRegion);
         if (viewer) {
-            this.listenTo(events, 's:widgetDrawRegion', this._widgetDrawRegion);
-            viewer.stopListening(events, 's:widgetDrawRegion', viewer.drawRegion);
-            viewer.listenTo(events, 's:widgetDrawRegion', viewer.drawRegion);
+            this.listenTo(events, 's:widgetDrawRegionEvent', this._widgetDrawRegion);
+            viewer.stopListening(events, 's:widgetDrawRegionEvent', viewer.drawRegion);
+            viewer.listenTo(events, 's:widgetDrawRegionEvent', viewer.drawRegion);
         }
         return this;
     },
