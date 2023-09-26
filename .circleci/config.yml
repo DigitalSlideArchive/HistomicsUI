@@ -34,7 +34,7 @@ commands:
       - run:
           name: Upload coverage
           # Retry as codecov can be flaky
-          command: for i in $(seq 1 10); do [ $i -gt 1 ] && echo "retrying $i" && sleep 5; ./codecov --disable search pycov gcov --file .tox/coverage/py_coverage.xml .tox/coverage/cobertura-coverage.xml && s=0 && break || s=$?; done; (exit $s)
+          command: for i in $(seq 1 10); do [ $i -gt 1 ] && echo "retrying $i" && sleep 5; ./codecov --disable search pycov gcov --file .tox/coverage/py_coverage.xml,.tox/coverage/cobertura-coverage.xml && s=0 && break || s=$?; done; (exit $s)
 
 jobs:
   py37:
