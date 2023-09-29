@@ -955,6 +955,9 @@ var ImageView = View.extend({
             this._debounceUpdatePixelmapValues(overlayElement, overlayLayer);
         } else if (event.mouse.buttonsDown.right) {
             const annotation = this.annotations.find((annotation) => annotation.elements().get(overlayElement.id));
+            if (!annotation) {
+                return;
+            }
             this._queueMouseClickAction(overlayElement, annotation.id, null, null);
             window.requestAnimationFrame(() => {
                 const data = this._processMouseClickQueue();
