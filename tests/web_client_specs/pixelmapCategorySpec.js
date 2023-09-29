@@ -211,7 +211,6 @@ girderTest.promise.done(function () {
                 sinon.assert.called(stubDraw);
                 sinon.assert.calledTwice(stubDebounce);
             });
-
             it('does nothing on left click if no draw widget', function () {
                 huiTest.app.bodyView._removeDrawWidget();
                 pixelmapElement.set('values', [1, 1, 1, 1, 1, 1, 1, 1]);
@@ -301,10 +300,11 @@ girderTest.promise.done(function () {
                     indexModified: function (min, max) { return null; },
                     draw: function () { return null; }
                 };
-                var spyQueueMouse = sinon.spy(huiTest.app.bodyView, '_queueMouseClickAction');
-                huiTest.app.bodyView.mouseClickOverlay(pixelmapElement, mockLayer, clickEvent);
-                sinon.assert.called(spyQueueMouse);
-
+                runs(function () {
+                    var spyQueueMouse = sinon.spy(huiTest.app.bodyView, '_queueMouseClickAction');
+                    huiTest.app.bodyView.mouseClickOverlay(pixelmapElement, mockLayer, clickEvent);
+                    sinon.assert.called(spyQueueMouse);
+                });
                 waitsFor(function () {
                     return huiTest.app.bodyView._pixelmapContextMenuActive === true;
                 });
