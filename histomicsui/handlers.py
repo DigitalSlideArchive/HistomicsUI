@@ -200,7 +200,7 @@ def quarantine_item(item, user, makePlaceholder=True):
         'originalBaseParentId': item['baseParentId'],
         'originalUpdated': item['updated'],
         'quarantineUserId': user['_id'],
-        'quarantineTime': datetime.datetime.utcnow()
+        'quarantineTime': datetime.datetime.now(datetime.timezone.utc)
     }
     item = Item().move(item, folder)
     if makePlaceholder:
