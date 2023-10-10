@@ -413,7 +413,7 @@ class GirderPlugin(plugin.GirderPlugin):
                     setattr(info['serverRoot'], alt_webroot_path, huiRoot)
         info['serverRoot'].girder = girderRoot
 
-        # Auto-ingest annotations into database when a file with an identifier
+        # Prevent ingesting the annotation files
         # ending in 'AnnotationFile' is uploaded (usually .anot files).
         events.bind('data.process', 'histomicsui.annotations', handlers.process_annotations)
         # Auto-ingest metadta into parent when a file with an identifier
