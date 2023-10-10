@@ -156,6 +156,7 @@ def process_annotations(event):  # noqa
         data = [data]
     # Check some of the early elements to see if there are any girderIds
     # that need resolution.
+    #TODO masked for testing
 #    if 'uuid' in results:
 #        girderIds = [
 #            element for annotation in data
