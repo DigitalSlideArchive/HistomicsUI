@@ -415,7 +415,7 @@ class GirderPlugin(plugin.GirderPlugin):
 
         # Prevent ingesting the annotation files
         # ending in 'AnnotationFile' is uploaded (usually .anot files).
-        events.bind('data.process', 'histomicsui.annotations', handlers.process_annotations)
+        events.bind('data.process', 'histomicsui.annotations', handlers.process_ai_annotations)
         # Auto-ingest metadta into parent when a file with an identifier
         # ending in 'ItemMetadata' is uploaded (usually .meta files).
         events.bind('data.process', 'histomicsui.metadata', handlers.process_metadata)

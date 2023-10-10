@@ -156,25 +156,68 @@ def process_annotations(event):  # noqa
         data = [data]
     # Check some of the early elements to see if there are any girderIds
     # that need resolution.
-    #TODO masked for testing
-#    if 'uuid' in results:
-#        girderIds = [
-#            element for annotation in data
-#            for element in annotation.get('elements', [])[:100]
-#            if 'girderId' in element]
-#        if len(girderIds):
-#            if not resolveAnnotationGirderIds(event, results, data, girderIds):
-#                return
+   if 'uuid' in results:
+       girderIds = [
+           element for annotation in data
+           for element in annotation.get('elements', [])[:100]
+           if 'girderId' in element]
+       if len(girderIds):
+           if not resolveAnnotationGirderIds(event, results, data, girderIds):
+               return
     for annotation in data:
         try:
             Annotation().createAnnotation(item, user, annotation)
         except Exception:
             logger.error('Could not create annotation object from data')
             raise
-#    if Setting().get(PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST):
-#        item = Item().load(file['itemId'], force=True)
-#        if item and len(list(Item().childFiles(item, limit=2))) == 1:
-#            Item().remove(item)
+    if Setting().get(PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST):
+        item = Item().load(file['itemId'], force=True)
+        if item and len(list(Item().childFiles(item, limit=2))) == 1:
+            Item().remove(item)
+
+def process_ai_annotations(event):
+        """Add annotations to an image on a ``data.process`` event"""
+    results = _itemFromEvent(event, 'AnnotationFile')
+    if not results:
+        return
+    item = results['item']
+    user = results['user']
+
+    file = File().load(
+        event.info.get('file', {}).get('_id'),
+        level=AccessType.READ, user=user
+    )
+    startTime = time.time()
+
+    if not file:
+        logger.error('Could not load models from the database')
+        return
+    try:
+        if file['size'] > int(large_image.config.getConfig(
+                'max_annotation_input_file_length', 1024 ** 3)):
+            raise Exception('File is larger than will be read into memory.')
+        data = []
+        with File().open(file) as fptr:
+            while True:
+                chunk = fptr.read(1024 ** 2)
+                if not len(chunk):
+                    break
+                data.append(chunk)
+        data = orjson.loads(b''.join(data).decode())
+    except Exception:
+        logger.error('Could not parse annotation file')
+        raise
+    if time.time() - startTime > 10:
+        logger.info('Decoded json in %5.3fs', time.time() - startTime)
+
+    if not isinstance(data, list):
+        data = [data]
+    for annotation in data:
+        try:
+            Annotation().createAnnotation(item, user, annotation)
+        except Exception:
+            logger.error('Could not create annotation object from data')
+            raise
 
 
 def quarantine_item(item, user, makePlaceholder=True):
