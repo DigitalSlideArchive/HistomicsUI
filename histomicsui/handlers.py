@@ -156,24 +156,24 @@ def process_annotations(event):  # noqa
         data = [data]
     # Check some of the early elements to see if there are any girderIds
     # that need resolution.
-    if 'uuid' in results:
-        girderIds = [
-            element for annotation in data
-            for element in annotation.get('elements', [])[:100]
-            if 'girderId' in element]
-        if len(girderIds):
-            if not resolveAnnotationGirderIds(event, results, data, girderIds):
-                return
+#    if 'uuid' in results:
+#        girderIds = [
+#            element for annotation in data
+#            for element in annotation.get('elements', [])[:100]
+#            if 'girderId' in element]
+#        if len(girderIds):
+#            if not resolveAnnotationGirderIds(event, results, data, girderIds):
+#                return
     for annotation in data:
         try:
             Annotation().createAnnotation(item, user, annotation)
         except Exception:
             logger.error('Could not create annotation object from data')
             raise
-    if Setting().get(PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST):
-        item = Item().load(file['itemId'], force=True)
-        if item and len(list(Item().childFiles(item, limit=2))) == 1:
-            Item().remove(item)
+#    if Setting().get(PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST):
+#        item = Item().load(file['itemId'], force=True)
+#        if item and len(list(Item().childFiles(item, limit=2))) == 1:
+#            Item().remove(item)
 
 
 def quarantine_item(item, user, makePlaceholder=True):

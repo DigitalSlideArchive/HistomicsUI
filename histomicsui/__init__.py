@@ -400,6 +400,7 @@ class GirderPlugin(plugin.GirderPlugin):
         betterInvalidateJSandCSSCaches(girderRoot)
         betterInvalidateJSandCSSCaches(huiRoot)
 
+        
         # The interface is always available under hui and also available
         # under the specified path.
         info['serverRoot'].hui = huiRoot
