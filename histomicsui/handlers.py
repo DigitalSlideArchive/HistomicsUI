@@ -1,8 +1,10 @@
 import datetime
 import json
+import math
 import time
 
 import cachetools
+import girder.utility
 import large_image.config
 import orjson
 from girder import logger
@@ -268,3 +270,35 @@ def process_metadata(event):
 
     item = results['item']
     Item().setMetadata(item, data, allowNull=False)
+
+
+def nan2None(obj):
+    """
+    Convert NaN and +/-Infitity to None.
+    """
+    if isinstance(obj, dict):
+        return {k: nan2None(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [nan2None(v) for v in obj]
+    elif isinstance(obj, float) and (
+            math.isnan(obj) or obj == float('inf') or obj == -float('inf')):
+        print('Nan')
+        return None
+    return obj
+
+
+def json_nans_as_nulls():
+    """
+    Convert NaN and +/-Infinity to nulls so that they will serialize
+    """
+
+    def encode(self, obj, *args, **kwargs):
+        obj = nan2None(obj)
+        return json.JSONEncoder.encode(self, obj, *args, **kwargs)
+
+    def iterencode(self, obj, *args, **kwargs):
+        obj = nan2None(obj)
+        return json.JSONEncoder.iterencode(self, obj, *args, **kwargs)
+
+    girder.utility.JsonEncoder.encode = encode
+    girder.utility.JsonEncoder.iterencode = iterencode
