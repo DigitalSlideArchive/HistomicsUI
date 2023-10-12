@@ -421,6 +421,8 @@ class GirderPlugin(plugin.GirderPlugin):
 
         events.bind('model.job.save', 'histomicsui', _saveJob)
 
+        handlers.json_nans_as_nulls()
+
         def updateWebroot(event):
             """
             If the webroot path setting is changed, bind the new path to the
