@@ -39,7 +39,7 @@ def import_recursive(job):
         user = User().load(job['userId'], force=True)
 
         children = list(Folder().childFolders(
-            root, 'collection', user=user
+            root, 'collection', user=user,
         ))
         count = len(children)
         progress = 0
@@ -48,7 +48,7 @@ def import_recursive(job):
             job, log='Started TCGA import\n',
             status=JobStatus.RUNNING,
             progressCurrent=progress,
-            progressTotal=count
+            progressTotal=count,
         )
         logger.info('Starting recursive TCGA import')
 
@@ -58,11 +58,11 @@ def import_recursive(job):
                 msg = 'Importing "%s"' % child.get('name', '')
                 job = Job().updateJob(
                     job, log=msg, progressMessage=msg + '\n',
-                    progressCurrent=progress
+                    progressCurrent=progress,
                 )
                 logger.debug(msg)
                 Cohort().importDocument(
-                    child, recurse=True, user=user, token=token, job=job
+                    child, recurse=True, user=user, token=token, job=job,
                 )
                 job = Job().load(id=job['_id'], force=True)
 
@@ -80,13 +80,13 @@ def import_recursive(job):
             job, log='Finished TCGA import\n',
             status=JobStatus.SUCCESS,
             progressCurrent=count,
-            progressMessage='Finished TCGA import'
+            progressMessage='Finished TCGA import',
         )
     except Exception as e:
         logger.exception('Importing TCGA failed with %s' % str(e))
         job = Job().updateJob(
             job, log='Import failed with %s\n' % str(e),
-            status=JobStatus.ERROR
+            status=JobStatus.ERROR,
         )
 
 
@@ -102,7 +102,7 @@ def pagedResponse(cursor, limit, offset, sort):
         'limit': limit,
         'total_pages': pages,
         'current_page': index,
-        'data': list(cursor)
+        'data': list(cursor),
     }
 
 
@@ -112,15 +112,16 @@ class TCGAResource(Resource):
         super().__init__()
 
         @setting_utilities.validator({
-            TCGACollectionSettingKey
+            TCGACollectionSettingKey,
         })
         def validateTCGACollection(doc):
             model = Collection().load(
-                doc['value'], force=True
+                doc['value'], force=True,
             )
             if model is None:
+                msg = 'Invalid collection id'
                 raise ValidationException(
-                    'Invalid collection id', 'value'
+                    msg, 'value',
                 )
 
         self.resourceName = 'tcga'
@@ -167,17 +168,18 @@ class TCGAResource(Resource):
     def getTCGACollection(self, level=AccessType.READ):
         tcga = Setting().get(TCGACollectionSettingKey)
         if tcga is None:
+            msg = 'TCGA collection id not initialized in settings'
             raise RestException(
-                'TCGA collection id not initialized in settings',
-                code=404
+                msg,
+                code=404,
             )
         return Collection().load(
-            tcga, level=level, user=self.getCurrentUser()
+            tcga, level=level, user=self.getCurrentUser(),
         )
 
     @access.public(scope=TokenScope.DATA_READ)
     @describeRoute(
-        Description('Get the TCGA collection')
+        Description('Get the TCGA collection'),
     )
     def getCollection(self, params):
         return self.getTCGACollection()
@@ -185,7 +187,7 @@ class TCGAResource(Resource):
     @access.admin
     @describeRoute(
         Description('Set the TCGA collection')
-        .param('collectionId', 'The id of the collection')
+        .param('collectionId', 'The id of the collection'),
     )
     def setCollection(self, params):
         user = self.getCurrentUser()
@@ -194,18 +196,18 @@ class TCGAResource(Resource):
         # this is to ensure the collection exists
         collection = Collection().load(
             id=params['collectionId'], user=user,
-            level=AccessType.WRITE, exc=True
+            level=AccessType.WRITE, exc=True,
         )
         return Setting().set(
             TCGACollectionSettingKey,
-            collection['_id']
+            collection['_id'],
         )
 
     @access.admin
     @describeRoute(
         Description('Recursively import the TCGA collection')
         .notes('This will run as a local job that will execute '
-               'asynchronously.')
+               'asynchronously.'),
     )
     def importCollection(self, params):
         user = self.getCurrentUser()
@@ -220,14 +222,14 @@ class TCGAResource(Resource):
             user=user,
             type='tcga_import_recursive',
             public=False,
-            asynchronous=True
+            asynchronous=True,
         )
         Job().scheduleJob(job)
         return job
 
     @access.admin
     @describeRoute(
-        Description('Remove the TCGA collection')
+        Description('Remove the TCGA collection'),
     )
     def deleteCollection(self, params):
         return Setting().unset(TCGACollectionSettingKey)
@@ -237,7 +239,7 @@ class TCGAResource(Resource):
     @access.public(scope=TokenScope.DATA_READ)
     @describeRoute(
         Description('List cohorts in the TCGA dataset')
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def findCohort(self, params):
         user = self.getCurrentUser()
@@ -246,7 +248,7 @@ class TCGAResource(Resource):
 
         cursor = Cohort().childFolders(
             parentType='collection', parent=tcga, cursor=True,
-            user=user, offset=offset, limit=limit, sort=sort
+            user=user, offset=offset, limit=limit, sort=sort,
         )
         return pagedResponse(cursor, limit, offset, sort)
 
@@ -255,7 +257,7 @@ class TCGAResource(Resource):
                level=AccessType.READ)
     @describeRoute(
         Description('Get a cohort document from an id')
-        .param('id', 'The id of the cohort', paramType='path')
+        .param('id', 'The id of the cohort', paramType='path'),
     )
     def getCohort(self, cohort, params):
         return cohort
@@ -263,7 +265,7 @@ class TCGAResource(Resource):
     @access.admin
     @describeRoute(
         Description('Import a folder as a TCGA cohort type')
-        .param('folderId', 'The id of the folder to import')
+        .param('folderId', 'The id of the folder to import'),
     )
     def importCohort(self, params):
         user = self.getCurrentUser()
@@ -272,11 +274,11 @@ class TCGAResource(Resource):
 
         folder = Folder().load(
             id=params['folderId'], user=user,
-            level=AccessType.WRITE, exc=True
+            level=AccessType.WRITE, exc=True,
         )
 
         cohort = Cohort().importDocument(
-            folder, user=user, token=token
+            folder, user=user, token=token,
         )
         return cohort
 
@@ -285,7 +287,7 @@ class TCGAResource(Resource):
                level=AccessType.WRITE)
     @describeRoute(
         Description('Remove a cohort type')
-        .param('id', 'The id of the cohort', paramType='path')
+        .param('id', 'The id of the cohort', paramType='path'),
     )
     def deleteCohort(self, cohort, params):
         return Cohort().removeTCGA(
@@ -297,12 +299,12 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('List slides in a cohort')
         .param('id', 'The id of the cohort', paramType='path')
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def cohortListSlides(self, cohort, params):
         limit, offset, sort = self.getPagingParameters(params, 'name')
         cursor = Slide().find({
-            'tcga.cohort': cohort['name']
+            'tcga.cohort': cohort['name'],
         }, cursor=True, limit=limit, offset=offset, sort=sort)
         return pagedResponse(cursor, limit, offset, sort)
 
@@ -312,12 +314,12 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('List slide images in a cohort')
         .param('id', 'The id of the cohort', paramType='path')
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def cohortListImages(self, cohort, params):
         limit, offset, sort = self.getPagingParameters(params, 'name')
         cursor = Image().find({
-            'tcga.cohort': cohort['name']
+            'tcga.cohort': cohort['name'],
         }, cursor=True, limit=limit, offset=offset, sort=sort)
         return pagedResponse(cursor, limit, offset, sort)
 
@@ -327,19 +329,19 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('List cases in the TCGA dataset')
         .param('cohort', 'The id of the cohort document', required=True)
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def findCase(self, params):
         user = self.getCurrentUser()
         limit, offset, sort = self.getPagingParameters(params, 'name')
         cohort = Cohort().load(
             id=params['cohort'], user=user, level=AccessType.READ,
-            exc=True
+            exc=True,
         )
 
         cursor = Case().childFolders(
             parentType='folder', parent=cohort, cursor=True,
-            user=user, offset=offset, limit=limit, sort=sort
+            user=user, offset=offset, limit=limit, sort=sort,
         )
         return pagedResponse(cursor, limit, offset, sort)
 
@@ -348,7 +350,7 @@ class TCGAResource(Resource):
                level=AccessType.READ)
     @describeRoute(
         Description('Get a case document from an id')
-        .param('id', 'The id of the case', paramType='path')
+        .param('id', 'The id of the case', paramType='path'),
     )
     def getCase(self, case, params):
         return case
@@ -357,23 +359,24 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('Get a case document from a label')
         .param('label', 'The label of the case', paramType='path')
-        .errorResponse('Label was invalid')
+        .errorResponse('Label was invalid'),
     )
     def getCaseByLabel(self, label, params):
         user = self.getCurrentUser()
         case = Case().findOne(
-            {'tcga.label': label}, user=user
+            {'tcga.label': label}, user=user,
         )
         if not case:
+            msg = 'TCGA case label not found'
             raise RestException(
-                'TCGA case label not found'
+                msg,
             )
         return case
 
     @access.admin
     @describeRoute(
         Description('Import a folder as a TCGA case')
-        .param('folderId', 'The id of the folder to import')
+        .param('folderId', 'The id of the folder to import'),
     )
     def importCase(self, params):
         user = self.getCurrentUser()
@@ -382,11 +385,11 @@ class TCGAResource(Resource):
 
         folder = Folder().load(
             id=params['folderId'], user=user,
-            level=AccessType.WRITE, exc=True
+            level=AccessType.WRITE, exc=True,
         )
 
         case = Case().importDocument(
-            folder, user=user, token=token
+            folder, user=user, token=token,
         )
         return case
 
@@ -395,7 +398,7 @@ class TCGAResource(Resource):
                level=AccessType.WRITE)
     @describeRoute(
         Description('Remove a case document')
-        .param('id', 'The id of the case', paramType='path')
+        .param('id', 'The id of the case', paramType='path'),
     )
     def deleteCase(self, case, params):
         return Case().removeTCGA(case)
@@ -412,7 +415,7 @@ class TCGAResource(Resource):
         .param('substring', 'Find values containing this substring',
                required=False)
         .notes('Only one of "value" or "substring" may be provided.')
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def searchCase(self, params):
         user = self.getCurrentUser()
@@ -425,44 +428,47 @@ class TCGAResource(Resource):
         substring = params.get('substring')
 
         if value and substring:
+            msg = 'Cannot search by both value and substring'
             raise RestException(
-                'Cannot search by both value and substring'
+                msg,
             )
 
         if (value or substring) and not key:
+            msg = 'A key must be provided to search by value'
             raise RestException(
-                'A key must be provided to search by value'
+                msg,
             )
 
         if key and invalid_key_re.search(key):
+            msg = 'Invalid key parameter'
             raise RestException(
-                'Invalid key parameter'
+                msg,
             )
 
         query = {}
         if not key:
             query = {
                 'tcga.meta.' + table: {
-                    '$exists': True
-                }
+                    '$exists': True,
+                },
             }
         elif not value and not substring:
             query = {
                 'tcga.meta.' + table + '.' + key: {
-                    '$exists': True
-                }
+                    '$exists': True,
+                },
             }
         elif value:
             query = {
-                'tcga.meta.' + table + '.' + key: value
+                'tcga.meta.' + table + '.' + key: value,
             }
         else:
             query = {
-                'tcga.meta.' + table + '.' + key: re.compile(re.escape(substring))
+                'tcga.meta.' + table + '.' + key: re.compile(re.escape(substring)),
             }
 
         cursor = Case().find(
-            query, user=user, offset=offset, limit=limit, sort=sort
+            query, user=user, offset=offset, limit=limit, sort=sort,
         )
         return pagedResponse(cursor, limit, offset, sort)
 
@@ -471,7 +477,7 @@ class TCGAResource(Resource):
                level=AccessType.READ)
     @describeRoute(
         Description('List tables present inside case metadata')
-        .param('id', 'The id of the case', paramType='path')
+        .param('id', 'The id of the case', paramType='path'),
     )
     def listCaseTables(self, case, params):
         return list(Case().getTCGAMeta(
@@ -483,7 +489,7 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('Get case metadata')
         .param('id', 'The id of the case', paramType='path')
-        .param('table', 'The table name to get', paramType='path')
+        .param('table', 'The table name to get', paramType='path'),
     )
     def getCaseMetadata(self, case, table, params):
         return Case().getTCGAMeta(
@@ -497,15 +503,16 @@ class TCGAResource(Resource):
         .param('id', 'The id of the case', paramType='path')
         .param('table', 'The table to update', paramType='path')
         .param('body', 'A JSON object containing the metadata to create',
-               paramType='body')
+               paramType='body'),
     )
     def setCaseMetadata(self, case, table, params):
         metadata = self.getBodyJson()
         caseModel = Case()
         for k in metadata:
             if not len(k) or '.' in k or k[0] == '$':
+                msg = 'Invalid key name'
                 raise RestException(
-                    'Invalid key name'
+                    msg,
                 )
         meta = caseModel.getTCGAMeta(case)
         meta[table] = metadata
@@ -521,18 +528,19 @@ class TCGAResource(Resource):
         .param('id', 'The id of the case', paramType='path')
         .param('table', 'The table to update', paramType='path')
         .param('body', 'A JSON object containing the metadata to update',
-               paramType='body')
+               paramType='body'),
     )
     def updateCaseMetadata(self, case, table, params):
         metadata = self.getBodyJson()
         caseModel = Case()
         for k in metadata:
             if not len(k) or '.' in k or k[0] == '$':
+                msg = 'Invalid key name'
                 raise RestException(
-                    'Invalid key name'
+                    msg,
                 )
         meta = {
-            table: metadata
+            table: metadata,
         }
 
         caseModel.updateTCGAMeta(case, meta).save(case)
@@ -544,7 +552,7 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('Delete case metadata')
         .param('id', 'The id of the case', paramType='path')
-        .param('table', 'The table to remove', paramType='path')
+        .param('table', 'The table to remove', paramType='path'),
     )
     def deleteCaseMetadata(self, case, table, params):
         caseModel = Case()
@@ -558,13 +566,13 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('List images under a case')
         .param('id', 'The id of the case', paramType='path')
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     @access.public(scope=TokenScope.DATA_READ)
     def listCaseImages(self, case, params):
         limit, offset, sort = self.getPagingParameters(params, 'name')
         cursor = Image().find({
-            'tcga.label': case['name']
+            'tcga.label': case['name'],
         }, cursor=True, limit=limit, offset=offset, sort=sort)
         return pagedResponse(cursor, limit, offset, sort)
 
@@ -574,18 +582,18 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('Find slides for a case')
         .param('case', 'The id of case document', required=True)
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def findSlide(self, params):
         limit, offset, sort = self.getPagingParameters(params, 'name')
         user = self.getCurrentUser()
         case = Case().load(
             id=params['case'], user=user, level=AccessType.READ,
-            exc=True
+            exc=True,
         )
         cursor = Slide().childFolders(
             parentType='folder', parent=case, user=user, cursor=True,
-            offset=offset, limit=limit, sort=sort
+            offset=offset, limit=limit, sort=sort,
         )
         return pagedResponse(cursor, limit, offset, sort)
 
@@ -594,7 +602,7 @@ class TCGAResource(Resource):
                level=AccessType.READ)
     @describeRoute(
         Description('Get a slide document by id')
-        .param('id', 'The id of the slide', paramType='path')
+        .param('id', 'The id of the slide', paramType='path'),
     )
     def getSlide(self, slide, params):
         return slide
@@ -602,7 +610,7 @@ class TCGAResource(Resource):
     @access.admin
     @describeRoute(
         Description('Import a folder as a TCGA slide')
-        .param('folderId', 'The id of the folder to import')
+        .param('folderId', 'The id of the folder to import'),
     )
     def importSlide(self, params):
         user = self.getCurrentUser()
@@ -611,11 +619,11 @@ class TCGAResource(Resource):
 
         folder = Folder().load(
             id=params['folderId'], user=user,
-            level=AccessType.WRITE, exc=True
+            level=AccessType.WRITE, exc=True,
         )
 
         slide = Slide().importDocument(
-            folder, user=user, token=token
+            folder, user=user, token=token,
         )
         return slide
 
@@ -624,7 +632,7 @@ class TCGAResource(Resource):
                level=AccessType.WRITE)
     @describeRoute(
         Description('Remove a slide')
-        .param('id', 'The id of the slide', paramType='path')
+        .param('id', 'The id of the slide', paramType='path'),
     )
     def deleteSlide(self, slide, params):
         return Slide().removeTCGA(slide)
@@ -636,7 +644,7 @@ class TCGAResource(Resource):
         Description('Find images')
         .param('slide', 'The id of slide document', required=False)
         .param('caseName', 'The name of the case', required=False)
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def findImage(self, params):
         limit, offset, sort = self.getPagingParameters(params, 'name')
@@ -644,20 +652,21 @@ class TCGAResource(Resource):
         if params.get('slide'):
             slide = Slide().load(
                 id=params['slide'], user=user, level=AccessType.READ,
-                exc=True
+                exc=True,
             )
             cursor = Image().find(
                 {'folderId': slide['_id']},
-                offset=offset, limit=limit, sort=sort
+                offset=offset, limit=limit, sort=sort,
             )
 
         elif params.get('caseName'):
             cursor = Image().find({
-                'tcga.label': params['caseName']
+                'tcga.label': params['caseName'],
             }, cursor=True, limit=limit, offset=offset, sort=sort)
 
         else:
-            raise RestException('You must provide a slide id or case name')
+            msg = 'You must provide a slide id or case name'
+            raise RestException(msg)
         return pagedResponse(cursor, limit, offset, sort)
 
     @access.public(scope=TokenScope.DATA_READ)
@@ -665,7 +674,7 @@ class TCGAResource(Resource):
                level=AccessType.READ)
     @describeRoute(
         Description('Get an image document by id')
-        .param('id', 'The id of the image', paramType='path')
+        .param('id', 'The id of the image', paramType='path'),
     )
     def getImage(self, image, params):
         return image
@@ -673,7 +682,7 @@ class TCGAResource(Resource):
     @access.admin
     @describeRoute(
         Description('Import an item as a TCGA slide image')
-        .param('itemId', 'The id of the item to import')
+        .param('itemId', 'The id of the item to import'),
     )
     def importImage(self, params):
         user = self.getCurrentUser()
@@ -682,11 +691,11 @@ class TCGAResource(Resource):
 
         item = Item().load(
             id=params['itemId'], user=user,
-            level=AccessType.WRITE, exc=True
+            level=AccessType.WRITE, exc=True,
         )
 
         image = Image().importDocument(
-            item, user=user, token=token
+            item, user=user, token=token,
         )
         return image
 
@@ -695,7 +704,7 @@ class TCGAResource(Resource):
                level=AccessType.WRITE)
     @describeRoute(
         Description('Remove an image')
-        .param('id', 'The id of the image', paramType='path')
+        .param('id', 'The id of the image', paramType='path'),
     )
     def deleteImage(self, image, params):
         return Image().removeTCGA(image)
@@ -706,19 +715,19 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('Find pathologies for a case')
         .param('case', 'The id of a case document', required=True)
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def findPathology(self, params):
         limit, offset, sort = self.getPagingParameters(params, 'name')
         user = self.getCurrentUser()
         case = Case().load(
             id=params['case'], user=user, level=AccessType.READ,
-            exc=True
+            exc=True,
         )
         model = Pathology()
         cursor = model.find(
             {'tcga.case': case['tcga']['label']},
-            offset=offset, limit=limit, sort=sort
+            offset=offset, limit=limit, sort=sort,
         )
 
         # Inject file information into the returned documents
@@ -734,11 +743,11 @@ class TCGAResource(Resource):
                level=AccessType.READ)
     @describeRoute(
         Description('Get a pathology document by id')
-        .param('id', 'The id of the pathology', paramType='path')
+        .param('id', 'The id of the pathology', paramType='path'),
     )
     def getPathology(self, pathology, params):
         files = Pathology().childFiles(
-            pathology, limit=1
+            pathology, limit=1,
         )
         if files.count():
             pathology['file'] = files[0]
@@ -749,7 +758,7 @@ class TCGAResource(Resource):
         Description('Import an item as a TCGA pathology')
         .param('id', 'The id of the item to import')
         .param('recursive', 'Perform a recursive search for pathologies',
-               required=False, dataType='boolean')
+               required=False, dataType='boolean'),
     )
     def importPathology(self, params):
         user = self.getCurrentUser()
@@ -758,11 +767,11 @@ class TCGAResource(Resource):
 
         item = Pathology().loadDocument(
             id=params['id'], user=user,
-            level=AccessType.WRITE, exc=True
+            level=AccessType.WRITE, exc=True,
         )
 
         pathology = Pathology().importDocument(
-            item, user=user, token=token, recurse=params.get('recursive')
+            item, user=user, token=token, recurse=params.get('recursive'),
         )
         return pathology
 
@@ -771,7 +780,7 @@ class TCGAResource(Resource):
                level=AccessType.WRITE)
     @describeRoute(
         Description('Remove a pathology')
-        .param('id', 'The id of the pathology', paramType='path')
+        .param('id', 'The id of the pathology', paramType='path'),
     )
     def deletePathology(self, pathology, params):
         return Pathology().removeTCGA(pathology)
@@ -782,18 +791,18 @@ class TCGAResource(Resource):
     @describeRoute(
         Description('Find Aperio annotations for a case')
         .param('case', 'The id of a case document', required=True)
-        .pagingParams(defaultSort='name')
+        .pagingParams(defaultSort='name'),
     )
     def findAperio(self, params):
         limit, offset, sort = self.getPagingParameters(params, 'name')
         user = self.getCurrentUser()
         case = Case().load(
             id=params['case'], user=user, level=AccessType.READ,
-            exc=True
+            exc=True,
         )
         cursor = Aperio().find(
             {'tcga.case': case['tcga']['label']},
-            offset=offset, limit=limit, sort=sort
+            offset=offset, limit=limit, sort=sort,
         )
         return pagedResponse(cursor, limit, offset, sort)
 
@@ -802,7 +811,7 @@ class TCGAResource(Resource):
                level=AccessType.READ)
     @describeRoute(
         Description('Get an Aperio document by id')
-        .param('id', 'The id of the Aperio item', paramType='path')
+        .param('id', 'The id of the Aperio item', paramType='path'),
     )
     def getAperio(self, aperio, params):
         return aperio
@@ -812,7 +821,7 @@ class TCGAResource(Resource):
         Description('Import an item as a TCGA Aperio XML item')
         .param('id', 'The id of the item or root to import')
         .param('recursive', 'Perform a recursive search for annotations',
-               required=False, dataType='boolean')
+               required=False, dataType='boolean'),
     )
     def importAperio(self, params):
         user = self.getCurrentUser()
@@ -821,11 +830,11 @@ class TCGAResource(Resource):
 
         item = Aperio().loadDocument(
             id=params['id'], user=user,
-            level=AccessType.WRITE, exc=True
+            level=AccessType.WRITE, exc=True,
         )
 
         aperio = Aperio().importDocument(
-            item, user=user, token=token, recurse=params.get('recursive')
+            item, user=user, token=token, recurse=params.get('recursive'),
         )
         return aperio
 
@@ -834,7 +843,7 @@ class TCGAResource(Resource):
                level=AccessType.WRITE)
     @describeRoute(
         Description('Remove an Aperio XML item')
-        .param('id', 'The id of the Aperio item', paramType='path')
+        .param('id', 'The id of the Aperio item', paramType='path'),
     )
     def deleteAperio(self, aperio, params):
         return Aperio().removeTCGA(aperio)

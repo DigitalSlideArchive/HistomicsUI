@@ -20,20 +20,20 @@ from histomicsui.models.slide import Slide
 from . import girder_utilities as utilities
 
 
-@pytest.fixture
+@pytest.fixture()
 def singular(tmp_path_factory):
     root_tmp_dir = tmp_path_factory.getbasetemp().parent
     with filelock.FileLock(root_tmp_dir / '.test_tcga.lock'):
-        yield
+        yield None
 
 
 def createFileItem(name, creator, parent):
     doc = Item().createItem(
-        name, creator, parent
+        name, creator, parent,
     )
     file = File().createFile(
         creator, doc, doc['name'],
-        0, {'_id': ''}
+        0, {'_id': ''},
     )
     Item().save(doc)
     return doc, file
@@ -43,7 +43,7 @@ def createImageItem(name, slide, admin):
     doc, file = createFileItem(name, admin, slide)
     doc['largeImage'] = {
         'fileId': file['_id'],
-        'sourceName': 'svs'
+        'sourceName': 'svs',
     }
     Item().save(doc)
     return doc
@@ -130,11 +130,11 @@ class TestTCGAModel:
                 'c': '',
                 'd': {
                     'e': {},
-                    'f': None
+                    'f': None,
                 },
-                'g': None
+                'g': None,
             },
-            'h': None
+            'h': None,
         }
         pruneNoneValues(doc)
         assert set(doc.keys()) == {'a', 'b'}
@@ -148,20 +148,20 @@ class TestTCGAModel:
                 'c': '',
                 'd': {
                     'e': {},
-                    'f': 'value'
+                    'f': 'value',
                 },
-                'g': 1
+                'g': 1,
             },
-            'h': 2
+            'h': 2,
         }
         update = {
             'a': 1,
             'b': {
                 'y': False,
                 'd': {
-                    'z': 10
-                }
-            }
+                    'z': 10,
+                },
+            },
         }
         updateDict(doc, update)
         assert set(doc.keys()) == {'a', 'b', 'h'}
@@ -199,7 +199,7 @@ class TestTCGAModel:
         makeResources(self, admin, user)
         doc = Folder().createFolder(
             self.tcgaCollection, 'ucec', parentType='collection',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         Cohort().importDocument(doc, user=admin)
         assert Cohort().getTCGAType(doc) == 'cohort'
@@ -218,18 +218,18 @@ class TestTCGAModel:
         makeResources(self, admin, user)
         cohort = Folder().createFolder(
             self.tcgaCollection, 'ucec', parentType='collection',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         invaliddoc = Folder().createFolder(
             cohort, 'invalid name', parentType='folder',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         doc = Folder().createFolder(
             cohort, 'TCGA-W5-AA2O', parentType='folder',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         Folder().createFolder(
-            doc, 'sub folder'
+            doc, 'sub folder',
         )
 
         with pytest.raises(ValidationException):
@@ -249,15 +249,15 @@ class TestTCGAModel:
 
         cohort = Folder().createFolder(
             self.tcgaCollection, 'ucec', parentType='collection',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         case = Folder().createFolder(
             cohort, 'TCGA-W5-AA2O', parentType='folder',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         doc = Folder().createFolder(
             case, 'TCGA-W5-AA2O-01A-01-TSA', parentType='folder',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
 
         with pytest.raises(ValidationException):
@@ -274,31 +274,31 @@ class TestTCGAModel:
 
         cohort = Folder().createFolder(
             self.tcgaCollection, 'ucec', parentType='collection',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         case = Folder().createFolder(
             cohort, 'TCGA-W5-AA2O', parentType='folder',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         slide = Folder().createFolder(
             case, 'TCGA-W5-AA2O-01A-01-TSA', parentType='folder',
-            public=True, creator=admin
+            public=True, creator=admin,
         )
         invalid = Item().createItem(
             'invalid_name.svs',
-            admin, slide
+            admin, slide,
         )
         doc = Item().createItem(
             'TCGA-W5-AA2O-01A-01-TSA.90E7868E-0605-43FD-A4A5-A2C0A6AC3AEE.svs',
-            admin, slide
+            admin, slide,
         )
         file = File().createFile(
             admin, doc, doc['name'],
-            0, {'_id': ''}
+            0, {'_id': ''},
         )
         doc['largeImage'] = {
             'fileId': file['_id'],
-            'sourceName': 'svs'
+            'sourceName': 'svs',
         }
         Item().save(doc)
 
@@ -309,11 +309,11 @@ class TestTCGAModel:
 
         ifile = File().createFile(
             admin, invalid, doc['name'],
-            0, {'_id': ''}
+            0, {'_id': ''},
         )
         invalid['largeImage'] = {
             'fileId': ifile['_id'],
-            'sourceName': 'svs'
+            'sourceName': 'svs',
         }
         Item().save(invalid)
         with pytest.raises(ValidationException):
@@ -329,7 +329,7 @@ class TestTCGARest:
         resp = server.request(
             path='/tcga/import',
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
@@ -341,7 +341,7 @@ class TestTCGARest:
 
             resp = server.request(
                 path='/job/' + job['_id'],
-                user=admin
+                user=admin,
             )
             assert utilities.respStatus(resp) == 200
 
@@ -349,14 +349,16 @@ class TestTCGARest:
             if status == JobStatus.SUCCESS:
                 return
             elif status in (JobStatus.ERROR, JobStatus.CANCELED):
-                raise Exception('TCGA import failed')
+                msg = 'TCGA import failed'
+                raise Exception(msg)
 
-        raise Exception('TCGA import did not finish in time')
+        msg = 'TCGA import did not finish in time'
+        raise Exception(msg)
 
     def testTCGACollection(self, server, admin, user, singular):
         makeResources(self, admin, user)
         resp = server.request(
-            path='/tcga'
+            path='/tcga',
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['_id'] == str(self.tcgaCollection['_id'])
@@ -364,26 +366,26 @@ class TestTCGARest:
         resp = server.request(
             path='/tcga',
             method='DELETE',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
         resp = server.request(
             path='/tcga',
             method='DELETE',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga'
+            path='/tcga',
         )
         assert utilities.respStatus(resp) == 404
 
         resp = server.request(
             path='/tcga',
             params={'collectionId': self.tcgaCollection['_id']},
-            method='POST'
+            method='POST',
         )
         assert utilities.respStatus(resp) == 401
 
@@ -391,12 +393,12 @@ class TestTCGARest:
             path='/tcga',
             params={'collectionId': self.tcgaCollection['_id']},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga'
+            path='/tcga',
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['_id'] == str(self.tcgaCollection['_id'])
@@ -410,7 +412,7 @@ class TestTCGARest:
     def testCohortEndpoints(self, server, admin, user, singular):
         makeResources(self, admin, user)
         resp = server.request(
-            path='/tcga/cohort'
+            path='/tcga/cohort',
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['data'] == []
@@ -418,7 +420,7 @@ class TestTCGARest:
         resp = server.request(
             path='/tcga/cohort',
             params={'folderId': self.cohort['_id']},
-            method='POST'
+            method='POST',
         )
         assert utilities.respStatus(resp) == 401
 
@@ -426,12 +428,12 @@ class TestTCGARest:
             path='/tcga/cohort',
             params={'folderId': self.cohort['_id']},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/cohort/' + str(self.cohort['_id'])
+            path='/tcga/cohort/' + str(self.cohort['_id']),
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['name'] == self.cohort['name']
@@ -439,12 +441,12 @@ class TestTCGARest:
         resp = server.request(
             path='/tcga/cohort/' + str(self.cohort['_id']),
             method='DELETE',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/cohort'
+            path='/tcga/cohort',
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['data'] == []
@@ -452,19 +454,19 @@ class TestTCGARest:
         # import recursively and test searching for slides
         self.runRecursiveImport(server, admin)
         resp = server.request(
-            path='/tcga/cohort/' + str(self.cohort['_id']) + '/slides'
+            path='/tcga/cohort/' + str(self.cohort['_id']) + '/slides',
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 3
 
         resp = server.request(
-            path='/tcga/cohort/' + str(self.cohort2['_id']) + '/slides'
+            path='/tcga/cohort/' + str(self.cohort2['_id']) + '/slides',
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 1
 
         resp = server.request(
-            path='/tcga/cohort/' + str(self.cohort['_id']) + '/images'
+            path='/tcga/cohort/' + str(self.cohort['_id']) + '/images',
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 3
@@ -476,7 +478,7 @@ class TestTCGARest:
 
         resp = server.request(
             path='/tcga/case',
-            params={'cohort': str(self.cohort['_id'])}
+            params={'cohort': str(self.cohort['_id'])},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 3
@@ -489,14 +491,14 @@ class TestTCGARest:
 
         # search for images under a case 1
         resp = server.request(
-            path='/tcga/case/' + str(self.case1['_id']) + '/images'
+            path='/tcga/case/' + str(self.case1['_id']) + '/images',
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 2
 
         # search for images under a case 2
         resp = server.request(
-            path='/tcga/case/' + str(self.case2['_id']) + '/images'
+            path='/tcga/case/' + str(self.case2['_id']) + '/images',
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 1
@@ -504,13 +506,13 @@ class TestTCGARest:
         resp = server.request(
             path='/tcga/case/' + str(self.case1['_id']),
             method='DELETE',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
             path='/tcga/case',
-            params={'cohort': str(self.cohort['_id'])}
+            params={'cohort': str(self.cohort['_id'])},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 2
@@ -519,19 +521,19 @@ class TestTCGARest:
             path='/tcga/case',
             params={'folderId': self.case1['_id']},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['name'] == self.case1['name']
 
         resp = server.request(
-            path='/tcga/case/label/' + self.case2['name']
+            path='/tcga/case/label/' + self.case2['name'],
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['_id'] == str(self.case2['_id'])
 
         resp = server.request(
-            path='/tcga/case/label/' + 'notalabel'
+            path='/tcga/case/label/' + 'notalabel',
         )
         assert utilities.respStatus(resp) == 400
 
@@ -542,7 +544,7 @@ class TestTCGARest:
         self.runRecursiveImport(server, admin)
 
         resp = server.request(
-            path='/tcga/case/' + id1 + '/metadata/tables'
+            path='/tcga/case/' + id1 + '/metadata/tables',
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json == []
@@ -552,8 +554,8 @@ class TestTCGARest:
             method='POST',
             body=json.dumps({
                 'key1': 'value1',
-                'key2': 'value2'
-            })
+                'key2': 'value2',
+            }),
         )
         assert utilities.respStatus(resp) == 401
 
@@ -562,15 +564,15 @@ class TestTCGARest:
             method='POST',
             body=json.dumps({
                 'key1': 'value1',
-                'key2': 'value2'
+                'key2': 'value2',
             }),
             user=user,
-            type='application/json'
+            type='application/json',
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/case/' + id1 + '/metadata/tables'
+            path='/tcga/case/' + id1 + '/metadata/tables',
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json == ['table1']
@@ -586,10 +588,10 @@ class TestTCGARest:
             method='PUT',
             body=json.dumps({
                 'key1': None,
-                'key3': 'value3'
+                'key3': 'value3',
             }),
             user=user,
-            type='application/json'
+            type='application/json',
         )
         assert utilities.respStatus(resp) == 200
 
@@ -603,23 +605,23 @@ class TestTCGARest:
             path='/tcga/case/' + id2 + '/metadata/table1',
             method='POST',
             body=json.dumps({
-                'key1': 'value1'
+                'key1': 'value1',
             }),
             user=user,
-            type='application/json'
+            type='application/json',
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
             path='/tcga/case/search',
-            params={'table': 'table1'}
+            params={'table': 'table1'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 2
 
         resp = server.request(
             path='/tcga/case/search',
-            params={'table': 'table1', 'key': 'key1'}
+            params={'table': 'table1', 'key': 'key1'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 1
@@ -627,14 +629,14 @@ class TestTCGARest:
 
         resp = server.request(
             path='/tcga/case/search',
-            params={'table': 'table1', 'key': 'key1', 'value': 'value2'}
+            params={'table': 'table1', 'key': 'key1', 'value': 'value2'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 0
 
         resp = server.request(
             path='/tcga/case/search',
-            params={'table': 'table1', 'key': 'key1', 'substring': 'alue'}
+            params={'table': 'table1', 'key': 'key1', 'substring': 'alue'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 1
@@ -642,7 +644,7 @@ class TestTCGARest:
         # special characters should be escaped
         resp = server.request(
             path='/tcga/case/search',
-            params={'table': 'table1', 'key': 'key1', 'substring': '.*'}
+            params={'table': 'table1', 'key': 'key1', 'substring': '.*'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 0
@@ -654,20 +656,20 @@ class TestTCGARest:
                 'table': 'table1',
                 'key': 'key1',
                 'substring': 'value1',
-                'value': 'value1'
-            }
+                'value': 'value1',
+            },
         )
         assert utilities.respStatus(resp) == 400
 
         resp = server.request(
             path='/tcga/case/' + id2 + '/metadata/table1',
             method='DELETE',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/case/' + id2 + '/metadata/tables'
+            path='/tcga/case/' + id2 + '/metadata/tables',
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json == []
@@ -680,13 +682,13 @@ class TestTCGARest:
 
         resp = server.request(
             path='/tcga/slide',
-            params={'case': case1}
+            params={'case': case1},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 2
 
         resp = server.request(
-            path='/tcga/slide/' + slide1
+            path='/tcga/slide/' + slide1,
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['name'] == self.slide1['name']
@@ -694,19 +696,19 @@ class TestTCGARest:
         resp = server.request(
             path='/tcga/slide/' + slide1,
             method='DELETE',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
         resp = server.request(
             path='/tcga/slide/' + slide1,
             method='DELETE',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/slide/' + slide1
+            path='/tcga/slide/' + slide1,
         )
         assert utilities.respStatus(resp) == 400
 
@@ -714,7 +716,7 @@ class TestTCGARest:
             path='/tcga/slide',
             params={'folderId': slide1},
             method='POST',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
@@ -722,12 +724,12 @@ class TestTCGARest:
             path='/tcga/slide',
             params={'folderId': slide1},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/slide/' + slide1
+            path='/tcga/slide/' + slide1,
         )
         assert utilities.respStatus(resp) == 200
 
@@ -739,7 +741,7 @@ class TestTCGARest:
 
         resp = server.request(
             path='/tcga/image',
-            params={'slide': slide1}
+            params={'slide': slide1},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 1
@@ -747,13 +749,13 @@ class TestTCGARest:
 
         resp = server.request(
             path='/tcga/image',
-            params={'caseName': self.case1['name']}
+            params={'caseName': self.case1['name']},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 2
 
         resp = server.request(
-            path='/tcga/image/' + image1
+            path='/tcga/image/' + image1,
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['name'] == self.image1['name']
@@ -761,19 +763,19 @@ class TestTCGARest:
         resp = server.request(
             path='/tcga/image/' + image1,
             method='DELETE',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
         resp = server.request(
             path='/tcga/image/' + image1,
             method='DELETE',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/image/' + image1
+            path='/tcga/image/' + image1,
         )
         assert utilities.respStatus(resp) == 400
 
@@ -781,7 +783,7 @@ class TestTCGARest:
             path='/tcga/image',
             params={'itemId': image1},
             method='POST',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
@@ -789,12 +791,12 @@ class TestTCGARest:
             path='/tcga/image',
             params={'itemId': image1},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/image/' + image1
+            path='/tcga/image/' + image1,
         )
         assert utilities.respStatus(resp) == 200
 
@@ -808,7 +810,7 @@ class TestTCGARest:
             path='/tcga/pathology',
             params={'id': pathology1},
             method='POST',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
@@ -816,13 +818,13 @@ class TestTCGARest:
             path='/tcga/pathology',
             params={'id': pathology1},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
             path='/tcga/pathology',
-            params={'case': case1}
+            params={'case': case1},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json['data']) == 1
@@ -830,7 +832,7 @@ class TestTCGARest:
         assert str(resp.json['data'][0]['file']['mimeType']) == 'application/pdf'
 
         resp = server.request(
-            path='/tcga/pathology/' + pathology1
+            path='/tcga/pathology/' + pathology1,
         )
         assert utilities.respStatus(resp) == 200
         assert resp.json['name'] == self.pathology1['name']
@@ -839,19 +841,19 @@ class TestTCGARest:
         resp = server.request(
             path='/tcga/pathology/' + pathology1,
             method='DELETE',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
         resp = server.request(
             path='/tcga/pathology/' + pathology1,
             method='DELETE',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/pathology/' + pathology1
+            path='/tcga/pathology/' + pathology1,
         )
         assert utilities.respStatus(resp) == 400
 
@@ -859,7 +861,7 @@ class TestTCGARest:
             path='/tcga/pathology',
             params={'itemId': pathology1},
             method='POST',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
@@ -867,12 +869,12 @@ class TestTCGARest:
             path='/tcga/pathology',
             params={'id': pathology1},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/pathology/' + pathology1
+            path='/tcga/pathology/' + pathology1,
         )
         assert utilities.respStatus(resp) == 200
 
@@ -880,12 +882,12 @@ class TestTCGARest:
             path='/tcga/pathology',
             params={'id': str(self.pathologyFolder['_id']), 'recursive': True},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/tcga/pathology/' + str(self.pathology2['_id'])
+            path='/tcga/pathology/' + str(self.pathology2['_id']),
         )
         assert utilities.respStatus(resp) == 200
 
@@ -901,7 +903,7 @@ class TestTCGARest:
             path='/tcga/aperio',
             params={'id': aperio1},
             method='POST',
-            user=user
+            user=user,
         )
         assert utilities.respStatus(resp) == 403
 
@@ -910,12 +912,12 @@ class TestTCGARest:
             path='/tcga/aperio',
             params={'id': aperio1},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
-            path='/item/' + image + '/aperio'
+            path='/item/' + image + '/aperio',
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json) == 1
@@ -926,7 +928,7 @@ class TestTCGARest:
         # test filtering by tag
         resp = server.request(
             path='/item/' + image + '/aperio',
-            params={'tag': 'foo'}
+            params={'tag': 'foo'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json) == 0
@@ -936,13 +938,13 @@ class TestTCGARest:
             path='/item/' + aperio1 + '/aperio',
             params={'tag': 'foo'},
             method='PUT',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
             path='/item/' + image + '/aperio',
-            params={'tag': 'foo'}
+            params={'tag': 'foo'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json) == 1
@@ -952,13 +954,13 @@ class TestTCGARest:
             path='/item/' + aperio2 + '/aperio',
             params={'tag': 'bar', 'imageId': image},
             method='POST',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
             path='/item/' + image + '/aperio',
-            params={'tag': 'bar'}
+            params={'tag': 'bar'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json) == 1
@@ -968,13 +970,13 @@ class TestTCGARest:
         resp = server.request(
             path='/item/' + aperio2 + '/aperio',
             method='DELETE',
-            user=admin
+            user=admin,
         )
         assert utilities.respStatus(resp) == 200
 
         resp = server.request(
             path='/item/' + image + '/aperio',
-            params={'tag': 'bar'}
+            params={'tag': 'bar'},
         )
         assert utilities.respStatus(resp) == 200
         assert len(resp.json) == 0
@@ -986,7 +988,7 @@ class TestTCGARest:
 
         resp = server.request(
             path='/tcga/case',
-            params={'cohort': cohort1, 'limit': 2, 'offset': 0}
+            params={'cohort': cohort1, 'limit': 2, 'offset': 0},
         )
         assert utilities.respStatus(resp) == 200
         data = resp.json
@@ -999,7 +1001,7 @@ class TestTCGARest:
 
         resp = server.request(
             path='/tcga/case',
-            params={'cohort': cohort1, 'limit': 2, 'offset': 2}
+            params={'cohort': cohort1, 'limit': 2, 'offset': 2},
         )
         assert utilities.respStatus(resp) == 200
         data = resp.json
@@ -1012,7 +1014,7 @@ class TestTCGARest:
 
         resp = server.request(
             path='/tcga/case',
-            params={'cohort': cohort1, 'limit': 2, 'offset': 1}
+            params={'cohort': cohort1, 'limit': 2, 'offset': 1},
         )
         assert utilities.respStatus(resp) == 200
         data = resp.json

@@ -9,24 +9,27 @@ class Case(TCGAModel, Folder):
 
     TCGAType = 'case'
     TCGAIndices = [
-        'tcga.label'
+        'tcga.label',
     ]
 
     def validate(self, doc, **kwargs):
         if doc.get('parentCollection') != 'folder':
+            msg = 'A Case model must be a child of a folder'
             raise ValidationException(
-                'A Case model must be a child of a folder'
+                msg,
             )
         super().validate(doc, **kwargs)
         cohort = Cohort().load(
             doc['parentId'], force=True)
         if not cohort or self.getTCGAType(cohort) != 'cohort':
+            msg = 'A Case model must be a child of a cohort'
             raise ValidationException(
-                'A Case model must be a child of a cohort'
+                msg,
             )
         if not self.case_re.match(self.getTCGA(doc).get('label', '')):
+            msg = 'Invalid label in TCGA metadata'
             raise ValidationException(
-                'Invalid label in TCGA metadata'
+                msg,
             )
         return doc
 
@@ -35,11 +38,12 @@ class Case(TCGAModel, Folder):
 
         recurse = kwargs.get('recurse', False)
         parent = Cohort().load(
-            doc.get('parentId'), force=True
+            doc.get('parentId'), force=True,
         )
         if not parent:
+            msg = 'Invalid folder document'
             raise ValidationException(
-                'Invalid folder document'
+                msg,
             )
         tcga = self.getTCGA(parent)
         tcga['label'] = doc['name']
@@ -51,7 +55,7 @@ class Case(TCGAModel, Folder):
 
         childModel = Slide()
         children = Folder().childFolders(
-            doc, 'folder', user=kwargs.get('user')
+            doc, 'folder', user=kwargs.get('user'),
         )
         for child in children:
             try:

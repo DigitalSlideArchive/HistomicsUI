@@ -40,7 +40,7 @@ class HistomicsUIResource(Resource):
         self.route('GET', ('query_metadata',), self.findItemsByMetadata)
 
     @describeRoute(
-        Description('Get public settings for HistomicsUI.')
+        Description('Get public settings for HistomicsUI.'),
     )
     @access.public(scope=TokenScope.DATA_READ)
     def getPublicSettings(self, params):
@@ -49,7 +49,7 @@ class HistomicsUIResource(Resource):
             PluginSettings.HUI_DEFAULT_DRAW_STYLES,
             PluginSettings.HUI_PANEL_LAYOUT,
             PluginSettings.HUI_QUARANTINE_FOLDER,
-            PluginSettings.HUI_WEBROOT_PATH
+            PluginSettings.HUI_WEBROOT_PATH,
         ]
         result = {k: Setting().get(k) for k in keys}
         result[PluginSettings.HUI_QUARANTINE_FOLDER] = bool(
@@ -61,7 +61,7 @@ class HistomicsUIResource(Resource):
         .responseClass('Item')
         .modelParam('id', model=Item, level=AccessType.WRITE)
         .errorResponse('ID was invalid.')
-        .errorResponse('Write access was denied for the item', 403)
+        .errorResponse('Write access was denied for the item', 403),
     )
     @access.user(scope=TokenScope.DATA_WRITE)
     @filtermodel(model=Item)
@@ -73,7 +73,7 @@ class HistomicsUIResource(Resource):
         .responseClass('Item')
         .modelParam('id', model=Item, level=AccessType.WRITE)
         .errorResponse('ID was invalid.')
-        .errorResponse('Write access was denied for the item', 403)
+        .errorResponse('Write access was denied for the item', 403),
     )
     @access.admin
     @filtermodel(model=Item)
@@ -98,7 +98,7 @@ class HistomicsUIResource(Resource):
         # The following to lines document common rest errors that can occur
         # when calling this endpoint.  This is for documentation only.
         .errorResponse('ID was invalid.')
-        .errorResponse('Access was denied for the resource.', 403)
+        .errorResponse('Access was denied for the resource.', 403),
     )
     # This makes the endpoint accessible without logging in.
     @access.public(scope=TokenScope.DATA_READ)
@@ -112,7 +112,8 @@ class HistomicsUIResource(Resource):
         model = ModelImporter.model(modelType)
         doc = model.load(id=id, user=user, level=AccessType.READ)
         if not doc:
-            raise RestException('Resource not found.')
+            msg = 'Resource not found.'
+            raise RestException(msg)
         results = {}
         if doc.get('meta'):
             results[str(doc['_id'])] = doc['meta']
@@ -153,7 +154,7 @@ class HistomicsUIResource(Resource):
         # The following to lines document common rest errors that can occur
         # when calling this endpoint.  This is for documentation only.
         .errorResponse('Required parameters were not provided.')
-        .errorResponse('Invalid value provided.')
+        .errorResponse('Invalid value provided.'),
     )
     @access.public(scope=TokenScope.DATA_READ)
     def findItemsByMetadata(self, key, value, limit, offset, sort):
@@ -165,12 +166,13 @@ class HistomicsUIResource(Resource):
         if isinstance(value, (list, dict)):
             # This is a special type of exception that tells girder to respond
             # with an HTTP response with the given code and message.
-            raise RestException('The value must not be a dictionary or list.', code=400)
+            msg = 'The value must not be a dictionary or list.'
+            raise RestException(msg, code=400)
 
         query = {
             'meta': {
-                key: value
-            }
+                key: value,
+            },
         }
 
         # This gets the logged in user who created the request.  If it is an
@@ -194,7 +196,7 @@ class HistomicsUIResource(Resource):
         response = item.filterResultsByPermission(
             cursor,
             user=user, level=AccessType.READ,
-            limit=limit, offset=offset
+            limit=limit, offset=offset,
         )
 
         # Finally, we turn the iterator into an explicit list for return to the

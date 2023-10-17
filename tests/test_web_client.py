@@ -25,7 +25,7 @@ def copyHUITest():
 def makeResources(server, fsAssetstore, admin, user):
     # Create an item in the admin Public folder
     adminPublicFolder = Folder().childFolders(  # noqa: B305
-        admin, 'user', filters={'name': 'Public'}
+        admin, 'user', filters={'name': 'Public'},
     ).next()
     Item().createItem('Empty', admin, adminPublicFolder)
     # Upload a sample file
@@ -66,7 +66,7 @@ class MockSlicerCLIWebResource(Resource):
 
     @access.public
     @describeRoute(
-        Description('Mock the docker_image endpoint.')
+        Description('Mock the docker_image endpoint.'),
     )
     def dockerImage(self, params):
         """
@@ -78,20 +78,20 @@ class MockSlicerCLIWebResource(Resource):
                     'ComputeNucleiFeatures': {
                         'run': 'mock_resource/test_analysis_features/run',
                         'type': 'python',
-                        'xmlspec': 'mock_resource/test_analysis_features/xml'
+                        'xmlspec': 'mock_resource/test_analysis_features/xml',
                     },
                     'NucleiDetection': {
                         'run': 'mock_resource/test_analysis_detection/run',
                         'type': 'python',
-                        'xmlspec': 'mock_resource/test_analysis_detection/xml'
-                    }
-                }
-            }
+                        'xmlspec': 'mock_resource/test_analysis_detection/xml',
+                    },
+                },
+            },
         }
 
     @access.public
     @describeRoute(
-        Description('Mock an analysis description route.')
+        Description('Mock an analysis description route.'),
     )
     def testAnalysisXmlDetection(self, params):
         """Return the nuclei detection XML spec as a test case."""
@@ -105,7 +105,7 @@ class MockSlicerCLIWebResource(Resource):
 
     @access.public
     @describeRoute(
-        Description('Mock an analysis description route.')
+        Description('Mock an analysis description route.'),
     )
     def testAnalysisXmlFeatures(self, params):
         """Return the nuclei feature classification XML spec as a test case."""
@@ -119,7 +119,7 @@ class MockSlicerCLIWebResource(Resource):
 
     @access.public
     @describeRoute(
-        Description('Mock an analysis run route.')
+        Description('Mock an analysis run route.'),
     )
     def testAnalysisRun(self, params):
         """
@@ -132,7 +132,7 @@ class MockSlicerCLIWebResource(Resource):
 
 
 @pytest.mark.plugin('histomicsui')
-@pytest.mark.parametrize('spec', (
+@pytest.mark.parametrize('spec', [
     'analysisSpec.js',
     'annotationSpec.js',
     'girderUISpec.js',
@@ -143,7 +143,7 @@ class MockSlicerCLIWebResource(Resource):
     'overviewPanelSpec.js',
     'panelLayoutSpec.js',
     'pixelmapCategorySpec.js',
-))
+])
 def testWebClient(boundServer, fsAssetstore, db, admin, user, spec):
     copyHUITest()
     boundServer.root.api.v1.mock_resource = MockSlicerCLIWebResource()

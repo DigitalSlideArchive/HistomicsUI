@@ -14,27 +14,32 @@ class Image(TCGAModel, Item):
     def validate(self, doc, **kwargs):
         super().validate(doc, **kwargs)
         if 'largeImage' not in doc:
+            msg = 'An image item must be a "large_image"'
             raise ValidationException(
-                'An image item must be a "large_image"'
+                msg,
             )
         slide = Slide().load(
             doc['folderId'], force=True)
         if not slide or self.getTCGAType(slide) != 'slide':
+            msg = 'An image must be a child of a slide'
             raise ValidationException(
-                'An image must be a child of a slide'
+                msg,
             )
         tcga = self.getTCGA(doc)
         if not self.case_re.match(tcga.get('case', '')):
+            msg = 'Invalid case name in TCGA metadata'
             raise ValidationException(
-                'Invalid case name in TCGA metadata'
+                msg,
             )
         if not self.barcode_re.match(tcga.get('barcode', '')):
+            msg = 'Invalid barcode in TCGA metadata'
             raise ValidationException(
-                'Invalid barcode in TCGA metadata'
+                msg,
             )
         if not self.uuid_re.match(tcga.get('uuid', '')):
+            msg = 'Invalid uuid in TCGA metadata'
             raise ValidationException(
-                'Invalid uuid in TCGA metadata'
+                msg,
             )
 
         return doc
@@ -46,11 +51,12 @@ class Image(TCGAModel, Item):
         try:
             return ImageItem.createImageItem(
                 doc, file,
-                user=user, token=token, createJob=False
+                user=user, token=token, createJob=False,
             )
         except Exception:
+            msg = 'Could not generate a large_image item'
             raise ValidationException(
-                'Could not generate a large_image item'
+                msg,
             )
 
     def _findImageFile(self, doc):
@@ -64,18 +70,20 @@ class Image(TCGAModel, Item):
         token = kwargs.get('token')
         fileId = self._findImageFile(doc)
         if fileId is None:
+            msg = 'Could not find a TCGA slide in item'
             raise ValidationException(
-                'Could not find a TCGA slide in item'
+                msg,
             )
         self._setLargeImage(doc, fileId, user, token)
 
         name = doc['name']
         parent = Slide().load(
-            doc.get('folderId'), force=True
+            doc.get('folderId'), force=True,
         )
         if not parent:
+            msg = 'Invalid item document'
             raise ValidationException(
-                'Invalid item document'
+                msg,
             )
         tcga = self.getTCGA(parent)
         tcga.update(self.parseImage(name))

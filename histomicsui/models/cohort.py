@@ -11,8 +11,9 @@ class Cohort(TCGAModel, Folder):
     def validate(self, doc, **kwargs):
         super().validate(doc, **kwargs)
         if doc['parentCollection'] != 'collection':
+            msg = 'A Cohort model must be a child of a collection'
             raise ValidationException(
-                'A Cohort model must be a child of a collection'
+                msg,
             )
         return doc
 
@@ -28,7 +29,7 @@ class Cohort(TCGAModel, Folder):
 
         childModel = Case()
         children = Folder().childFolders(
-            doc, 'folder', user=kwargs.get('user')
+            doc, 'folder', user=kwargs.get('user'),
         )
         for child in children:
             try:
