@@ -19,6 +19,7 @@ import os
 import re
 from functools import wraps
 
+import cherrypy
 from bson import json_util
 from girder import events, logger, plugin
 from girder.api import access
@@ -30,6 +31,7 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
+from girder.models.token import Token
 from girder.settings import SettingDefault, SettingKey
 from girder.utility import config
 from girder.utility import path as path_util
@@ -258,6 +260,23 @@ class WebrootHistomicsUI(Webroot):
             'huiHelpText': Setting().get(PluginSettings.HUI_HELP_TEXT)
         })
         return super()._renderHTML()
+
+    def GET(self, **params):
+        print(params)
+        if params.get('token'):
+            try:
+                token = Token().load(params['token'], force=True, objectId=False)
+                if token:
+                    cookie = cherrypy.response.cookie
+                    cookie['girderToken'] = str(token['_id'])
+                    cookie['girderToken']['path'] = '/'
+                    days = float(Setting().get(SettingKey.COOKIE_LIFETIME))
+                    cookie['girderToken']['expires'] = int(days * 3600 * 24)
+                    cookie['girderToken']['sameSite'] = 'None'
+                    cookie['girderToken']['secure'] = True
+            except Exception:
+                pass
+        return self._renderHTML()
 
 
 def restrict_downloads(info):

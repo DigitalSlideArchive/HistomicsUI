@@ -6,7 +6,7 @@ import '@girder/fontello/dist/css/fontello.css';
 
 import GirderApp from '@girder/core/views/App';
 import eventStream from '@girder/core/utilities/EventStream';
-import {getCurrentUser} from '@girder/core/auth';
+import {getCurrentUser, setCurrentToken} from '@girder/core/auth';
 import {splitRoute} from '@girder/core/misc';
 
 import router from './router';
@@ -16,8 +16,22 @@ import bindRoutes from './routes';
 import layoutTemplate from './templates/layout/layout.pug';
 import './stylesheets/layout/layout.styl';
 
+function getQuery() {
+    var query = document.location.search.replace(/(^\?)/, '').split('&').map(function (n) {
+        n = n.split('=');
+        if (n[0]) {
+            this[decodeURIComponent(n[0].replace(/\+/g, '%20'))] = decodeURIComponent(n[1].replace(/\+/g, '%20'));
+        }
+        return this;
+    }.bind({}))[0];
+    return query;
+}
+
 var App = GirderApp.extend({
     initialize(settings) {
+        if (getQuery().token) {
+            setCurrentToken(getQuery().token);
+        }
         this.settings = settings;
         return GirderApp.prototype.initialize.apply(this, arguments);
     },
