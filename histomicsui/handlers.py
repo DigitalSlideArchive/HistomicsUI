@@ -129,7 +129,7 @@ def process_annotations(event):  # noqa
 
     file = File().load(
         event.info.get('file', {}).get('_id'),
-        level=AccessType.READ, user=user
+        level=AccessType.READ, user=user,
     )
     startTime = time.time()
 
@@ -139,7 +139,8 @@ def process_annotations(event):  # noqa
     try:
         if file['size'] > int(large_image.config.getConfig(
                 'max_annotation_input_file_length', 1024 ** 3)):
-            raise Exception('File is larger than will be read into memory.')
+            msg = 'File is larger than will be read into memory.'
+            raise Exception(msg)
         data = []
         with File().open(file) as fptr:
             while True:
@@ -189,12 +190,15 @@ def quarantine_item(item, user, makePlaceholder=True):
     """
     folder = Setting().get(PluginSettings.HUI_QUARANTINE_FOLDER)
     if not folder:
-        raise RestException('The quarantine folder is not configured.')
+        msg = 'The quarantine folder is not configured.'
+        raise RestException(msg)
     folder = Folder().load(folder, force=True, exc=True)
     if not folder:
-        raise RestException('The quarantine folder does not exist.')
+        msg = 'The quarantine folder does not exist.'
+        raise RestException(msg)
     if str(folder['_id']) == str(item['folderId']):
-        raise RestException('The item is already in the quarantine folder.')
+        msg = 'The item is already in the quarantine folder.'
+        raise RestException(msg)
     originalFolder = Folder().load(item['folderId'], force=True)
     quarantineInfo = {
         'originalFolderId': item['folderId'],
@@ -202,7 +206,7 @@ def quarantine_item(item, user, makePlaceholder=True):
         'originalBaseParentId': item['baseParentId'],
         'originalUpdated': item['updated'],
         'quarantineUserId': user['_id'],
-        'quarantineTime': datetime.datetime.now(datetime.timezone.utc)
+        'quarantineTime': datetime.datetime.now(datetime.timezone.utc),
     }
     item = Item().move(item, folder)
     if makePlaceholder:
@@ -216,7 +220,7 @@ def quarantine_item(item, user, makePlaceholder=True):
     if makePlaceholder:
         placeholderInfo = {
             'quarantined': True,
-            'quarantineTime': quarantineInfo['quarantineTime']
+            'quarantineTime': quarantineInfo['quarantineTime'],
         }
         placeholder.setdefault('meta', {})['quarantine'] = placeholderInfo
         placeholder = Item().updateItem(placeholder)
@@ -232,10 +236,12 @@ def restore_quarantine_item(item, user):
     :returns: the modified item.
     """
     if not item.get('meta', {}).get('quarantine'):
-        raise RestException('The item has no quarantine record.')
+        msg = 'The item has no quarantine record.'
+        raise RestException(msg)
     folder = Folder().load(item['meta']['quarantine']['originalFolderId'], force=True)
     if not folder:
-        raise RestException('The original folder is not accessible.')
+        msg = 'The original folder is not accessible.'
+        raise RestException(msg)
     if 'placeholderItemId' in item['meta']['quarantine']:
         placeholder = Item().load(item['meta']['quarantine']['placeholderItemId'], force=True)
     else:
@@ -256,7 +262,7 @@ def process_metadata(event):
         return
     file = File().load(
         event.info.get('file', {}).get('_id'),
-        level=AccessType.READ, user=results['user']
+        level=AccessType.READ, user=results['user'],
     )
 
     if not file:

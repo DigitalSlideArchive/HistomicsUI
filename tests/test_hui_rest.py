@@ -119,28 +119,28 @@ class TestHUIResourceAndItem:
             item = Item().save(item)
         resp = server.request(
             path='/item/query', user=admin, params={'query': json.dumps({
-                'meta.key1': {'$exists': True}
+                'meta.key1': {'$exists': True},
             })})
         assert utilities.respStatus(resp) == 200
         items = resp.json
         assert len(items) == 3
         resp = server.request(
             path='/item/query', user=user, params={'query': json.dumps({
-                'meta.key1': {'$exists': True}
+                'meta.key1': {'$exists': True},
             })})
         assert utilities.respStatus(resp) == 200
         items = resp.json
         assert len(items) == 0
         resp = server.request(
             path='/item/query', user=admin, params={'query': json.dumps({
-                'meta.key1': 'value1'
+                'meta.key1': 'value1',
             })})
         assert utilities.respStatus(resp) == 200
         items = resp.json
         assert len(items) == 2
         resp = server.request(
             path='/item/query', user=admin, params={'query': json.dumps({
-                'meta': {'key1': 'value1'}
+                'meta': {'key1': 'value1'},
             })})
         assert utilities.respStatus(resp) == 200
         items = resp.json
@@ -150,13 +150,13 @@ class TestHUIResourceAndItem:
         self.makeResources(admin)
         resp = server.request(
             path='/folder/query', user=admin, params={'query': json.dumps({
-                'baseParentId': {'$oid': str(admin['_id'])}
+                'baseParentId': {'$oid': str(admin['_id'])},
             })})
         assert utilities.respStatus(resp) == 200
         assert len(resp.json) == 3
         resp = server.request(
             path='/folder/query', user=user, params={'query': json.dumps({
-                'baseParentId': {'$oid': str(admin['_id'])}
+                'baseParentId': {'$oid': str(admin['_id'])},
             })})
         assert utilities.respStatus(resp) == 200
         assert len(resp.json) == 2
@@ -168,7 +168,7 @@ class TestHUIResourceAndItem:
                 'resources': json.dumps({'item': [str(self.colItemA1['_id'])]}),
                 'metadata': json.dumps({
                     'keya': 'valuea',
-                    'keyb.keyc': 'valuec'
+                    'keyb.keyc': 'valuec',
                 })})
         assert utilities.respStatus(resp) == 401
         resp = server.request(
@@ -176,7 +176,7 @@ class TestHUIResourceAndItem:
                 'resources': json.dumps({'item': [str(self.colItemA1['_id'])]}),
                 'metadata': json.dumps({
                     'keya': 'valuea',
-                    'keyb.keyc': 'valuec'
+                    'keyb.keyc': 'valuec',
                 })})
         assert utilities.respStatus(resp) == 200
         assert resp.json == 1
@@ -187,7 +187,7 @@ class TestHUIResourceAndItem:
             method='PUT', path='/resource/metadata', user=admin, params={
                 'resources': json.dumps({'item': [
                     str(self.colItemA1['_id']),
-                    str(self.colItemB1['_id'])
+                    str(self.colItemB1['_id']),
                 ], 'folder': [str(self.colFolderA['_id'])]}),
                 'metadata': json.dumps({
                     'keya': 'valuea',
@@ -263,7 +263,7 @@ class TestHUIEndpoints:
             'initial': 'histomics',
             'bad': {
                 'girder': 'not be "girder"',
-                '': 'not be empty'
+                '': 'not be empty',
             },
             'good': {'alternate1': 'alternate1'},
         }, {
@@ -277,7 +277,7 @@ class TestHUIEndpoints:
             'bad': {
                 '': 'not be empty',
                 'white': 'be a hex color',
-                '#777': 'be a hex color'
+                '#777': 'be a hex color',
             },
             'good': {'#000000': '#000000'},
         }, {
@@ -286,7 +286,7 @@ class TestHUIEndpoints:
             'bad': {
                 '': 'not be empty',
                 'white': 'be a hex color',
-                '#777': 'be a hex color'
+                '#777': 'be a hex color',
             },
             'good': {'#000000': '#000000'},
         }, {
@@ -294,12 +294,12 @@ class TestHUIEndpoints:
             'initial': None,
             'bad': {
                 'girder': 'not contain "girder"',
-                'girder,histomicstk': 'not contain "girder"'
+                'girder,histomicstk': 'not contain "girder"',
             },
             'good': {
                 '': '',
                 'histomicstk': 'histomicstk',
-                'hui,histomicstk': 'hui,histomicstk'
+                'hui,histomicstk': 'hui,histomicstk',
             },
         }]
         for setting in settings:
@@ -352,13 +352,13 @@ class TestHUIEndpoints:
 
     def testQuarantine(self, server, admin, user):
         publicFolder = Folder().childFolders(  # noqa: B305
-            user, 'user', filters={'name': 'Public'}
+            user, 'user', filters={'name': 'Public'},
         ).next()
         adminFolder = Folder().childFolders(  # noqa: B305
-            admin, 'user', filters={'name': 'Public'}
+            admin, 'user', filters={'name': 'Public'},
         ).next()
         privateFolder = Folder().childFolders(  # noqa: B305
-            admin, 'user', filters={'name': 'Private'}, user=admin
+            admin, 'user', filters={'name': 'Private'}, user=admin,
         ).next()
         items = [Item().createItem(name, creator, folder) for name, creator, folder in [
             ('userPublic1', user, publicFolder),

@@ -25,4 +25,5 @@ class Pathology(TCGAModel, Item):
                 except ValidationException:
                     pass
         else:
-            raise ValidationException('Invalid model type')
+            msg = 'Invalid model type'
+            raise ValidationException(msg)

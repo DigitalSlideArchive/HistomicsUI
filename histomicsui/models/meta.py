@@ -58,13 +58,13 @@ class TCGAModel:
     #: Matches valid uuid's
     uuid_re = re.compile(
         r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-        flags=re.I
+        flags=re.I,
     )
 
     #: Matches valid tcga barcodes
     barcode_re = re.compile(
         case_re.pattern + r'[0-9a-z-]*',
-        flags=re.I
+        flags=re.I,
     )
 
     #: Parses tcga slide image file names
@@ -72,7 +72,7 @@ class TCGAModel:
         r'^(?P<barcode>(?P<case>' +
         case_re.pattern + r')[0-9a-z-]*)\.' +
         r'(?P<uuid>' + uuid_re.pattern + r')\.svs$',
-        flags=re.I
+        flags=re.I,
     )
 
     #: Parses tcga pathology report file names
@@ -80,7 +80,7 @@ class TCGAModel:
         r'^(?P<case>' + case_re.pattern +
         r')\.(?P<uuid>' + uuid_re.pattern +
         r')\.pdf$',
-        flags=re.I
+        flags=re.I,
     )
 
     def initialize(self, **kwargs):
@@ -149,14 +149,15 @@ class TCGAModel:
     def getTCGACollection(self):
         """Get the unique TCGA collection from the settings collection."""
         tcga = Setting().get(
-            TCGACollectionSettingKey
+            TCGACollectionSettingKey,
         )
         if tcga is None:
+            msg = 'TCGA collection id not initialized in settings'
             raise Exception(
-                'TCGA collection id not initialized in settings'
+                msg,
             )
         return Collection().load(
-            tcga, force=True
+            tcga, force=True,
         )
 
     def __upper(self, obj, key):
@@ -170,7 +171,8 @@ class TCGAModel:
     def _parse(self, name, regex):
         m = regex.match(name)
         if m is None:
-            raise ValidationException('Invalid name')
+            msg = 'Invalid name'
+            raise ValidationException(msg)
         d = m.groupdict()
         self.__lower(d, 'uuid')
         self.__upper(d, 'barcode')
@@ -190,7 +192,7 @@ class TCGAModel:
         """Set the mime type of a file document."""
         oldType = doc.get('mimeType')
         newType = mimetypes.guess_type(
-            doc.get('name', '')
+            doc.get('name', ''),
         )[0]
         doc['mimeType'] = newType
         return newType != oldType
@@ -218,8 +220,9 @@ class TCGAModel:
                     return doc
             except ValidationException:
                 pass
+        msg = 'Invalid document id provided'
         raise ValidationException(
-            'Invalid document id provided'
+            msg,
         )
 
     def iterateItems(self, doc, **kwargs):
@@ -248,7 +251,7 @@ class TCGAModel:
         parentType = parentType.lower()
         q = {
             'parentId': parent['_id'],
-            'parentCollection': parentType
+            'parentCollection': parentType,
         }
         q.update(filters or {})
         return self.find(q, sort=sort, limit=limit, offset=offset)

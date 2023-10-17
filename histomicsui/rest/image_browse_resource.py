@@ -53,7 +53,8 @@ class ImageBrowseResource(ItemResource):
         try:
             index = allImages.index(currentImage)
         except ValueError:
-            raise RestException('Id is not an image', 404)
+            msg = 'Id is not an image'
+            raise RestException(msg, 404)
 
         return {
             'previous': allImages[index - 1],
@@ -71,7 +72,7 @@ class ImageBrowseResource(ItemResource):
                     model='folder', destName='folder', paramType='query', level=AccessType.READ,
                     required=False)
         .errorResponse()
-        .errorResponse('Image not found', code=404)
+        .errorResponse('Image not found', code=404),
     )
     def getNextImage(self, image, folder):
         return self.getAdjacentImages(image, folder)['next']
@@ -85,7 +86,7 @@ class ImageBrowseResource(ItemResource):
                     model='folder', destName='folder', paramType='query', level=AccessType.READ,
                     required=False)
         .errorResponse()
-        .errorResponse('Image not found', code=404)
+        .errorResponse('Image not found', code=404),
     )
     def getPreviousImage(self, image, folder):
         return self.getAdjacentImages(image, folder)['previous']
@@ -99,7 +100,7 @@ class ImageBrowseResource(ItemResource):
                     model='folder', destName='folder', paramType='query', level=AccessType.READ,
                     required=False)
         .errorResponse()
-        .errorResponse('Image not found', code=404)
+        .errorResponse('Image not found', code=404),
     )
     def getPreviousAndNextImages(self, image, folder):
         return self.getAdjacentImages(image, folder)

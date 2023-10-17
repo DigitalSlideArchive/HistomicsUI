@@ -58,7 +58,7 @@ except DistributionNotFound:
 
 _template = os.path.join(
     os.path.dirname(__file__),
-    'webroot.mako'
+    'webroot.mako',
 )
 
 
@@ -155,29 +155,35 @@ def validateListOrJSON(doc):
 })
 def validateHistomicsUIColor(doc):
     if not doc['value']:
-        raise ValidationException('The banner color may not be empty', 'value')
+        msg = 'The banner color may not be empty'
+        raise ValidationException(msg, 'value')
     elif not re.match(r'^#[0-9A-Fa-f]{6}$', doc['value']):
-        raise ValidationException('The banner color must be a hex color triplet', 'value')
+        msg = 'The banner color must be a hex color triplet'
+        raise ValidationException(msg, 'value')
 
 
 @setting_utilities.validator(PluginSettings.HUI_BRAND_NAME)
 def validateHistomicsUIBrandName(doc):
     if not doc['value']:
-        raise ValidationException('The brand name may not be empty', 'value')
+        msg = 'The brand name may not be empty'
+        raise ValidationException(msg, 'value')
 
 
 @setting_utilities.validator(PluginSettings.HUI_WEBROOT_PATH)
 def validateHistomicsUIWebrootPath(doc):
     if not doc['value']:
-        raise ValidationException('The webroot path may not be empty', 'value')
+        msg = 'The webroot path may not be empty'
+        raise ValidationException(msg, 'value')
     if re.match(r'^girder$', doc['value']):
-        raise ValidationException('The webroot path may not be "girder"', 'value')
+        msg = 'The webroot path may not be "girder"'
+        raise ValidationException(msg, 'value')
 
 
 @setting_utilities.validator(PluginSettings.HUI_ALTERNATE_WEBROOT_PATH)
 def validateHistomicsUIAlternateWebrootPath(doc):
     if re.match(r'(^,|)girder(,|$)', doc['value']):
-        raise ValidationException('The alternate webroot path may not contain "girder"', 'value')
+        msg = 'The alternate webroot path may not contain "girder"'
+        raise ValidationException(msg, 'value')
 
 
 @setting_utilities.validator(PluginSettings.HUI_QUARANTINE_FOLDER)
@@ -197,14 +203,14 @@ SettingDefault.defaults.update({
     PluginSettings.HUI_HELP_URL:
         'https://github.com/DigitalSlideArchive/HistomicsUI/blob/master/docs/controls.rst',
     PluginSettings.HUI_HELP_TOOLTIP: 'Mouse and keyboard controls',
-    PluginSettings.HUI_HELP_TEXT: 'Help'
+    PluginSettings.HUI_HELP_TEXT: 'Help',
 })
 
 
 @setting_utilities.validator({
     PluginSettings.HUI_HELP_URL,
     PluginSettings.HUI_HELP_TOOLTIP,
-    PluginSettings.HUI_HELP_TEXT
+    PluginSettings.HUI_HELP_TEXT,
 })
 def validateHistomicsUIHelp(doc):
     pass
@@ -257,7 +263,7 @@ class WebrootHistomicsUI(Webroot):
             'huiBannerColor': Setting().get(PluginSettings.HUI_BANNER_COLOR),
             'huiHelpURL': Setting().get(PluginSettings.HUI_HELP_URL),
             'huiHelpTooltip': Setting().get(PluginSettings.HUI_HELP_TOOLTIP),
-            'huiHelpText': Setting().get(PluginSettings.HUI_HELP_TEXT)
+            'huiHelpText': Setting().get(PluginSettings.HUI_HELP_TEXT),
         })
         return super()._renderHTML()
 
@@ -327,8 +333,9 @@ def restrict_downloads(info):
             def wrapped(*args, **kwargs):
                 if (not getCurrentToken() and len(args) >= 1 and
                         args[0] and args[0].get('size', 0) >= limit):
+                    msg = 'You must be logged in or have a valid auth token.'
                     raise AccessException(
-                        'You must be logged in or have a valid auth token.')
+                        msg)
                 return fun(*args, **kwargs)
             return wrapped
         File().download = limitLengthDownload(

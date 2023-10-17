@@ -24,7 +24,7 @@ def addTcgaEndpoints(tcgaRoot):
     .param('tag', 'Import annotations with this tag',
            required=False)
     .param('recursive', 'Perform a recursive search for annotations',
-           required=False, dataType='boolean')
+           required=False, dataType='boolean'),
 )
 @access.admin
 @loadmodel(model='item', level=AccessType.ADMIN)
@@ -38,7 +38,7 @@ def importTCGADocument(self, item, params):
     return aperio.importTCGADocument(
         item, tag=tag,
         user=user, token=token,
-        recurse=recursive
+        recurse=recursive,
     )
 
 
@@ -48,7 +48,7 @@ def importTCGADocument(self, item, params):
            paramType='path')
     .param('imageId', 'The ID of the slide image', required=True)
     .param('tag', 'A searchable tag to store with the metadata',
-           required=False)
+           required=False),
 )
 @access.admin
 @loadmodel(model='item', level=AccessType.ADMIN)
@@ -61,12 +61,12 @@ def importDocument(self, item, params):
     imageId = params['imageId']
     image = Item().load(
         imageId,
-        user=user, level=AccessType.READ, exc=True
+        user=user, level=AccessType.READ, exc=True,
     )
     aperio = Aperio()
     return aperio.importDocument(
         item, image, tag=tag,
-        user=user, token=token
+        user=user, token=token,
     )
 
 
@@ -74,7 +74,7 @@ def importDocument(self, item, params):
     Description('Find Aperio annotation items associated with a slide image.')
     .param('id', 'The ID of the slide image item', paramType='path')
     .param('tag', 'Filter by the given tag string', required=False)
-    .pagingParams(defaultSort='name')
+    .pagingParams(defaultSort='name'),
 )
 @access.public
 @loadmodel(model='item', level=AccessType.READ)
@@ -86,7 +86,7 @@ def findAperio(self, item, params):
     aperio = Aperio()
     docs = list(aperio.findAperio(
         item, tag=tag,
-        user=user, level=AccessType.READ
+        user=user, level=AccessType.READ,
     ))
 
     for doc in docs:
@@ -99,26 +99,26 @@ def findAperio(self, item, params):
 
 @describeRoute(
     Description('Remove Aperio specific metadata from an item')
-    .param('id', 'The ID of the annotation item', paramType='path')
+    .param('id', 'The ID of the annotation item', paramType='path'),
 )
 @access.admin
 @loadmodel(model='item', level=AccessType.WRITE)
 @boundHandler()
 def removeAperio(self, item, params):
     return Aperio().removeAperio(
-        item
+        item,
     )
 
 
 @describeRoute(
     Description('Set the tag associated with the annotation file')
     .param('id', 'The ID of the annotation file', paramType='path')
-    .param('tag', 'A searchable tag to store with the metadata')
+    .param('tag', 'A searchable tag to store with the metadata'),
 )
 @access.admin
 @loadmodel(model='item', level=AccessType.WRITE)
 @boundHandler()
 def modifyAperio(self, item, params):
     return Aperio().setTag(
-        item, tag=params.get('tag')
+        item, tag=params.get('tag'),
     )

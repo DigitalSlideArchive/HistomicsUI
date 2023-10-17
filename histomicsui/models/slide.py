@@ -11,15 +11,17 @@ class Slide(TCGAModel, Folder):
 
     def validate(self, doc, **kwargs):
         if not doc.get('parentCollection') == 'folder':
+            msg = 'A Slide model must be a child of a folder'
             raise ValidationException(
-                'A Slide model must be a child of a folder'
+                msg,
             )
         super().validate(doc, **kwargs)
         case = Case().load(
             doc['parentId'], force=True)
         if not case or self.getTCGAType(case) != 'case':
+            msg = 'A Slide model must be a child of a case'
             raise ValidationException(
-                'A Slide model must be a child of a case'
+                msg,
             )
         return doc
 
@@ -28,11 +30,12 @@ class Slide(TCGAModel, Folder):
 
         recurse = kwargs.get('recurse', False)
         parent = Case().load(
-            doc.get('parentId'), force=True
+            doc.get('parentId'), force=True,
         )
         if not parent:
+            msg = 'Invalid folder document'
             raise ValidationException(
-                'Invalid folder document'
+                msg,
             )
         tcga = self.getTCGA(parent)
         tcga.pop('meta', None)
@@ -43,7 +46,7 @@ class Slide(TCGAModel, Folder):
 
         childModel = Image()
         children = Folder().childItems(
-            doc, user=kwargs.get('user')
+            doc, user=kwargs.get('user'),
         )
         for child in children:
             try:

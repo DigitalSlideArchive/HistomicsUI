@@ -76,7 +76,7 @@ def allChildFolders(parent, parentType, user, limit=0, offset=0,
         _internal = {
             'limit': limit,
             'offset': offset,
-            'done': False
+            'done': False,
         }
     for folder in Folder().childFolders(
             parentType=parentType, parent=parent, user=user,
@@ -120,7 +120,7 @@ def allChildItems(parent, parentType, user, limit=0, offset=0,
         _internal = {
             'limit': limit,
             'offset': offset,
-            'done': False
+            'done': False,
         }
     model = ModelImporter.model(parentType)
     if hasattr(model, 'childItems'):
@@ -158,7 +158,7 @@ def allChildItems(parent, parentType, user, limit=0, offset=0,
     .jsonParam('query', 'Find items that match this Mongo query.',
                required=True, requireObject=True)
     .pagingParams(defaultSort='_id')
-    .errorResponse()
+    .errorResponse(),
 )
 @boundHandler()
 def getItemsByQuery(self, query, limit, offset, sort):
@@ -174,7 +174,7 @@ def getItemsByQuery(self, query, limit, offset, sort):
     .jsonParam('query', 'Find folders that match this Mongo query.',
                required=True, requireObject=True)
     .pagingParams(defaultSort='_id')
-    .errorResponse()
+    .errorResponse(),
 )
 @boundHandler()
 def getFoldersByQuery(self, query, limit, offset, sort):
@@ -186,7 +186,7 @@ def getFoldersByQuery(self, query, limit, offset, sort):
 @autoDescribeRoute(
     Description('Restart the Girder REST server.')
     .notes('Must be a system administrator to call this.')
-    .errorResponse('You are not a system administrator.', 403)
+    .errorResponse('You are not a system administrator.', 403),
 )
 @boundHandler()
 def restartServer(self):
@@ -196,7 +196,8 @@ def restartServer(self):
     from girder.utility import config
 
     if not config.getConfig()['server'].get('cherrypy_server', True):
-        raise RestException('Restarting of server is disabled.', 403)
+        msg = 'Restarting of server is disabled.'
+        raise RestException(msg, 403)
 
     class Restart(cherrypy.process.plugins.Monitor):
         def __init__(self, bus, frequency=1):
@@ -223,7 +224,7 @@ def restartServer(self):
            dataType='int', default=1)
     .param('status', 'A comma-separated list of statuses to include.  Blank '
            'for all.', required=False, default='0,1,2')
-    .errorResponse()
+    .errorResponse(),
 )
 @access.admin
 @boundHandler()
@@ -241,7 +242,7 @@ def getOldJobs(self, age, status):
            dataType='int', default=1)
     .param('status', 'A comma-separated list of statuses to include.  Blank '
            'for all.', required=False, default='0,1,2')
-    .errorResponse()
+    .errorResponse(),
 )
 @access.admin
 @boundHandler()
@@ -271,7 +272,7 @@ class HUIResourceResource(ResourceResource):
                'user).')
         .pagingParams(defaultSort='_id')
         .errorResponse('ID was invalid.')
-        .errorResponse('Access was denied for the resource.', 403)
+        .errorResponse('Access was denied for the resource.', 403),
     )
     @access.public(scope=TokenScope.DATA_READ)
     def getResourceItems(self, id, params):
@@ -280,7 +281,8 @@ class HUIResourceResource(ResourceResource):
         model = ModelImporter.model(modelType)
         doc = model.load(id=id, user=user, level=AccessType.READ)
         if not doc:
-            raise RestException('Resource not found.')
+            msg = 'Resource not found.'
+            raise RestException(msg)
         limit, offset, sort = self.getPagingParameters(params, '_id')
         return list(allChildItems(
             parentType=modelType, parent=doc, user=user,
@@ -300,7 +302,7 @@ class HUIResourceResource(ResourceResource):
         .errorResponse('Invalid resources format.')
         .errorResponse('No resources specified.')
         .errorResponse('Resource not found.')
-        .errorResponse('Write access was denied for a resource.', 403)
+        .errorResponse('Write access was denied for a resource.', 403),
     )
     @access.public(scope=TokenScope.DATA_WRITE)
     def putResourceMetadata(self, resources, metadata, allowNull):
@@ -339,17 +341,20 @@ class HUIResourceResource(ResourceResource):
     .param('default', 'If "none", return a null value if a setting is '
            'currently the default value. If "default", return the default '
            'value of the setting(s).', required=False)
-    .errorResponse('You are not a system administrator.', 403)
+    .errorResponse('You are not a system administrator.', 403),
 )
 @boundHandler
 def getSettingDefault(self, key, list, default=None):
     getFunc = Setting().get
     if default == 'none':
-        getFunc = (lambda k: (Setting()._get(k) or {}).get('value'))
+        def getFuncValue(k):
+            return (Setting()._get(k) or {}).get('value')
+        getFunc = getFuncValue
     elif default == 'default':
         getFunc = Setting().getDefault
     elif default:
-        raise RestException("Default was not 'none', 'default', or blank.")
+        msg = "Default was not 'none', 'default', or blank."
+        raise RestException(msg)
     if list is not None:
         return {k: getFunc(k) for k in list}
     else:
@@ -365,16 +370,18 @@ def getSettingDefault(self, key, list, default=None):
     .modelParam('id', model=File, level=AccessType.ADMIN)
     .param('path', 'The new import path of the file.')
     .errorResponse('ID was invalid.')
-    .errorResponse('Write access was denied on the parent folder.', 403)
+    .errorResponse('Write access was denied on the parent folder.', 403),
 
 )
 @boundHandler()
 def adjustFileImportPath(self, file, path):
     assetstore = Assetstore().load(file['assetstoreId'])
     if assetstore['type'] != AssetstoreType.FILESYSTEM or not file.get('path'):
-        raise RestException('The file must be on a filesystem assetstore')
+        msg = 'The file must be on a filesystem assetstore'
+        raise RestException(msg)
     if not os.path.exists(path):
-        raise RestException('The new import path does not exist or is unreachable')
+        msg = 'The new import path does not exist or is unreachable'
+        raise RestException(msg)
     File().getAssetstoreAdapter(file).deleteFile(file)
     file['size'] = os.path.getsize(path)
     file['imported'] = True

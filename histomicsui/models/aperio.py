@@ -15,7 +15,7 @@ class Aperio(Item):
     aperio_re = re.compile(
         r'^(?P<barcode>(?P<case>' +
         TCGAModel.case_re.pattern + r')[0-9a-z-]*)\.xml',
-        flags=re.I
+        flags=re.I,
     )
 
     def initialize(self, **kwargs):
@@ -32,14 +32,16 @@ class Aperio(Item):
         try:
             Item().load(imageId, force=True)
         except Exception:
+            msg = 'The item is not associated with a valid image.'
             raise ValidationException(
-                'The item is not associated with a valid image.'
+                msg,
             )
 
         files = Item().childFiles(doc)
         if files.count() != 1:
+            msg = 'The annotation item must have exactly one file.'
             raise ValidationException(
-                'The annotation item must have exactly one file.'
+                msg,
             )
 
         meta.setdefault('tag', None)
@@ -72,7 +74,7 @@ class Aperio(Item):
             name = doc['name']
             d = self.aperio_re.match(name).groupdict()
             image = TCGAImage().findOne({
-                'tcga.barcode': d['barcode'].upper()
+                'tcga.barcode': d['barcode'].upper(),
             })
             self.importDocument(doc, image, **kwargs)
 
@@ -84,7 +86,8 @@ class Aperio(Item):
                 except ValidationException:
                     pass
         else:
-            raise ValidationException('Invalid model type')
+            msg = 'Invalid model type'
+            raise ValidationException(msg)
 
     def findAperio(self, image, tag=None, **kwargs):
         """Find Aperio annotations associated with the given image."""

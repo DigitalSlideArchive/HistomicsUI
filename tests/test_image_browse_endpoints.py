@@ -16,7 +16,7 @@ class TestImageBrowseEndpoints:
         for item in self.items:
             # make the item look like an image
             item['largeImage'] = {
-                'fileId': 'deadbeef'
+                'fileId': 'deadbeef',
             }
             Item().save(item)
         self.nonimage = Item().createItem('non-image', creator=admin, folder=self.folder)
