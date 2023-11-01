@@ -153,7 +153,7 @@ export default {
                 const isValidColor = tinycolor(entry.colorString).isValid();
                 if (!isValidColor) {
                     this.validationErrors.push(
-                        `Invaid color for value ${entry.value}`
+                        `Invalid color for value ${entry.value}`
                     );
                 }
             });

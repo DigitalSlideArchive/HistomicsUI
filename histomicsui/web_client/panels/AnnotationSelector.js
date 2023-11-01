@@ -16,7 +16,7 @@ import annotationSelectorWidget from '../templates/panels/annotationSelector.pug
 import '../stylesheets/panels/annotationSelector.styl';
 
 // Too many elements in the draw panel will crash the browser,
-// so we only allow editing of annnotations with less than this
+// so we only allow editing of annotations with less than this
 // many elements.
 const MAX_ELEMENTS_LIST_LENGTH = 5000;
 
