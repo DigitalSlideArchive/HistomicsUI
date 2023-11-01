@@ -56,12 +56,6 @@ select = [
     "RSE",
 ]
 
-[per-file-ignores]
-# allow "useless expressions" as it shows output
-# allow non-top level imports
-# allow long lines
-"docs/large_image_examples.ipynb" = ["B018", "E402", "E501"]
-
 [flake8-quotes]
 inline-quotes = "single"
 
