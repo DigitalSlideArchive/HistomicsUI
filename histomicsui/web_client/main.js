@@ -12,6 +12,7 @@ import './views/itemList';
 import './views/itemPage';
 import './views/HierarchyWidget';
 import './views/searchResultsView';
+import './views/JobDetailsWidget';
 
 import ConfigView from './views/body/ConfigView';
 
