@@ -25,6 +25,7 @@ import AnnotationPopover from '../popover/AnnotationPopover';
 import PixelmapContextMenu from '../popover/PixelmapContextMenu';
 import AnnotationSelector from '../../panels/AnnotationSelector';
 import OverviewWidget from '../../panels/OverviewWidget';
+import LabelImageWidget from '../../panels/LabelImageWidget';
 import ZoomWidget from '../../panels/ZoomWidget';
 import FrameSelectorWidget from '../../panels/FrameSelectorWidget';
 import MetadataWidget from '../../panels/MetadataWidget';
@@ -84,6 +85,9 @@ var ImageView = View.extend({
             closeButton: true
         });
         this.overviewWidget = new OverviewWidget({
+            parentView: this
+        });
+        this.labelImageWidget = new LabelImageWidget({
             parentView: this
         });
         this.zoomWidget = new ZoomWidget({
@@ -277,6 +281,10 @@ var ImageView = View.extend({
                     .setViewer(this.viewerWidget)
                     .setElement('.h-overview-widget').render();
 
+                this.labelImageWidget
+                    .setViewer(this.viewerWidget)
+                    .setElement('.h-label-image-widget').render();
+
                 this.zoomWidget
                     .setViewer(this.viewerWidget)
                     .setElement('.h-zoom-widget').render();
@@ -396,6 +404,7 @@ var ImageView = View.extend({
                 this.zoomWidget.render();
                 this.overviewWidget.setImage(tiles);
                 this.frameSelectorWidget.setImage(itemId, tiles);
+                this.labelImageWidget.setImage(itemId);
                 return null;
             });
         };
