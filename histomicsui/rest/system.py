@@ -27,6 +27,7 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
+from girder.utility import path as path_util
 from girder.utility.model_importer import ModelImporter
 from girder_jobs.models.job import Job
 
@@ -49,6 +50,8 @@ def addSystemEndpoints(apiRoot):
     apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
     # Added to the file route
     apiRoot.file.route('POST', (':id', 'import', 'adjust_path'), adjustFileImportPath)
+    # Added to the resource route
+    apiRoot.resource.route('POST', ('paths',), getMultipleResourcePaths)
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
@@ -394,3 +397,24 @@ def adjustFileImportPath(self, file, path):
     except ImportError:
         pass
     return file
+
+
+@access.public(scope=TokenScope.DATA_READ)
+@autoDescribeRoute(
+    Description('Get resource paths for multiple resources at once.')
+    .jsonParam('resources', 'A JSON-encoded set of resources to get resource paths.'
+               'Each type is a list of ids. For example: {"item": [(item '
+               'id 1), (item id 2)], "folder": [(folder id 1)]}.',
+               paramType='body', requireObject=True),
+)
+@boundHandler()
+def getMultipleResourcePaths(self, resources):
+    user = self.getCurrentUser()
+    results = {}
+    for kind in resources:
+        results[kind] = {}
+        model = ModelImporter.model(kind)
+        for id in resources[kind]:
+            doc = model.load(id=id, user=user, level=AccessType.READ)
+            results[kind][id] = path_util.getResourcePath(kind, doc, user=user)
+    return results

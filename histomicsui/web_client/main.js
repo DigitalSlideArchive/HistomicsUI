@@ -11,6 +11,7 @@ import * as histomicsui from '@girder/histomicsui';
 import './views/itemList';
 import './views/itemPage';
 import './views/HierarchyWidget';
+import './views/searchResultsView';
 
 import ConfigView from './views/body/ConfigView';
 
