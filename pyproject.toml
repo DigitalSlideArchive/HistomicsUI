@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling",
+"hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "histomicsui"
+dynamic = ["version"]
+description = "Organize, visualize, and analyze histology images."
+readme = "README.rst"
+license = { text = "Apache 2.0" }
+requires-python = ">=3.8"
+authors = [
+    { name = "Kitware, Inc.", email = "kitware@kitware.com" },
+]
+keywords = [
+    "girder-plugin",
+    "histomicsui",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "cachetools",
+    "girder-large-image-annotation>=1.25.0",
+    "girder-slicer-cli-web>=1.4.0",
+    "orjson",
+]
+
+[project.optional-dependencies]
+analysis = [
+    "girder-slicer-cli-web[girder]>=1.2.3",
+]
+
+[project.entry-points."girder.plugin"]
+histomicsui = "histomicsui:GirderPlugin"
+
+[project.urls]
+Homepage = "https://github.com/DigitalSlideArchive/histomicsui"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "histomicsui/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/histomicsui",
+]

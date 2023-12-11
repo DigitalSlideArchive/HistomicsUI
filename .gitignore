@@ -51,3 +51,5 @@ ENV/
 
 node_modules/
 .eslintcache
+
+histomicsui/_version.py
