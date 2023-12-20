@@ -194,6 +194,21 @@ def validateHistomicsUIQuarantineFolder(doc):
         Folder().load(doc['value'], force=True, exc=True)
 
 
+@setting_utilities.validator(PluginSettings.HUI_LOGIN_SESSION_EXPIRY_MINUTES)
+def validateLoginSessionExpiryMinutes(doc):
+    if not doc.get('value', None):
+        doc['value'] = None
+    else:
+        try:
+            doc['value'] = float(doc['value'])
+            if doc['value'] > 0:
+                return
+        except ValueError:
+            pass  # We want to raise the ValidationException
+        msg = 'Login session expiry must be None or a number >= 0.0.'
+        raise ValidationException(msg, 'value')
+
+
 # Defaults that have fixed values are added to the system defaults dictionary.
 SettingDefault.defaults.update({
     PluginSettings.HUI_WEBROOT_PATH: 'histomics',
@@ -386,6 +401,8 @@ class GirderPlugin(plugin.GirderPlugin):
                         'tasks are therefore unavailable.')
         plugin.getPlugin('large_image_annotation').load(info)
 
+        # Support short login sessions
+        handlers.shortLoginSessions()
         # Python's http cookie parser fails for all cookies when there are some
         # invalid cookies.  Work around some of that.
         patchCookieParsing()
