@@ -4,6 +4,7 @@ import math
 import time
 
 import cachetools
+import cherrypy
 import girder.utility
 import large_image.config
 import orjson
@@ -14,6 +15,7 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
+from girder.models.token import Token
 from girder.models.user import User
 from girder_large_image_annotation.models.annotation import Annotation
 
@@ -308,3 +310,47 @@ def json_nans_as_nulls():
 
     girder.utility.JsonEncoder.encode = encode
     girder.utility.JsonEncoder.iterencode = iterencode
+
+
+def shortLoginSessions():
+    import girder.api.rest
+
+    _recentTokens = {}
+
+    origGetCurrentUser = girder.api.rest.getCurrentUser
+
+    def getCurrentUser(*args, **kwargs):
+        result = origGetCurrentUser(*args, **kwargs)
+        try:
+            if 'api/v1/notification/stream' in cherrypy.request.path_info:
+                return result
+        except Exception:
+            pass
+        user = result[0] if isinstance(result, tuple) else result
+        if user:
+            token = girder.api.rest.getCurrentToken()
+            if token['_id'] not in _recentTokens or time.time() - _recentTokens[token['_id']] > 60:
+                if Setting().get(PluginSettings.HUI_LOGIN_SESSION_EXPIRY_MINUTES):
+                    days = float(Setting().get(
+                        PluginSettings.HUI_LOGIN_SESSION_EXPIRY_MINUTES)) / 24 / 60
+                    token['expires'] = datetime.datetime.utcnow() + datetime.timedelta(
+                        days=float(days))
+                    token = Token().save(token)
+                    logger.debug(
+                        'Extend user login duration '
+                        f'(user {user["_id"]}, token {token["_id"][:16]}...)')
+            if len(_recentTokens) > 100:
+                _recentTokens.empty()
+            _recentTokens[token['_id']] = time.time()
+        return result
+
+    girder.api.rest.getCurrentUser = getCurrentUser
+
+    origResourceSendAuthTokenCookie = girder.api.rest.Resource.sendAuthTokenCookie
+
+    def sendAuthTokenCookie(self, user=None, scope=None, token=None, days=None):
+        if days is None and Setting().get(PluginSettings.HUI_LOGIN_SESSION_EXPIRY_MINUTES):
+            days = float(Setting().get(PluginSettings.HUI_LOGIN_SESSION_EXPIRY_MINUTES)) / 24 / 60
+        return origResourceSendAuthTokenCookie(self, user, scope, token, days)
+
+    girder.api.rest.Resource.sendAuthTokenCookie = origResourceSendAuthTokenCookie
