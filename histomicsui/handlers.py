@@ -329,6 +329,7 @@ def shortLoginSessions():
         user = result[0] if isinstance(result, tuple) else result
         if user:
             token = girder.api.rest.getCurrentToken()
+        if user and token:
             if token['_id'] not in _recentTokens or time.time() - _recentTokens[token['_id']] > 60:
                 if Setting().get(PluginSettings.HUI_LOGIN_SESSION_EXPIRY_MINUTES):
                     days = float(Setting().get(
