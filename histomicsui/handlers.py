@@ -341,7 +341,7 @@ def shortLoginSessions():
                         'Extend user login duration '
                         f'(user {user["_id"]}, token {token["_id"][:16]}...)')
             if len(_recentTokens) > 100:
-                _recentTokens.empty()
+                _recentTokens.clear()
             _recentTokens[token['_id']] = time.time()
         return result
 
