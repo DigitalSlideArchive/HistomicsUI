@@ -790,7 +790,6 @@ var DrawWidget = Panel.extend({
         } else if (change !== 0) {
             const span = ($('.h-group-count-option:first span.h-group-count-select')[0] || {}).outerHTML || '';
             const newrecord = '<div class="h-group-count-option" data-group="' + groupName + '" data-count=' + change + '><span class="h-group-count-value">' + change + ' ' + groupName + '</span>' + span + '</div>';
-            console.log(newrecord);
             for (const group of $('.h-group-count-option').toArray().reverse()) {
                 if ($(group).attr('data-count') > change || ($(group).attr('data-count') === change && $(group).attr('data-group') < groupName)) {
                     $(group).after(newrecord);

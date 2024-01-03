@@ -26,7 +26,6 @@ function addResourcePaths(v) {
         if (resources !== JSON.stringify(payload)) {
             return;
         }
-        console.log(payload, resp);
         v._results.forEach((doc, idx) => {
             $(v.$el.find('.g-search-result')[idx]).append($('<span class="g-hui-search-result-resource-path">').text(resp[v._type][doc._id]));
         });
