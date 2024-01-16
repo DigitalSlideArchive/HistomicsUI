@@ -15,6 +15,7 @@
 #############################################################################
 
 import json
+import logging
 import os
 import re
 from functools import wraps
@@ -55,6 +56,9 @@ except DistributionNotFound:
     # package is not installed
     pass
 
+# There are other packages that we add to the root log handler; stop that
+# unless specifically desired.
+logging.root.addHandler(logging.NullHandler())
 
 _template = os.path.join(
     os.path.dirname(__file__),
