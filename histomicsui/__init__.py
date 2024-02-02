@@ -56,8 +56,10 @@ except DistributionNotFound:
     # package is not installed
     pass
 
-# There are other packages that we add to the root log handler; stop that
-# unless specifically desired.
+# There are other packages that add to the root log handler; this makes the
+# system very noisy.  Stop that.
+while logging.root.hasHandlers():
+    logging.root.removeHandler(logging.root.handlers[0])
 logging.root.addHandler(logging.NullHandler())
 
 _template = os.path.join(
