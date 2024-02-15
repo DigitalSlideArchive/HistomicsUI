@@ -55,6 +55,27 @@ def addSystemEndpoints(apiRoot):
     # Added to the histomicui route
     HUIResourceResource(apiRoot)
 
+    # Allow getting plugin resources
+    origGetResourceModel = ResourceResource._getResourceModel
+
+    def _getResourceModel(self, kind, funcName=None):
+        model = None
+        try:
+            model = origGetResourceModel(self, kind, funcName=funcName)
+        except Exception:
+            if model is None and '.' in str(kind):
+                try:
+                    model = ModelImporter.model(
+                        kind.split('.', 1)[-1], plugin=kind.split('.', 1)[0])
+                except Exception:
+                    model = None
+            if not model or (funcName and not hasattr(model, funcName)):
+                msg = 'Invalid resources format.'
+                raise RestException(msg)
+        return model
+
+    ResourceResource._getResourceModel = _getResourceModel
+
 
 def allChildFolders(parent, parentType, user, limit=0, offset=0,
                     sort=None, _internal=None, **kwargs):
