@@ -43,14 +43,12 @@ setup(
     ],
     install_requires=[
         'girder-large-image-annotation>=1.25.0',
-        'girder-slicer-cli-web>=1.4.0',
+        'girder-slicer-cli-web[girder]>=1.4.0',
         'cachetools',
         'orjson',
     ],
     extras_require={
-        'analysis': [
-            'girder-slicer-cli-web[girder]>=1.2.3',
-        ],
+        'analysis': [],  # kept for backwards compatibility
     },
     license='Apache Software License 2.0',
     long_description=readme,

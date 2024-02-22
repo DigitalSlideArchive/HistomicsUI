@@ -76,6 +76,9 @@ def addSystemEndpoints(apiRoot):
 
     ResourceResource._getResourceModel = _getResourceModel
 
+    # Allow users to see what user created a job
+    Job().exposeFields(level=AccessType.READ, fields={'userId'})
+
 
 def allChildFolders(parent, parentType, user, limit=0, offset=0,
                     sort=None, _internal=None, **kwargs):
