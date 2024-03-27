@@ -6,21 +6,32 @@
           span(aria-hidden='true') &times;
         h4.modal-title Metadata Plot
       .modal-body
+        .form-group
+          label(for='h-plot-format') Format
+          -
+            var plotFormats = [
+              {key: 'scatter', label: 'Scatter'},
+              {key: 'violin', label: 'Violin'}]
+          select#h-plot-format.form-control
+            each opt in plotFormats
+              option(value=opt.key, selected=plotConfig.format === opt.key) #{opt.label}
         -
           var seriesList = [
-            {key: 'x', label: 'x-axis', number: true},
+            {key: 'x', label: 'x-axis', number: true, comment: 'Used only for data length in violin plots'},
             {key: 'y', label: 'y-axis', number: true},
             {key: 'r', label: 'Radius'},
             {key: 'c', label: 'Color'},
-            {key: 's', label: 'Symbol', string: true}]
+            {key: 's', label: 'Symbol', string: true, comment: 'Grouping for violin plots'}]
         for series in seriesList
           .form-group
             label(for='h-plot-series-' + series.key) #{series.label}
+            if series.comment
+              p.g-hui-description #{series.comment}
             select.form-control(id='h-plot-series-' + series.key)
               if !series.number
                 option(value='_none_', selected=plotConfig[series.key] === undefined) None
               each opt in plotOptions
-                if (!series.number || opt.type === 'number') && (!series.string || opt.type === 'string')
+                if (!series.number || opt.type === 'number') && (!series.string || opt.type === 'string' || opt.distinct)
                   - var selected = plotConfig[series.key] === opt.sort
                   option(value=opt.sort, selected=selected) #{opt.root + ' - ' + opt.key}
         .form-group

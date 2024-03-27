@@ -125,14 +125,24 @@ var MetadataPlot = Panel.extend({
             for (const [root, entry] of Object.entries(meta)) {
                 if (_.isArray(entry) && entry.length >= 1 && _.isObject(entry[0])) {
                     for (const [key, value] of Object.entries(entry[0])) {
-                        let type;
+                        let type, distinct;
                         if (_.isFinite(value)) {
                             type = 'number';
                         } else if (_.isString(value)) {
                             type = 'string';
                         }
+                        if (Number.isInteger(value) || _.isString(value)) {
+                            distinct = {};
+                            const maxDistinct = 20;
+                            for (let eidx = 0; eidx < entry.length && Object.keys(distinct).length <= maxDistinct; eidx += 1) {
+                                distinct[entry[eidx][key]] = true;
+                            }
+                            if (Object.keys(distinct).length > maxDistinct) {
+                                distinct = null;
+                            }
+                        }
                         if (type) {
-                            results.push({root, key, type, sort: `${root}.${key}`.toLowerCase()});
+                            results.push({root, key, type, distinct, sort: `${root}.${key}`.toLowerCase()});
                         }
                     }
                 }
@@ -152,7 +162,7 @@ var MetadataPlot = Panel.extend({
         const plotOptions = this.getPlotOptions();
         const optDict = {};
         plotOptions.forEach((opt) => { optDict[opt.sort] = opt; });
-        const plotData = {data: [], fieldToPlot: {}, plotToOpt: {}, ranges: {}};
+        const plotData = {data: [], fieldToPlot: {}, plotToOpt: {}, ranges: {}, format: plotConfig.format};
         const usedFields = ['x', 'y', 'r', 'c', 's'].filter((series) => plotConfig[series] && optDict[plotConfig[series]]).map((series) => {
             if (!plotData.fieldToPlot[plotConfig[series]]) {
                 plotData.fieldToPlot[plotConfig[series]] = [];
@@ -190,8 +200,10 @@ var MetadataPlot = Panel.extend({
                         if (value === undefined || (opt.type === 'number' && !_.isFinite(value))) {
                             end = true;
                         }
-                        if (opt.type === 'string') {
+                        if (opt.type === 'string' || (['s', 'c'].includes(key) && opt.distinct)) {
                             value = '' + value;
+                        } else {
+                            value = +value;
                         }
                         entry[key] = value;
                     });
@@ -207,13 +219,13 @@ var MetadataPlot = Panel.extend({
                     return;
                 }
                 if (!plotData.ranges[key]) {
-                    if (_.isFinite(value)) {
+                    if (!_.isString(value)) {
                         plotData.ranges[key] = {min: value, max: value};
                     } else {
                         plotData.ranges[key] = {distinct: {}};
                     }
                 }
-                if (_.isFinite(value)) {
+                if (plotData.ranges[key].min !== undefined) {
                     if (value < plotData.ranges[key].min) {
                         plotData.ranges[key].min = value;
                     }
@@ -222,11 +234,17 @@ var MetadataPlot = Panel.extend({
                     }
                 } else {
                     plotData.ranges[key].distinct[value] = true;
+                }
+            });
+        });
+        if (plotData.data.length) {
+            Object.entries(plotData.data[0]).forEach(([key, value]) => {
+                if (plotData.ranges[key] && plotData.ranges[key].distinct) {
                     plotData.ranges[key].list = Object.keys(plotData.ranges[key].distinct).sort();
                     plotData.ranges[key].count = plotData.ranges[key].list.length;
                 }
             });
-        });
+        }
         return plotData;
     },
 
@@ -279,6 +297,22 @@ var MetadataPlot = Panel.extend({
             type: plotData.data.length > 100 ? 'scattergl' : 'scatter',
             mode: 'markers'
         };
+        if (plotData.format === 'violin') {
+            plotlyData.type = 'violin';
+            plotlyData.x = plotlyData.marker.symbol;
+            // plotlyData.points = none;
+            plotlyData.box = {visible: true};
+            plotlyData.meanline = {visible: true};
+            plotlyData.line = {color: plotlyData.marker.color};
+            plotlyData.yaxis = {zeroline: false};
+            if (plotData.ranges.c && plotData.ranges.c.distinct) {
+                plotlyData.transforms = [{
+                    type: 'groupby',
+                    groups: plotlyData.x,
+                    styles: Object.keys(plotData.ranges.c.distinct).map((k, kidx) => ({target: kidx, value: {line: {color: colorBrewerPaired12[kidx]}}}))
+                }];
+            }
+        }
         return [plotlyData];
     },
 
