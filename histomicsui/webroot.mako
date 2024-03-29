@@ -16,7 +16,7 @@
     <script src="${staticPublicPath}/built/girder_app.min.js"></script>
     <script>
     $(function () {
-      $('body').addClass('hui-body')
+      $('body').addClass('hui-body');
       girder.router.enabled(false);
       girder.events.trigger('g:appload.before');
       var app = new girder.plugins.histomicsui.App({
