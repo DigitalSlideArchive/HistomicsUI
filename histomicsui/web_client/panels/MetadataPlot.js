@@ -198,7 +198,9 @@ var MetadataPlot = Panel.extend({
                             entry._roots[opt.root] = entry._roots[opt.root] || meta[opt.root][idx];
                         }
                         if (value === undefined || (opt.type === 'number' && !_.isFinite(value))) {
-                            end = true;
+                            if (plotData.format !== 'violin' || key !== 'x') {
+                                end = true;
+                            }
                         }
                         if (opt.type === 'string' || (['s', 'c'].includes(key) && opt.distinct)) {
                             value = '' + value;
@@ -303,8 +305,9 @@ var MetadataPlot = Panel.extend({
             // plotlyData.points = none;
             plotlyData.box = {visible: true};
             plotlyData.meanline = {visible: true};
-            plotlyData.line = {color: plotlyData.marker.color};
             plotlyData.yaxis = {zeroline: false};
+            plotlyData.scalemode = 'width';
+            plotlyData.width = 0.9;
             if (plotData.ranges.c && plotData.ranges.c.distinct) {
                 plotlyData.transforms = [{
                     type: 'groupby',
@@ -313,6 +316,7 @@ var MetadataPlot = Panel.extend({
                 }];
             }
         }
+        console.log(plotlyData);
         return [plotlyData];
     },
 
@@ -349,7 +353,7 @@ var MetadataPlot = Panel.extend({
                 if (maximized) {
                     plotOptions.margin.l += 20;
                     plotOptions.margin.b += 40;
-                    plotOptions.xaxis = {title: {text: `${plotData.plotToOpt.x.root} - ${plotData.plotToOpt.x.key}`}};
+                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' ? `${plotData.plotToOpt.x.root} - ${plotData.plotToOpt.x.key}` : `${plotData.plotToOpt.s.root} - ${plotData.plotToOpt.s.key}`}};
                     plotOptions.yaxis = {title: {text: `${plotData.plotToOpt.y.root} - ${plotData.plotToOpt.y.key}`}};
                 }
                 window.Plotly.newPlot(elem[0], this.plotDataToPlotly(plotData), plotOptions);
