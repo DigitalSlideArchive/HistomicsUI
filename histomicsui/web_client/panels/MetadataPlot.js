@@ -302,12 +302,16 @@ var MetadataPlot = Panel.extend({
         if (plotData.format === 'violin') {
             plotlyData.type = 'violin';
             plotlyData.x = plotlyData.marker.symbol;
-            // plotlyData.points = none;
             plotlyData.box = {visible: true};
             plotlyData.meanline = {visible: true};
             plotlyData.yaxis = {zeroline: false};
             plotlyData.scalemode = 'width';
             plotlyData.width = 0.9;
+            // plotlyData.points = 'outliers';
+            plotlyData.points = 'all';
+            plotlyData.pointpos = 0;
+            plotlyData.jitter = 0;
+            // plotlyData.side = 'positive';
             if (plotData.ranges.c && plotData.ranges.c.distinct) {
                 plotlyData.transforms = [{
                     type: 'groupby',
