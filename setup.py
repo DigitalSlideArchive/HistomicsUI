@@ -42,6 +42,7 @@ setup(
         'Programming Language :: Python :: 3.12',
     ],
     install_requires=[
+        'girder>=5.0.0a2',
         'girder-large-image-annotation>=1.25.0',
         'girder-slicer-cli-web[girder]>=1.4.0',
         'cachetools',
