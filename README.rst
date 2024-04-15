@@ -55,6 +55,12 @@ Now install the histomicsui package, have Girder build its UI, and start the Gir
   girder build
   girder serve
 
+Alternatively, you can run inside other WSGI servers using the `histomicsui.wsgi:app` symbol, e.g.:
+
+.. code-block:: bash
+
+  gunicorn histomicsui.wsgi:app
+
 To use Girder Worker:
 
 .. code-block:: bash
