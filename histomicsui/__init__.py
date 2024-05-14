@@ -232,6 +232,7 @@ SettingDefault.defaults.update({
     PluginSettings.HUI_HELP_URL,
     PluginSettings.HUI_HELP_TOOLTIP,
     PluginSettings.HUI_HELP_TEXT,
+    PluginSettings.HUI_LOGIN_TEXT,
 })
 def validateHistomicsUIHelp(doc):
     pass
