@@ -6,6 +6,7 @@ import time
 import cachetools
 import cherrypy
 import girder.utility
+import girder_large_image_annotation
 import large_image.config
 import orjson
 from girder import logger
@@ -157,7 +158,9 @@ def process_annotations(event):  # noqa
     if time.time() - startTime > 10:
         logger.info('Decoded json in %5.3fs', time.time() - startTime)
 
-    if not isinstance(data, list):
+    if not isinstance(data, list) or (
+            hasattr(girder_large_image_annotation.utils, 'isGeoJSON') and
+            girder_large_image_annotation.utilsisGeoJSON(data)):
         data = [data]
     # Check some of the early elements to see if there are any girderIds
     # that need resolution.
