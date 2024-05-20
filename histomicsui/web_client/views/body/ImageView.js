@@ -1043,7 +1043,7 @@ var ImageView = View.extend({
 
         window.requestAnimationFrame(() => {
             const {element, annotationId} = this._processMouseClickQueue();
-            if (!evt.mouse.modifiers.shift) {
+            if (!evt.mouse.modifiers.shift && (!evt.sourceEvent || !evt.sourceEvent.handled)) {
                 if (evt.mouse.buttonsDown.right) {
                     this._openContextMenu(element.annotation.elements().get(element.id), annotationId, evt);
                 } else if (evt.mouse.modifiers.ctrl && !this.viewerWidget.annotationLayer.mode()) {
