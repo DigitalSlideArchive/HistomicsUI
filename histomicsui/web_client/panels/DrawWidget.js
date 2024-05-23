@@ -662,7 +662,12 @@ var DrawWidget = Panel.extend({
             }
 
             this.viewer.startDrawMode(type, options)
-                .then((element, annotations, opts) => this._addDrawnElements(element, annotations, opts));
+                .then((element, annotations, opts) => this._addDrawnElements(element, annotations, opts))
+                .fail(() => {
+                    if (this._drawingType) {
+                        this.drawElement(undefined, this._drawingType, !!this._drawingType);
+                    }
+                });
         }
         this.$('button.h-draw[data-type]').removeClass('active');
         if (this._drawingType) {
@@ -833,6 +838,12 @@ var DrawWidget = Panel.extend({
      * @param {object} group The new group.
      */
     _setStyleGroup(group) {
+        group = Object.assign({}, group);
+        Object.keys(group).forEach((k) => {
+            if (!['fillColor', 'lineColor', 'lineWidth', 'label', 'group', 'id'].includes(k)) {
+                delete group[k];
+            }
+        });
         this._style.set(group);
         if (!group.group && this._style.id !== this.parentView._defaultGroup) {
             this._style.set('group', this._style.id);
