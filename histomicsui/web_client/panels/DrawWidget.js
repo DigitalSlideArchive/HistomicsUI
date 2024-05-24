@@ -664,7 +664,7 @@ var DrawWidget = Panel.extend({
             this.viewer.startDrawMode(type, options)
                 .then((element, annotations, opts) => this._addDrawnElements(element, annotations, opts))
                 .fail(() => {
-                    if (this._drawingType) {
+                    if (this._drawingType && this._drawingType !== this.viewer.annotationLayer.mode()) {
                         this.drawElement(undefined, this._drawingType, !!this._drawingType);
                     }
                 });
