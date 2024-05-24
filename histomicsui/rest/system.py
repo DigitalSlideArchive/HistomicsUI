@@ -42,6 +42,8 @@ def addSystemEndpoints(apiRoot):
     apiRoot.item.route('GET', ('query',), getItemsByQuery)
     # Added to the folder route
     apiRoot.folder.route('GET', ('query',), getFoldersByQuery)
+    # Added to the file route
+    apiRoot.file.route('GET', ('query',), getFilesByQuery)
     # Added to the system route
     apiRoot.system.route('PUT', ('restart',), restartServer)
     apiRoot.system.route('GET', ('setting', 'default'), getSettingDefault)
@@ -191,6 +193,22 @@ def allChildItems(parent, parentType, user, limit=0, offset=0,
 def getItemsByQuery(self, query, limit, offset, sort):
     user = self.getCurrentUser()
     return Item().findWithPermissions(query, offset=offset, limit=limit, sort=sort, user=user)
+
+
+@access.admin(scope=TokenScope.DATA_READ)
+@filtermodel(model=File)
+@autoDescribeRoute(
+    Description('List files that match a query.')
+    .responseClass('File', array=True)
+    .jsonParam('query', 'Find files that match this Mongo query.',
+               required=True, requireObject=True)
+    .pagingParams(defaultSort='_id')
+    .errorResponse(),
+)
+@boundHandler()
+def getFilesByQuery(self, query, limit, offset, sort):
+    user = self.getCurrentUser()
+    return File().findWithPermissions(query, offset=offset, limit=limit, sort=sort, user=user)
 
 
 @access.public(scope=TokenScope.DATA_READ)
