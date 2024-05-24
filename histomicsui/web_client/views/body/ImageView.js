@@ -1429,6 +1429,8 @@ var ImageView = View.extend({
     },
 
     _editElementShape(element, annotationId) {
+        this._preeditDrawMode = this.drawWidget ? this.drawWidget.drawingType() : undefined;
+        this.drawWidget.cancelDrawMode();
         const annotation = this.annotations.get(element.originalAnnotation || annotationId);
         this._editAnnotation(annotation);
         const geojson = convertToGeojson(element);
@@ -1471,6 +1473,14 @@ var ImageView = View.extend({
         this._currentAnnotationEditShape = null;
         this.viewerWidget.annotationLayer.removeAllAnnotations();
         this.viewerWidget.hideAnnotation();
+        if (this.drawWidget) {
+            this.drawWidget.cancelDrawMode();
+            if (this._preeditDrawMode) {
+                window.setTimeout(() => {
+                    this.drawWidget.drawElement(undefined, this._preeditDrawMode);
+                }, 0);
+            }
+        }
     },
 
     _redrawSelection() {

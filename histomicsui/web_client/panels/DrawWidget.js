@@ -140,6 +140,12 @@ var DrawWidget = Panel.extend({
             this.$('button.h-draw[data-type="' + this._drawingType + '"]').addClass('active');
             this.drawElement(undefined, this._drawingType);
         }
+        this._bindHUIModeChange();
+        this._updateConstraintValueInputs();
+        return this;
+    },
+
+    _bindHUIModeChange() {
         if (this.viewer.annotationLayer && this.viewer.annotationLayer._boundHUIModeChange !== this) {
             this.viewer.annotationLayer._boundHUIModeChange = this;
             this.viewer.annotationLayer.geoOff(geo.event.annotation.mode);
@@ -160,8 +166,6 @@ var DrawWidget = Panel.extend({
                 }
             });
         }
-        this._updateConstraintValueInputs();
-        return this;
     },
 
     /**
@@ -626,6 +630,9 @@ var DrawWidget = Panel.extend({
      *      if it hasn't changed.
      */
     drawElement(evt, type, forceRefresh) {
+        if (type) {
+            this._bindHUIModeChange();
+        }
         var $el;
         if (evt) {
             $el = this.$(evt.currentTarget);
@@ -664,7 +671,7 @@ var DrawWidget = Panel.extend({
             this.viewer.startDrawMode(type, options)
                 .then((element, annotations, opts) => this._addDrawnElements(element, annotations, opts))
                 .fail(() => {
-                    if (this._drawingType && this._drawingType !== this.viewer.annotationLayer.mode()) {
+                    if (this._drawingType && this._drawingType !== this.viewer.annotationLayer.mode() && this.viewer.annotationLayer.mode() !== 'edit') {
                         this.drawElement(undefined, this._drawingType, !!this._drawingType);
                     }
                 });
@@ -682,6 +689,7 @@ var DrawWidget = Panel.extend({
         this.drawElement(undefined, null);
         this.viewer.annotationLayer._boundHUIModeChange = false;
         this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
+        this.viewer.annotationLayer.geoOff(geo.event.annotation.mode);
     },
 
     drawingType() {
@@ -935,13 +943,7 @@ var DrawWidget = Panel.extend({
 
         this._updateConstraintValueInputs();
 
-        if (opts.size_mode === 'fixed_aspect_ratio') {
-            this.viewer.startDrawMode(this._drawingType, {modeOptions: {constraint: opts.fixed_width / opts.fixed_height}});
-        } else if (opts.size_mode === 'fixed_size') {
-            this.viewer.startDrawMode(this._drawingType, {modeOptions: {constraint: {width: opts.fixed_width, height: opts.fixed_height}}});
-        } else {
-            this.viewer.startDrawMode(this._drawingType);
-        }
+        this.drawElement(null, this._drawingType, true);
     },
 
     /**
