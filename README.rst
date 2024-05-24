@@ -1,6 +1,19 @@
-=======================================
-HistomicsUI |build-status| |codecov-io|
-=======================================
+===========
+HistomicsUI
+===========
+
+|build-status| |codecov-io| |doi-badge|
+
+.. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/HistomicsUI.svg?style=svg
+    :target: https://circleci.com/gh/DigitalSlideArchive/HistomicsUI
+    :alt: Build Status
+
+.. |codecov-io| image:: https://img.shields.io/codecov/c/github/DigitalSlideArchive/HistomicsUI.svg
+    :target: https://codecov.io/github/DigitalSlideArchive/HistomicsUI?branch=master
+    :alt: codecov.io
+
+.. |doi-badge| image:: https://img.shields.io/badge/DOI-10.5281%2Fzenodo.5474914-blue.svg
+   :target: https://zenodo.org/doi/10.5281/zenodo.5474914
 
 Organize, visualize, and analyze histology images.
 
@@ -115,11 +128,3 @@ This work was funded in part by the NIH grant U24-CA194362-01_.
 .. _celery: http://www.celeryproject.org/
 .. _HistomicsTK: https://github.com/DigitalSlideArchive/HistomicsTK
 .. _Digital Slide Archive: https://github.com/DigitalSlideArchive/digital_slide_archive
-
-.. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/HistomicsUI.svg?style=svg
-    :target: https://circleci.com/gh/DigitalSlideArchive/HistomicsUI
-    :alt: Build Status
-
-.. |codecov-io| image:: https://img.shields.io/codecov/c/github/DigitalSlideArchive/HistomicsUI.svg
-    :target: https://codecov.io/github/DigitalSlideArchive/HistomicsUI?branch=master
-    :alt: codecov.io
