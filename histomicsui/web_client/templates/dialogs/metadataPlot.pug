@@ -32,8 +32,8 @@
                 option(value='_none_', selected=plotConfig[series.key] === undefined) None
               each opt in plotOptions
                 if (!series.number || opt.type === 'number') && (!series.string || opt.type === 'string' || opt.distinct)
-                  - var selected = plotConfig[series.key] === opt.sort
-                  option(value=opt.sort, selected=selected) #{opt.root + ' - ' + opt.key}
+                  - var selected = plotConfig[series.key] === opt.key
+                  option(value=opt.key, selected=selected) #{opt.title}
         .form-group
           label(for='h-plot-folder')
             input#h-plot-folder(type='checkbox', checked=plotConfig.folder)
