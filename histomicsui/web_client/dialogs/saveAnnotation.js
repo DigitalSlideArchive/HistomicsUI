@@ -1,17 +1,16 @@
-import _ from 'underscore';
-import $ from 'jquery';
 import tinycolor from 'tinycolor2';
-
-import {AccessType} from '@girder/core/constants';
-import {formatDate, DATE_SECOND} from '@girder/core/misc';
-import AccessWidget from '@girder/core/views/widgets/AccessWidget';
-// import MetadataWidget from '@girder/core/views/widgets/MetadataWidget';
-import View from '@girder/core/views/View';
 
 import MetadataWidget from '../panels/MetadataWidget';
 import '../stylesheets/dialogs/saveAnnotation.styl';
 import saveAnnotation from '../templates/dialogs/saveAnnotation.pug';
 import {elementAreaAndEdgeLength} from '../views/utils';
+
+const _ = girder._;
+const $ = girder.$;
+const {AccessType} = girder.constants;
+const View = girder.views.View;
+const AccessWidget = girder.views.widgets.AccessWidget;
+const {formatDate, DATE_SECOND} = girder.misc;
 
 /**
  * Collect styleable properties from user parameters in elements.

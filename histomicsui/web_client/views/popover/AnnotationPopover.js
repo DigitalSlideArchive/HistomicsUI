@@ -1,19 +1,18 @@
-import _ from 'underscore';
-import $ from 'jquery';
-
-import {getCurrentUser} from '@girder/core/auth';
-import {restRequest} from '@girder/core/rest';
-import ElementCollection from '@girder/large_image_annotation/collections/ElementCollection';
-import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
-import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
-import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
-
 import events from '../../events';
 import View from '../View';
 import annotationPopover from '../../templates/popover/annotationPopover.pug';
 import annotationPopoverMetadata from '../../templates/popover/annotationPopoverMetadata.pug';
 import '../../stylesheets/popover/annotationPopover.styl';
 import {elementAreaAndEdgeLength} from '../utils';
+
+const $ = girder.$;
+const _ = girder._;
+const {getCurrentUser} = girder.auth;
+const {restRequest} = girder.rest;
+const ElementCollection = girder.plugins.large_image_annotation.collections.ElementCollection;
+const convertRectangle = girder.plugins.large_image_annotation.annotations.geometry.rectangle;
+const convertEllipse = girder.plugins.large_image_annotation.annotations.geometry.ellipse;
+const convertCircle = girder.plugins.large_image_annotation.annotations.geometry.circle;
 
 /**
  * Format a point as a string for the user.

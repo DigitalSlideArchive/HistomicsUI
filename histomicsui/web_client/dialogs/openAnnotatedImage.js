@@ -1,19 +1,17 @@
-import $ from 'jquery';
-import _ from 'underscore';
-import backbone from 'backbone';
-
-import {restRequest} from '@girder/core/rest';
-import ItemCollection from '@girder/core/collections/ItemCollection';
-import UserCollection from '@girder/core/collections/UserCollection';
-import View from '@girder/core/views/View';
-import '@girder/core/utilities/jquery/girderModal';
-
 import events from '../events';
 import router from '../router';
 
 import listTemplate from '../templates/dialogs/annotatedImageList.pug';
 import template from '../templates/dialogs/openAnnotatedImage.pug';
 import '../stylesheets/dialogs/openAnnotatedImage.styl';
+
+const $ = girder.$;
+const _ = girder._;
+const Backbone = girder.Backbone;
+const {restRequest} = girder.rest;
+const ItemCollection = girder.collections.ItemCollection;
+const UserCollection = girder.collections.UserCollection;
+const View = girder.views.View;
 
 let dialog;
 const paths = {};
@@ -46,7 +44,7 @@ const OpenAnnotatedImage = View.extend({
         this.collection.comparator = null;
 
         // This is a view model used to store the form state of the dialog.
-        this._query = new backbone.Model({
+        this._query = new Backbone.Model({
             imageName: '',
             creator: ''
         });

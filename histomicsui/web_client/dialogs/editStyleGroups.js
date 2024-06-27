@@ -1,16 +1,15 @@
 import tinycolor from 'tinycolor2';
-import _ from 'underscore';
-import $ from 'jquery';
-
-import View from '@girder/core/views/View';
-import events from '@girder/core/events';
-import {restRequest} from '@girder/core/rest';
-import {getCurrentUser} from '@girder/core/auth';
 
 import StyleModel from '../models/StyleModel';
 import editStyleGroups from '../templates/dialogs/editStyleGroups.pug';
-import '@girder/core/utilities/jquery/girderModal';
 import '../stylesheets/dialogs/editStyleGroups.styl';
+
+const _ = girder._;
+const $ = girder.$;
+const View = girder.views.View;
+const events = girder.events;
+const {restRequest} = girder.rest;
+const {getCurrentUser} = girder.auth;
 
 /**
  * Create a modal dialog with fields to edit and create annotation

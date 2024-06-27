@@ -1,6 +1,4 @@
-import Backbone from 'backbone';
-
-const StyleModel = Backbone.Model.extend({
+const StyleModel = girder.Backbone.Model.extend({
     defaults: {
         lineWidth: 2,
         lineColor: 'rgb(0,0,0)',

@@ -1,7 +1,5 @@
-import $ from 'jquery';
-
-import {restRequest} from '@girder/core/rest';
-import convert from '@girder/large_image_annotation/annotations/convert';
+const $ = girder.$;
+const { restRequest } = girder.rest;
 
 /* Utility items for HistomicUI views
   In the future more utility classes/functions can be added for export
@@ -41,6 +39,7 @@ class HuiSettings {
  * @returns {object} An area and edge length; may be undefined.
  */
 function elementAreaAndEdgeLength(element) {
+    const convert = girder.plugins.large_image_annotation.annotations.convert;
     const geojson = convert(element, {}).features[0];
     const geogeom = geojson.geometry;
     let area, edge;

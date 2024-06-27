@@ -1,8 +1,7 @@
-import $ from 'jquery';
-
-import {wrap} from '@girder/core/utilities/PluginUtils';
-import {restRequest} from '@girder/core/rest';
-import SearchResultsView from '@girder/core/views/body/SearchResultsView';
+const $ = girder.$;
+const {wrap} = girder.utilities.PluginUtils;
+const {restRequest} = girder.rest;
+const SearchResultsView = girder.views.body.SearchResultsView;
 
 import '../stylesheets/views/searchResultsView.styl';
 

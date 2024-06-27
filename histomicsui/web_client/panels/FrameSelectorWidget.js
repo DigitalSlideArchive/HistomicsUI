@@ -1,10 +1,8 @@
-import _ from 'underscore';
-
-import Panel from '@girder/slicer_cli_web/views/Panel';
-import FrameSelector from '@girder/large_image/vue/components/FrameSelector.vue';
-
 import frameSelectorWidget from '../templates/panels/frameSelectorWidget.pug';
 import '../stylesheets/panels/frameSelectorWidget.styl';
+
+const _ = girder._;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
 var FrameSelectorWidget = Panel.extend({
     render() {
@@ -23,7 +21,7 @@ var FrameSelectorWidget = Panel.extend({
             collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
         }));
         const el = this.$('#vue-container').get(0);
-        const vm = new FrameSelector({
+        const vm = new girder.plugins.large_image.vue.FrameSelector({
             el,
             propsData: {
                 itemId: this._itemId,

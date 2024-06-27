@@ -1,13 +1,12 @@
-import $ from 'jquery';
-
-import {restRequest} from '@girder/core/rest';
-
 import events from '../../events';
 import router from '../../router';
 import View from '../View';
 
 import headerImageTemplate from '../../templates/layout/headerImage.pug';
 import '../../stylesheets/layout/headerImage.styl';
+
+const $ = girder.$;
+const {restRequest} = girder.rest;
 
 var HeaderImageView = View.extend({
     events: {
