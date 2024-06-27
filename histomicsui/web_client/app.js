@@ -1,20 +1,16 @@
-import _ from 'underscore';
-import Backbone from 'backbone';
-
-import '@girder/fontello/dist/css/animation.css';
-import '@girder/fontello/dist/css/fontello.css';
-
-import GirderApp from '@girder/core/views/App';
-import eventStream from '@girder/core/utilities/EventStream';
-import {getCurrentUser, setCurrentToken} from '@girder/core/auth';
-import {splitRoute} from '@girder/core/misc';
-
 import router from './router';
 import HeaderView from './views/layout/HeaderView';
 import bindRoutes from './routes';
 
 import layoutTemplate from './templates/layout/layout.pug';
 import './stylesheets/layout/layout.styl';
+
+const _ = girder._;
+const Backbone = girder.Backbone;
+const GirderApp = girder.views.App;
+const eventStream = girder.utilities.EventStream;
+const {getCurrentUser, setCurrentToken} = girder.auth;
+const {splitRoute} = girder.misc;
 
 function getQuery() {
     var query = document.location.search.replace(/(^\?)/, '').split('&').map(function (n) {

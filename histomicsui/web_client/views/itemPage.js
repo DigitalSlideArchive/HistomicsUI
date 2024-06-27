@@ -1,7 +1,7 @@
-import {wrap} from '@girder/core/utilities/PluginUtils';
-import {restRequest} from '@girder/core/rest';
-import events from '@girder/core/events';
-import ItemView from '@girder/core/views/body/ItemView';
+const {wrap} = girder.utilities.PluginUtils;
+const {restRequest} = girder.rest;
+const events = girder.events;
+const ItemView = girder.views.body.ItemView;
 
 import {HuiSettings} from './utils';
 

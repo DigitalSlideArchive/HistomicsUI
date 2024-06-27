@@ -1,17 +1,11 @@
-import Backbone from 'backbone';
-import {LocalStorage} from 'backbone.localstorage';
-
 import StyleModel from '../models/StyleModel';
 
-let localStorage;
-try {
-    localStorage = new LocalStorage('histomicsui.draw.style');
-} catch (e) {
-}
+const Backbone = girder.Backbone;
 
 const StyleCollection = Backbone.Collection.extend({
     model: StyleModel,
-    localStorage: localStorage
+    // TODO use an alternate method to persist this and read it from localStorage
+    // localStorage: localStorage
 });
 
 export default StyleCollection;

@@ -1,10 +1,9 @@
-import $ from 'jquery';
-
-import {wrap} from '@girder/core/utilities/PluginUtils';
-import {AccessType} from '@girder/core/constants';
-import {restRequest} from '@girder/core/rest';
-import events from '@girder/core/events';
-import ItemListWidget from '@girder/core/views/widgets/ItemListWidget';
+const $ = girder.$;
+const { wrap } = girder.utilities.PluginUtils;
+const { AccessType } = girder.constants;
+const { restRequest } = girder.rest;
+const events = girder.events;
+const ItemListWidget = girder.views.widgets.ItemListWidget;
 
 import {HuiSettings} from './utils';
 

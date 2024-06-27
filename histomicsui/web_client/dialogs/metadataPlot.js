@@ -1,7 +1,6 @@
-import View from '@girder/core/views/View';
-
 import metadataPlotDialog from '../templates/dialogs/metadataPlot.pug';
-import '@girder/core/utilities/jquery/girderModal';
+
+const View = girder.views.View;
 
 const MetadataPlotDialog = View.extend({
     events: {

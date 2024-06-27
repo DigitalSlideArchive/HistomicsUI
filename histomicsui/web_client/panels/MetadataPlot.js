@@ -1,14 +1,11 @@
-import $ from 'jquery';
-import _ from 'underscore';
-
-import {restRequest} from '@girder/core/rest';
-
-import Panel from '@girder/slicer_cli_web/views/Panel';
-// import events from '@girder/core/events';
-
 import MetadataPlotDialog from '../dialogs/metadataPlot';
 import metadataPlotTemplate from '../templates/panels/metadataPlot.pug';
 import '../stylesheets/panels/metadataPlot.styl';
+
+const $ = girder.$;
+const _ = girder._;
+const {restRequest} = girder.rest;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
 var MetadataPlot = Panel.extend({
     events: _.extend(Panel.prototype.events, {

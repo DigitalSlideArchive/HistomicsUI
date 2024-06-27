@@ -1,12 +1,12 @@
 import datetime
 import json
+import logging
 import math
 import time
 
 import cherrypy
 import girder.utility
 import orjson
-from girder import logger
 from girder.constants import AccessType
 from girder.exceptions import RestException
 from girder.models.file import File
@@ -19,6 +19,8 @@ from girder_large_image_annotation.models.annotation import Annotation
 from girder_worker.app import app
 
 from .constants import PluginSettings
+
+logger = logging.getLogger(__name__)
 
 
 def _itemFromEvent(info, identifierEnding, itemAccessLevel=AccessType.READ):  # noqa

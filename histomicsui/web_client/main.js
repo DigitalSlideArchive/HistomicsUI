@@ -1,11 +1,8 @@
-import events from '@girder/core/events';
-import router from '@girder/core/router';
+const events = girder.events;
+const router = girder.router;
 
-import {registerPluginNamespace} from '@girder/core/pluginUtils';
-import {exposePluginConfig} from '@girder/core/utilities/PluginUtils';
-
-// expose symbols under girder.plugins
-import * as histomicsui from '@girder/histomicsui';
+const { registerPluginNamespace } = girder.pluginUtils;
+const { exposePluginConfig } = girder.utilities.PluginUtils;
 
 // import modules for side effects
 import './views/itemList';
@@ -19,7 +16,7 @@ import ConfigView from './views/body/ConfigView';
 const pluginName = 'histomicsui';
 const configRoute = `plugins/${pluginName}/config`;
 
-registerPluginNamespace(pluginName, histomicsui);
+registerPluginNamespace(pluginName, pluginName);
 
 exposePluginConfig(pluginName, configRoute);
 

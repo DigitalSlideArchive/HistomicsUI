@@ -1,12 +1,11 @@
-import _ from 'underscore';
-import $ from 'jquery';
-
-import {getCurrentUser} from '@girder/core/auth';
-import {restRequest} from '@girder/core/rest';
-import ElementCollection from '@girder/large_image_annotation/collections/ElementCollection';
-import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
-import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
-import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
+const $ = girder.$;
+const _ = girder._;
+const {getCurrentUser} = girder.auth;
+const {restRequest} = girder.rest;
+const ElementCollection = girder.large_image_annotation.collections.ElementCollection;
+const convertRectangle = girder.large_image_annotation.annotations.geometry.rectangle;
+const convertEllipse = girder.large_image_annotation.annotations.geometry.ellipse;
+const convertCircle = girder.large_image_annotation.annotations.geometry.circle;
 
 import events from '../../events';
 import View from '../View';

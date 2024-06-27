@@ -1,7 +1,6 @@
-import $ from 'jquery';
-
-import {restRequest} from '@girder/core/rest';
-import convert from '@girder/large_image_annotation/annotations/convert';
+const $ = girder.$;
+const { restRequest } = girder.rest;
+const convert = girder.plugins.large_image_annotation.annotations.convert;
 
 /* Utility items for HistomicUI views
   In the future more utility classes/functions can be added for export

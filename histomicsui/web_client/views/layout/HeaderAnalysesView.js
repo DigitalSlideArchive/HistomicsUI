@@ -1,7 +1,3 @@
-import _ from 'underscore';
-import $ from 'jquery';
-import {restRequest} from '@girder/core/rest';
-
 import events from '../../events';
 import router from '../../router';
 import View from '../View';
@@ -10,6 +6,10 @@ import '../../stylesheets/layout/headerAnalyses.styl';
 
 import 'bootstrap-submenu/dist/js/bootstrap-submenu';
 import 'bootstrap-submenu/dist/css/bootstrap-submenu.css';
+
+const _ = girder._;
+const $ = girder.$;
+const {restRequest} = girder.rest;
 
 var HeaderUserView = View.extend({
     events: {

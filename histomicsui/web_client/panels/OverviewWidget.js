@@ -1,12 +1,9 @@
 /* global geo */
-import _ from 'underscore';
-
-import Panel from '@girder/slicer_cli_web/views/Panel';
-
-import setFrameQuad from '@girder/large_image/views/imageViewerWidget/setFrameQuad.js';
-
 import overviewWidget from '../templates/panels/overviewWidget.pug';
 import '../stylesheets/panels/overviewWidget.styl';
+
+const _ = girder._;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
 var OverviewWidget = Panel.extend({
     render() {
@@ -96,6 +93,7 @@ var OverviewWidget = Panel.extend({
         params.layer.autoshareRenderer = false;
         this._tileLayer = this.viewer.createLayer('osm', params.layer);
         if (this.parentViewer._layer && this.parentViewer._layer.setFrameQuad) {
+            const setFrameQuad = girder.plugins.large_image.views.imageViewerWidget.setFrameQuad;
             setFrameQuad((this.parentViewer._layer.setFrameQuad.status || {}).tileinfo, this._tileLayer, (this.parentViewer._layer.setFrameQuad.status || {}).options);
             this._tileLayer.setFrameQuad(0);
         }
