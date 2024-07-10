@@ -1,3 +1,5 @@
+/* global BUILD_TIMESTAMP */
+
 import $ from 'jquery';
 import _ from 'underscore';
 
@@ -22,6 +24,9 @@ var MetadataPlot = Panel.extend({
             }).render();
             dlg.$el.on('hidden.bs.modal', () => {
                 if (dlg.result !== undefined) {
+                    if (!_.isEqual(this.plotConfig, dlg.result)) {
+                        this.plottableData = null;
+                    }
                     this.plotConfig = dlg.result;
                     this.render();
                 }
@@ -50,54 +55,33 @@ var MetadataPlot = Panel.extend({
         };
     },
 
-    getSiblingItems(folderId) {
-        var chunk = 100;
-        if (folderId !== this.parentFolderId) {
-            return null;
-        }
-        return restRequest({url: 'item', data: {folderId, offset: this.siblingItems.length, limit: chunk + 1}}).done((result) => {
-            if (folderId !== this.parentFolderId) {
-                return null;
-            }
-            this.siblingItems = this.siblingItems.concat(result.slice(0, chunk));
-            if (result.length > chunk) {
-                return this.getSiblingItems(folderId);
-            }
-            this.siblingItemsPromise.resolve(this.siblingItems);
-            return null;
-        });
-    },
-
     setItem: function (item) {
+        const update = (this.item !== undefined && item !== undefined && this.item.id !== item.id) || !(this.item === undefined && item === undefined);
         this.item = item;
         this.item.on('g:changed', function () {
             this.render();
         }, this);
-        if (this.parentFolderId !== item.get('folderId')) {
-            this.parentFolderId = null;
-            this.parentMeta = null;
-            if (this.parentFolderPromise) {
-                this.parentFolderPromise.abort();
+        if (update) {
+            this.parentFolderId = item.get('folderId');
+            this.plottableList = null;
+            if (this.plottableListPromise) {
+                this.plottableListPromise.abort();
             }
-            if (this.siblingItemPromise) {
-                this.siblingItemPromise.abort();
+            this.plottableData = null;
+            if (this.plottableDataPromise) {
+                this.plottableDataPromise.abort();
             }
-            this.siblingItems = [];
-            this.collectedPlotData = null;
             const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number').length >= 2);
-            this.siblingItemsPromise = $.Deferred();
-            this.parentFolderPromise = restRequest({url: `folder/${item.get('folderId')}`, error: null}).done((result) => {
-                this.parentFolderPromise = null;
-                this.parentMeta = (result || {}).meta;
+
+            // redo this when annotations are turned on or off
+            this.plottableListPromise = restRequest({url: `annotation/item/${item.id}/plot/list`, method: 'POST', error: null}).done((result) => {
+                this.plottableListPromise = null;
+                this.plottableList = result;
                 const plotOptions = this.getPlotOptions();
                 if (plotOptions.filter((v) => v.type === 'number').length >= 2) {
                     if (!hasPlot) {
                         this.render();
                     }
-                    this.parentFolderId = item.get('folderId');
-                    this.getSiblingItems(item.get('folderId'));
-                } else {
-                    this.siblingItemsPromise.resolve(this.siblingItems);
                 }
             });
         }
@@ -116,39 +100,45 @@ var MetadataPlot = Panel.extend({
      *   is an object with 'root', 'key' and 'type'.
      */
     getPlotOptions: function () {
-        if (!this.item || !this.item.id || (!this.item.get('meta') && !this.parentMeta)) {
+        if (!this.item || !this.item.id || !this.item.get('meta') || !this.plottableList) {
             return [];
         }
-        var results = [{root: 'Item', key: 'name', type: 'string', sort: '_name'}];
-        for (let midx = 0; midx < 2; midx += 1) {
-            var meta = (!midx ? this.item.get('meta') : this.parentMeta) || {};
-            for (const [root, entry] of Object.entries(meta)) {
-                if (_.isArray(entry) && entry.length >= 1 && _.isObject(entry[0])) {
-                    for (const [key, value] of Object.entries(entry[0])) {
-                        let type, distinct;
-                        if (_.isFinite(value)) {
-                            type = 'number';
-                        } else if (_.isString(value)) {
-                            type = 'string';
-                        }
-                        if (Number.isInteger(value) || _.isString(value)) {
-                            distinct = {};
-                            const maxDistinct = 20;
-                            for (let eidx = 0; eidx < entry.length && Object.keys(distinct).length <= maxDistinct; eidx += 1) {
-                                distinct[entry[eidx][key]] = true;
-                            }
-                            if (Object.keys(distinct).length > maxDistinct) {
-                                distinct = null;
-                            }
-                        }
-                        if (type) {
-                            results.push({root, key, type, distinct, sort: `${root}.${key}`.toLowerCase()});
-                        }
-                    }
-                }
-            }
+        return this.plottableList;
+    },
+
+    fetchPlottableData: function () {
+        if (!this.item) {
+            return;
         }
-        return results.sort((a, b) => a.sort.localeCompare(b.sort));
+        let keys = [];
+        ['x', 'y', 'r', 'c', 's'].forEach((k) => {
+            if (this.plotConfig[k] !== undefined) {
+                keys.push(this.plotConfig[k]);
+            }
+        });
+        if (!keys.length) {
+            return;
+        }
+        const requiredKeys = [];
+        ['x', 'y'].forEach((k) => {
+            if (this.plotConfig[k] !== undefined) {
+                requiredKeys.push(this.plotConfig[k]);
+            }
+        });
+        keys = keys.concat(['_0_item.name', '_2_item.id', '_bbox.x0', '_bbox.y0', '_bbox.x1', '_bbox.y1']);
+        this.plottableDataPromise = restRequest({
+            url: `annotation/item/${this.item.id}/plot/data`,
+            method: 'POST',
+            error: null,
+            data: {
+                adjacentItems: !!this.plotConfig.folder,
+                keys: keys.join(','),
+                requiredKeys: requiredKeys.join(','),
+                annotations: []
+            }
+        }).done((result) => {
+            this.plottableData = result;
+        });
     },
 
     /**
@@ -159,94 +149,19 @@ var MetadataPlot = Panel.extend({
      * combined.
      */
     getPlotData: function (plotConfig) {
-        const plotOptions = this.getPlotOptions();
-        const optDict = {};
-        plotOptions.forEach((opt) => { optDict[opt.sort] = opt; });
-        const plotData = {data: [], fieldToPlot: {}, plotToOpt: {}, ranges: {}, format: plotConfig.format};
-        const usedFields = ['x', 'y', 'r', 'c', 's'].filter((series) => plotConfig[series] && optDict[plotConfig[series]]).map((series) => {
-            if (!plotData.fieldToPlot[plotConfig[series]]) {
-                plotData.fieldToPlot[plotConfig[series]] = [];
-            }
-            plotData.fieldToPlot[plotConfig[series]].push(series);
-            plotData.plotToOpt[series] = optDict[plotConfig[series]];
-            return plotConfig[series];
+        const plotData = {
+            columns: this.plottableData.columns,
+            data: this.plottableData.data,
+            colDict: {},
+            series: {},
+            format: plotConfig.format || 'scatter'
+        };
+        plotData.columns.forEach((col) => {
+            plotData.colDict[col.key] = col;
         });
-        const usedOptions = plotOptions.filter((opt) => usedFields.includes(opt.sort));
-        if (!usedOptions.length) {
-            return plotData;
-        }
-        let items = [];
-        if (plotConfig.folder) {
-            items = this.siblingItems.filter((d) => d.largeImage && !d.largeImage.expected && d.meta && d._id !== this.item.id);
-        }
-        items.unshift(this.item.toJSON());
-        if (this.parentMeta) {
-            items.unshift({meta: this.parentMeta});
-        }
-        items.forEach((item, itemIdx) => {
-            const meta = item.meta || {};
-            let end = false;
-            for (let idx = 0; !end; idx += 1) {
-                const entry = {_roots: {}};
-                usedOptions.forEach((opt) => {
-                    plotData.fieldToPlot[opt.sort].forEach((key) => {
-                        let value;
-                        if (opt.sort === '_name') {
-                            value = item.name;
-                        } else if (meta[opt.root] && meta[opt.root][idx]) {
-                            value = meta[opt.root][idx][opt.key];
-                            entry._roots[opt.root] = entry._roots[opt.root] || meta[opt.root][idx];
-                        }
-                        if (value === undefined || (opt.type === 'number' && !_.isFinite(value))) {
-                            if (plotData.format !== 'violin' || key !== 'x') {
-                                end = true;
-                            }
-                        }
-                        if (opt.type === 'string' || (['s', 'c'].includes(key) && opt.distinct)) {
-                            value = '' + value;
-                        } else {
-                            value = +value;
-                        }
-                        entry[key] = value;
-                    });
-                });
-                if (!end) {
-                    plotData.data.push(entry);
-                }
-            }
+        ['x', 'y', 'r', 'c', 's'].filter((series) => plotConfig[series] && plotData.colDict[plotConfig[series]]).forEach((series) => {
+            plotData.series[series] = plotData.colDict[plotConfig[series]];
         });
-        plotData.data.forEach((entry, idx) => {
-            Object.entries(entry).forEach(([key, value]) => {
-                if (key === '_roots') {
-                    return;
-                }
-                if (!plotData.ranges[key]) {
-                    if (!_.isString(value)) {
-                        plotData.ranges[key] = {min: value, max: value};
-                    } else {
-                        plotData.ranges[key] = {distinct: {}};
-                    }
-                }
-                if (plotData.ranges[key].min !== undefined) {
-                    if (value < plotData.ranges[key].min) {
-                        plotData.ranges[key].min = value;
-                    }
-                    if (value > plotData.ranges[key].max) {
-                        plotData.ranges[key].max = value;
-                    }
-                } else {
-                    plotData.ranges[key].distinct[value] = true;
-                }
-            });
-        });
-        if (plotData.data.length) {
-            Object.entries(plotData.data[0]).forEach(([key, value]) => {
-                if (plotData.ranges[key] && plotData.ranges[key].distinct) {
-                    plotData.ranges[key].list = Object.keys(plotData.ranges[key].distinct).sort();
-                    plotData.ranges[key].count = plotData.ranges[key].list.length;
-                }
-            });
-        }
         return plotData;
     },
 
@@ -254,44 +169,44 @@ var MetadataPlot = Panel.extend({
         // this is a stub for wrapping.
     },
 
-    adjustHoverText: function (d, parts) {
+    adjustHoverText: function (d, parts, plotData) {
     },
 
     plotDataToPlotly: function (plotData) {
         const colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
         const viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
         let colorScale;
-        if (plotData.ranges.c && !plotData.ranges.c.count) {
-            colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * (plotData.ranges.c.max - plotData.ranges.c.min) + plotData.ranges.c.min)).range(viridis);
+        if (plotData.series.c && plotData.series.c.type === 'number') {
+            colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * (plotData.series.c.max - plotData.series.c.min) + plotData.series.c.min)).range(viridis);
         }
         const plotlyData = {
-            x: plotData.data.map((d) => d.x),
-            y: plotData.data.map((d) => d.y),
+            x: plotData.data.map((d) => d[plotData.series.x.index]),
+            y: plotData.data.map((d) => d[plotData.series.y.index]),
             hovertext: plotData.data.map((d) => {
                 const parts = [];
                 ['x', 'y', 'r', 'c', 's'].forEach((series) => {
-                    if (d[series] !== undefined) {
-                        parts.push(`${plotData.plotToOpt[series].root} - ${plotData.plotToOpt[series].key}: ${d[series]}`);
+                    if (plotData.series[series] && d[plotData.series[series].index] !== undefined) {
+                        parts.push(`${plotData.series[series].title}: ${d[plotData.series[series].index]}`);
                     }
                 });
-                this.adjustHoverText(d, parts);
+                this.adjustHoverText(d, parts, plotData);
                 return '<span class="hui-plotly-hover" style="font-size: 9px">' + parts.join('<br>') + '</span>';
             }),
             hoverinfo: 'text',
             marker: {
-                symbol: plotData.ranges.s && plotData.ranges.s.count ? plotData.data.map((d) => plotData.ranges.s.list.indexOf(d.s)) : 0,
-                size: plotData.ranges.r
+                symbol: plotData.series.s && plotData.series.s.distinct ? plotData.data.map((d) => plotData.series.s.distinct.indexOf(d[plotData.series.s.index])) : 0,
+                size: plotData.series.r
                     ? (
-                        !plotData.ranges.r.count
-                            ? plotData.data.map((d) => (d.r - plotData.ranges.r.min) / (plotData.ranges.r.max - plotData.ranges.r.min) * 10 + 5)
-                            : plotData.data.map((d) => plotData.ranges.r.list.indexOf(d.r) / plotData.ranges.r.count * 10 + 5)
+                        plotData.series.r.type === 'number'
+                            ? plotData.data.map((d) => (d[plotData.series.r.index] - plotData.series.r.min) / (plotData.series.r.max - plotData.series.r.min) * 10 + 5)
+                            : plotData.data.map((d) => plotData.series.r.distinct.indexOf(d[plotData.series.r.index]) / plotData.series.r.distinctcount * 10 + 5)
                     )
                     : 10,
-                color: plotData.ranges.c
+                color: plotData.series.c
                     ? (
-                        !plotData.ranges.c.count
-                            ? plotData.data.map((d) => colorScale(d.c))
-                            : plotData.data.map((d) => colorBrewerPaired12[plotData.ranges.c.list.indexOf(d.c)] || '#000000')
+                        !plotData.series.c.distinctcount
+                            ? plotData.data.map((d) => colorScale(d[plotData.series.c.index]))
+                            : plotData.data.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
                     )
                     : '#000000',
                 opacity: 0.5
@@ -312,15 +227,14 @@ var MetadataPlot = Panel.extend({
             plotlyData.pointpos = 0;
             plotlyData.jitter = 0;
             // plotlyData.side = 'positive';
-            if (plotData.ranges.c && plotData.ranges.c.distinct) {
+            if (plotData.series.c && plotData.series.c.distinct) {
                 plotlyData.transforms = [{
                     type: 'groupby',
                     groups: plotlyData.x,
-                    styles: Object.keys(plotData.ranges.c.distinct).map((k, kidx) => ({target: kidx, value: {line: {color: colorBrewerPaired12[kidx]}}}))
+                    styles: Object.keys(plotData.series.c.distinct).map((k, kidx) => ({target: kidx, value: {line: {color: colorBrewerPaired12[kidx]}}}))
                 }];
             }
         }
-        console.log(plotlyData);
         return [plotlyData];
     },
 
@@ -331,11 +245,17 @@ var MetadataPlot = Panel.extend({
                 this.$el.html('');
                 return;
             }
+            let root = '/static/built';
+            try {
+                root = __webpack_public_path__ || root; // eslint-disable-line
+            } catch (err) { }
+            root = root.replace(/\/$/, '');
+            this.fetchPlottableData();
             $.when(
-                this.siblingItemsPromise,
+                this.plottableDataPromise,
                 !window.Plotly
                     ? $.ajax({ // like $.getScript, but allow caching
-                        url: 'https://cdn.plot.ly/plotly-latest.min.js',
+                        url: root + '/plugins/histomicsui/extra/plotly.js' + (BUILD_TIMESTAMP ? '?_=' + BUILD_TIMESTAMP : ''),
                         dataType: 'script',
                         cache: true
                     })
@@ -345,7 +265,7 @@ var MetadataPlot = Panel.extend({
                 this.lastPlotData = plotData;
                 this.$el.html(metadataPlotTemplate({}));
                 const elem = this.$el.find('.h-metadata-plot-area');
-                if (!plotData.ranges.x || !plotData.ranges.y || plotData.data.length < 2) {
+                if (!plotData.series.x || !plotData.series.y || plotData.data.length < 2) {
                     elem.html('');
                     return;
                 }
@@ -357,8 +277,8 @@ var MetadataPlot = Panel.extend({
                 if (maximized) {
                     plotOptions.margin.l += 20;
                     plotOptions.margin.b += 40;
-                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' ? `${plotData.plotToOpt.x.root} - ${plotData.plotToOpt.x.key}` : `${plotData.plotToOpt.s.root} - ${plotData.plotToOpt.s.key}`}};
-                    plotOptions.yaxis = {title: {text: `${plotData.plotToOpt.y.root} - ${plotData.plotToOpt.y.key}`}};
+                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' ? `${plotData.series.x.title}` : `${plotData.series.s.title}`}};
+                    plotOptions.yaxis = {title: {text: `${plotData.series.y.title}`}};
                 }
                 window.Plotly.newPlot(elem[0], this.plotDataToPlotly(plotData), plotOptions);
                 elem[0].on('plotly_hover', (evt) => this.onHover(evt));

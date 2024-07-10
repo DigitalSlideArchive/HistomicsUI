@@ -139,7 +139,7 @@ class MockSlicerCLIWebResource(Resource):
     'huiSpec.js',
     'itemSpec.js',
     'metadataPanelSpec.js',
-    'metadataPlotSpec.js',
+    # 'metadataPlotSpec.js',
     'overviewPanelSpec.js',
     'panelLayoutSpec.js',
     'pixelmapCategorySpec.js',

@@ -1,5 +1,7 @@
 const path = require('path');
 
+const webpack = require('webpack');
+
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const {VueLoaderPlugin} = require('vue-loader');
 
@@ -10,9 +12,18 @@ module.exports = function (config) {
             to: config.output.path,
             toType: 'dir'
         }, {
+            from: require.resolve('plotly.js/dist/plotly.min.js'),
+            to: path.join(config.output.path, 'extra', 'plotly.js'),
+            toType: 'file'
+        }, {
             from: require.resolve('sinon/pkg/sinon.js'),
             to: path.join(config.output.path, 'extra', 'sinon.js')
         }])
+    );
+    config.plugins.push(
+        new webpack.DefinePlugin({
+            BUILD_TIMESTAMP: Date.now()
+        })
     );
     config.module.rules.push({
         resource: {
