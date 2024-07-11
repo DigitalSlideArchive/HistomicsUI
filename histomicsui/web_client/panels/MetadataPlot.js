@@ -71,14 +71,14 @@ var MetadataPlot = Panel.extend({
             if (this.plottableDataPromise) {
                 this.plottableDataPromise.abort();
             }
-            const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number').length >= 2);
+            const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number' && v.count).length >= 2);
 
             // redo this when annotations are turned on or off
             this.plottableListPromise = restRequest({url: `annotation/item/${item.id}/plot/list`, method: 'POST', error: null}).done((result) => {
                 this.plottableListPromise = null;
                 this.plottableList = result;
                 const plotOptions = this.getPlotOptions();
-                if (plotOptions.filter((v) => v.type === 'number').length >= 2) {
+                if (plotOptions.filter((v) => v.type === 'number' && v.count).length >= 2) {
                     if (!hasPlot) {
                         this.render();
                     }
@@ -149,6 +149,9 @@ var MetadataPlot = Panel.extend({
      * combined.
      */
     getPlotData: function (plotConfig) {
+        if (!this.plottableData || !this.plottableData.columns || !this.plottableData.data) {
+            return null;
+        }
         const plotData = {
             columns: this.plottableData.columns,
             data: this.plottableData.data,
@@ -241,7 +244,7 @@ var MetadataPlot = Panel.extend({
     render: function () {
         if (this.item && this.item.id) {
             const plotOptions = this.getPlotOptions();
-            if (plotOptions.filter((v) => v.type === 'number').length < 2) {
+            if (plotOptions.filter((v) => v.type === 'number' && v.count).length < 2) {
                 this.$el.html('');
                 return;
             }
@@ -265,7 +268,7 @@ var MetadataPlot = Panel.extend({
                 this.lastPlotData = plotData;
                 this.$el.html(metadataPlotTemplate({}));
                 const elem = this.$el.find('.h-metadata-plot-area');
-                if (!plotData.series.x || !plotData.series.y || plotData.data.length < 2) {
+                if (!plotData || !plotData.series.x || !plotData.series.y || plotData.data.length < 2) {
                     elem.html('');
                     return;
                 }
