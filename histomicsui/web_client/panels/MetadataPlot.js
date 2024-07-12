@@ -55,6 +55,55 @@ var MetadataPlot = Panel.extend({
         };
     },
 
+    _refetchPlottable: function () {
+        const annotations = [];
+        if (this.parentView.annotationSelector && this.parentView.annotationSelector.collection) {
+            this.parentView.annotationSelector.collection.each((model) => {
+                if (model.get('displayed')) {
+                    annotations.push(model.id);
+                }
+            });
+            if (!this._listeningForAnnotations) {
+                this.listenTo(this.parentView.annotationSelector.collection, 'sync remove update reset change:displayed', this._refetchPlottable);
+                this._listeningForAnnotations = true;
+            }
+        }
+        const lastUsed = this.item.id + ',' + annotations.join(',');
+        if (lastUsed === this.plottableListUsed && this.plottableListPromise) {
+            return;
+        }
+        this._currentAnnotations = annotations;
+        this.plottableListUsed = lastUsed;
+
+        this.plottableList = null;
+        if (this.plottableListPromise) {
+            this.plottableListPromise.abort();
+        }
+        this.plottableData = null;
+        if (this.plottableDataPromise) {
+            this.plottableDataPromise.abort();
+        }
+        const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number' && v.count).length >= 2);
+
+        // redo this when annotations are turned on or off
+        this.plottableListPromise = restRequest({
+            url: `annotation/item/${this.item.id}/plot/list`,
+            method: 'POST',
+            error: null,
+            data: {
+                annotations: JSON.stringify(this._currentAnnotations)
+            }
+        }).done((result) => {
+            this.plottableList = result;
+            const plotOptions = this.getPlotOptions();
+            if (plotOptions.filter((v) => v.type === 'number' && v.count).length >= 2) {
+                if (!hasPlot) {
+                    this.render();
+                }
+            }
+        });
+    },
+
     setItem: function (item) {
         const update = (this.item !== undefined && item !== undefined && this.item.id !== item.id) || !(this.item === undefined && item === undefined);
         this.item = item;
@@ -63,27 +112,7 @@ var MetadataPlot = Panel.extend({
         }, this);
         if (update) {
             this.parentFolderId = item.get('folderId');
-            this.plottableList = null;
-            if (this.plottableListPromise) {
-                this.plottableListPromise.abort();
-            }
-            this.plottableData = null;
-            if (this.plottableDataPromise) {
-                this.plottableDataPromise.abort();
-            }
-            const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number' && v.count).length >= 2);
-
-            // redo this when annotations are turned on or off
-            this.plottableListPromise = restRequest({url: `annotation/item/${item.id}/plot/list`, method: 'POST', error: null}).done((result) => {
-                this.plottableListPromise = null;
-                this.plottableList = result;
-                const plotOptions = this.getPlotOptions();
-                if (plotOptions.filter((v) => v.type === 'number' && v.count).length >= 2) {
-                    if (!hasPlot) {
-                        this.render();
-                    }
-                }
-            });
+            this._refetchPlottable();
         }
         this.render();
         return this;
@@ -134,7 +163,7 @@ var MetadataPlot = Panel.extend({
                 adjacentItems: !!this.plotConfig.folder,
                 keys: keys.join(','),
                 requiredKeys: requiredKeys.join(','),
-                annotations: []
+                annotations: JSON.stringify(this._currentAnnotations)
             }
         }).done((result) => {
             this.plottableData = result;

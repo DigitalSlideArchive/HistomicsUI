@@ -95,13 +95,14 @@ var ImageView = View.extend({
         this.metadataWidget = new MetadataWidget({
             parentView: this
         });
-        this.metadataPlot = new MetadataPlot({
-            parentView: this
-        });
         this.annotationSelector = new AnnotationSelector({
             parentView: this,
             collection: this.annotations,
             image: this.model
+        });
+        /* Should be after annotationSelector */
+        this.metadataPlot = new MetadataPlot({
+            parentView: this
         });
         this.popover = new AnnotationPopover({
             parentView: this
