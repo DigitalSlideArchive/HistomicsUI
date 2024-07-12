@@ -179,8 +179,8 @@ var MetadataPlot = Panel.extend({
         const colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
         const viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
         let colorScale;
-        if (plotData.series.c && plotData.series.c.type === 'number') {
-            colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * (plotData.series.c.max - plotData.series.c.min) + plotData.series.c.min)).range(viridis);
+        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount)) {
+            colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(viridis);
         }
         const plotlyData = {
             x: plotData.data.map((d) => d[plotData.series.x.index]),
@@ -198,7 +198,7 @@ var MetadataPlot = Panel.extend({
             hoverinfo: 'text',
             marker: {
                 symbol: plotData.series.s && plotData.series.s.distinct ? plotData.data.map((d) => plotData.series.s.distinct.indexOf(d[plotData.series.s.index])) : 0,
-                size: plotData.series.r
+                size: plotData.series.r && (plotData.series.r.type === 'number' || plotData.series.r.distinctcount)
                     ? (
                         plotData.series.r.type === 'number'
                             ? plotData.data.map((d) => (d[plotData.series.r.index] - plotData.series.r.min) / (plotData.series.r.max - plotData.series.r.min) * 10 + 5)
