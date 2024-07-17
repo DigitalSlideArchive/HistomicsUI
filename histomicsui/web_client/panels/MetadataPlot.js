@@ -64,7 +64,7 @@ var MetadataPlot = Panel.extend({
                 }
             });
             if (!this._listeningForAnnotations) {
-                this.listenTo(this.parentView.annotationSelector.collection, 'sync remove update reset change:displayed', this._refetchPlottable);
+                this.listenTo(this.parentView.annotationSelector.collection, 'sync remove update reset change:displayed h:refreshed', this._refetchPlottable);
                 this._listeningForAnnotations = true;
             }
         }
