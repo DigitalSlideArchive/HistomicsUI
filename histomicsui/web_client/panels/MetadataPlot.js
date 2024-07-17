@@ -65,6 +65,7 @@ var MetadataPlot = Panel.extend({
             });
             if (!this._listeningForAnnotations) {
                 this.listenTo(this.parentView.annotationSelector.collection, 'sync remove update reset change:displayed h:refreshed', this._refetchPlottable);
+                this.listenTo(this.parentView, 'h:selectedElementsByRegion', this.onElementSelect);
                 this._listeningForAnnotations = true;
             }
         }
@@ -155,6 +156,12 @@ var MetadataPlot = Panel.extend({
             }
         });
         keys = keys.concat(['_0_item.name', '_2_item.id', '_bbox.x0', '_bbox.y0', '_bbox.x1', '_bbox.y1']);
+        if (this._currentAnnotations && this._currentAnnotations.length > 1) {
+            keys = keys.concat(['_1_annotation.name']);
+        }
+        if (this._currentAnnotations && this._currentAnnotations.length >= 1) {
+            keys = keys.concat(['_3_annotation.id', '_5_annotationelement.id']);
+        }
         this.plottableDataPromise = restRequest({
             url: `annotation/item/${this.item.id}/plot/data`,
             method: 'POST',
@@ -186,7 +193,8 @@ var MetadataPlot = Panel.extend({
             data: this.plottableData.data,
             colDict: {},
             series: {},
-            format: plotConfig.format || 'scatter'
+            format: plotConfig.format || 'scatter',
+            adjacentItems: !!plotConfig.folder
         };
         plotData.columns.forEach((col) => {
             plotData.colDict[col.key] = col;
@@ -198,10 +206,140 @@ var MetadataPlot = Panel.extend({
     },
 
     onHover: function (evt) {
-        // this is a stub for wrapping.
+        if (!evt || !evt.points || evt.points.length < 1 || evt.points[0].pointIndex === undefined || !$('svg g.hoverlayer').length) {
+            return;
+        }
+        const idx = evt.points[0].pointIndex;
+        const image = this.lastPlotData.data[idx].image;
+        const maxw = 100, maxh = 100;
+        const imgw = Math.min(Math.ceil(image.right - image.left) * 2, maxw);
+        const imgh = Math.min(Math.ceil(image.bottom - image.top) * 2, maxh);
+        const regionUrl = `api/v1/item/${image.id}/tiles/region?width=${imgw}&height=${imgh}&left=${image.left}&top=${image.top}&right=${image.right}&bottom=${image.bottom}`;
+        let x = parseFloat($('svg g.hoverlayer g.hovertext text[x]').attr('x'));
+        let y = parseFloat($('svg g.hoverlayer g.hovertext text[y]').attr('y'));
+        x = x === 0 ? -maxw / 2 + (maxw - imgw) / 2 : x < 0 ? x - maxw + (maxw - imgw) : x;
+        const d = $('svg g.hoverlayer g.hovertext path[d]').attr('d');
+        if (d && (d.split('L6,').length >= 2 || d.split('L-6,').length >= 2)) {
+            const y2 = parseFloat(d.split('v')[2]);
+            y += Math.abs(y2) - maxh - 13 + (maxh - imgh) / 2;
+        } else if (d && d.split('v').length === 2) {
+            const y2 = parseFloat(d.split('v')[1]);
+            y += Math.abs(y2) - maxh - 13 + (maxh - imgh) / 2;
+        } else {
+            y = -3;
+        }
+        $('svg g.hoverlayer g.hovertext image.hoverthumbnail').remove();
+        $('svg g.hoverlayer g.hovertext').html($('svg g.hoverlayer g.hovertext').html() + `<image class="hoverthumbnail" href="${regionUrl}" x="${x}px" y="${y}px" width="${imgw}px" height="${imgh}px"/>`);
     },
 
     adjustHoverText: function (d, parts, plotData) {
+    },
+
+    onSelect: function (evt, plotData) {
+        if (plotData.colDict['_3_annotation.id'] === undefined || plotData.colDict['_5_annotationelement.id'] === undefined) {
+            return;
+        }
+        // evt is undefined when selection is cleared
+        if (evt === undefined) {
+            this.parentView._resetSelection();
+            return;
+        }
+        // evt.points is an array with data, fullData, pointNumber, and pointIndex
+        const annots = {};
+        const elements = [];
+        evt.points.forEach((pt) => {
+            const row = plotData.data[pt.pointIndex];
+            const annotid = row[plotData.colDict['_3_annotation.id'].index];
+            const elid = row[plotData.colDict['_5_annotationelement.id'].index];
+            if (annotid === undefined || elid === undefined) {
+                return;
+            }
+            if (annots[annotid] === undefined) {
+                annots[annotid] = this.parentView.annotationSelector.collection.get(annotid) || null;
+            }
+            if (annots[annotid] === null || !annots[annotid]._elements || !annots[annotid]._elements._byId || !annots[annotid]._elements._byId[elid]) {
+                return;
+            }
+            elements.push(annots[annotid]._elements._byId[elid]);
+        });
+        if (!elements.length) {
+            return;
+        }
+        this.parentView._resetSelection();
+        elements.forEach((element, idx) => {
+            this.parentView._selectElement(element, {silent: idx !== elements.length - 1});
+        });
+    },
+
+    onElementSelect: function (elements) {
+        if (!this.lastPlotData || !this.lastPlotData.colDict['_5_annotationelement.id'] || !elements.models) {
+            return;
+        }
+        const ids = {};
+        elements.models.forEach((el) => {
+            ids[el.id] = true;
+        });
+        const colidx = this.lastPlotData.colDict['_5_annotationelement.id'].index;
+        const points = this.lastPlotData.data.map((row, idx) => ids[row[colidx]] ? idx : null).filter((idx) => idx !== null);
+        if (!points.length) {
+            return;
+        }
+        window.Plotly.restyle(this._plotlyNode[0], {selectedpoints: [points]});
+    },
+
+    _formatNumber: function (val, significant) {
+        if (isNaN(parseFloat(val))) {
+            return val;
+        }
+        if (!significant || significant < 1) {
+            significant = 3;
+        }
+        const digits = Math.min(significant, Math.max(0, significant - Math.floor(Math.log10(Math.abs(val)))));
+        return val.toFixed(digits);
+    },
+
+    _hoverText: function (d, plotData) {
+        const used = {};
+        let parts = [];
+        let key = '_0_item.name';
+        if (plotData.adjacentItems && plotData.colDict[key] && d[plotData.colDict[key].index] !== undefined && plotData.colDict[key].distinctcount !== 1) {
+            used[key] = true;
+            parts.push(plotData.colDict[key]);
+        }
+        key = '_1_annotation.name';
+        if (plotData.colDict[key] && d[plotData.colDict[key].index] !== undefined) {
+            used[key] = true;
+            parts.push(plotData.colDict[key]);
+        }
+        ['x', 'y', 'r', 'c', 's'].forEach((series) => {
+            if (plotData.series[series] && d[plotData.series[series].index] !== undefined && used[plotData.series[series].key] === undefined) {
+                used[plotData.series[series].key] = true;
+                parts.push(plotData.series[series]);
+            }
+        });
+        parts = parts.map((col) => `${col.title}: ${col.type === 'number' ? this._formatNumber(d[col.index]) : d[col.index]}`);
+
+        const imageDict = {
+            id: '_2_item.id',
+            left: '_bbox.x0',
+            top: '_bbox.y0',
+            right: '_bbox.x1',
+            bottom: '_bbox.y1'
+        };
+        if (Object.values(imageDict).every((v) => plotData.colDict[v] && d[plotData.colDict[v].index] !== undefined)) {
+            d.image = {};
+            Object.entries(imageDict).forEach(([k, v]) => {
+                d.image[k] = d[plotData.colDict[v].index];
+            });
+            /* Plotly adds hovertext rows in its own way, so add several rows
+             * that are blank and of some width that we can dynamically
+             * replace. */
+            for (let i = 0; i < 8; i += 1) {
+                parts.push('<span class="hui-plotly-hover-thumbnail">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+            }
+        }
+        this.adjustHoverText(d, parts, plotData);
+        return '<span class="hui-plotly-hover">' + parts.join('<br>') + '</span>';
     },
 
     plotDataToPlotly: function (plotData) {
@@ -214,17 +352,11 @@ var MetadataPlot = Panel.extend({
         const plotlyData = {
             x: plotData.data.map((d) => d[plotData.series.x.index]),
             y: plotData.data.map((d) => d[plotData.series.y.index]),
-            hovertext: plotData.data.map((d) => {
-                const parts = [];
-                ['x', 'y', 'r', 'c', 's'].forEach((series) => {
-                    if (plotData.series[series] && d[plotData.series[series].index] !== undefined) {
-                        parts.push(`${plotData.series[series].title}: ${d[plotData.series[series].index]}`);
-                    }
-                });
-                this.adjustHoverText(d, parts, plotData);
-                return '<span class="hui-plotly-hover" style="font-size: 9px">' + parts.join('<br>') + '</span>';
-            }),
+            hovertext: plotData.data.map((d) => this._hoverText(d, plotData)),
             hoverinfo: 'text',
+            hoverlabel: {
+                font: {size: 10}
+            },
             marker: {
                 symbol: plotData.series.s && plotData.series.s.distinct ? plotData.data.map((d) => plotData.series.s.distinct.indexOf(d[plotData.series.s.index])) : 0,
                 size: plotData.series.r && (plotData.series.r.type === 'number' || plotData.series.r.distinctcount)
@@ -312,8 +444,10 @@ var MetadataPlot = Panel.extend({
                     plotOptions.xaxis = {title: {text: plotData.format !== 'violin' ? `${plotData.series.x.title}` : `${plotData.series.s.title}`}};
                     plotOptions.yaxis = {title: {text: `${plotData.series.y.title}`}};
                 }
+                this._plotlyNode = elem;
                 window.Plotly.newPlot(elem[0], this.plotDataToPlotly(plotData), plotOptions);
                 elem[0].on('plotly_hover', (evt) => this.onHover(evt));
+                elem[0].on('plotly_selected', (evt) => this.onSelect(evt, plotData));
             });
         }
         return this;
