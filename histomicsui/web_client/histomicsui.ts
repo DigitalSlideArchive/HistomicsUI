@@ -20,7 +20,7 @@ const initializeHistomicsApp = async (apiRoot: string, el: string | HTMLElement 
           girder.router.enabled(false);
           girder.events.trigger('g:appload.before');
           girder.rest.restRequest({
-              url: `system/public_settings`,
+              url: 'system/setting/histomicsui',
               method: 'GET',
           }).done(async (resp: any) => {
               // We use dynamic import because this app's code depends on other plugins'
@@ -29,15 +29,14 @@ const initializeHistomicsApp = async (apiRoot: string, el: string | HTMLElement 
               const app = new App({
                   el,
                   parentView: null,
-                  // TODO get all these values using the former HistomicsUI webroot logic
-                  contactEmail: resp['core.contact_email_address'],
-                  privacyNoticeHref: resp['core.privacy_notice'],
-                  brandName: resp['core.brand_name'],
-                  bannerColor: resp['core.banner_color'],
-                  registrationPolicy: resp['core.registration_policy'],
-                  enablePasswordLogin: resp['core.enable_password_login'],
+                  brandName: resp['histomicsui.brand_name'],
+                  brandColor: resp['histomicsui.brand_color'],
+                  bannerColor: resp['histomicsui.banner_color'],
+                  helpURL: resp['histomicsui.help_url'],
+                  helpTooltip: resp['histomicsui.help_tooltip'],
+                  helpText: resp['histomicsui.help_text'],
               });
-              document.title = resp['core.brand_name'];
+              document.title = resp['histomicsui.brand_name'];
               app.bindRoutes();
               girder.events.trigger('g:appload.after', app);
               resolve(app);
