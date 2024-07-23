@@ -12,7 +12,9 @@ module.exports = function (config) {
             to: config.output.path,
             toType: 'dir'
         }, {
-            from: require.resolve('plotly.js/dist/plotly.min.js'),
+            // the minified version fails in our test environment because
+            // plotly.min.js uses some modern javascript (plotly.js doesn't)
+            from: require.resolve(process.env.TOX_ENV_NAME ? 'plotly.js/dist/plotly.js' : 'plotly.js/dist/plotly.min.js'),
             to: path.join(config.output.path, 'extra', 'plotly.js'),
             toType: 'file'
         }, {
