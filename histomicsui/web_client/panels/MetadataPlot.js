@@ -236,10 +236,18 @@ var MetadataPlot = Panel.extend({
     },
 
     onSelect: function (evt, plotData) {
+        if (this._elementSelect) {
+            this._elementSelect -= 1;
+            if (this._afterSelect && !this._elementSelect) {
+                this._afterSelect();
+                this._afterSelect = null;
+            }
+            return;
+        }
         if (plotData.colDict['_3_annotation.id'] === undefined || plotData.colDict['_5_annotationelement.id'] === undefined) {
             return;
         }
-        // evt is undefined when selection is cleared
+        // evt is undefined when the selection is cleared
         if (evt === undefined) {
             this.parentView._resetSelection();
             return;
@@ -284,7 +292,27 @@ var MetadataPlot = Panel.extend({
         if (!points.length) {
             return;
         }
-        window.Plotly.restyle(this._plotlyNode[0], {selectedpoints: [points]});
+        /* Deselect any selection on plotly.  There is no exposed function to
+         * do this, so we synthesize several actions: (a) switch to box select
+         * mode, (b) double click on the plot, (c) ignore the first selection
+         * event (first click), (d) on the second selection event, the plot no
+         * longer has a selection, so we can specify the selected points (in
+         * the _afterSelect callback), (e) switch back to whatever tool the
+         * user had selected on the plot. */
+        this._elementSelect = 2;
+        const curactive = this._plotlyNode.find('.modebar-btn.active');
+        this._afterSelect = () => {
+            window.Plotly.restyle(this._plotlyNode[0], {selectedpoints: [points]});
+            if (curactive.length) {
+                curactive[0].dispatchEvent(new MouseEvent('click'));
+            }
+        };
+        const plot = this._plotlyNode.find('.drag').first()[0];
+        for (let i = 0; i <= 2; i += 1) {
+            this._plotlyNode.find('.modebar-btn[data-val="select"]')[0].dispatchEvent(new MouseEvent('click'));
+            plot.dispatchEvent(new MouseEvent('mousedown', {bubbles: true, cancelable: true, view: window, clientX: 10, clientY: 10}));
+            plot.dispatchEvent(new MouseEvent('mouseup', {bubbles: true, cancelable: true, view: window, clientX: 10, clientY: 10}));
+        }
     },
 
     _formatNumber: function (val, significant) {

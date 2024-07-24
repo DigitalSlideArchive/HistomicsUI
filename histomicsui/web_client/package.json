@@ -38,7 +38,7 @@
         "bootstrap-submenu": "^2.0.4",
         "copy-webpack-plugin": "^4.5.2",
         "petite-vue": "^0.4.1",
-        "plotly.js": "^1.58.5",
+        "plotly.js": "^2.34.0",
         "sinon": "^2.1.0",
         "tinycolor2": "~1.4.1",
         "url-search-params-polyfill": "^8.1.1",
