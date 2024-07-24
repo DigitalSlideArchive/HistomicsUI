@@ -83,6 +83,7 @@ var MetadataPlot = Panel.extend({
         this.plottableData = null;
         if (this.plottableDataPromise) {
             this.plottableDataPromise.abort();
+            this.plottableDataPromise = null;
         }
         const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number' && v.count).length >= 2);
 
@@ -162,17 +163,22 @@ var MetadataPlot = Panel.extend({
         if (this._currentAnnotations && this._currentAnnotations.length >= 1) {
             keys = keys.concat(['_3_annotation.id', '_5_annotationelement.id']);
         }
-        this.plottableDataPromise = restRequest({
-            url: `annotation/item/${this.item.id}/plot/data`,
-            method: 'POST',
-            error: null,
-            data: {
-                adjacentItems: !!this.plotConfig.folder,
-                keys: keys.join(','),
-                requiredKeys: requiredKeys.join(','),
-                annotations: JSON.stringify(this._currentAnnotations)
-            }
-        }).done((result) => {
+        const fetch = {
+            adjacentItems: !!this.plotConfig.folder,
+            keys: keys.join(','),
+            requiredKeys: requiredKeys.join(','),
+            annotations: JSON.stringify(this._currentAnnotations)
+        };
+        if (!this.plottableDataPromise || !_.isEqual(this._lastPlottableDataFetch, fetch)) {
+            this.plottableDataPromise = restRequest({
+                url: `annotation/item/${this.item.id}/plot/data`,
+                method: 'POST',
+                error: null,
+                data: fetch
+            });
+        }
+        this._lastPlottableDataFetch = fetch;
+        this.plottableDataPromise.done((result) => {
             this.plottableData = result;
         });
     },
