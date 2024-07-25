@@ -156,12 +156,12 @@ var MetadataPlot = Panel.extend({
                 requiredKeys.push(this.plotConfig[k]);
             }
         });
-        keys = keys.concat(['_0_item.name', '_2_item.id', '_bbox.x0', '_bbox.y0', '_bbox.x1', '_bbox.y1']);
+        keys = keys.concat(['item.name', 'item.id', 'bbox.x0', 'bbox.y0', 'bbox.x1', 'bbox.y1']);
         if (this._currentAnnotations && this._currentAnnotations.length > 1) {
-            keys = keys.concat(['_1_annotation.name']);
+            keys = keys.concat(['annotation.name']);
         }
         if (this._currentAnnotations && this._currentAnnotations.length >= 1) {
-            keys = keys.concat(['_3_annotation.id', '_5_annotationelement.id']);
+            keys = keys.concat(['annotation.id', 'annotationelement.id']);
         }
         const fetch = {
             adjacentItems: !!this.plotConfig.folder,
@@ -250,7 +250,7 @@ var MetadataPlot = Panel.extend({
             }
             return;
         }
-        if (plotData.colDict['_3_annotation.id'] === undefined || plotData.colDict['_5_annotationelement.id'] === undefined) {
+        if (plotData.colDict['annotation.id'] === undefined || plotData.colDict['annotationelement.id'] === undefined) {
             return;
         }
         // evt is undefined when the selection is cleared
@@ -263,8 +263,8 @@ var MetadataPlot = Panel.extend({
         const elements = [];
         evt.points.forEach((pt) => {
             const row = plotData.data[pt.pointIndex];
-            const annotid = row[plotData.colDict['_3_annotation.id'].index];
-            const elid = row[plotData.colDict['_5_annotationelement.id'].index];
+            const annotid = row[plotData.colDict['annotation.id'].index];
+            const elid = row[plotData.colDict['annotationelement.id'].index];
             if (annotid === undefined || elid === undefined) {
                 return;
             }
@@ -286,14 +286,14 @@ var MetadataPlot = Panel.extend({
     },
 
     onElementSelect: function (elements) {
-        if (!this.lastPlotData || !this.lastPlotData.colDict['_5_annotationelement.id'] || !elements.models) {
+        if (!this.lastPlotData || !this.lastPlotData.colDict['annotationelement.id'] || !elements.models) {
             return;
         }
         const ids = {};
         elements.models.forEach((el) => {
             ids[el.id] = true;
         });
-        const colidx = this.lastPlotData.colDict['_5_annotationelement.id'].index;
+        const colidx = this.lastPlotData.colDict['annotationelement.id'].index;
         const points = this.lastPlotData.data.map((row, idx) => ids[row[colidx]] ? idx : null).filter((idx) => idx !== null);
         if (!points.length) {
             return;
@@ -335,12 +335,12 @@ var MetadataPlot = Panel.extend({
     _hoverText: function (d, plotData) {
         const used = {};
         let parts = [];
-        let key = '_0_item.name';
+        let key = 'item.name';
         if (plotData.adjacentItems && plotData.colDict[key] && d[plotData.colDict[key].index] !== undefined && plotData.colDict[key].distinctcount !== 1) {
             used[key] = true;
             parts.push(plotData.colDict[key]);
         }
-        key = '_1_annotation.name';
+        key = 'annotation.name';
         if (plotData.colDict[key] && d[plotData.colDict[key].index] !== undefined) {
             used[key] = true;
             parts.push(plotData.colDict[key]);
@@ -354,11 +354,11 @@ var MetadataPlot = Panel.extend({
         parts = parts.map((col) => `${col.title}: ${col.type === 'number' ? this._formatNumber(d[col.index]) : d[col.index]}`);
 
         const imageDict = {
-            id: '_2_item.id',
-            left: '_bbox.x0',
-            top: '_bbox.y0',
-            right: '_bbox.x1',
-            bottom: '_bbox.y1'
+            id: 'item.id',
+            left: 'bbox.x0',
+            top: 'bbox.y0',
+            right: 'bbox.x1',
+            bottom: 'bbox.y1'
         };
         if (Object.values(imageDict).every((v) => plotData.colDict[v] && d[plotData.colDict[v].index] !== undefined)) {
             d.image = {};

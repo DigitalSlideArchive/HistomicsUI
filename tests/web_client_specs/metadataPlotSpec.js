@@ -103,11 +103,11 @@ girderTest.promise.done(function () {
                     return $('#h-plot-series-x').length;
                 }, 'dialog controls to exist');
                 runs(function () {
-                    $('#h-plot-series-x').val('gloms.pas.item');
-                    $('#h-plot-series-y').val('gloms.area.item');
-                    $('#h-plot-series-r').val('gloms.aspect.item');
-                    $('#h-plot-series-c').val('gloms.label.item');
-                    $('#h-plot-series-s').val('_0_item.name');
+                    $('#h-plot-series-x').val('data.gloms.0.pas');
+                    $('#h-plot-series-y').val('data.gloms.0.area');
+                    $('#h-plot-series-r').val('data.gloms.0.aspect');
+                    $('#h-plot-series-c').val('data.gloms.0.label');
+                    $('#h-plot-series-s').val('item.name');
                     $('.h-submit').click();
                 });
                 girderTest.waitForLoad();
@@ -130,8 +130,8 @@ girderTest.promise.done(function () {
                 girderTest.waitForDialog();
                 runs(function () {
                     // switch some other options, too.
-                    $('#h-plot-series-r').val('gloms.label.item');
-                    $('#h-plot-series-c').val('gloms.average.item');
+                    $('#h-plot-series-r').val('data.gloms.0.label');
+                    $('#h-plot-series-c').val('data.gloms.0.average');
                     $('#h-plot-folder').prop('checked', false);
                     $('.h-submit').click();
                 });
