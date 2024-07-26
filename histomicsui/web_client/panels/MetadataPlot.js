@@ -217,6 +217,9 @@ var MetadataPlot = Panel.extend({
         }
         const idx = evt.points[0].pointIndex;
         const image = this.lastPlotData.data[idx].image;
+        if (!image) {
+            return;
+        }
         const maxw = 100, maxh = 100;
         const imgw = Math.min(Math.ceil(image.right - image.left) * 2, maxw);
         const imgh = Math.min(Math.ceil(image.bottom - image.top) * 2, maxh);
