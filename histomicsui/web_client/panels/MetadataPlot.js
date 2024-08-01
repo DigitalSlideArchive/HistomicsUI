@@ -331,7 +331,10 @@ var MetadataPlot = Panel.extend({
         if (!significant || significant < 1) {
             significant = 3;
         }
-        const digits = Math.min(significant, Math.max(0, significant - Math.floor(Math.log10(Math.abs(val)))));
+        let digits = Math.min(significant, Math.max(0, significant - Math.floor(Math.log10(Math.abs(val)))));
+        if (parseFloat(val) === parseInt(val, 10)) {
+            digits = 0;
+        }
         return val.toFixed(digits);
     },
 
