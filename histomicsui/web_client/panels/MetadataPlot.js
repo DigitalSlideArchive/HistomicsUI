@@ -357,7 +357,31 @@ var MetadataPlot = Panel.extend({
                 parts.push(plotData.series[series]);
             }
         });
-        parts = parts.map((col) => `${col.title}: ${col.type === 'number' ? this._formatNumber(d[col.index]) : d[col.index]}`);
+        const maximized = this.$el.closest('.h-panel-maximized').length > 0;
+        const maxtotallen = 50;
+        const maxlen = 32;
+        parts = parts.map((col) => {
+            let title = '' + col.title;
+            let val = d[col.index];
+            if (val === undefined || val === null) {
+                val = '';
+            } else if (col.type === 'number') {
+                val = this._formatNumber(val);
+            } else {
+                val = '' + val;
+            }
+            const result = title + ': ' + val;
+            if (maximized || result.length <= maxtotallen) {
+                return result;
+            }
+            if (val.length > maxlen + 3) {
+                val = val.substring(0, maxlen).replace(/\.+$/, '') + '...';
+            }
+            if (title.length + val.length + 2 > maxtotallen + 3) {
+                title = title.substring(0, maxtotallen - val.length - 2).replace(/\.+$/, '') + '...';
+            }
+            return title + ': ' + val;
+        });
 
         const imageDict = {
             id: 'item.id',
