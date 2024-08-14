@@ -223,6 +223,9 @@ var MetadataPlot = Panel.extend({
         const maxw = 100, maxh = 100;
         const imgw = Math.min(Math.ceil(image.right - image.left) * 2, maxw);
         const imgh = Math.min(Math.ceil(image.bottom - image.top) * 2, maxh);
+        if (!imgw || !imgh) {
+            return;
+        }
         const regionUrl = `api/v1/item/${image.id}/tiles/region?width=${imgw}&height=${imgh}&left=${image.left}&top=${image.top}&right=${image.right}&bottom=${image.bottom}`;
         let x = parseFloat($('svg g.hoverlayer g.hovertext text[x]').attr('x'));
         let y = parseFloat($('svg g.hoverlayer g.hovertext text[y]').attr('y'));
