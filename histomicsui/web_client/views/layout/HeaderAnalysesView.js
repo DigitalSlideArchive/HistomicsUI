@@ -27,10 +27,15 @@ var HeaderUserView = View.extend({
             restRequest({
                 url: 'slicer_cli_web/docker_image'
             }).then((analyses) => {
+                let maxEntries = Math.max(10, Math.floor(($('.h-image-view-body').height() || 0) / 26) - 10);
+                if (Object.keys(analyses).length > maxEntries * maxEntries) {
+                    maxEntries = Math.max(10, Math.floor((($('.h-image-view-body').height() || 0) / 26 - 10) / 2));
+                }
                 if (_.keys(analyses || {}).length > 0) {
                     this.$el.removeClass('hidden');
                     this.$el.html(headerAnalysesTemplate({
-                        analyses: analyses || {}
+                        analyses: analyses || {},
+                        maxEntries: maxEntries
                     }));
                     this.$('.h-analyses-dropdown-link').submenupicker();
                 } else {
