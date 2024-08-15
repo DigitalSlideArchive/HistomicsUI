@@ -20,7 +20,7 @@ from histomicsui.models.slide import Slide
 from . import girder_utilities as utilities
 
 
-@pytest.fixture()
+@pytest.fixture
 def singular(tmp_path_factory):
     root_tmp_dir = tmp_path_factory.getbasetemp().parent
     with filelock.FileLock(root_tmp_dir / '.test_tcga.lock'):

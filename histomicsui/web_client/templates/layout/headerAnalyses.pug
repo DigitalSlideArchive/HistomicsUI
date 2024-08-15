@@ -1,21 +1,74 @@
+mixin analysisMenu(image, imageName)
+  li.dropdown-submenu
+    a(tabindex='0', href='#', data-name=imageName) #{imageName}
+    ul.dropdown-menu
+      each version, versionName in image
+        li.dropdown-submenu
+          a(tabindex='0', href='#') #{versionName}
+          ul.dropdown-menu
+            each cli, cliName in version
+              - var api = cli.run.replace(/\/run$/, '');
+              li
+                a.h-analysis-item(
+                    tabindex='0',
+                    href='#',
+                    data-api=api,
+                    data-image=imageName,
+                    data-version=versionName,
+                    data-cli=cliName) #{cliName}
+
 a.h-analyses-dropdown-link(data-toggle='dropdown')
   | #[span.icon-tasks] Analyses #[span.icon-down-open]
-ul.h-analyses-dropdown.dropdown-menu(role='menu')
-  each image, imageName in analyses
-    li.dropdown-submenu
-      a(tabindex='0', href='#', data-name=imageName) #{imageName}
-      ul.dropdown-menu
-        each version, versionName in image
-          li.dropdown-submenu
-            a(tabindex='0', href='#') #{versionName}
-            ul.dropdown-menu
-              each cli, cliName in version
-                - var api = cli.run.replace(/\/run$/, '');
-                li
-                  a.h-analysis-item(
-                      tabindex='0',
-                      href='#',
-                      data-api=api,
-                      data-image=imageName,
-                      data-version=versionName,
-                      data-cli=cliName) #{cliName}
+-
+  let depth = 0;
+  let rows = maxEntries;
+  let keyList = Object.keys(analyses).sort();
+  let entries = keyList.length;
+  if (entries > maxEntries * maxEntries * maxEntries) {
+    rows = Math.ceil(Math.pow(entries, 1./3));
+  }
+  if (entries > maxEntries * maxEntries) {
+    depth = 2;
+  } else if (entries > maxEntries) {
+    depth = 1;
+  }
+if depth === 2
+  ul.h-analyses-dropdown.dropdown-menu(role='menu')
+    for d2v, d2i in Array(Math.ceil(entries / rows / rows))
+      -
+        let start2 = d2i * rows * rows;
+        let end2 = Math.min((d2i + 1) * rows * rows, entries);
+      li.dropdown-submenu
+        a(tabindex='0', href='#', title=keyList[start2] + ' to ' + keyList[end2 - 1]) #{start2 + 1} to #{end2}
+        ul.dropdown-menu
+          for d1v, d1i in Array(Math.ceil((end2 - start2) / rows))
+            -
+              let start1 = start2 + d1i * rows;
+              let end1 = Math.min(start2 + (d1i + 1) * rows, entries);
+            li.dropdown-submenu
+              a(tabindex='0', href='#', title=keyList[start1] + ' to ' + keyList[end1 - 1]) #{start1 + 1} to #{end1}
+              ul.dropdown-menu
+                for d0v, d0i in Array(end1 - start1)
+                  -
+                    let imageName = keyList[start1 + d0i];
+                    let image = analyses[imageName];
+                  +analysisMenu(image, imageName)
+else if depth === 1
+  ul.h-analyses-dropdown.dropdown-menu(role='menu')
+    for d1v, d1i in Array(Math.ceil(entries / rows))
+      -
+        let start1 = d1i * rows;
+        let end1 = Math.min((d1i + 1) * rows, entries);
+      li.dropdown-submenu
+        a(tabindex='0', href='#', title=keyList[start1] + ' to ' + keyList[end1 - 1]) #{start1 + 1} to #{end1}
+        ul.dropdown-menu
+          for d0v, d0i in Array(end1 - start1)
+            -
+              let imageName = keyList[start1 + d0i];
+              let image = analyses[imageName];
+            +analysisMenu(image, imageName)
+else
+  ul.h-analyses-dropdown.dropdown-menu(role='menu')
+    each imageName in keyList
+      - let image = analyses[imageName];
+      +analysisMenu(image, imageName)
