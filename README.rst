@@ -94,7 +94,7 @@ If you are making changes to the HistomicsUI frontend, you can make Girder watch
 Annotations and Metadata from Jobs
 ----------------------------------
 
-This handles ingesting annotations and metadata that are uploaded and associating them with existing large image items in the Girder database.  These annotations and metadata re commonly generated through jobs, such as HistomicTK tasks, but can also be added manually.
+This handles ingesting annotations and metadata that are uploaded and associating them with existing large image items in the Girder database.  These annotations and metadata are commonly generated through jobs, such as HistomicTK tasks, but can also be added manually.
 
 If a file is uploaded to the Girder system that includes a ``reference`` record, and that ``reference`` record contains an ``identifier`` field and at least one of a ``fileId`` and an ``itemId`` field, specific identifiers can be used to ingest the results.  If a ``userId`` is specified in the ``reference`` record, permissions for adding the annotation or metadata are associated with that user.
 
@@ -124,7 +124,6 @@ This work was funded in part by the NIH grant U24-CA194362-01_.
 .. _Girder Worker: https://girder-worker.readthedocs.io/en/latest/
 .. _large_image: https://github.com/girder/large_image
 .. _slicer_cli_web: https://github.com/girder/slicer_cli_web
-.. _slicer execution model: https://www.slicer.org/slicerWiki/index.php/Slicer3:Execution_Model_Documentation
 .. _celery: http://www.celeryproject.org/
 .. _HistomicsTK: https://github.com/DigitalSlideArchive/HistomicsTK
 .. _Digital Slide Archive: https://github.com/DigitalSlideArchive/digital_slide_archive
