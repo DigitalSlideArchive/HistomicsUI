@@ -9,7 +9,6 @@ wrap(LoginView, 'render', function (render) {
         const loginText = (settings['histomicsui.login_text'] || '');
         if (loginText) {
             this.$('#g-login-form label[for="g-login"]').text(loginText);
-            console.log('HERE', loginText); // DWM::
         }
         return null;
     });

@@ -150,7 +150,7 @@ var MetadataPlot = Panel.extend({
         if (!keys.length) {
             return;
         }
-        const requiredKeys = [];
+        let requiredKeys = [];
         ['x', 'y'].forEach((k) => {
             if (this.plotConfig[k] !== undefined) {
                 requiredKeys.push(this.plotConfig[k]);
@@ -163,12 +163,27 @@ var MetadataPlot = Panel.extend({
         if (this._currentAnnotations && this._currentAnnotations.length >= 1) {
             keys = keys.concat(['annotation.id', 'annotationelement.id']);
         }
+        if (this.plotConfig.u) {
+            ['x', 'y', 'r', 'c', 's'].forEach((k) => {
+                if (this.plotConfig[k] !== undefined && this.plotConfig[k].startsWith('compute.') && !keys.includes(this.plotConfig[k])) {
+                    keys.push(this.plotConfig[k]);
+                }
+                if (this.plotConfig[k] !== undefined && this.plotConfig[k].startsWith('compute.') && !requiredKeys.includes(this.plotConfig[k])) {
+                    requiredKeys.push(this.plotConfig[k]);
+                }
+            });
+            keys = keys.concat(this.plotConfig.u);
+            requiredKeys = requiredKeys.concat(this.plotConfig.u);
+        }
         const fetch = {
             adjacentItems: !!this.plotConfig.folder,
             keys: keys.join(','),
             requiredKeys: requiredKeys.join(','),
             annotations: JSON.stringify(this._currentAnnotations)
         };
+        if (this.plotConfig.u && this.plotConfig.u.length >= 3) {
+            fetch.compute = JSON.stringify({columns: this.plotConfig.u});
+        }
         if (!this.plottableDataPromise || !_.isEqual(this._lastPlottableDataFetch, fetch)) {
             this.plottableDataPromise = restRequest({
                 url: `annotation/item/${this.item.id}/plot/data`,

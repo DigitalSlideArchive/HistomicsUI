@@ -1,3 +1,5 @@
+import $ from 'jquery';
+
 import View from '@girder/core/views/View';
 
 import metadataPlotDialog from '../templates/dialogs/metadataPlot.pug';
@@ -34,6 +36,11 @@ const MetadataPlotDialog = View.extend({
             if (val !== '_none_' && val !== undefined) {
                 configOptions[series] = val;
             }
+        });
+        ['u'].forEach((series) => {
+            const opts = this.$('#h-plot-series-' + series + ' option');
+            const val = opts.filter((idx, o) => o.selected).map((idx, o) => $(o).val()).get();
+            configOptions[series] = val.length ? val : undefined;
         });
         this.result = configOptions;
         this.$el.modal('hide');
