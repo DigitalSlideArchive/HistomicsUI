@@ -28,7 +28,7 @@
           var numIndex = [];
           plotOptions.forEach((po, idx) => { numIndex.push(numNumbers);  if (po.type === 'number') { numNumbers += 1; }});
         for series, seriesidx in seriesList
-          .form-group
+          .form-group(class=series.multiple ? 'h-plot-resizable' : '')
             label(for='h-plot-series-' + series.key) #{series.label}
             if series.comment
               p.g-hui-description #{series.comment}

@@ -88,6 +88,7 @@ var MetadataPlot = Panel.extend({
         const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number' && v.count).length >= 2);
 
         // redo this when annotations are turned on or off
+        this.$el.addClass('loading');
         this.plottableListPromise = restRequest({
             url: `annotation/item/${this.item.id}/plot/list`,
             method: 'POST',
@@ -97,6 +98,8 @@ var MetadataPlot = Panel.extend({
             }
         }).done((result) => {
             this.plottableList = result;
+            this.plottableListPromise = null;
+            this.$el.toggleClass('loading', !!(this.plottableListPromise || this.plottableDataPromise));
             const plotOptions = this.getPlotOptions();
             if (plotOptions.filter((v) => v.type === 'number' && v.count).length >= 2) {
                 if (!hasPlot) {
@@ -163,8 +166,10 @@ var MetadataPlot = Panel.extend({
         if (this._currentAnnotations && this._currentAnnotations.length >= 1) {
             keys = keys.concat(['annotation.id', 'annotationelement.id']);
         }
+        let anyCompute = false;
         if (this.plotConfig.u) {
             ['x', 'y', 'r', 'c', 's'].forEach((k) => {
+                anyCompute = anyCompute || !!(this.plotConfig[k] !== undefined && this.plotConfig[k].startsWith('compute.'));
                 if (this.plotConfig[k] !== undefined && this.plotConfig[k].startsWith('compute.') && !keys.includes(this.plotConfig[k])) {
                     keys.push(this.plotConfig[k]);
                 }
@@ -172,8 +177,10 @@ var MetadataPlot = Panel.extend({
                     requiredKeys.push(this.plotConfig[k]);
                 }
             });
-            keys = keys.concat(this.plotConfig.u);
-            requiredKeys = requiredKeys.concat(this.plotConfig.u);
+            if (anyCompute) {
+                keys = keys.concat(this.plotConfig.u);
+                requiredKeys = requiredKeys.concat(this.plotConfig.u);
+            }
         }
         const fetch = {
             adjacentItems: !!this.plotConfig.folder,
@@ -181,10 +188,11 @@ var MetadataPlot = Panel.extend({
             requiredKeys: requiredKeys.join(','),
             annotations: JSON.stringify(this._currentAnnotations)
         };
-        if (this.plotConfig.u && this.plotConfig.u.length >= 3) {
+        if (this.plotConfig.u && this.plotConfig.u.length >= 3 && anyCompute) {
             fetch.compute = JSON.stringify({columns: this.plotConfig.u});
         }
         if (!this.plottableDataPromise || !_.isEqual(this._lastPlottableDataFetch, fetch)) {
+            this.$el.addClass('loading');
             this.plottableDataPromise = restRequest({
                 url: `annotation/item/${this.item.id}/plot/data`,
                 method: 'POST',
@@ -195,6 +203,8 @@ var MetadataPlot = Panel.extend({
         this._lastPlottableDataFetch = fetch;
         this.plottableDataPromise.done((result) => {
             this.plottableData = result;
+            this.plottableDataPromise = null;
+            this.$el.toggleClass('loading', !!(this.plottableListPromise || this.plottableDataPromise));
         });
     },
 
@@ -467,6 +477,7 @@ var MetadataPlot = Panel.extend({
             plotlyData.meanline = {visible: true};
             plotlyData.yaxis = {zeroline: false};
             plotlyData.scalemode = 'width';
+            plotlyData.spanmode = 'hard';
             plotlyData.width = 0.9;
             // plotlyData.points = 'outliers';
             plotlyData.points = 'all';
