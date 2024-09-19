@@ -191,7 +191,7 @@ var MetadataPlot = Panel.extend({
         if (this.plotConfig.u && this.plotConfig.u.length >= 3 && anyCompute) {
             fetch.compute = JSON.stringify({columns: this.plotConfig.u});
         }
-        if (!this.plottableDataPromise || !_.isEqual(this._lastPlottableDataFetch, fetch)) {
+        if (!_.isEqual(this._lastPlottableDataFetch, fetch)) {
             this.$el.addClass('loading');
             this.plottableDataPromise = restRequest({
                 url: `annotation/item/${this.item.id}/plot/data`,
