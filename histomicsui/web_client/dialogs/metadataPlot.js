@@ -4,6 +4,7 @@ import View from '@girder/core/views/View';
 
 import metadataPlotDialog from '../templates/dialogs/metadataPlot.pug';
 import '@girder/core/utilities/jquery/girderModal';
+import '../stylesheets/dialogs/metadataPlot.styl';
 
 const MetadataPlotDialog = View.extend({
     events: {
@@ -22,6 +23,7 @@ const MetadataPlotDialog = View.extend({
                 plotOptions: this.plotOptions
             })
         ).girderModal(this);
+
         return this;
     },
 
