@@ -2,6 +2,7 @@
 
 import $ from 'jquery';
 import _ from 'underscore';
+import {v4 as uuidv4} from 'uuid';
 
 import {restRequest} from '@girder/core/rest';
 
@@ -11,6 +12,8 @@ import Panel from '@girder/slicer_cli_web/views/Panel';
 import MetadataPlotDialog from '../dialogs/metadataPlot';
 import metadataPlotTemplate from '../templates/panels/metadataPlot.pug';
 import '../stylesheets/panels/metadataPlot.styl';
+
+const sessionId = uuidv4();
 
 var MetadataPlot = Panel.extend({
     events: _.extend(Panel.prototype.events, {
@@ -94,7 +97,8 @@ var MetadataPlot = Panel.extend({
             method: 'POST',
             error: null,
             data: {
-                annotations: JSON.stringify(this._currentAnnotations)
+                annotations: JSON.stringify(this._currentAnnotations),
+                uuid: sessionId
             }
         }).done((result) => {
             this.plottableList = result;
@@ -182,25 +186,26 @@ var MetadataPlot = Panel.extend({
                 requiredKeys = requiredKeys.concat(this.plotConfig.u);
             }
         }
-        const fetch = {
+        const params = {
             adjacentItems: !!this.plotConfig.folder,
             keys: keys.join(','),
             requiredKeys: requiredKeys.join(','),
-            annotations: JSON.stringify(this._currentAnnotations)
+            annotations: JSON.stringify(this._currentAnnotations),
+            uuid: sessionId
         };
         if (this.plotConfig.u && this.plotConfig.u.length >= 3 && anyCompute) {
-            fetch.compute = JSON.stringify({columns: this.plotConfig.u});
+            params.compute = JSON.stringify({columns: this.plotConfig.u});
         }
-        if (!_.isEqual(this._lastPlottableDataFetch, fetch)) {
+        if (!_.isEqual(this._lastPlottableDataParams, params)) {
             this.$el.addClass('loading');
             this.plottableDataPromise = restRequest({
                 url: `annotation/item/${this.item.id}/plot/data`,
                 method: 'POST',
                 error: null,
-                data: fetch
+                data: params
             });
         }
-        this._lastPlottableDataFetch = fetch;
+        this._lastPlottableDataParams = params;
         this.plottableDataPromise.done((result) => {
             this.plottableData = result;
             this.plottableDataPromise = null;
