@@ -82,16 +82,19 @@ var MetadataPlot = Panel.extend({
         this.plottableList = null;
         if (this.plottableListPromise) {
             this.plottableListPromise.abort();
+            this.plottableListLoading = false;
         }
         this.plottableData = null;
         if (this.plottableDataPromise) {
             this.plottableDataPromise.abort();
             this.plottableDataPromise = null;
+            this.plottableDataLoading = false;
         }
         const hasPlot = (this.getPlotOptions().filter((v) => v.type === 'number' && v.count).length >= 2);
 
         // redo this when annotations are turned on or off
         this.$el.addClass('loading');
+        this.plottableListLoading = true;
         this.plottableListPromise = restRequest({
             url: `annotation/item/${this.item.id}/plot/list`,
             method: 'POST',
@@ -102,14 +105,17 @@ var MetadataPlot = Panel.extend({
             }
         }).done((result) => {
             this.plottableList = result;
-            this.plottableListPromise = null;
-            this.$el.toggleClass('loading', !!(this.plottableListPromise || this.plottableDataPromise));
+            this.plottableListLoading = false;
+            this.$el.toggleClass('loading', !!(this.plottableListLoading || this.plottableDataLoading));
             const plotOptions = this.getPlotOptions();
             if (plotOptions.filter((v) => v.type === 'number' && v.count).length >= 2) {
                 if (!hasPlot) {
                     this.render();
                 }
             }
+        }).fail((result) => {
+            this.plottableListLoading = false;
+            this.$el.toggleClass('loading', !!(this.plottableListLoading || this.plottableDataLoading));
         });
     },
 
@@ -198,18 +204,22 @@ var MetadataPlot = Panel.extend({
         }
         if (!_.isEqual(this._lastPlottableDataParams, params)) {
             this.$el.addClass('loading');
+            this.plottableDataLoading = true;
             this.plottableDataPromise = restRequest({
                 url: `annotation/item/${this.item.id}/plot/data`,
                 method: 'POST',
                 error: null,
                 data: params
             });
+            this._lastPlottableDataParams = params;
         }
-        this._lastPlottableDataParams = params;
         this.plottableDataPromise.done((result) => {
             this.plottableData = result;
-            this.plottableDataPromise = null;
-            this.$el.toggleClass('loading', !!(this.plottableListPromise || this.plottableDataPromise));
+            this.plottableDataLoading = false;
+            this.$el.toggleClass('loading', !!(this.plottableListLoading || this.plottableDataLoading));
+        }).fail(() => {
+            this.plottableDataLoading = false;
+            this.$el.toggleClass('loading', !!(this.plottableListLoading || this.plottableDataLoading));
         });
     },
 
@@ -483,17 +493,28 @@ var MetadataPlot = Panel.extend({
             plotlyData.yaxis = {zeroline: false};
             plotlyData.scalemode = 'width';
             plotlyData.spanmode = 'hard';
+            plotlyData.showlegend = false;
             plotlyData.width = 0.9;
             // plotlyData.points = 'outliers';
             plotlyData.points = 'all';
             plotlyData.pointpos = 0;
             plotlyData.jitter = 0;
             // plotlyData.side = 'positive';
-            if (plotData.series.c && plotData.series.c.distinct) {
+            if (plotData.series.c && plotData.series.c.distinct && plotData.series.s.distinct) {
                 plotlyData.transforms = [{
                     type: 'groupby',
                     groups: plotlyData.x,
-                    styles: Object.keys(plotData.series.c.distinct).map((k, kidx) => ({target: kidx, value: {line: {color: colorBrewerPaired12[kidx]}}}))
+                    styles: Object.keys(plotData.series.s.distinct).map((k, kidx) => {
+                        k = plotData.series.s.distinct[kidx];
+                        for (let didx = 0; didx < plotData.data.length; didx += 1) {
+                            if (plotData.data[didx][plotData.series.s.index] === k) {
+                                const cval = plotData.data[didx][plotData.series.c.index];
+                                const cidx = plotData.series.c.distinct.indexOf(cval);
+                                return {target: kidx, value: {line: {color: colorBrewerPaired12[cidx]}}};
+                            }
+                        }
+                        return {target: kidx, value: {line: {color: '#000000'}}};
+                    })
                 }];
             }
         }
