@@ -202,7 +202,7 @@ var MetadataPlot = Panel.extend({
         if (this.plotConfig.u && this.plotConfig.u.length >= 3 && anyCompute) {
             params.compute = JSON.stringify({columns: this.plotConfig.u});
         }
-        if (!_.isEqual(this._lastPlottableDataParams, params)) {
+        if (!_.isEqual(this._lastPlottableDataParams, params) || !this.plottableDataPromise) {
             this.$el.addClass('loading');
             this.plottableDataLoading = true;
             this.plottableDataPromise = restRequest({
