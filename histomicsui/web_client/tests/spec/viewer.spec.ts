@@ -1,39 +1,19 @@
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 
-import { createUser, delay, login, logout, waitForDialog } from '../util';
+import { createUser, uploadSampleFile } from '../util';
 import { setupServer } from '../server';
 
-test.describe('Create an admin and non-admin user', () => {
+test.describe('Test image viewer', () => {
   setupServer();
 
-  test('Register a user (first is admin)', async ({ page }) => {
-    await expect(page.getByText('Admin console')).toBeHidden();
-    await createUser(page, 'admin', 'admin@girder.test', 'Admin', 'Admin', 'adminpassword!');
-    await expect(page.getByText('Admin console')).toBeVisible();
-    await logout(page);
-    await expect(page.getByText('Admin console')).toBeHidden();
-  });
+  test('Upload SVS large image and ensure thumbnail renders', async ({ page }) => {
+    await createUser(page);
+    await page.locator('#g-app-header-container').getByText('firstlast').click();
+    await page.getByRole('link', { name: ' My folders' }).click();
+    await page.getByRole('link', { name: ' Private ' }).click();
+    await uploadSampleFile(page, 'sample_svs_image.TCGA-DU-6399-01A-01-TS1.e8eb65de-d63e-42db-af6f-14fefbbdf7bd.svs');
 
-  test('Register a second user (non-admin)', async ({ page }) => {
-    await createUser(page, 'johndoe', 'john.doe@girder.test', 'John', 'Doe', 'password!');
-    await delay(1000);
-    await expect(page.getByText('Admin console')).toBeHidden();
-    await logout(page);
-  });
-
-  test('Login non-admin user', async ({ page }) => {
-    await login(page, 'johndoe', 'password!');
-    await logout(page);
-  });
-
-  test('Create public group', async ({ page }) => {
-    await login(page, 'johndoe', 'password!');
-    await page.getByText('Groups').click();
-    await page.getByRole('button', { name: ' Create Group' }).click();
-    await waitForDialog(page);
-    await page.getByText('Public — Anyone can see this group').click();
-    await page.getByLabel('Name').fill('pubGroup', { timeout: 1000 });
-    await page.getByLabel('Description (optional)').fill('public group', { timeout: 1000 });
-    await page.getByRole('button', { name: ' Create', exact: true }).click();
+    const locator = page.locator('.large_image_thumbnail>img.loaded');
+    await locator.waitFor({ state: 'visible' });
   });
 });

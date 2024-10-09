@@ -1,3 +1,5 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { expect, type Page } from '@playwright/test';
 
 export const waitForDialog = async (page: Page) => {
@@ -80,4 +82,10 @@ export const upload = async (page: Page, file: string | string[], awaitSuccess: 
   if (awaitSuccess) {
     await expect(page.locator('.g-start-upload')).toBeHidden();
   }
+};
+
+export const uploadSampleFile = async (page: Page, filename: string) => {
+  const __filename = fileURLToPath(import.meta.url);
+  const sampleFile = path.join(path.dirname(__filename), '..', '..', '..', 'sample_data', filename);
+  await upload(page, sampleFile);
 };
