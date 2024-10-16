@@ -39,7 +39,10 @@ const startServer = async (port: number) => {
       GIRDER_SETTING_CORE_CORS_ALLOW_ORIGIN: '*',
       GIRDER_EMAIL_TO_CONSOLE: 'true',
     },
+    // These two options are necessary to make Girder server subprocess survive end of
+    // the test process.
     detached: true,
+    stdio: 'ignore',
   });
   await new Promise<void>((resolve) => {
     serverProcess?.stdout.on('data', (data: string) => {
