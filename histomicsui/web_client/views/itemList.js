@@ -67,8 +67,8 @@ wrap(ItemListWidget, 'render', function (render) {
         const webrootPath = (settings['histomicsui.webroot_path'] || '');
         if (!this.$el.closest('.modal-dialog').length) {
             for (let ix = 0; ix < this.collection.length; ix++) {
-                if (!this.$el.find('.g-item-list li.g-item-list-entry:eq(' + ix + ') .g-hui-open-link').length && this.collection.models[ix].attributes.largeImage) {
-                    this.$el.find('.g-item-list li.g-item-list-entry:eq(' + ix + ') a[class^=g-]:last').after(
+                if (!this.$el.find('.g-item-list .g-item-list-entry:eq(' + ix + ') .g-hui-open-link').length && this.collection.models[ix].attributes.largeImage) {
+                    this.$el.find('.g-item-list .g-item-list-entry:eq(' + ix + ') a[class^=g-]:last').after(
                         `<a class="g-hui-open-link" title="Open in ${brandName}" href="${webrootPath}#?image=${this.collection.models[ix].id}" target="_blank"><i class="icon-link-ext"></i></a>`
                     );
                 }
