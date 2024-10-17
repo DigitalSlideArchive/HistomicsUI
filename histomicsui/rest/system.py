@@ -17,6 +17,7 @@
 import datetime
 import os
 
+from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import RestException, boundHandler, filtermodel
@@ -458,5 +459,12 @@ def getMultipleResourcePaths(self, resources):
         model = ModelImporter.model(kind)
         for id in resources[kind]:
             doc = model.load(id=id, user=user, level=AccessType.READ)
-            results[kind][id] = path_util.getResourcePath(kind, doc, user=user)
+            if doc is None:
+                logger.info(f'Failed to load {kind} {id}')
+                continue
+            try:
+                results[kind][id] = path_util.getResourcePath(kind, doc, user=user)
+            except Exception:
+                logger.info(f'Failed to resolve path for {kind} {id} {doc}')
+                continue
     return results
