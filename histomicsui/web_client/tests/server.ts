@@ -9,8 +9,13 @@ const startServer = async (port: number) => {
 
   if (process.env.HISTOMICS_PLAYWRIGHT_DEV) {
     // For recording with playwright, it's run through VSCode and Girder is run via docker-compose
-    command = 'docker-compose';
+    // If running through docker-compose, wrap the command with `nohup` to ensure the spawned
+    // process is kept alive on linux, where child processes will, by default, recieve a SIGHUP
+    // when the parent process is killed.
+    command = 'nohup';
     args = [
+        'docker',
+        'compose',
         'run',
         '-p', `${port}:${port}`,
         '--rm',
@@ -42,7 +47,7 @@ const startServer = async (port: number) => {
     // These two options are necessary to make Girder server subprocess survive end of
     // the test process.
     detached: true,
-    stdio: 'ignore',
+    // stdio: 'ignore',
   });
   await new Promise<void>((resolve) => {
     serverProcess?.stdout.on('data', (data: string) => {
