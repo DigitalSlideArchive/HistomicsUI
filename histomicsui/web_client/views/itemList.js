@@ -4,7 +4,7 @@ import {wrap} from '@girder/core/utilities/PluginUtils';
 import {AccessType} from '@girder/core/constants';
 import {restRequest} from '@girder/core/rest';
 import events from '@girder/core/events';
-import ItemListWidget from '@girder/core/views/widgets/ItemListWidget';
+import ItemListWidget from '@girder/large_image/views/itemList';
 
 import {HuiSettings} from './utils';
 
@@ -63,17 +63,32 @@ wrap(ItemListWidget, 'render', function (render) {
     }
 
     HuiSettings.getSettings().then((settings) => {
-        const brandName = (settings['histomicsui.brand_name'] || '');
-        const webrootPath = (settings['histomicsui.webroot_path'] || '');
-        if (!this.$el.closest('.modal-dialog').length) {
-            for (let ix = 0; ix < this.collection.length; ix++) {
-                if (!this.$el.find('.g-item-list li.g-item-list-entry:eq(' + ix + ') .g-hui-open-link').length && this.collection.models[ix].attributes.largeImage) {
-                    this.$el.find('.g-item-list li.g-item-list-entry:eq(' + ix + ') a[class^=g-]:last').after(
-                        `<a class="g-hui-open-link" title="Open in ${brandName}" href="${webrootPath}#?image=${this.collection.models[ix].id}" target="_blank"><i class="icon-link-ext"></i></a>`
-                    );
+        const brandName = (settings['histomicsui.brand_name'] || 'HistomicsUI');
+        const webrootPath = (settings['histomicsui.webroot_path'] || 'histomics');
+
+        ItemListWidget.registeredApplications.histomicsui = {
+            name: brandName,
+            // icon:
+            check: (modelType, model) => {
+                if (modelType !== 'item' || !model.get('largeImage')) {
+                    return false;
                 }
+                const li = model.get('largeImage');
+                if (!li.fileId || li.expected === true) {
+                    return false;
+                }
+                let priority = 0;
+                try {
+                    if (model.get('meta') && model.get('meta').dicom && model.get('meta').dicom.Modality && model.get('meta').dicom.Modality !== 'SM') {
+                        priority = 1;
+                    }
+                } catch (e) {}
+                return {
+                    url: `${webrootPath}#?image=${model.id}`,
+                    priority: priority
+                };
             }
-        }
+        };
         if (this.accessLevel >= AccessType.WRITE) {
             adjustView.call(this, settings);
         }
