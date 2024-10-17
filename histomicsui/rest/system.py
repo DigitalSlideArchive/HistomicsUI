@@ -15,9 +15,9 @@
 #############################################################################
 
 import datetime
+import logging
 import os
 
-from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import RestException, boundHandler, filtermodel
@@ -34,6 +34,7 @@ from girder_jobs.models.job import Job
 
 from histomicsui.constants import PluginSettings
 
+logger = logging.getLogger(__name__)
 
 def addSystemEndpoints(apiRoot):
     """
