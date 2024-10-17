@@ -27,10 +27,12 @@ var HeaderUserView = View.extend({
             restRequest({
                 url: 'slicer_cli_web/docker_image'
             }).then((analyses) => {
+                const maxRows = Math.max(5, Math.floor((($('.h-image-view-body').height() || 0) - 8) / 26));
                 if (_.keys(analyses || {}).length > 0) {
                     this.$el.removeClass('hidden');
                     this.$el.html(headerAnalysesTemplate({
-                        analyses: analyses || {}
+                        analyses: analyses || {},
+                        maxRows: maxRows
                     }));
                     this.$('.h-analyses-dropdown-link').submenupicker();
                 } else {

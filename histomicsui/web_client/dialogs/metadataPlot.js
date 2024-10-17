@@ -1,6 +1,9 @@
 import metadataPlotDialog from '../templates/dialogs/metadataPlot.pug';
+import '../stylesheets/dialogs/metadataPlot.styl';
 
 const View = girder.views.View;
+const $ = girder.$;
+const girderModal = girder.utilities.girderModal;
 
 const MetadataPlotDialog = View.extend({
     events: {
@@ -19,6 +22,7 @@ const MetadataPlotDialog = View.extend({
                 plotOptions: this.plotOptions
             })
         ).girderModal(this);
+
         return this;
     },
 
@@ -33,6 +37,11 @@ const MetadataPlotDialog = View.extend({
             if (val !== '_none_' && val !== undefined) {
                 configOptions[series] = val;
             }
+        });
+        ['u'].forEach((series) => {
+            const opts = this.$('#h-plot-series-' + series + ' option');
+            const val = opts.filter((idx, o) => o.selected).map((idx, o) => $(o).val()).get();
+            configOptions[series] = val.length ? val : undefined;
         });
         this.result = configOptions;
         this.$el.modal('hide');

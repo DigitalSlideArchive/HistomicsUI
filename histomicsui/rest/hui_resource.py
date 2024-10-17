@@ -50,6 +50,7 @@ class HistomicsUIResource(Resource):
         keys = [
             PluginSettings.HUI_BRAND_NAME,
             PluginSettings.HUI_DEFAULT_DRAW_STYLES,
+            PluginSettings.HUI_LOGIN_TEXT,
             PluginSettings.HUI_PANEL_LAYOUT,
             PluginSettings.HUI_QUARANTINE_FOLDER,
             PluginSettings.HUI_WEBROOT_PATH,
