@@ -6,6 +6,7 @@ import time
 
 import cherrypy
 import girder.utility
+import girder_large_image_annotation
 import orjson
 from girder.constants import AccessType
 from girder.exceptions import RestException
@@ -97,7 +98,9 @@ def process_annotations_task(info: dict) -> None:
     if time.time() - startTime > 10:
         logger.info('Decoded json in %5.3fs', time.time() - startTime)
 
-    if not isinstance(data, list):
+    if not isinstance(data, list) or (
+            hasattr(girder_large_image_annotation.utils, 'isGeoJSON') and
+            girder_large_image_annotation.utilsisGeoJSON(data)):
         data = [data]
 
     for annotation in data:

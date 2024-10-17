@@ -62,7 +62,11 @@ const AnnotationContextMenu = View.extend({
     _setStyleDefinition(group) {
         const style = this.styles.get({id: group}) || this.styles.get({id: this.parentView._defaultGroup});
         const styleAttrs = Object.assign({}, style ? style.toJSON() : {});
-        delete styleAttrs.id;
+        Object.keys(styleAttrs).forEach((k) => {
+            if (!['fillColor', 'lineColor', 'lineWidth', 'label'].includes(k)) {
+                delete styleAttrs[k];
+            }
+        });
         let refresh = false;
         this.collection.each((element) => { /* eslint-disable backbone/no-silent */
             if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id &&

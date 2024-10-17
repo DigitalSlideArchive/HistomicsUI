@@ -17,6 +17,7 @@
 import datetime
 import os
 
+from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import RestException, boundHandler, filtermodel
@@ -44,6 +45,8 @@ def addSystemEndpoints(apiRoot):
     apiRoot.item.route('GET', ('query',), getItemsByQuery)
     # Added to the folder route
     apiRoot.folder.route('GET', ('query',), getFoldersByQuery)
+    # Added to the file route
+    apiRoot.file.route('GET', ('query',), getFilesByQuery)
     # Added to the system route
     apiRoot.system.route('PUT', ('restart',), restartServer)
     apiRoot.system.route('GET', ('setting', 'default'), getSettingDefault)
@@ -195,6 +198,22 @@ def allChildItems(parent, parentType, user, limit=0, offset=0,
 def getItemsByQuery(self, query, limit, offset, sort):
     user = self.getCurrentUser()
     return Item().findWithPermissions(query, offset=offset, limit=limit, sort=sort, user=user)
+
+
+@access.admin(scope=TokenScope.DATA_READ)
+@filtermodel(model=File)
+@autoDescribeRoute(
+    Description('List files that match a query.')
+    .responseClass('File', array=True)
+    .jsonParam('query', 'Find files that match this Mongo query.',
+               required=True, requireObject=True)
+    .pagingParams(defaultSort='_id')
+    .errorResponse(),
+)
+@boundHandler()
+def getFilesByQuery(self, query, limit, offset, sort):
+    user = self.getCurrentUser()
+    return File().findWithPermissions(query, offset=offset, limit=limit, sort=sort, user=user)
 
 
 @access.public(scope=TokenScope.DATA_READ)
@@ -461,5 +480,12 @@ def getMultipleResourcePaths(self, resources):
         model = ModelImporter.model(kind)
         for id in resources[kind]:
             doc = model.load(id=id, user=user, level=AccessType.READ)
-            results[kind][id] = path_util.getResourcePath(kind, doc, user=user)
+            if doc is None:
+                logger.info(f'Failed to load {kind} {id}')
+                continue
+            try:
+                results[kind][id] = path_util.getResourcePath(kind, doc, user=user)
+            except Exception:
+                logger.info(f'Failed to resolve path for {kind} {id} {doc}')
+                continue
     return results

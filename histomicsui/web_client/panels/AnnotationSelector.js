@@ -329,6 +329,7 @@ var AnnotationSelector = Panel.extend({
                     this.trigger('h:deleteAnnotation', models[id]);
                 }
             });
+            this.collection.trigger('h:refreshed', this.collection);
             return null;
         });
     },

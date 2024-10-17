@@ -19,4 +19,5 @@ class PluginSettings:
     HUI_HELP_URL = 'histomicsui.help_url'
     HUI_HELP_TOOLTIP = 'histomicsui.help_tooltip'
     HUI_HELP_TEXT = 'histomicsui.help_text'
+    HUI_LOGIN_TEXT = 'histomicsui.login_text'
     HUI_LOGIN_SESSION_EXPIRY_MINUTES = 'histomicsui.login_session_expiry_minutes'
