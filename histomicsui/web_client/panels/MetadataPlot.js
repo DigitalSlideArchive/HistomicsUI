@@ -202,7 +202,7 @@ var MetadataPlot = Panel.extend({
         if (this.plotConfig.u && this.plotConfig.u.length >= 3 && anyCompute) {
             params.compute = JSON.stringify({columns: this.plotConfig.u});
         }
-        if (!_.isEqual(this._lastPlottableDataParams, params)) {
+        if (!_.isEqual(this._lastPlottableDataParams, params) || !this.plottableDataPromise) {
             this.$el.addClass('loading');
             this.plottableDataLoading = true;
             this.plottableDataPromise = restRequest({
@@ -500,7 +500,7 @@ var MetadataPlot = Panel.extend({
             plotlyData.pointpos = 0;
             plotlyData.jitter = 0;
             // plotlyData.side = 'positive';
-            if (plotData.series.c && plotData.series.c.distinct && plotData.series.s.distinct) {
+            if (plotData.series.c && plotData.series.c.distinct && plotData.series.s && plotData.series.s.distinct) {
                 plotlyData.transforms = [{
                     type: 'groupby',
                     groups: plotlyData.x,

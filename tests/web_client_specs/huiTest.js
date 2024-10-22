@@ -85,8 +85,8 @@
         }, 'item list to load');
 
         runs(function () {
-            var $item = $('.g-item-list-link:contains("' + name + '")');
-            imageId = $item.next().attr('href').match(/\/item\/([a-f0-9]+)\/download/)[1];
+            var $item = $('.g-item-list-link.li-column-record-name:contains("' + name + '")');
+            imageId = $item.next().attr('href').match(/item\/([a-f0-9]{24})/)[1];
             expect($item.length).toBe(1);
             $item.click();
         });
