@@ -1,14 +1,16 @@
 Slicer CLI Web Plugins
 ======================
 
-When used with common deployments, HistomicsUI can run algorithms that are packaged in containers and conform to the Slicer CLI Execution model.  Once installed, these are listed in the ``Analyses`` menu.  In order to work with the HistomicsUI system, the containers must conform to some minimum standards.
+HistomicsUI can run algorithms that are packaged in containers and conform to the Slicer CLI Execution model.  Once installed, these are listed in the ``Analyses`` menu.  In order to work with the HistomicsUI system, the containers must conform to some minimum standards.
 
 The main standard is `Slicer Execution Schema <https://www.slicer.org/w/index.php?title=Documentation/Nightly/Developers/SlicerExecutionModel>`_, with additions documented in the `Girder slicer_cli_web <https://github.com/girder/slicer_cli_web?tab=readme-ov-file#docker-clis>`_ package and in the main `HistomicsUI <https://github.com/DigitalSlideArchive/HistomicsUI?tab=readme-ov-file#annotations-and-metadata-from-jobs>`_ package.  Those references should be considered primary.
+
+To install and use HistomicsUI, see the instructions at the `Digital Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops/dsa#readme>`_.
 
 Summary
 -------
 
-Slicer CLI Web Plugins are usually docker containers that can have any number of algorithms, where each algorithm takes some inputs and produces some outputs, optionally also interacting with Girder.
+Slicer CLI Web Plugins are typically docker images that contain any number of algorithms, where each algorithm receives a set of inputs and produces some outputs.  Algorithms can be self contained, or can interact with Girder or other external systems.
 
 At a minimal, doing:
 
@@ -117,11 +119,13 @@ returns xml that describes the algorithm and its command line interface.  For ex
 Requirements for the XML File
 -----------------------------
 
-The xml file with the specification of the inputs and outputs of an algorithm is required.
+For each algorithm, an xml file with the specification of the inputs and outputs of an algorithm is required, as detailed below.
 
 Many python algorithms use the ``CLIArgumentParser`` class to facilitate parsing the command line.  This can be imported via ``from ctk_cli import CLIArgumentParser``.  There are some ``slicer_cli_web`` specific extensions to the format; to use those, do ``from slicer_cli_web import CLIArgumentParser`` instead.  This has the virtue that the algorithm can parse the command line based on the xml.  This might look like:
 
 .. code-block:: python
+
+  from slicer_cli_web import CLIArgumentParse
 
   if __name__ == '__main__':
 
@@ -152,7 +156,7 @@ The minimal example is:
 Parameter Sections
 ++++++++++++++++++
 
-Parameters consist of all of the inputs and outputs for the algorithm.  A parameter node must have ``label`` and ``description`` nodes.  It may contain an ``advanced`` attribute that is a binary value of ``true`` or ``false``.  User interfaces use this to determine whether the parameters should be exposed by default.  The parameter block contains any number of value nodes.
+Parameters consist of all of the inputs and outputs for the algorithm.  A parameter node must have ``label`` and ``description`` nodes.  It may contain an ``advanced`` attribute that is a binary value of ``true`` or ``false``.  User interfaces use this to determine whether the parameters should be exposed by default.  The parameter block contains any number of ``value`` nodes.
 
 The minimal example is:
 
@@ -164,8 +168,8 @@ The minimal example is:
     ...
   </parameters>
 
-Value Sections
-++++++++++++++
+Value Nodes
++++++++++++
 
 There are many different value types that can be specified.  This is one of the places where the xml description is richer than the expression that is possible in a simple posix-style command description.  Available value types are ``boolean``, ``integer``, ``float``, ``double``, ``string``, ``integer-vector``, ``float-vector``, ``double-vector``, ``string-vector``, ``integer-enumeration``, ``float-enumeration``, ``double-enumeration``, ``string-enumeration``, ``region``, ``directory``, ``file``, ``image``, ``item`` (added by slicer_cli_web), ``point``, ``pointfile``, ``transform``, ``table``, ``measurement``, ``geometry`` (these last six are not supported by slicer_cli_web).
 
@@ -205,11 +209,29 @@ Some value nodes can have additional attributes.  These are:
 
 * ``subtype``: used by ``image`` and ``geometry`` values.  slicer_cli_web ignores this value.
 
-* ``shapes``: used by ``region`` values; a slicer_cli_web extension.  A comma-separated list of values that can include ``default``, ``rectangle``, ``polygon``, ``line``, ``polyline``, and ``point``, plus ``multi`` and one of ``submit`` (or ``submitoff``), ``submiton``, or ``autosubmit``. In the official schema, region is a vector of six values of the form x,y,z,rx,ry,rz, defining a rectangle based on its center and radius in each of three dimensions.  This is the ``default`` shape.  The ``rectangle`` shape allows a vector of four values defining a rectangle of the form x,y,width,height, where x,y is the left and top of the rectangle in pixel coordinates.  Many algorithms that accept this value accept -1,-1,-1,-1 as a default to specify the whole conceptual space.  The ``polygon`` shape allows for a list of x,y values.  Polygons must always have at least four points so that the vector of values cannot be confused with the default; repeat the first vertex at the end to specify a triangle.  The ``line`` shape allows a two-vertex line.  To disambiguate this from a rectangle, the values -2,-2 are added after the line.  The ``polyline`` shape allows a multi vertex line, indicated again by a -2,-2 value after the line.  A ``point`` is a single vertex.  ``multi`` allow multiple shapes, indicated by separating coordinates of each shape by -1,-1.  Note that neither -1,-1 nor -2,-2 are allowed as coordinates within a shape -- to use those, specify them with decimals (e.g., -1.0,-1.0).  The submit options will add suggestions on how the UI should handle changes.  If present, the option to auto-run a job as soon as a valid shape is set should be present.  ``autosubmit`` means this should always happen.  ``submit`` or ``submitoff`` offers this as a setting but is default to not submit the job.  ``submiton`` offers this as a setting and defaults to submitting the job.
+* ``shapes``: used by ``region`` values; a slicer_cli_web extension.  A comma-separated list of values that can include ``default``, ``rectangle``, ``polygon``, ``line``, ``polyline``, and ``point``, plus ``multi`` and one of ``submit`` (or ``submitoff``), ``submiton``, or ``autosubmit``.
+
+  In the official schema, region is a vector of six values of the form x,y,z,rx,ry,rz, defining a rectangle based on its center and radius in each of three dimensions.  This is the ``default`` shape.
+
+  The ``rectangle`` shape allows a vector of four values defining a rectangle of the form x,y,width,height, where x,y is the left and top of the rectangle in pixel coordinates.  Many algorithms that accept this value accept -1,-1,-1,-1 as a default to specify the whole conceptual space.
+
+  The ``polygon`` shape allows for a list of x,y values.  Polygons must always have at least four points so that the vector of values cannot be confused with the default; repeat the first vertex at the end to specify a triangle.
+
+  The ``line`` shape allows a two-vertex line.  To disambiguate this from a rectangle, the values -2,-2 are added after the line.
+
+  The ``polyline`` shape allows a multi vertex line, indicated again by a -2,-2 value after the line.
+
+  A ``point`` is a single vertex.
+
+  ``multi`` allow multiple shapes, indicated by separating coordinates of each shape by -1,-1.  Note that neither -1,-1 nor -2,-2 are allowed as coordinates within a shape -- to use those, specify them with decimals (e.g., -1.0,-1.0).
+
+  The submit options will add suggestions on how the UI should handle changes.  If present, the option to auto-run a job as soon as a valid shape is set should be present.  ``autosubmit`` means this should always happen.  ``submit`` or ``submitoff`` offers this as a setting but is default to not submit the job.  ``submiton`` offers this as a setting and defaults to submitting the job.
 
 * ``defaultNameMatch``, ``defaultPathMatch``, ``defaultRelativePath``: used by ``image``, ``file``, ``item``, and ``directory`` values.  ``defaultNameMatch`` and ``defaultPathMatch`` are regular expressions designed to give a UI a value to match to prepopulate default values from files or paths that match the regex.  ``defaultNameMatch`` is intended to match the final path element, whereas ``defaultPathMatch`` is used on the entire path as a combined string.  ``defaultRelativePath`` is used to find a value that has a path relative to some base.  In the Girder UI, this might be from an item.
 
-* ``datalist``: this applies to ``string`` values and is a slicer_cli_web extension.  If this is present, when the CLI is first loaded or, possibly periodically after parameters have been changed, the CLI may be called with optional parameters. The CLI is expected to return a new-line separated list of values that can be used as recommended inputs. As an example, a ``string`` input might have a ``datalist`` of ``{"enumerate-options": "true"}``; the cli would be called with the existing parameters PLUS the extra parameter specified by datalist. If the result is sensible, the input control would expose this list to the user. The datalist property is a json-encoded dictionary that overrides other parameters. This should override parameters that aren't needed to be resolved to produce the datalist (e.g., input and output files) as that will speed up the call. The CLI should respond to the modified call with a response that contains multiple ``<element>some text</element>`` values that will be the suggested data for the control.
+* ``datalist``: this applies to ``string`` values and is a slicer_cli_web extension.
+
+  If this is present, when the CLI is first loaded or, possibly periodically after parameters have been changed, the CLI may be called with optional parameters. The CLI is expected to return a new-line separated list of values that can be used as recommended inputs. As an example, a ``string`` input might have a ``datalist`` of ``{"enumerate-options": "true"}``; the cli would be called with the existing parameters PLUS the extra parameter specified by datalist. If the result is sensible, the input control would expose this list to the user. The datalist property is a json-encoded dictionary that overrides other parameters. This should override parameters that aren't needed to be resolved to produce the datalist (e.g., input and output files) as that will speed up the call. The CLI should respond to the modified call with a response that contains multiple ``<element>some text</element>`` values that will be the suggested data for the control.
 
 A Note About Booleans
 ~~~~~~~~~~~~~~~~~~~~~
@@ -222,6 +244,7 @@ Special Value Names
 The ``name`` element of a value node can have a special name to gain additional functionality.
 
 * ``girderApiUrl`` and ``girderToken``: as a slicer_cli_web extension, if these values are not specified or blank, they are populated with the appropriate url and token so that a running job could use girder_client to communicate with Girder.
+
 * Ending in ``ItemMetadata``: as a HistomicsUI extension, if the value has a ``reference`` to an ``image`` input, the output file is ingested as a large_image annotation on the input image.  If the annotation file contains any annotations with elements that contain ``girderId`` values, the ``girderId`` values can be identifier values from files that were uploaded with a reference record that contains a matching ``uuid`` field.  The ``uuid`` field is required for this, but is treated as an arbitrary string
 
 * Ending in ``AnnotationFile``: as a HistomicsUI extension, if the value has a ``reference`` to an ``item`` or ``image`` input, the output file is ingested as metadata on the input item or image.
