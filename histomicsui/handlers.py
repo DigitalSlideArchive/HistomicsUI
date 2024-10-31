@@ -7,6 +7,7 @@ import time
 import cherrypy
 import girder.utility
 import girder_large_image_annotation
+import large_image.config
 import orjson
 from girder.constants import AccessType
 from girder.exceptions import RestException
@@ -91,9 +92,17 @@ def process_annotations_task(info: dict) -> None:
             while chunk := fptr.read(1048576):
                 yield chunk
 
-    contents = b''.join(chunk for chunk in read_entire_file())
-    data = orjson.loads(contents.decode())
-    del contents
+    try:
+        if file['size'] > int(large_image.config.getConfig(
+                'max_annotation_input_file_length', 1024 ** 3)):
+            msg = 'File is larger thatn will be read into memory'
+            raise Exception(msg)
+        contents = b''.join(chunk for chunk in read_entire_file())
+        data = orjson.loads(contents.decode())
+        del contents
+    except Exception:
+        logger.error('Could not parse annotation file')
+        raise
 
     if time.time() - startTime > 10:
         logger.info('Decoded json in %5.3fs', time.time() - startTime)
