@@ -74,9 +74,7 @@ wrap(ItemListWidget, 'render', function (render) {
     }
 });
 
-console.log(girder.rest.getApiRoot());
 events.on('g:appload.before', () => {
-    console.log(girder.rest.getApiRoot());
     HuiSettings.getSettings().then((settings) => {
         const brandName = (settings['histomicsui.brand_name'] || 'HistomicsUI');
         const webrootPath = (settings['histomicsui.webroot_path'] || 'histomics');
