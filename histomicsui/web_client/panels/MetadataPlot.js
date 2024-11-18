@@ -545,7 +545,7 @@ var MetadataPlot = Panel.extend({
                 this.lastPlotData = plotData;
                 this.$el.html(metadataPlotTemplate({}));
                 const elem = this.$el.find('.h-metadata-plot-area');
-                if (!plotData || !plotData.series.x || !plotData.series.y || plotData.data.length < 2) {
+                if (!plotData || (plotData.format !== 'violin' && !plotData.series.x) || !plotData.series.y || plotData.data.length < 2) {
                     elem.html('');
                     return;
                 }
@@ -557,7 +557,7 @@ var MetadataPlot = Panel.extend({
                 if (maximized) {
                     plotOptions.margin.l += 20;
                     plotOptions.margin.b += 40;
-                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' ? `${plotData.series.x.title}` : `${plotData.series.s.title}`}};
+                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' ? `${plotData.series.x.title}` : `${plotData.series.s ? plotData.series.s.title : ''}`}};
                     plotOptions.yaxis = {title: {text: `${plotData.series.y.title}`}};
                 }
                 this._plotlyNode = elem;
