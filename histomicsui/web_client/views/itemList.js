@@ -74,32 +74,36 @@ wrap(ItemListWidget, 'render', function (render) {
     }
 });
 
-HuiSettings.getSettings().then((settings) => {
-    const brandName = (settings['histomicsui.brand_name'] || 'HistomicsUI');
-    const webrootPath = (settings['histomicsui.webroot_path'] || 'histomics');
+console.log(girder.rest.getApiRoot());
+events.on('g:appload.before', () => {
+    console.log(girder.rest.getApiRoot());
+    HuiSettings.getSettings().then((settings) => {
+        const brandName = (settings['histomicsui.brand_name'] || 'HistomicsUI');
+        const webrootPath = (settings['histomicsui.webroot_path'] || 'histomics');
 
-    ItemListWidget.registeredApplications.histomicsui = {
-        name: brandName,
-        // icon:
-        check: (modelType, model) => {
-            if (modelType !== 'item' || !model.get('largeImage')) {
-                return false;
-            }
-            const li = model.get('largeImage');
-            if (!li.fileId || li.expected === true) {
-                return false;
-            }
-            let priority = 0;
-            try {
-                if (model.get('meta') && model.get('meta').dicom && model.get('meta').dicom.Modality && model.get('meta').dicom.Modality !== 'SM') {
-                    priority = 1;
+        ItemListWidget.registeredApplications.histomicsui = {
+            name: brandName,
+            // icon:
+            check: (modelType, model) => {
+                if (modelType !== 'item' || !model.get('largeImage')) {
+                    return false;
                 }
-            } catch (e) {}
-            return {
-                url: `${webrootPath}#?image=${model.id}`,
-                priority: priority
-            };
-        }
-    };
-    return settings;
+                const li = model.get('largeImage');
+                if (!li.fileId || li.expected === true) {
+                    return false;
+                }
+                let priority = 0;
+                try {
+                    if (model.get('meta') && model.get('meta').dicom && model.get('meta').dicom.Modality && model.get('meta').dicom.Modality !== 'SM') {
+                        priority = 1;
+                    }
+                } catch (e) {}
+                return {
+                    url: `${webrootPath}#?image=${model.id}`,
+                    priority: priority
+                };
+            }
+        };
+        return settings;
+    });
 });
