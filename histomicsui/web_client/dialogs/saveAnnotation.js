@@ -232,7 +232,10 @@ var SaveAnnotation = View.extend({
 
     render() {
         // clean up old colorpickers when rerendering
-        this.$('.h-colorpicker').colorpicker('destroy');
+        const hColorPicker = this.$('.h-colorpicker');
+        if (hColorPicker.colorpicker) {
+            hColorPicker.colorpicker('destroy');
+        }
 
         let elementTypes = [];
         if (this.annotation.get('annotation').elements) {
