@@ -25,6 +25,7 @@ var EditElement = View.extend({
             })
         ).girderModal(this);
         this.createVueModal();
+        this.$('.h-colorpicker').colorpicker();
         return this;
     },
 
