@@ -45,7 +45,7 @@ form#g-hui-form(role="form")
       input#g-hui-help-text.form-control.input-sm(
           type="text", value=settings['histomicsui.help_text'],
           placeholder="The text to display with the help button",
-          title="The text for the optional help buttion in the application.")
+          title="The text for the optional help button in the application.")
       button#g-hui-help-default-text.form-control.input-sm(
           type="button", title="Default text") default
   .form-group
@@ -54,9 +54,16 @@ form#g-hui-form(role="form")
       input#g-hui-help-tooltip.form-control.input-sm(
           type="text", value=settings['histomicsui.help_tooltip'],
           placeholder="The text for the help button's tooltip",
-          title="The tooltip text for the optional help buttion in the application.")
+          title="The tooltip text for the optional help button in the application.")
       button#g-hui-help-default-tooltip.form-control.input-sm(
           type="button", title="Default tooltip") default
+  .form-group
+    label(for="g-hui-login-text") Login Text
+    #g-hui-login-text-container
+      input#g-hui-login-text.form-control.input-sm(
+          type="text", value=settings['histomicsui.login_text'],
+          placeholder="Login or email",
+          title="The text for the login prompt in the login dialog.")
   .form-group
     label
       | Default styles for drawing annotations

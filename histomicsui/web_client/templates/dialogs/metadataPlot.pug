@@ -21,19 +21,26 @@
             {key: 'y', label: 'y-axis', number: true},
             {key: 'r', label: 'Radius'},
             {key: 'c', label: 'Color'},
-            {key: 's', label: 'Symbol', string: true, comment: 'Grouping for violin plots'}]
-        for series in seriesList
-          .form-group
+            {key: 's', label: 'Symbol', string: true, comment: 'Grouping for violin plots'},
+            {key: 'u', label: 'Dimension Reducation', number: true, multiple: true}]
+        -
+          var numNumbers = 0;
+          var numIndex = [];
+          plotOptions.forEach((po, idx) => { numIndex.push(numNumbers);  if (po.type === 'number') { numNumbers += 1; }});
+        for series, seriesidx in seriesList
+          .form-group(class=series.multiple ? 'h-plot-resizable' : '')
             label(for='h-plot-series-' + series.key) #{series.label}
             if series.comment
               p.g-hui-description #{series.comment}
-            select.form-control(id='h-plot-series-' + series.key)
+            select.form-control(id='h-plot-series-' + series.key, multiple=series.multiple)
               if !series.number
                 option(value='_none_', selected=plotConfig[series.key] === undefined) None
-              each opt in plotOptions
+              each opt, optidx in plotOptions
                 if (!series.number || opt.type === 'number') && (!series.string || opt.type === 'string' || opt.distinct)
-                  - var selected = plotConfig[series.key] === opt.sort
-                  option(value=opt.sort, selected=selected) #{opt.root + ' - ' + opt.key}
+                  - var selected = plotConfig[series.key] === opt.key
+                  - if (plotConfig[series.key] === undefined && series.number === true && numIndex[optidx] === seriesidx) { selected = true; }
+                  - if (series.multiple) { selected = plotConfig[series.key] ? plotConfig[series.key].includes(opt.key) : false; }
+                  option(value=opt.key, selected=selected) #{opt.title}#{opt.count > 1 && opt.distinctcount !== 1 ? ' *' : ''}
         .form-group
           label(for='h-plot-folder')
             input#h-plot-folder(type='checkbox', checked=plotConfig.folder)

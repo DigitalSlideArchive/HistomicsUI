@@ -35,6 +35,7 @@ var ConfigView = View.extend({
                     case 'histomicsui.help_url':
                     case 'histomicsui.help_tooltip':
                     case 'histomicsui.help_text':
+                    case 'histomicsui.login_text':
                         result.value = result.value === null || !result.value.trim() ? '' : result.value;
                         break;
                 }
@@ -89,7 +90,8 @@ var ConfigView = View.extend({
             'histomicsui.delete_annotations_after_ingest',
             'histomicsui.help_url',
             'histomicsui.help_tooltip',
-            'histomicsui.help_text'
+            'histomicsui.help_text',
+            'histomicsui.login_text'
         ];
         $.when(
             restRequest({

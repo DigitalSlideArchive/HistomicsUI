@@ -187,6 +187,7 @@ SettingDefault.defaults.update({
     PluginSettings.HUI_HELP_URL,
     PluginSettings.HUI_HELP_TOOLTIP,
     PluginSettings.HUI_HELP_TEXT,
+    PluginSettings.HUI_LOGIN_TEXT,
 })
 def validateHistomicsUIHelp(doc):
     pass
@@ -396,7 +397,7 @@ class GirderPlugin(plugin.GirderPlugin):
         # Auto-ingest annotations into database when a file with an identifier
         # ending in 'AnnotationFile' is uploaded (usually .anot files).
         events.bind('data.process', 'histomicsui.annotations', handlers.process_annotations)
-        # Auto-ingest metadta into parent when a file with an identifier
+        # Auto-ingest metadata into parent when a file with an identifier
         # ending in 'ItemMetadata' is uploaded (usually .meta files).
         events.bind('data.process', 'histomicsui.metadata', handlers.process_metadata)
 

@@ -86,13 +86,14 @@ var ImageView = View.extend({
         this.metadataWidget = new MetadataWidget({
             parentView: this
         });
-        this.metadataPlot = new MetadataPlot({
-            parentView: this
-        });
         this.annotationSelector = new AnnotationSelector({
             parentView: this,
             collection: this.annotations,
             image: this.model
+        });
+        /* Should be after annotationSelector */
+        this.metadataPlot = new MetadataPlot({
+            parentView: this
         });
         this.popover = new AnnotationPopover({
             parentView: this
@@ -1034,7 +1035,7 @@ var ImageView = View.extend({
 
         window.requestAnimationFrame(() => {
             const {element, annotationId} = this._processMouseClickQueue();
-            if (!evt.mouse.modifiers.shift) {
+            if (!evt.mouse.modifiers.shift && (!evt.sourceEvent || !evt.sourceEvent.handled)) {
                 if (evt.mouse.buttonsDown.right) {
                     this._openContextMenu(element.annotation.elements().get(element.id), annotationId, evt);
                 } else if (evt.mouse.modifiers.ctrl && !this.viewerWidget.annotationLayer.mode()) {
@@ -1420,6 +1421,8 @@ var ImageView = View.extend({
     },
 
     _editElementShape(element, annotationId) {
+        this._preeditDrawMode = this.drawWidget ? this.drawWidget.drawingType() : undefined;
+        this.drawWidget.cancelDrawMode();
         const annotation = this.annotations.get(element.originalAnnotation || annotationId);
         this._editAnnotation(annotation);
         const geojson = girder.plugins.large_image_annotation.annotations.convert(element);
@@ -1462,6 +1465,14 @@ var ImageView = View.extend({
         this._currentAnnotationEditShape = null;
         this.viewerWidget.annotationLayer.removeAllAnnotations();
         this.viewerWidget.hideAnnotation();
+        if (this.drawWidget) {
+            this.drawWidget.cancelDrawMode();
+            if (this._preeditDrawMode) {
+                window.setTimeout(() => {
+                    this.drawWidget.drawElement(undefined, this._preeditDrawMode);
+                }, 0);
+            }
+        }
     },
 
     _redrawSelection() {
