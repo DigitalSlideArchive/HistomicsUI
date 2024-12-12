@@ -1,7 +1,7 @@
 extends ./panel.pug
 
 block title
-  | #[span.icon-chart-line] Metadata Plot
+  | #[span.icon-chart-line] #[span.icon-spin1.animate-spin.load-mark(title="Getting Plot Information")] Metadata Plot
 block controls
   span.s-no-panel-toggle
     button.g-widget-metadata-plot-settings.btn.btn-sm.btn-default(title="Plot Settings")
@@ -10,4 +10,4 @@ block controls
       i.icon-resize-full(title="Maximize")
 
 block content
-  .h-metadata-plot-area
+  #h-metadata-plot.h-metadata-plot-area
