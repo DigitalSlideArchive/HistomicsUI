@@ -32,7 +32,7 @@
             label(for='h-plot-series-' + series.key) #{series.label}
             if series.comment
               p.g-hui-description #{series.comment}
-            select.form-control(id='h-plot-series-' + series.key, multiple=series.multiple)
+            select.h-plot-select.form-control(id='h-plot-series-' + series.key, multiple=series.multiple)
               if !series.number
                 option(value='_none_', selected=plotConfig[series.key] === undefined) None
               each opt, optidx in plotOptions
