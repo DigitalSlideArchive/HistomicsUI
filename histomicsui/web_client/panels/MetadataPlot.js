@@ -15,6 +15,21 @@ import '../stylesheets/panels/metadataPlot.styl';
 
 const sessionId = uuidv4();
 
+function mean(arr) {
+    if (!arr.length) {
+        return 0;
+    }
+    return arr.reduce((a, b) => a + b) / arr.length;
+}
+
+function stddev(arr) {
+    if (arr.length <= 1) {
+        return 0;
+    }
+    const m = mean(arr);
+    return Math.sqrt(arr.map((x) => Math.pow(x - m, 2)).reduce((a, b) => a + b) / arr.length);
+}
+
 var MetadataPlot = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .g-widget-metadata-plot-settings': function (event) {
@@ -457,7 +472,7 @@ var MetadataPlot = Panel.extend({
             colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(viridis);
         }
         const plotlyData = {
-            x: plotData.data.map((d) => d[plotData.series.x.index]),
+            x: plotData.series.x ? plotData.data.map((d) => d[plotData.series.x.index]) : 0,
             y: plotData.data.map((d) => d[plotData.series.y.index]),
             hovertext: plotData.data.map((d) => this._hoverText(d, plotData)),
             hoverinfo: 'text',
@@ -518,6 +533,86 @@ var MetadataPlot = Panel.extend({
                 }];
             }
         }
+        if (plotData.format === 'distrib') {
+            const maxs = plotData.series.s && plotData.series.s.distinct ? plotData.series.s.distinctcount : 1;
+            const pv = {
+                x: [],
+                y: [],
+                c: [],
+                r: [],
+                xe: [],
+                ye: [],
+                dd: Array(maxs),
+                xd: Array.from(Array(maxs), () => []),
+                yd: Array.from(Array(maxs), () => []),
+                cd: Array.from(Array(maxs), () => []),
+                rd: Array.from(Array(maxs), () => [])
+            };
+            plotData.data.forEach((d) => {
+                const s = plotData.series.s && plotData.series.s.distinct ? plotData.series.s.distinct.indexOf(d[plotData.series.s.index]) : 0;
+                if (pv.dd[s] === undefined) {
+                    pv.dd[s] = d;
+                }
+                if (plotData.series.x) {
+                    pv.xd[s].push(d[plotData.series.x.index]);
+                }
+                pv.yd[s].push(d[plotData.series.y.index]);
+                if (plotData.series.c) {
+                    pv.cd[s].push(d[plotData.series.c.index]);
+                }
+                if (plotData.series.r) {
+                    pv.rd[s].push(d[plotData.series.r.index]);
+                }
+            });
+            for (let s = 0; s < maxs; s += 1) {
+                pv.x[s] = mean(pv.xd[s]);
+                pv.xe[s] = stddev(pv.xd[s]);
+                pv.y[s] = mean(pv.yd[s]);
+                pv.ye[s] = stddev(pv.yd[s]);
+                pv.r[s] = plotData.series.r && plotData.series.r !== 'number' && pv.rd[s].length ? pv.rd[s][0] : mean(pv.rd[s]);
+                pv.c[s] = plotData.series.c && plotData.series.c !== 'number' && pv.cd[s].length ? pv.cd[s][0] : mean(pv.cd[s]);
+            }
+            plotlyData.x = [...Array(maxs).keys()];
+            if (plotData.series.x) {
+                plotlyData.error_x = {
+                    type: 'data',
+                    array: pv.xe.map((v) => v / Math.max.apply(Math, pv.xe)),
+                    color: '#0000C0',
+                    // width: 0,
+                    visible: true
+                };
+            }
+            plotlyData.y = pv.y;
+            plotlyData.mode = 'lines+markers';
+            plotlyData.error_y = {
+                type: 'data',
+                array: pv.ye,
+                color: '#C00000',
+                // width: 0,
+                visible: true
+            };
+            plotlyData.hovertext = pv.dd.map((d) => this._hoverText(d, plotData));
+            plotlyData.marker.symbol = 0;
+            if (plotData.series.r) {
+                plotlyData.marker.size = plotData.series.r && (plotData.series.r.type === 'number' || plotData.series.r.distinctcount)
+                    ? (
+                        plotData.series.r.type === 'number'
+                            ? pv.r.map((r) => (r - plotData.series.r.min) / (plotData.series.r.max - plotData.series.r.min) * 10 + 5)
+                            : pv.dd.map((d) => plotData.series.r.distinct.indexOf(d[plotData.series.r.index]) / plotData.series.r.distinctcount * 10 + 5)
+                    )
+                    : 10;
+            }
+            if (plotData.series.c) {
+                plotlyData.marker.color = plotData.series.c
+                    ? (
+                        !plotData.series.c.distinctcount
+                            ? pv.c.map((c) => colorScale(c))
+                            : pv.dd.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
+                    )
+                    : '#000000';
+            }
+            plotlyData.type = 'scatter';
+        }
         return [plotlyData];
     },
 
@@ -548,7 +643,7 @@ var MetadataPlot = Panel.extend({
                 this.lastPlotData = plotData;
                 this.$el.html(metadataPlotTemplate({}));
                 const elem = this.$el.find('.h-metadata-plot-area');
-                if (!plotData || (plotData.format !== 'violin' && !plotData.series.x) || !plotData.series.y || plotData.data.length < 2) {
+                if (!plotData || (plotData.format !== 'violin' && plotData.format !== 'distrib' && !plotData.series.x) || !plotData.series.y || plotData.data.length < 2) {
                     elem.html('');
                     return;
                 }
@@ -560,7 +655,7 @@ var MetadataPlot = Panel.extend({
                 if (maximized) {
                     plotOptions.margin.l += 20;
                     plotOptions.margin.b += 40;
-                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' ? `${plotData.series.x.title}` : `${plotData.series.s ? plotData.series.s.title : ''}`}};
+                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' && plotData.format !== 'distrib' ? `${plotData.series.x.title}` : `${plotData.series.s ? plotData.series.s.title : ''}`}};
                     plotOptions.yaxis = {title: {text: `${plotData.series.y.title}`}};
                 }
                 this._plotlyNode = elem;
