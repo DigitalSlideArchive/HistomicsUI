@@ -450,11 +450,18 @@ var MetadataPlot = Panel.extend({
     },
 
     plotDataToPlotly: function (plotData) {
-        const colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
+        let colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
         const viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
-        let colorScale;
-        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount)) {
+        // concatenate this so we have predictable colors for a longer scale
+        // for discrete values.  It would probably be better to use a longer
+        // scale
+        colorBrewerPaired12 = colorBrewerPaired12.concat(viridis);
+        let colorScale, sColorScale;
+        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount || plotData.series.c.distinctcount > colorBrewerPaired12.length)) {
             colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(viridis);
+        }
+        if (plotData.series.s && (plotData.series.s.type === 'number' || !plotData.series.s.distinctcount || plotData.series.s.distinctcount > colorBrewerPaired12.length)) {
+            sColorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.s.max - plotData.series.s.min) || 0) + plotData.series.s.min)).range(viridis);
         }
         const plotlyData = {
             x: plotData.data.map((d) => d[plotData.series.x.index]),
@@ -475,7 +482,7 @@ var MetadataPlot = Panel.extend({
                     : 10,
                 color: plotData.series.c
                     ? (
-                        !plotData.series.c.distinctcount
+                        colorScale
                             ? plotData.data.map((d) => colorScale(d[plotData.series.c.index]))
                             : plotData.data.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
                     )
@@ -509,8 +516,15 @@ var MetadataPlot = Panel.extend({
                         for (let didx = 0; didx < plotData.data.length; didx += 1) {
                             if (plotData.data[didx][plotData.series.s.index] === k) {
                                 const cval = plotData.data[didx][plotData.series.c.index];
-                                const cidx = plotData.series.c.distinct.indexOf(cval);
-                                return {target: kidx, value: {line: {color: colorBrewerPaired12[cidx]}}};
+                                const cidx = plotData.series.s.distinct.indexOf(cval);
+                                return {
+                                    target: kidx,
+                                    value: {
+                                        line: {
+                                            color: colorScale ? sColorScale[cval] : colorBrewerPaired12[cidx]
+                                        }
+                                    }
+                                };
                             }
                         }
                         return {target: kidx, value: {line: {color: '#000000'}}};
