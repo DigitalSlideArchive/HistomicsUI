@@ -564,13 +564,16 @@ var MetadataPlot = Panel.extend({
             };
             plotData.data.forEach((d) => {
                 const s = plotData.series.s && plotData.series.s.distinct ? plotData.series.s.distinct.indexOf(d[plotData.series.s.index]) : 0;
+                if (!isFinite(d[plotData.series.y.index]) || (plotData.series.x && !isFinite(d[plotData.series.x.index])) || (plotData.series.r && plotData.series.r === 'number' && !isFinite(d[plotData.series.r.index])) || (plotData.series.c && plotData.series.c === 'number' && !isFinite(d[plotData.series.c.index]))) {
+                    return;
+                }
                 if (pv.dd[s] === undefined) {
                     pv.dd[s] = d;
                 }
                 if (plotData.series.x) {
-                    pv.xd[s].push(d[plotData.series.x.index]);
+                    pv.xd[s].push(+d[plotData.series.x.index]);
                 }
-                pv.yd[s].push(d[plotData.series.y.index]);
+                pv.yd[s].push(+d[plotData.series.y.index]);
                 if (plotData.series.c) {
                     pv.cd[s].push(d[plotData.series.c.index]);
                 }
