@@ -44,8 +44,10 @@ setup(
     ],
     install_requires=[
         'girder>=5.0.0a2',
-        # TODO
-        #'girder-large-image-annotation',
+        'girder-large-image @ file:///.../girder_large_image-1.30.3.dev63+gf787b31d-py3-none-any.whl',
+        'girder-large-image-annotation @ file:///.../girder_large_image_annotation-1.30.3.dev63+gf787b31d-py3-none-any.whl',
+        'large-image-tasks @ file:///.../large_image_tasks-1.30.3.dev63+gf787b31d-py3-none-any.whl',
+        'large-image-converter @ file:///.../large_image_converter-1.30.3.dev63+gf787b31d-py3-none-any.whl',
         #'girder-slicer-cli-web',
         'cachetools',
         'orjson',
