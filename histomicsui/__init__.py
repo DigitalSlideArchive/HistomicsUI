@@ -374,6 +374,9 @@ class GirderPlugin(plugin.GirderPlugin):
             tree=info['serverRoot'],
         )
 
+        webroot = os.getenv("HUI_WEBROOT_PATH", False)
+        if webroot:
+            Setting().set(PluginSettings.HUI_WEBROOT_PATH, webroot)
         info['serverRoot'].mount(None, f'/{Setting().get(PluginSettings.HUI_WEBROOT_PATH)}', {
             '/': {
                 'tools.staticdir.on': True,
