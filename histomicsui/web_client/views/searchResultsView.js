@@ -1,9 +1,9 @@
+import '../stylesheets/views/searchResultsView.styl';
+
 const $ = girder.$;
 const {wrap} = girder.utilities.PluginUtils;
 const {restRequest} = girder.rest;
 const SearchResultsView = girder.views.body.SearchResultsView;
-
-import '../stylesheets/views/searchResultsView.styl';
 
 function addResourcePaths(v) {
     if (!v._results || !v._results.length) {

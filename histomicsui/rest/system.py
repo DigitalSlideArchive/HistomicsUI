@@ -36,6 +36,7 @@ from histomicsui.constants import PluginSettings
 
 logger = logging.getLogger(__name__)
 
+
 def addSystemEndpoints(apiRoot):
     """
     This adds endpoints to routes that already exist in Girder.
@@ -412,9 +413,10 @@ def getSettingDefault(self, key, list, default=None):
         self.requireParams({'key': key})
         return getFunc(key)
 
+
 @access.public
 @autoDescribeRoute(
-    Description('Get all HistomicsUI publicly visible settings.')
+    Description('Get all HistomicsUI publicly visible settings.'),
 )
 @boundHandler
 def getHistomicsUISettings(self):
@@ -429,6 +431,7 @@ def getHistomicsUISettings(self):
             PluginSettings.HUI_HELP_TEXT,
         ]
     }
+
 
 @access.admin
 @filtermodel(model=File)

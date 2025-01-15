@@ -17,9 +17,9 @@
 import json
 import logging
 import os
-from pathlib import Path
 import re
 from functools import wraps
+from pathlib import Path
 
 from bson import json_util
 from girder import events, plugin
@@ -32,8 +32,7 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
-from girder.models.token import Token
-from girder.settings import SettingDefault, SettingKey
+from girder.settings import SettingDefault
 from girder.utility import config
 from girder.utility import path as path_util
 from girder.utility import setting_utilities
@@ -56,7 +55,6 @@ except DistributionNotFound:
     pass
 
 logger = logging.getLogger(__name__)
-
 
 
 def patchCookieParsing():
@@ -345,7 +343,7 @@ class GirderPlugin(plugin.GirderPlugin):
         ModelImporter.registerModel('slide', Slide, 'histomicsui')
 
         rest.addEndpoints(info['apiRoot'])
-        #info['serverRoot'].updateHtmlVars({
+        # info['serverRoot'].updateHtmlVars({
         #    'brandName': Setting().get(SettingKey.BRAND_NAME)})
         # Better virtual folder support
         if not getattr(Folder, '_childItemsBeforeHUI', None):
@@ -374,25 +372,28 @@ class GirderPlugin(plugin.GirderPlugin):
             tree=info['serverRoot'],
         )
 
+        webroot = os.getenv('HUI_WEBROOT_PATH', False)
+        if webroot:
+            Setting().set(PluginSettings.HUI_WEBROOT_PATH, webroot)
         info['serverRoot'].mount(None, f'/{Setting().get(PluginSettings.HUI_WEBROOT_PATH)}', {
             '/': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': Path(__file__).parent / 'web_client' / 'dist-app',
                 'tools.staticdir.index': 'index.html',
-            }
+            },
         })
 
         # The interface is always available under hui and also available
         # under the specified path.
         # TODO is something using the "hui" path?
-        #info['serverRoot'].hui = huiRoot
+        # info['serverRoot'].hui = huiRoot
         # TODO these settings are not honored at this point
-        #setattr(info['serverRoot'], webrootPath, huiRoot)
-        #if alternateWebrootPath:
+        # setattr(info['serverRoot'], webrootPath, huiRoot)
+        # if alternateWebrootPath:
         #    for alt_webroot_path in alternateWebrootPath.split(','):
         #        if alt_webroot_path:
         #            setattr(info['serverRoot'], alt_webroot_path, huiRoot)
-        #info['serverRoot'].girder = girderRoot
+        # info['serverRoot'].girder = girderRoot
 
         # Auto-ingest annotations into database when a file with an identifier
         # ending in 'AnnotationFile' is uploaded (usually .anot files).

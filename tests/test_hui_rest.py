@@ -317,22 +317,26 @@ class TestHUIEndpoints:
                 assert Setting().set(key, goodval['value'])['value'] == goodval['return']
 
     def testGetWebroot(self, server):
-        resp = server.request(path='/histomics', method='GET', isJson=False, prefix='')
+        resp = server.request(
+            path='/histomics/',
+            method='GET',
+            isJson=False,
+            prefix='',
+            appPrefix='/histomics')
         assert utilities.respStatus(resp) == 200
         body = utilities.getBody(resp)
-        assert '<title>HistomicsUI</title>' in body
-        resp = server.request(path='/alternate2', method='GET', isJson=False, prefix='')
-        assert utilities.respStatus(resp) == 404
-        Setting().set(PluginSettings.HUI_WEBROOT_PATH, 'alternate2')
-        Setting().set(PluginSettings.HUI_BRAND_NAME, 'Alternate')
-        resp = server.request(path='/histomics', method='GET', isJson=False, prefix='')
+        assert '<body class="hui-body">' in body
+
+    def testGetWebrootAlternate(self, alt_server):
+        resp = alt_server.request(
+            path='/alternate/',
+            method='GET',
+            isJson=False,
+            prefix='',
+            appPrefix='/alternate')
         assert utilities.respStatus(resp) == 200
         body = utilities.getBody(resp)
-        assert '<title>Alternate</title>' in body
-        resp = server.request(path='/alternate2', method='GET', isJson=False, prefix='')
-        assert utilities.respStatus(resp) == 200
-        body = utilities.getBody(resp)
-        assert '<title>Alternate</title>' in body
+        assert '<body class="hui-body">' in body
 
     def testRestrictDownloads(self, server, fsAssetstore, admin, user):
         self.makeResources(admin)
