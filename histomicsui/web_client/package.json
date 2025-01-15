@@ -96,7 +96,11 @@
             "no-var": "off",
             "vue/require-prop-types": "off"
         },
-        "root": true
+        "root": true,
+        "ignorePatterns": ["dist/**"],
+        "globals": {
+            "girder": "readonly"
+        }
     },
     "eslintIgnore": [
         "**/node_modules/**"
