@@ -73,7 +73,7 @@ def _itemFromEvent(info, identifierEnding, itemAccessLevel=AccessType.READ):  # 
 
 
 @app.task
-def process_annotations_task(info: dict) -> None:
+def process_annotations_task(info: dict) -> None:  # noqa: C901
     results = _itemFromEvent(info, 'AnnotationFile')
     if not results:
         return
