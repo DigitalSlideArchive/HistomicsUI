@@ -317,13 +317,23 @@ class TestHUIEndpoints:
                 assert Setting().set(key, goodval['value'])['value'] == goodval['return']
 
     def testGetWebroot(self, server):
-        resp = server.request(path='/histomics/', method='GET', isJson=False, prefix='', appPrefix='/histomics')
+        resp = server.request(
+            path='/histomics/',
+            method='GET',
+            isJson=False,
+            prefix='',
+            appPrefix='/histomics')
         assert utilities.respStatus(resp) == 200
         body = utilities.getBody(resp)
         assert '<body class="hui-body">' in body
 
     def testGetWebrootAlternate(self, alt_server):
-        resp = alt_server.request(path='/alternate/', method='GET', isJson=False, prefix='', appPrefix='/alternate')
+        resp = alt_server.request(
+            path='/alternate/',
+            method='GET',
+            isJson=False,
+            prefix='',
+            appPrefix='/alternate')
         assert utilities.respStatus(resp) == 200
         body = utilities.getBody(resp)
         assert '<body class="hui-body">' in body
