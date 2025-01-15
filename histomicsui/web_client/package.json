@@ -97,7 +97,7 @@
             "vue/require-prop-types": "off"
         },
         "root": true,
-        "ignorePatterns": ["dist/**"],
+        "ignorePatterns": ["dist/**", "dist-app/**"],
         "globals": {
             "girder": "readonly"
         }
