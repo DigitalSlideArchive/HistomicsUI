@@ -9,6 +9,44 @@ executors:
         command: bash -c "mkdir /dev/shm/mongo && mongod --nojournal --dbpath=/dev/shm/mongo --noauth --bind_ip_all"
       - image: rabbitmq
 commands:
+  use_nvm:
+      description: "Use nvm"
+      parameters:
+        version:
+          type: string
+          default: v20
+      steps:
+        - run:
+          name: Use nvm
+          # see https://discuss.circleci.com/t/nvm-does-not-change-node-version-on-machine/28973/14
+          command: |
+            echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+        - restore_cache:
+            name: Restore nvm cache
+            key: v1-nvm-cache-<< parameters.node >>
+        - run:
+            name: Switch node versions
+            command: |
+              . ~/.bashrc
+              nvm install << parameters.node >>
+              nvm alias default << parameters.node >>
+              NODE_DIR=$(dirname $(which node))
+              echo "export PATH=$NODE_DIR:\$PATH" >> $BASH_ENV
+        - run:
+            name: Check node versions
+            command: |
+              node --version
+              npm --version
+  build_client:
+    description: "Build HistomicsUI client"
+    steps:
+      - run:
+          name: Build client
+          command: |
+            pushd histomicsui/web_client
+            npm ci
+            npm run build
   tox:
     description: "Run tox"
     parameters:
@@ -41,6 +79,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py38
       - coverage
@@ -48,6 +88,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py39
       - coverage
@@ -55,6 +97,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py310
       - coverage
@@ -62,6 +106,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py311
       - coverage
@@ -69,6 +115,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py312
       - coverage
@@ -90,6 +138,8 @@ jobs:
       - image: girder/tox-and-node
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - deploy:
           name: Run tests via tox
           # Piping through cat does less buffering of the output but can
