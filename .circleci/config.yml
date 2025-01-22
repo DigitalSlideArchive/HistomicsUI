@@ -12,16 +12,16 @@ commands:
   use_nvm:
       description: "Use nvm"
       parameters:
-        version:
+        node:
           type: string
           default: v20
       steps:
         - run:
-          name: Use nvm
-          # see https://discuss.circleci.com/t/nvm-does-not-change-node-version-on-machine/28973/14
-          command: |
-            echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            name: Use nvm
+            # see https://discuss.circleci.com/t/nvm-does-not-change-node-version-on-machine/28973/14
+            command: |
+              echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+              echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
         - restore_cache:
             name: Restore nvm cache
             key: v1-nvm-cache-<< parameters.node >>
