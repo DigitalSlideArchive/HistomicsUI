@@ -28,7 +28,8 @@ commands:
         - run:
             name: Switch node versions
             command: |
-              . ~/.bashrc
+              export NVM_DIR="/opt/circleci/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
               nvm install << parameters.node >>
               nvm alias default << parameters.node >>
               NODE_DIR=$(dirname $(which node))
