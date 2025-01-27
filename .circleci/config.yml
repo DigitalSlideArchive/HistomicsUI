@@ -47,6 +47,7 @@ commands:
             pushd histomicsui/web_client
             npm ci
             npm run build
+            popd
   tox:
     description: "Run tox"
     parameters:
