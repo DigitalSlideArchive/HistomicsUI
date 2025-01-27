@@ -20,7 +20,7 @@ commands:
             name: Use nvm
             # see https://discuss.circleci.com/t/nvm-does-not-change-node-version-on-machine/28973/14
             command: |
-              echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+              echo 'export NVM_DIR="/root/.nvm"' >> $BASH_ENV
               echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
         - restore_cache:
             name: Restore nvm cache
@@ -28,8 +28,6 @@ commands:
         - run:
             name: Switch node versions
             command: |
-              export NVM_DIR="/opt/circleci/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
               nvm install << parameters.node >>
               nvm alias default << parameters.node >>
               NODE_DIR=$(dirname $(which node))
