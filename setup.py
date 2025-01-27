@@ -48,7 +48,7 @@ setup(
         'girder-large-image-annotation>=1.31.0a1',
         'large-image-tasks>=1.31.0a1',
         'large-image-converter>=1.31.0a1',
-        #'girder-slicer-cli-web',
+        # 'girder-slicer-cli-web',
         'cachetools',
         'orjson',
     ],
