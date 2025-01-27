@@ -2,9 +2,9 @@
 // on the presence of a separate bundled Backbone or a global-scope Backbone symbol.
 // The only modifications are reusing Girder's Backbone and _ symbols.
 
-import { LocalStorage } from './localstorage';
-import { sync as localSync } from './sync';
-import { getLocalStorage } from './utils';
+import {LocalStorage} from './localstorage';
+import {sync as localSync} from './sync';
+import {getLocalStorage} from './utils';
 
 const Backbone = girder.Backbone;
 
@@ -17,15 +17,14 @@ const ajaxSync = Backbone.sync;
  * @returns {function} The sync method that will be called
  */
 function getSyncMethod(model, options = {}) {
-  const forceAjaxSync = options.ajaxSync;
-  const hasLocalStorage = getLocalStorage(model);
+    const forceAjaxSync = options.ajaxSync;
+    const hasLocalStorage = getLocalStorage(model);
 
-  return !forceAjaxSync && hasLocalStorage ? localSync : ajaxSync;
+    return !forceAjaxSync && hasLocalStorage ? localSync : ajaxSync;
 }
 
-
-Backbone.sync = function(method, model, options) {
-  return getSyncMethod(model, options).apply(this, [method, model, options]);
+Backbone.sync = function (method, model, options) {
+    return getSyncMethod(model, options).apply(this, [method, model, options]);
 };
 
-export { LocalStorage };
+export {LocalStorage};

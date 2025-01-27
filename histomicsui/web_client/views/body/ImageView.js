@@ -23,7 +23,7 @@ import '../../stylesheets/body/image.styl';
 
 const _ = girder._;
 const $ = girder.$;
-const { restRequest } = girder.rest;
+const {restRequest} = girder.rest;
 const {getCurrentUser} = girder.auth;
 const {AccessType} = girder.constants;
 const ItemModel = girder.models.ItemModel;

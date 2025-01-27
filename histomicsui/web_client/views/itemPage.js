@@ -1,11 +1,11 @@
+import {HuiSettings} from './utils';
+
+import '../stylesheets/views/itemList.styl';
+
 const {wrap} = girder.utilities.PluginUtils;
 const {restRequest} = girder.rest;
 const events = girder.events;
 const ItemView = girder.views.body.ItemView;
-
-import {HuiSettings} from './utils';
-
-import '../stylesheets/views/itemList.styl';
 
 wrap(ItemView, 'render', function (render) {
     function quarantine(event) {

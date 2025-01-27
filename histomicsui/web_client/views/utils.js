@@ -1,5 +1,5 @@
 const $ = girder.$;
-const { restRequest } = girder.rest;
+const {restRequest} = girder.rest;
 
 /* Utility items for HistomicUI views
   In the future more utility classes/functions can be added for export
