@@ -124,6 +124,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: noanalysis
       - coverage
