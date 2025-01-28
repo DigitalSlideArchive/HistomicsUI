@@ -1,7 +1,14 @@
 import _ from 'underscore';
+import Vue from 'vue';
 
+import {restRequest} from '@girder/core/rest';
 import Panel from '@girder/slicer_cli_web/views/Panel';
-import FrameSelector from '@girder/large_image/vue/components/FrameSelector.vue';
+import FrameSelector from '@girder/large_image/widgets/FrameSelector.vue';
+import DualInput from '@girder/large_image/widgets/DualInput.vue';
+import CompositeLayers from '@girder/large_image/widgets/CompositeLayers.vue';
+import HistogramEditor from '@girder/large_image/widgets/HistogramEditor.vue';
+import PresetsMenu from '@girder/large_image/vue/components/PresetsMenu.vue';
+import colors from '@girder/large_image/widgets/colors.json';
 
 import frameSelectorWidget from '../templates/panels/frameSelectorWidget.pug';
 import '../stylesheets/panels/frameSelectorWidget.styl';
@@ -23,14 +30,35 @@ var FrameSelectorWidget = Panel.extend({
             collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
         }));
         const el = this.$('#vue-container').get(0);
-        const vm = new FrameSelector({
+        const getFrameHistogram = (params) => {
+            params = Object.assign({}, params);
+            restRequest({
+                type: 'GET',
+                url: 'item/' + this._itemId + '/tiles/histogram',
+                data: params
+            }).then((response) => {
+                const frameHistograms = this.vueApp._props.frameHistograms || {};
+                frameHistograms[params.frame] = response;
+                this.vueApp._props.frameHistograms = Object.assign({}, frameHistograms);
+                return undefined;
+            });
+        };
+        CompositeLayers.components = {HistogramEditor};
+        FrameSelector.components = {DualInput, CompositeLayers, HistogramEditor, PresetsMenu};
+        const Component = Vue.extend(FrameSelector);
+        const vm = new Component({
             el,
             propsData: {
+                currentFrame: 0,
                 itemId: this._itemId,
                 imageMetadata: this._tiles,
                 frameUpdate: (frame, style) => {
                     this.viewer.frameUpdate(frame, style);
-                }
+                },
+                liConfig: this._liConfig,
+                frameHistograms: undefined,
+                getFrameHistogram,
+                colors
             }
         });
         this.vueApp = vm;
