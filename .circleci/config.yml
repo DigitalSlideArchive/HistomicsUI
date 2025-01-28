@@ -47,6 +47,15 @@ commands:
             npm ci
             npm run build
             popd
+  web_client_test:
+    description: "Run web client tests"
+    steps:
+      - run:
+          name: Run client tests
+          command: |
+            pushd histomicsui/web_client
+            npm run test
+            popd
   tox:
     description: "Run tox"
     parameters:
@@ -119,6 +128,14 @@ jobs:
       - build_client
       - tox:
           env: py312
+      - coverage
+  web_client:
+    executor: toxandnode
+    steps:
+      - checkout
+      - use_nvm
+      - build_client
+      - npm run test
       - coverage
   noanalysis:
     executor: toxandnode
