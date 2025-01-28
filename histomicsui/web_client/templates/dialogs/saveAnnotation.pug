@@ -55,7 +55,13 @@ mixin functional(name, key, title, color)
             input(id='h-annotation-' + name + '-max-setval', type='radio', name=name + '-max-set', checked=styleFuncs[key].maxSet ? 'checked' : undefined)
             input(id='h-annotation-' + name + '-max-val', type='number', step='any', value=styleFuncs[key].maxValue)
 
-- var timestamp = moment().format('YYYY-MM-DD HH:mm')
+- var date = new Date()
+- var year = date.getFullYear()
+- var month = String(date.getMonth() + 1).padStart(2, '0')
+- var day = String(date.getDate()).padStart(2, '0')
+- var hours = String(date.getHours()).padStart(2, '0')
+- var minutes = String(date.getMinutes()).padStart(2, '0')
+- var timestamp = year + '-' + month + '-' + day + ' ' + hours + ':' + minutes
 - var defaultName = 'Annotation '+ timestamp
 .modal-dialog(role='document')
   .modal-content
