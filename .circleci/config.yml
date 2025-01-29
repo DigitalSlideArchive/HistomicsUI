@@ -119,6 +119,8 @@ jobs:
       - coverage
   web_client:
     executor: toxandnode
+    environment:
+      GIRDER_CLIENT_TESTING_MONGO_URI: mongodb://localhost:27017
     steps:
       - checkout
       - use_nvm
