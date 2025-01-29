@@ -4,9 +4,7 @@ mixin functional(name, key, title, color)
     - let anyFuncs = !!Object.keys(styleableFuncs || {}).length;
     if !anyFuncs
       .input-group.h-colorpicker(id='h-annotation-colorpicker-' + name)
-        input.input-sm.form-control(id='h-annotation-' + name, type='text', value=defaultStyles[key])
-        span.input-group-addon
-          i
+        input.input-sm.form-control(id='h-annotation-' + name, type='text')
     else
       .row
         .col-sm-2
@@ -14,9 +12,7 @@ mixin functional(name, key, title, color)
           label.unstyled(for='h-annotation-' + name + '-fixed') Constant
         .col-sm-10
           .input-group.h-colorpicker(id='h-annotation-colorpicker-' + name)
-            input.input-sm.form-control(id='h-annotation-' + name, type='text', value=defaultStyles[key])
-            span.input-group-addon
-              i
+            input.input-sm.form-control(id='h-annotation-' + name, type='text')
       .row
         .col-sm-2
           input(id='h-annotation-' + name + '-func', type='radio', name=name + '-set', checked=styleFuncs[key].useFunc ? 'checked' : undefined)
@@ -31,9 +27,7 @@ mixin functional(name, key, title, color)
         .col-sm-3
           | minimum
           .input-group.h-colorpicker
-            input.input-sm.form-control(id='h-annotation-' + name + '-min', type='text', value=styleFuncs[key].minColor || defaultStyles[key])
-            span.input-group-addon
-              i
+            input.input-sm.form-control(id='h-annotation-' + name + '-min', type='text')
         .col-sm-2
           div
             input(id='h-annotation-' + name + '-min-auto', type='radio', name=name + '-min-set', checked=styleFuncs[key].minSet ? undefined : 'checked')
@@ -44,9 +38,7 @@ mixin functional(name, key, title, color)
         .col-sm-3
           | maximum
           .input-group.h-colorpicker
-            input.input-sm.form-control(id='h-annotation-' + name + '-max', type='text', value=styleFuncs[key].maxColor || defaultStyles[key])
-            span.input-group-addon
-              i
+            input.input-sm.form-control(id='h-annotation-' + name + '-max', type='text')
         .col-sm-2
           div
             input(id='h-annotation-' + name + '-max-auto', type='radio', name=name + '-max-set', checked=styleFuncs[key].maxSet ? undefined : 'checked')
