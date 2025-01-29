@@ -47,6 +47,15 @@ commands:
             npm ci
             npm run build
             popd
+  install_playwright:
+    description: "Install playwright"
+    steps:
+      - run:
+          name: Install playwright with dependencies
+          command: |
+            pushd histomicsui/web_client
+            npx playwright install --with-deps
+            popd
   tox:
     description: "Run tox"
     parameters:
@@ -120,11 +129,14 @@ jobs:
   web_client:
     executor: toxandnode
     environment:
+      CI: "true"
+      HEADLESS: "true"
       GIRDER_CLIENT_TESTING_MONGO_URI: mongodb://localhost:27017
     steps:
       - checkout
       - use_nvm
       - build_client
+      - install_playwright
       - tox:
           env: webtest
   noanalysis:
