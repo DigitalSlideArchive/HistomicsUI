@@ -68,7 +68,7 @@ Now install the histomicsui package, have Girder build its UI, and start the Gir
   girder build
   girder serve
 
-Note that `girder serve` should only be used in development. In production, use a WSGI server such as gunicorn, e.g.::
+Note that ``girder serve`` should only be used in development. In production, use a WSGI server such as gunicorn, e.g.::
 
 .. code-block:: bash
 
