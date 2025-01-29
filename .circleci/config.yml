@@ -47,24 +47,12 @@ commands:
             npm ci
             npm run build
             popd
-  web_client_test:
-    description: "Run web client tests"
-    steps:
-      - run:
-          name: Run client tests
-          command: |
-            pushd histomicsui/web_client
-            npm run test
-            popd
   tox:
     description: "Run tox"
     parameters:
       env:
         type: string
     steps:
-      - run:
-          name: Preinstall phantomjs to work around an npm permission issue
-          command: npm install -g phantomjs-prebuilt --unsafe-perm
       - run:
           name: Run tests via tox
           # Piping through cat does less buffering of the output but can
@@ -135,8 +123,8 @@ jobs:
       - checkout
       - use_nvm
       - build_client
-      - npm run test
-      - coverage
+      - tox:
+          env: webtest
   noanalysis:
     executor: toxandnode
     steps:
@@ -212,6 +200,13 @@ workflows:
               ignore:
                 - gh-pages
       - lint_and_docs:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore:
+                - gh-pages
+      - web_client:
           filters:
             tags:
               only: /^v.*/
