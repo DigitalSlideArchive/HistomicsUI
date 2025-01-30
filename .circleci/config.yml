@@ -47,15 +47,21 @@ commands:
             npm ci
             npm run build
             popd
+  install_playwright:
+    description: "Install playwright"
+    steps:
+      - run:
+          name: Install playwright with dependencies
+          command: |
+            pushd histomicsui/web_client
+            npx playwright install --with-deps
+            popd
   tox:
     description: "Run tox"
     parameters:
       env:
         type: string
     steps:
-      - run:
-          name: Preinstall phantomjs to work around an npm permission issue
-          command: npm install -g phantomjs-prebuilt --unsafe-perm
       - run:
           name: Run tests via tox
           # Piping through cat does less buffering of the output but can
@@ -120,6 +126,19 @@ jobs:
       - tox:
           env: py312
       - coverage
+  web_client:
+    executor: toxandnode
+    environment:
+      CI: "true"
+      HEADLESS: "true"
+      GIRDER_CLIENT_TESTING_MONGO_URI: mongodb://localhost:27017
+    steps:
+      - checkout
+      - use_nvm
+      - build_client
+      - install_playwright
+      - tox:
+          env: webtest
   noanalysis:
     executor: toxandnode
     steps:
@@ -195,6 +214,13 @@ workflows:
               ignore:
                 - gh-pages
       - lint_and_docs:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore:
+                - gh-pages
+      - web_client:
           filters:
             tags:
               only: /^v.*/
