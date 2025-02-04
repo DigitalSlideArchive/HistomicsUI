@@ -12,6 +12,21 @@ const {restRequest} = girder.rest;
 const Panel = girder.plugins.slicer_cli_web.views.Panel;
 const sessionId = uuidv4();
 
+function mean(arr) {
+    if (!arr.length) {
+        return 0;
+    }
+    return arr.reduce((a, b) => a + b) / arr.length;
+}
+
+function stddev(arr) {
+    if (arr.length <= 1) {
+        return 0;
+    }
+    const m = mean(arr);
+    return Math.sqrt(arr.map((x) => Math.pow(x - m, 2)).reduce((a, b) => a + b) / arr.length);
+}
+
 var MetadataPlot = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .g-widget-metadata-plot-settings': function (event) {
@@ -447,14 +462,21 @@ var MetadataPlot = Panel.extend({
     },
 
     plotDataToPlotly: function (plotData) {
-        const colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
+        let colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
         const viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
-        let colorScale;
-        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount)) {
+        // concatenate this so we have predictable colors for a longer scale
+        // for discrete values.  It would probably be better to use a longer
+        // scale
+        colorBrewerPaired12 = colorBrewerPaired12.concat(viridis);
+        let colorScale, sColorScale;
+        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount || plotData.series.c.distinctcount > colorBrewerPaired12.length)) {
             colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(viridis);
         }
+        if (plotData.series.s && (plotData.series.s.type === 'number' || !plotData.series.s.distinctcount || plotData.series.s.distinctcount > colorBrewerPaired12.length)) {
+            sColorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.s.max - plotData.series.s.min) || 0) + plotData.series.s.min)).range(viridis);
+        }
         const plotlyData = {
-            x: plotData.data.map((d) => d[plotData.series.x.index]),
+            x: plotData.series.x ? plotData.data.map((d) => d[plotData.series.x.index]) : 0,
             y: plotData.data.map((d) => d[plotData.series.y.index]),
             hovertext: plotData.data.map((d) => this._hoverText(d, plotData)),
             hoverinfo: 'text',
@@ -472,7 +494,7 @@ var MetadataPlot = Panel.extend({
                     : 10,
                 color: plotData.series.c
                     ? (
-                        !plotData.series.c.distinctcount
+                        colorScale
                             ? plotData.data.map((d) => colorScale(d[plotData.series.c.index]))
                             : plotData.data.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
                     )
@@ -506,14 +528,104 @@ var MetadataPlot = Panel.extend({
                         for (let didx = 0; didx < plotData.data.length; didx += 1) {
                             if (plotData.data[didx][plotData.series.s.index] === k) {
                                 const cval = plotData.data[didx][plotData.series.c.index];
-                                const cidx = plotData.series.c.distinct.indexOf(cval);
-                                return {target: kidx, value: {line: {color: colorBrewerPaired12[cidx]}}};
+                                const cidx = plotData.series.s.distinct.indexOf(cval);
+                                return {
+                                    target: kidx,
+                                    value: {
+                                        line: {
+                                            color: colorScale ? sColorScale[cval] : colorBrewerPaired12[cidx]
+                                        }
+                                    }
+                                };
                             }
                         }
                         return {target: kidx, value: {line: {color: '#000000'}}};
                     })
                 }];
             }
+        }
+        if (plotData.format === 'distrib') {
+            const maxs = plotData.series.s && plotData.series.s.distinct ? plotData.series.s.distinctcount : 1;
+            const pv = {
+                x: [],
+                y: [],
+                c: [],
+                r: [],
+                xe: [],
+                ye: [],
+                dd: Array(maxs),
+                xd: Array.from(Array(maxs), () => []),
+                yd: Array.from(Array(maxs), () => []),
+                cd: Array.from(Array(maxs), () => []),
+                rd: Array.from(Array(maxs), () => [])
+            };
+            plotData.data.forEach((d) => {
+                const s = plotData.series.s && plotData.series.s.distinct ? plotData.series.s.distinct.indexOf(d[plotData.series.s.index]) : 0;
+                if (!isFinite(d[plotData.series.y.index]) || (plotData.series.x && !isFinite(d[plotData.series.x.index])) || (plotData.series.r && plotData.series.r === 'number' && !isFinite(d[plotData.series.r.index])) || (plotData.series.c && plotData.series.c === 'number' && !isFinite(d[plotData.series.c.index]))) {
+                    return;
+                }
+                if (pv.dd[s] === undefined) {
+                    pv.dd[s] = d;
+                }
+                if (plotData.series.x) {
+                    pv.xd[s].push(+d[plotData.series.x.index]);
+                }
+                pv.yd[s].push(+d[plotData.series.y.index]);
+                if (plotData.series.c) {
+                    pv.cd[s].push(d[plotData.series.c.index]);
+                }
+                if (plotData.series.r) {
+                    pv.rd[s].push(d[plotData.series.r.index]);
+                }
+            });
+            for (let s = 0; s < maxs; s += 1) {
+                pv.x[s] = mean(pv.xd[s]);
+                pv.xe[s] = stddev(pv.xd[s]);
+                pv.y[s] = mean(pv.yd[s]);
+                pv.ye[s] = stddev(pv.yd[s]);
+                pv.r[s] = plotData.series.r && plotData.series.r !== 'number' && pv.rd[s].length ? pv.rd[s][0] : mean(pv.rd[s]);
+                pv.c[s] = plotData.series.c && plotData.series.c !== 'number' && pv.cd[s].length ? pv.cd[s][0] : mean(pv.cd[s]);
+            }
+            plotlyData.x = [...Array(maxs).keys()];
+            if (plotData.series.x) {
+                plotlyData.error_x = {
+                    type: 'data',
+                    array: pv.xe.map((v) => v / Math.max.apply(Math, pv.xe)),
+                    color: '#0000C0',
+                    // width: 0,
+                    visible: true
+                };
+            }
+            plotlyData.y = pv.y;
+            plotlyData.mode = 'lines+markers';
+            plotlyData.error_y = {
+                type: 'data',
+                array: pv.ye,
+                color: '#C00000',
+                // width: 0,
+                visible: true
+            };
+            plotlyData.hovertext = pv.dd.map((d) => this._hoverText(d, plotData));
+            plotlyData.marker.symbol = 0;
+            if (plotData.series.r) {
+                plotlyData.marker.size = plotData.series.r && (plotData.series.r.type === 'number' || plotData.series.r.distinctcount)
+                    ? (
+                        plotData.series.r.type === 'number'
+                            ? pv.r.map((r) => (r - plotData.series.r.min) / (plotData.series.r.max - plotData.series.r.min) * 10 + 5)
+                            : pv.dd.map((d) => plotData.series.r.distinct.indexOf(d[plotData.series.r.index]) / plotData.series.r.distinctcount * 10 + 5)
+                    )
+                    : 10;
+            }
+            if (plotData.series.c) {
+                plotlyData.marker.color = plotData.series.c
+                    ? (
+                        !plotData.series.c.distinctcount
+                            ? pv.c.map((c) => colorScale(c))
+                            : pv.dd.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
+                    )
+                    : '#000000';
+            }
+            plotlyData.type = 'scatter';
         }
         return [plotlyData];
     },
@@ -545,7 +657,7 @@ var MetadataPlot = Panel.extend({
                 this.lastPlotData = plotData;
                 this.$el.html(metadataPlotTemplate({}));
                 const elem = this.$el.find('.h-metadata-plot-area');
-                if (!plotData || (plotData.format !== 'violin' && !plotData.series.x) || !plotData.series.y || plotData.data.length < 2) {
+                if (!plotData || (plotData.format !== 'violin' && plotData.format !== 'distrib' && !plotData.series.x) || !plotData.series.y || plotData.data.length < 2) {
                     elem.html('');
                     return;
                 }
@@ -557,7 +669,7 @@ var MetadataPlot = Panel.extend({
                 if (maximized) {
                     plotOptions.margin.l += 20;
                     plotOptions.margin.b += 40;
-                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' ? `${plotData.series.x.title}` : `${plotData.series.s ? plotData.series.s.title : ''}`}};
+                    plotOptions.xaxis = {title: {text: plotData.format !== 'violin' && plotData.format !== 'distrib' ? `${plotData.series.x.title}` : `${plotData.series.s ? plotData.series.s.title : ''}`}};
                     plotOptions.yaxis = {title: {text: `${plotData.series.y.title}`}};
                 }
                 this._plotlyNode = elem;
