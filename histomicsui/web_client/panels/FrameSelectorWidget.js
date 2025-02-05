@@ -6,15 +6,15 @@ import '../stylesheets/panels/frameSelectorWidget.styl';
 const _ = girder._;
 const Panel = girder.plugins.slicer_cli_web.views.Panel;
 const {restRequest} = girder.rest;
-const FrameSelector = girder.plugins.large_image.widgets.FrameSelector;
-const DualInput = girder.plugins.large_image.widgets.DualInput;
-const CompositeLayers = girder.plugins.large_image.widgets.CompositeLayers;
-const HistogramEditor = girder.plugins.large_image.widgets.HistogramEditor;
-const PresetsMenu = girder.plugins.large_image.vue.components.PresetsMenu;
-const colors = girder.plugins.large_image.widgets.colors;
 
 var FrameSelectorWidget = Panel.extend({
     render() {
+        const FrameSelector = girder.plugins.large_image.widgets.FrameSelector;
+        const DualInput = girder.plugins.large_image.widgets.DualInput;
+        const CompositeLayers = girder.plugins.large_image.widgets.CompositeLayers;
+        const HistogramEditor = girder.plugins.large_image.widgets.HistogramEditor;
+        const PresetsMenu = girder.plugins.large_image.vue.components.PresetsMenu;
+        const colors = girder.plugins.large_image.widgets.colors;
         // if not a multi frame image, don't show (this means we can't do
         // band-only work on hyperspectral data, so we may want to change this
         // to also expose it if there are listed bands and there are more
