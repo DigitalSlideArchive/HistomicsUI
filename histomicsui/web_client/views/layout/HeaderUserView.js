@@ -1,6 +1,6 @@
 import headerUserTemplate from '../../templates/layout/headerUser.pug';
 
-const { getCurrentUser } = girder.auth;
+const {getCurrentUser} = girder.auth;
 const GirderHeaderUserView = girder.views.layout.HeaderUserView;
 
 var HeaderUserView = GirderHeaderUserView.extend({

@@ -8,7 +8,7 @@ const _ = girder._;
 const View = girder.views.View;
 const PluginConfigBreadcrumbWidget = girder.views.widgets.PluginConfigBreadcrumbWidget;
 const BrowserWidget = girder.views.widgets.BrowserWidget;
-const { restRequest } = girder.rest;
+const {restRequest} = girder.rest;
 const events = girder.events;
 const router = girder.router;
 

@@ -73,7 +73,7 @@ def _itemFromEvent(info, identifierEnding, itemAccessLevel=AccessType.READ):  # 
 
 
 @app.task
-def process_annotations_task(info: dict) -> None:
+def process_annotations_task(info: dict) -> None:  # noqa: C901
     results = _itemFromEvent(info, 'AnnotationFile')
     if not results:
         return
@@ -95,7 +95,7 @@ def process_annotations_task(info: dict) -> None:
     try:
         if file['size'] > int(large_image.config.getConfig(
                 'max_annotation_input_file_length', 1024 ** 3)):
-            msg = 'File is larger thatn will be read into memory'
+            msg = 'File is larger than will be read into memory'
             raise Exception(msg)
         contents = b''.join(chunk for chunk in read_entire_file())
         data = orjson.loads(contents.decode())

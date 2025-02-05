@@ -9,15 +9,59 @@ executors:
         command: bash -c "mkdir /dev/shm/mongo && mongod --nojournal --dbpath=/dev/shm/mongo --noauth --bind_ip_all"
       - image: rabbitmq
 commands:
+  use_nvm:
+      description: "Use nvm"
+      parameters:
+        node:
+          type: string
+          default: v20
+      steps:
+        - run:
+            name: Use nvm
+            # see https://discuss.circleci.com/t/nvm-does-not-change-node-version-on-machine/28973/14
+            command: |
+              echo 'export NVM_DIR="/root/.nvm"' >> $BASH_ENV
+              echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+        - restore_cache:
+            name: Restore nvm cache
+            key: v1-nvm-cache-<< parameters.node >>
+        - run:
+            name: Switch node versions
+            command: |
+              nvm install << parameters.node >>
+              nvm alias default << parameters.node >>
+              NODE_DIR=$(dirname $(which node))
+              echo "export PATH=$NODE_DIR:\$PATH" >> $BASH_ENV
+        - run:
+            name: Check node versions
+            command: |
+              node --version
+              npm --version
+  build_client:
+    description: "Build HistomicsUI client"
+    steps:
+      - run:
+          name: Build client
+          command: |
+            pushd histomicsui/web_client
+            npm ci
+            npm run build
+            popd
+  install_playwright:
+    description: "Install playwright"
+    steps:
+      - run:
+          name: Install playwright with dependencies
+          command: |
+            pushd histomicsui/web_client
+            npx playwright install --with-deps
+            popd
   tox:
     description: "Run tox"
     parameters:
       env:
         type: string
     steps:
-      - run:
-          name: Preinstall phantomjs to work around an npm permission issue
-          command: npm install -g phantomjs-prebuilt --unsafe-perm
       - run:
           name: Run tests via tox
           # Piping through cat does less buffering of the output but can
@@ -41,6 +85,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py38
       - coverage
@@ -48,6 +94,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py39
       - coverage
@@ -55,6 +103,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py310
       - coverage
@@ -62,6 +112,8 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py311
       - coverage
@@ -69,13 +121,30 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: py312
       - coverage
+  web_client:
+    executor: toxandnode
+    environment:
+      CI: "true"
+      HEADLESS: "true"
+      GIRDER_CLIENT_TESTING_MONGO_URI: mongodb://localhost:27017
+    steps:
+      - checkout
+      - use_nvm
+      - build_client
+      - install_playwright
+      - tox:
+          env: webtest
   noanalysis:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - tox:
           env: noanalysis
       - coverage
@@ -90,6 +159,8 @@ jobs:
       - image: girder/tox-and-node
     steps:
       - checkout
+      - use_nvm
+      - build_client
       - deploy:
           name: Run tests via tox
           # Piping through cat does less buffering of the output but can
@@ -143,6 +214,13 @@ workflows:
               ignore:
                 - gh-pages
       - lint_and_docs:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore:
+                - gh-pages
+      - web_client:
           filters:
             tags:
               only: /^v.*/

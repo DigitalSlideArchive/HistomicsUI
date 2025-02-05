@@ -1,5 +1,6 @@
 <script>
 import Vue from 'vue';
+
 import EditHeatmapOrGridData from './EditHeatmapOrGridData.vue';
 
 const _ = girder._;

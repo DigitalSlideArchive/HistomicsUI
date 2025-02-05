@@ -1,15 +1,14 @@
-import "select2";
-import "select2/dist/css/select2.css";
-import metadataPlotDialog from "../templates/dialogs/metadataPlot.pug";
-import "../stylesheets/dialogs/metadataPlot.styl";
+import 'select2';
+import 'select2/dist/css/select2.css';
+import metadataPlotDialog from '../templates/dialogs/metadataPlot.pug';
+import '../stylesheets/dialogs/metadataPlot.styl';
 
 const View = girder.views.View;
 const $ = girder.$;
-const girderModal = girder.utilities.girderModal;
 
 const MetadataPlotDialog = View.extend({
     events: {
-        "click .h-submit": "_submit",
+        'click .h-submit': '_submit'
     },
 
     initialize(settings) {
@@ -22,18 +21,18 @@ const MetadataPlotDialog = View.extend({
             .html(
                 metadataPlotDialog({
                     plotConfig: this.plotConfig,
-                    plotOptions: this.plotOptions,
+                    plotOptions: this.plotOptions
                 })
             )
             .girderModal(this);
         // this adds search functionality to the select boxes, but not to the
         // multiple select, since the select2 tool breaks some traditional
         // aspects of multiple select
-        this.$(".h-plot-select")
-            .not("[multiple]")
+        this.$('.h-plot-select')
+            .not('[multiple]')
             .select2({
-                dropdownParent: $(".modal-body"),
-                width: "100%",
+                dropdownParent: $('.modal-body'),
+                width: '100%'
             });
 
         return this;
@@ -42,17 +41,17 @@ const MetadataPlotDialog = View.extend({
     _submit(evt) {
         evt.preventDefault();
         const configOptions = {
-            folder: this.$("#h-plot-folder").is(":checked"),
-            format: this.$("#h-plot-format").val(),
+            folder: this.$('#h-plot-folder').is(':checked'),
+            format: this.$('#h-plot-format').val()
         };
-        ["x", "y", "r", "c", "s"].forEach((series) => {
-            const val = this.$("#h-plot-series-" + series).val();
-            if (val !== "_none_" && val !== undefined) {
+        ['x', 'y', 'r', 'c', 's'].forEach((series) => {
+            const val = this.$('#h-plot-series-' + series).val();
+            if (val !== '_none_' && val !== undefined) {
                 configOptions[series] = val;
             }
         });
-        ["u"].forEach((series) => {
-            const opts = this.$("#h-plot-series-" + series + " option");
+        ['u'].forEach((series) => {
+            const opts = this.$('#h-plot-series-' + series + ' option');
             const val = opts
                 .filter((idx, o) => o.selected)
                 .map((idx, o) => $(o).val())
@@ -60,8 +59,8 @@ const MetadataPlotDialog = View.extend({
             configOptions[series] = val.length ? val : undefined;
         });
         this.result = configOptions;
-        this.$el.modal("hide");
-    },
+        this.$el.modal('hide');
+    }
 });
 
 export default MetadataPlotDialog;

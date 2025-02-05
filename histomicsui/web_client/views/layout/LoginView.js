@@ -1,6 +1,6 @@
-import { HuiSettings } from '../utils';
+import {HuiSettings} from '../utils';
 
-const { wrap } = girder.utilities.PluginUtils;
+const {wrap} = girder.utilities.PluginUtils;
 const LoginView = girder.views.layout.LoginView;
 
 wrap(LoginView, 'render', function (render) {

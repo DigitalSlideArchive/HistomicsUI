@@ -1,13 +1,13 @@
-const $ = girder.$;
-const { wrap } = girder.utilities.PluginUtils;
-const { AccessType } = girder.constants;
-const { restRequest } = girder.rest;
-const events = girder.events;
-const ItemListWidget = girder.views.widgets.ItemListWidget;
-
 import {HuiSettings} from './utils';
 
 import '../stylesheets/views/itemList.styl';
+
+const $ = girder.$;
+const {wrap} = girder.utilities.PluginUtils;
+const {AccessType} = girder.constants;
+const {restRequest} = girder.rest;
+const events = girder.events;
+const ItemListWidget = girder.views.widgets.ItemListWidget;
 
 wrap(ItemListWidget, 'render', function (render) {
     const root = this;

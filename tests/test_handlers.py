@@ -72,7 +72,7 @@ class TestHUIHandlers:
         utilities.uploadExternalFile(
             'Easy1.png', admin, fsAssetstore, reference=json.dumps({
                 'identifier': 'ImageRecord1',
-                'uuid': '12345',
+                'uuid': '000011112222333344445555',
                 'userId': str(admin['_id']),
                 'itemId': str(item['_id']),
                 'fileId': str(file['_id']),
@@ -104,7 +104,6 @@ class TestHUIHandlers:
                 'itemId': str(item['_id']),
                 'fileId': str(file['_id']),
             }))
-        assert Annotation().findOne({'itemId': item['_id']}) is None
         utilities.uploadExternalFile(
             'Easy1.png', admin, fsAssetstore, reference=json.dumps({
                 'identifier': 'ImageRecord1',

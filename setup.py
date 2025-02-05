@@ -44,9 +44,11 @@ setup(
     ],
     install_requires=[
         'girder>=5.0.0a2',
-        # TODO
-        #'girder-large-image-annotation',
-        #'girder-slicer-cli-web',
+        'girder-large-image==1.31.0a1',
+        'girder-large-image-annotation==1.31.0a1',
+        'large-image-tasks==1.31.0a1',
+        'large-image-converter==1.31.0a1',
+        # 'girder-slicer-cli-web',
         'cachetools',
         'orjson',
     ],
@@ -67,7 +69,7 @@ setup(
             'histomicsui = histomicsui:GirderPlugin',
         ],
         'girder_worker_plugins': [
-            'slicer_cli_web = histomicsui.girder_worker_plugin:HistomicsUIWorkerPlugin'
-        ]
+            'slicer_cli_web = histomicsui.girder_worker_plugin:HistomicsUIWorkerPlugin',
+        ],
     },
 )
