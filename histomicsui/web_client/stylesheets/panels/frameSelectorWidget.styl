@@ -32,11 +32,19 @@
   .table-container td, .table-container th
     padding 0 5px 0 0
 
+  .table-row
+    height unset
+    vertical-align unset
+    border-bottom 1px solid #ddd !important
+
   td
     padding 2px
 
   .current-color, .color-col
     width 25px
+
+  .color-col
+    padding unset
 
   .enable-col
     width initial
@@ -83,6 +91,7 @@
 
     .canvas
       width calc(100% - 120px)
+      left 65px
 
     .percentage-input
       width unset
@@ -93,10 +102,24 @@
     .percentage-input:after
       left 42px
 
+  .auto-range-col
+    min-width unset
+    display inline-block
+
+  .switch
+    width 45px
+
+  .onoff-slider.checked:before
+    transform translateX(22px)
+
+  .expand-btn
+    font-size unset
+    font-weight unset
+
   .auto-range-label > .small-text
     display none
 
-  .auto-range-toggle
+  .auto-range-label
     min-width 60px
     display block
 
