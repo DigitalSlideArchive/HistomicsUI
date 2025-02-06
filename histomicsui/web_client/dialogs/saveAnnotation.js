@@ -1,4 +1,5 @@
 import tinycolor from 'tinycolor2';
+import JsColor from '@eastdesire/jscolor';
 
 import MetadataWidget from '../panels/MetadataWidget';
 import '../stylesheets/dialogs/saveAnnotation.styl';
@@ -216,13 +217,13 @@ var SaveAnnotation = View.extend({
         'click .h-cancel': 'cancel',
 
         'input #h-annotation-fill-color': 'checkFixedIfPresent',
-        'changeColor #h-annotation-colorpicker-fill-color': 'checkFixedIfPresent',
+        'change #h-annotation-colorpicker-fill-color': 'checkFixedIfPresent',
         'change #h-annotation-fill-color-func-list': 'changeFillColorFunc',
         'input #h-annotation-fill-color-min-val': () => $('.h-functional-value #h-annotation-fill-color-min-setval').prop('checked', true),
         'input #h-annotation-fill-color-max-val': () => $('.h-functional-value #h-annotation-fill-color-max-setval').prop('checked', true),
 
         'input #h-annotation-line-color': 'checkFixedIfPresent',
-        'changeColor #h-annotation-colorpicker-line-color': 'checkFixedIfPresent',
+        'change #h-annotation-colorpicker-line-color': 'checkFixedIfPresent',
         'change #h-annotation-line-color-func-list': 'changeLineColorFunc',
         'input #h-annotation-line-color-min-val': () => $('.h-functional-value #h-annotation-line-color-min-setval').prop('checked', true),
         'input #h-annotation-line-color-max-val': () => $('.h-functional-value #h-annotation-line-color-max-setval').prop('checked', true),
@@ -232,7 +233,10 @@ var SaveAnnotation = View.extend({
 
     render() {
         // clean up old colorpickers when rerendering
-        this.$('.h-colorpicker').colorpicker('destroy');
+        // const hColorPicker = this.$('.h-colorpicker');
+        // if (hColorPicker.colorpicker) {
+        //     hColorPicker.colorpicker('destroy');
+        // }
 
         let elementTypes = [];
         if (this.annotation.get('annotation').elements) {
@@ -306,7 +310,29 @@ var SaveAnnotation = View.extend({
                 defaultStyles
             })
         ).girderModal(this);
-        this.$('.h-colorpicker').colorpicker();
+
+        const lc = 'lineColor';
+        const fc = 'fillColor';
+        const styleFuncs = this.annotation._styleFuncs;
+        // There are 6 possible colorpickers we may need to initialize
+        // Ids can be:
+        const colorPickerOpts = {
+            '#h-annotation-line-color': defaultStyles[lc],
+            '#h-annotation-fill-color': defaultStyles[fc],
+            '#h-annotation-line-color-max': styleFuncs[lc].maxColor || defaultStyles[lc],
+            '#h-annotation-line-color-min': styleFuncs[lc].minColor || defaultStyles[lc],
+            '#h-annotation-fill-color-max': styleFuncs[fc].maxColor || defaultStyles[fc],
+            '#h-annotation-fill-color-min': styleFuncs[fc].minColor || defaultStyles[fc]
+        };
+        Object.keys(colorPickerOpts).forEach((id) => {
+            const input = this.$(id)[0] || null;
+            if (input) {
+                (() => new JsColor(input, {
+                    format: 'rgba',
+                    value: colorPickerOpts[id]
+                }))();
+            }
+        });
 
         if (this.annotation.id) {
             if (!this.annotation.meta) {
