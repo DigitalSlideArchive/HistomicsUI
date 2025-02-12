@@ -13,7 +13,7 @@ var FrameSelectorWidget = Panel.extend({
         const DualInput = girder.plugins.large_image.widgets.DualInput;
         const CompositeLayers = girder.plugins.large_image.widgets.CompositeLayers;
         const HistogramEditor = girder.plugins.large_image.widgets.HistogramEditor;
-        const PresetsMenu = girder.plugins.large_image.vue.components.PresetsMenu;
+        const PresetsMenu = girder.plugins.large_image.vue.PresetsMenu;
         const colors = girder.plugins.large_image.widgets.colors;
         // if not a multi frame image, don't show (this means we can't do
         // band-only work on hyperspectral data, so we may want to change this

@@ -93,7 +93,7 @@ var OverviewWidget = Panel.extend({
         params.layer.autoshareRenderer = false;
         this._tileLayer = this.viewer.createLayer('osm', params.layer);
         if (this.parentViewer._layer && this.parentViewer._layer.setFrameQuad) {
-            const setFrameQuad = girder.plugins.large_image.views.imageViewerWidget.setFrameQuad;
+            const setFrameQuad = girder.plugins.large_image.utils.setFrameQuad;
             setFrameQuad((this.parentViewer._layer.setFrameQuad.status || {}).tileinfo, this._tileLayer, (this.parentViewer._layer.setFrameQuad.status || {}).options);
             this._tileLayer.setFrameQuad(0);
         }
