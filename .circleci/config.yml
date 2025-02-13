@@ -72,6 +72,13 @@ jobs:
       - tox:
           env: py312
       - coverage
+  py313:
+    executor: toxandnode
+    steps:
+      - checkout
+      - tox:
+          env: py313
+      - coverage
   noanalysis:
     executor: toxandnode
     steps:
@@ -135,6 +142,13 @@ workflows:
             branches:
               ignore:
                 - gh-pages
+      - py313:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore:
+                - gh-pages
       - noanalysis:
           filters:
             tags:
@@ -156,6 +170,7 @@ workflows:
             - py310
             - py311
             - py312
+            - py313
             - lint_and_docs
           filters:
             tags:
