@@ -1,7 +1,6 @@
 """Test annotation file and metadata handlers."""
 
 import json
-import time
 
 import pytest
 from girder.models.item import Item
@@ -30,11 +29,6 @@ class TestHUIHandlers:
                 'itemId': str(item['_id']),
                 'fileId': str(file['_id']),
             }))
-        starttime = time.time()
-        while time.time() < starttime + 10:
-            if Annotation().findOne({'itemId': item['_id']}) is not None:
-                break
-            time.sleep(0.1)
         assert Annotation().findOne({'itemId': item['_id']}) is not None
 
     def testMetadataHandler(self, server, fsAssetstore, admin):
@@ -56,12 +50,6 @@ class TestHUIHandlers:
                 'itemId': str(item['_id']),
                 'fileId': str(file['_id']),
             }))
-        starttime = time.time()
-        while time.time() < starttime + 10:
-            item = Item().load(file['itemId'], user=admin)
-            if 'sample' in item.get('meta', {}):
-                break
-            time.sleep(0.1)
         item = Item().load(file['itemId'], user=admin)
         assert item['meta']['sample'] == 'value'
         assert item['meta']['complex']['key1'] == 'value1'
@@ -86,11 +74,6 @@ class TestHUIHandlers:
                 'itemId': str(item['_id']),
                 'fileId': str(file['_id']),
             }))
-        starttime = time.time()
-        while time.time() < starttime + 10:
-            if Annotation().findOne({'itemId': item['_id']}) is not None:
-                break
-            time.sleep(0.1)
         assert Annotation().findOne({'itemId': item['_id']}) is not None
 
     def testAnnotationWithGirderIdHandlerAltOrder(self, server, fsAssetstore, admin):
@@ -112,9 +95,4 @@ class TestHUIHandlers:
                 'itemId': str(item['_id']),
                 'fileId': str(file['_id']),
             }))
-        starttime = time.time()
-        while time.time() < starttime + 10:
-            if Annotation().findOne({'itemId': item['_id']}) is not None:
-                break
-            time.sleep(0.1)
         assert Annotation().findOne({'itemId': item['_id']}) is not None
