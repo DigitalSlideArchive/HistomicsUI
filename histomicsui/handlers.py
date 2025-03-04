@@ -87,22 +87,15 @@ def process_annotations_task(info: dict) -> None:  # noqa: C901
         logger.error('Could not load models from the database')
         return
 
-    def read_entire_file():
-        with File().open(file) as fptr:
-            while chunk := fptr.read(1048576):
-                yield chunk
-
     try:
         if file['size'] > int(large_image.config.getConfig(
                 'max_annotation_input_file_length', 1024 ** 3)):
-            msg = 'File is larger than will be read into memory'
-            raise Exception(msg)
-        contents = b''.join(chunk for chunk in read_entire_file())
-        data = orjson.loads(contents.decode())
-        del contents
+            raise Exception('File is larger than will be read into memory')
+        with File().open(file) as fptr:
+            data = orjson.loads(fptr.read())
     except Exception:
-        logger.error('Could not parse annotation file')
-        raise
+        logger.exception('Could not parse annotation file')
+        return
 
     if time.time() - startTime > 10:
         logger.info('Decoded json in %5.3fs', time.time() - startTime)
@@ -114,10 +107,12 @@ def process_annotations_task(info: dict) -> None:  # noqa: C901
 
     for annotation in data:
         try:
+            # TODO consider bulk insertion for performance
             Annotation().createAnnotation(item, user, annotation)
         except Exception:
-            logger.error('Could not create annotation object from data')
-            raise
+            logger.exception(f'Failed to save annotation: {annotation}')
+            return
+
     if Setting().get(PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST):
         item = Item().load(file['itemId'], force=True)
         if item and len(list(Item().childFiles(item, limit=2))) == 1:
@@ -129,10 +124,10 @@ def process_annotations(event):  # noqa
     if not _itemFromEvent(event.info, 'AnnotationFile'):
         return
 
-    process_annotations_task.delay(
-        event.info,
-        girder_job_title=f"Processing annotation results from {event.info['file']['name']}",
-    )
+    # We call this as a normal function rather than a celery task, because it needs direct
+    # access to the database.
+    # TODO figure out a better solution than doing this in the request thread.
+    process_annotations_task(event.info)
 
 
 def quarantine_item(item, user, makePlaceholder=True):
