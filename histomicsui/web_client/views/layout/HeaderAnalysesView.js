@@ -4,11 +4,22 @@ import View from '../View';
 import headerAnalysesTemplate from '../../templates/layout/headerAnalyses.pug';
 import '../../stylesheets/layout/headerAnalyses.styl';
 
-import 'bootstrap-submenu/dist/js/bootstrap-submenu';
-import 'bootstrap-submenu/dist/css/bootstrap-submenu.css';
+// Importing the bootstrap-submenu jQuery plugin immediately
+// runs an IIFE, which modifies the global jQuery (i.e. window.jQuery).
+// We can temporarily point window.jQuery to girder.$, so we add the
+// plugin to the instance of jQuery stored on the girder global.
+const windowJQuery = window.jQuery;
+window.jQuery = girder.$;
 
-const _ = girder._;
+import 'bootstrap-submenu/dist/js/bootstrap-submenu'; // eslint-disable-line
+import 'bootstrap-submenu/dist/css/bootstrap-submenu.css'; // eslint-disable-line
+
+if (typeof girder.$.fn.submenupicker === 'function') {
+    window.jQuery = windowJQuery;
+}
+
 const $ = girder.$;
+const _ = girder._;
 const {restRequest} = girder.rest;
 
 var HeaderUserView = View.extend({
@@ -34,7 +45,7 @@ var HeaderUserView = View.extend({
                         analyses: analyses || {},
                         maxRows: maxRows
                     }));
-                    this.$('.h-analyses-dropdown-link').submenupicker();
+                    $('.h-analyses-dropdown-link').submenupicker();
                 } else {
                     this.$el.addClass('hidden');
                 }
