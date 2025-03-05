@@ -43,6 +43,12 @@ var HeaderUserView = View.extend({
                         maxRows: maxRows
                     }));
                     $('.h-analyses-dropdown-link').submenupicker();
+                    // Restore the "fully collapse" functionality
+                    $('.h-analyses-dropdown-link').on('click', function () {
+                        $('.dropdown-submenu').each(function () {
+                            $(this).removeClass('open');
+                        });
+                    });
                 } else {
                     this.$el.addClass('hidden');
                 }
@@ -55,7 +61,10 @@ var HeaderUserView = View.extend({
     },
     _setAnalysis(evt) {
         evt.preventDefault();
-        var target = _$(evt.currentTarget).data();
+        var target = $(evt.currentTarget).data();
+        $('.dropdown-submenu').each(function () {
+            $(this).removeClass('open');
+        });
 
         router.setQuery('analysis', target.api, {trigger: true});
     }
