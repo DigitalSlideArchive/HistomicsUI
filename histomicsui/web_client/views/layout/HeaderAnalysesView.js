@@ -8,17 +8,20 @@ import '../../stylesheets/layout/headerAnalyses.styl';
 // runs an IIFE, which modifies the global jQuery (i.e. window.jQuery).
 // We can temporarily point window.jQuery to girder.$, so we add the
 // plugin to the instance of jQuery stored on the girder global.
+// See: https://github.com/DigitalSlideArchive/HistomicsUI/issues/454
+const $ = girder.$;
 const windowJQuery = window.jQuery;
-window.jQuery = girder.$;
+window.jQuery = $;
 
 import 'bootstrap-submenu/dist/js/bootstrap-submenu'; // eslint-disable-line
 import 'bootstrap-submenu/dist/css/bootstrap-submenu.css'; // eslint-disable-line
 
-if (typeof girder.$.fn.submenupicker === 'function') {
+console.log('help');
+if (typeof $.fn.submenupicker === 'function') {
+    console.log('success');
     window.jQuery = windowJQuery;
 }
 
-const $ = girder.$;
 const _ = girder._;
 const {restRequest} = girder.rest;
 
