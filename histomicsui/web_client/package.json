@@ -37,8 +37,8 @@
         "sinon": "^2.1.0",
         "tinycolor2": "~1.4.1",
         "url-search-params-polyfill": "^8.1.1",
-        "vue": "^2.7.16",
         "uuid": "^8.3.2",
+        "vue": "^2.7.16",
         "vue-color": "^2.8.1",
         "vue-loader": "~15.9.8",
         "vue-template-compiler": "~2.6.14"
@@ -98,7 +98,10 @@
             "vue/require-prop-types": "off"
         },
         "root": true,
-        "ignorePatterns": ["dist/**", "dist-app/**"],
+        "ignorePatterns": [
+            "dist/**",
+            "dist-app/**"
+        ],
         "globals": {
             "girder": "readonly"
         }
