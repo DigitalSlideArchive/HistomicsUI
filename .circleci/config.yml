@@ -126,6 +126,15 @@ jobs:
       - tox:
           env: py312
       - coverage
+  py313:
+    executor: toxandnode
+    steps:
+      - checkout
+      - use_nvm
+      - build_client
+      - tox:
+          env: py313
+      - coverage
   web_client:
     executor: toxandnode
     environment:
@@ -206,6 +215,13 @@ workflows:
             branches:
               ignore:
                 - gh-pages
+      - py313:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore:
+                - gh-pages
       - noanalysis:
           filters:
             tags:
@@ -234,6 +250,7 @@ workflows:
             - py310
             - py311
             - py312
+            - py313
             - lint_and_docs
           filters:
             tags:
