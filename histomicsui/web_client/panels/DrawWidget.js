@@ -374,7 +374,7 @@ var DrawWidget = Panel.extend({
     },
 
     /**
-     * Apply a boolean operation to the existign polygons.
+     * Apply a boolean operation to the existing polygons.
      *
      * @param {geo.annotation[]} annotations The list of specified geojs
      *      annotations.
@@ -406,7 +406,7 @@ var DrawWidget = Panel.extend({
             if (element.properties.element && element.properties.element.group !== this._style.get('group')) {
                 return;
             }
-            element.properties.annotationId = element.properties.annotation;
+            element.properties.annotationId = element.properties.annotation.id;
             geojson.features.push(element);
             oldids[element.id] = true;
         }));

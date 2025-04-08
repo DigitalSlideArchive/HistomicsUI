@@ -167,6 +167,7 @@ def quarantine_item(item, user, makePlaceholder=True):
             description=item['description'])
         quarantineInfo['placeholderItemId'] = placeholder['_id']
     item.setdefault('meta', {})['quarantine'] = quarantineInfo
+    item['updatedId'] = user['_id']
     item = Item().updateItem(item)
     if makePlaceholder:
         placeholderInfo = {
@@ -199,6 +200,8 @@ def restore_quarantine_item(item, user):
         placeholder = None
     item = Item().move(item, folder)
     item['updated'] = item['meta']['quarantine']['originalUpdated']
+    if user:
+        item['updatedId'] = user['_id']
     del item['meta']['quarantine']
     item = Item().updateItem(item)
     if placeholder is not None:
