@@ -1,5 +1,3 @@
-/* global BUILD_TIMESTAMP */
-
 import {v4 as uuidv4} from 'uuid';
 
 import MetadataPlotDialog from '../dialogs/metadataPlot';
@@ -637,21 +635,9 @@ var MetadataPlot = Panel.extend({
                 this.$el.html('');
                 return;
             }
-            let root = '/static/built';
-            try {
-                root = __webpack_public_path__ || root; // eslint-disable-line
-            } catch (err) { }
-            root = root.replace(/\/$/, '');
             this.fetchPlottableData();
             $.when(
-                this.plottableDataPromise,
-                !window.Plotly
-                    ? $.ajax({ // like $.getScript, but allow caching
-                        url: root + '/plugins/histomicsui/extra/plotly.js' + (BUILD_TIMESTAMP ? '?_=' + BUILD_TIMESTAMP : ''),
-                        dataType: 'script',
-                        cache: true
-                    })
-                    : null
+                this.plottableDataPromise
             ).done(() => {
                 const plotData = this.getPlotData(this.plotConfig);
                 this.lastPlotData = plotData;

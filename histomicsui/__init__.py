@@ -367,7 +367,10 @@ class GirderPlugin(plugin.GirderPlugin):
         plugin.registerPluginStaticContent(
             'histomicsui',
             css=['/style.css'],
-            js=['/girder-plugin-histomics-ui.umd.cjs'],
+            js=[
+                '/girder-plugin-histomics-ui.umd.cjs',
+                '/extra/plotly.js',
+            ],
             staticDir=Path(__file__).parent / 'web_client' / 'dist',
             tree=info['serverRoot'],
         )
