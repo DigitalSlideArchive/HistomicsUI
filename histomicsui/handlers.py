@@ -91,8 +91,14 @@ def process_annotations_task(info: dict) -> None:  # noqa: C901
         if file['size'] > int(large_image.config.getConfig(
                 'max_annotation_input_file_length', 1024 ** 3)):
             raise Exception('File is larger than will be read into memory')
+        data = []
         with File().open(file) as fptr:
-            data = orjson.loads(fptr.read())
+            while True:
+                chunk = fptr.read(1024 ** 2)
+                if not len(chunk):
+                    break
+                data.append(chunk)
+        data = orjson.loads(b''.join(data).decode())
     except Exception:
         logger.exception('Could not parse annotation file')
         return
