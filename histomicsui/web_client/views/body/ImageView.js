@@ -1431,7 +1431,9 @@ var ImageView = View.extend({
 
     _editElementShape(element, annotationId) {
         this._preeditDrawMode = this.drawWidget ? this.drawWidget.drawingType() : undefined;
-        this.drawWidget.cancelDrawMode();
+        if (this.drawWidget && this.drawWidget.drawingType()) {
+            this.drawWidget.cancelDrawMode();
+        }
         const annotation = this.annotations.get(element.originalAnnotation || annotationId);
         this._editAnnotation(annotation);
         const geojson = convertToGeojson(element);
@@ -1584,6 +1586,12 @@ var ImageView = View.extend({
         });
     },
     _deselectAnnotationElements(evt) {
+        if (this.viewerWidget && this.viewerWidget.annotationLayer && this.viewerWidget.annotationLayer.mode() !== null) {
+            if (this.drawWidget) {
+                this.drawWidget._drawingType = null;
+            }
+            this.viewerWidget.annotationLayer.mode(null);
+        }
         const model = (evt || {}).model;
         if (this.selectedElements && this.selectedElements.length) {
             const elements = this.selectedElements.models.filter((el) => el.originalAnnotation.id === model.id);
@@ -1703,11 +1711,13 @@ var ImageView = View.extend({
     },
 
     _drawModeChange(evt) {
-        if (this._drawingType) {
+        if (this.drawWidget && this.drawWidget._drawingType) {
             this.viewer.annotationLayer.mode(null);
             this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
         }
-        this._drawingType = null;
+        if (this.drawWidget) {
+            this.drawWidget._drawingType = null;
+        }
         $('#h-analysis-panel .input-group-btn').find('.s-select-region-button').removeClass('active');
     },
 
