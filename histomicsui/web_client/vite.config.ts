@@ -1,6 +1,7 @@
 import { resolve } from 'path';
 
 import { defineConfig, type UserConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { compileClient } from 'pug';
 import vue from '@vitejs/plugin-vue2';
 
@@ -24,11 +25,21 @@ const config: UserConfig = {
   plugins: [
     pugPlugin(),
     vue(),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'node_modules/plotly.js/dist/plotly.min.js',
+          dest: 'extra',
+          rename: () => 'plotly.js',
+        }
+      ]
+    })
   ],
   build: {
-    sourcemap: true,
+    sourcemap: !process.env.SKIP_SOURCE_MAPS
   },
   define: {
+    __BUILD_TIMESTAMP__: `${+new Date()}`,
     'process.env': {},  // for legacy Vue 2
   },
 };

@@ -1,10 +1,12 @@
-import 'select2';
+import select2 from 'select2';
+
 import 'select2/dist/css/select2.css';
 import metadataPlotDialog from '../templates/dialogs/metadataPlot.pug';
 import '../stylesheets/dialogs/metadataPlot.styl';
 
 const View = girder.views.View;
 const $ = girder.$;
+select2(window, girder.$);
 
 const MetadataPlotDialog = View.extend({
     events: {
@@ -34,7 +36,6 @@ const MetadataPlotDialog = View.extend({
                 dropdownParent: $('.modal-body'),
                 width: '100%'
             });
-
         return this;
     },
 
