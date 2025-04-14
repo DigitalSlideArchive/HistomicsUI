@@ -54,13 +54,13 @@ class TestHUIHandlers:
         assert item['meta']['sample'] == 'value'
         assert item['meta']['complex']['key1'] == 'value1'
 
-    def testAnnotationWithGirderIdHandler(self, server, fsAssetstore, admin):
+    def testAnnotationWithGirderIdHandler(self, server, fsAssetstore, admin, eagerWorkerTasks):
         file = utilities.uploadExternalFile('Easy1.png', admin, fsAssetstore)
         item = Item().load(file['itemId'], user=admin)
         utilities.uploadExternalFile(
             'Easy1.png', admin, fsAssetstore, reference=json.dumps({
                 'identifier': 'ImageRecord1',
-                'uuid': '000011112222333344445555',
+                'uuid': '12345',
                 'userId': str(admin['_id']),
                 'itemId': str(item['_id']),
                 'fileId': str(file['_id']),
@@ -76,7 +76,8 @@ class TestHUIHandlers:
             }))
         assert Annotation().findOne({'itemId': item['_id']}) is not None
 
-    def testAnnotationWithGirderIdHandlerAltOrder(self, server, fsAssetstore, admin):
+    def testAnnotationWithGirderIdHandlerAltOrder(
+            self, server, fsAssetstore, admin, eagerWorkerTasks):
         file = utilities.uploadExternalFile('Easy1.png', admin, fsAssetstore)
         item = Item().load(file['itemId'], user=admin)
         utilities.uploadTestFile(

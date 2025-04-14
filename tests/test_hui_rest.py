@@ -48,7 +48,7 @@ class TestHUIResourceAndItem:
         self.itemD1 = Item().createItem('item D1', admin, self.folderD)
         self.itemD2 = Item().createItem('item D2', admin, self.folderD)
 
-    def testResourceItems(self, server, admin):
+    def testResourceItems(self, server, admin, eagerWorkerTasks):
         self.makeResources(admin)
         # Now test that we get the items we expect
         # From a user
@@ -348,10 +348,10 @@ class TestHUIEndpoints:
             path='/item/%s/download' % file['itemId'], user=None)
         assert utilities.respStatus(resp) == 401
         resp = server.request(
-            path='/item/%s/tiles/images/noimage' % file['itemId'], user=self.user2)
-        assert utilities.respStatus(resp) == 400
+            path='/item/%s/tiles/images/noimage' % file['itemId'], user=self.user2, isJson=False)
+        assert utilities.respStatus(resp) == 200
         resp = server.request(
-            path='/item/%s/tiles/images/noimage' % file['itemId'], user=None)
+            path='/item/%s/tiles/images/noimage' % file['itemId'], user=None, isJson=False)
         assert utilities.respStatus(resp) == 401
 
     def testQuarantine(self, server, admin, user):
