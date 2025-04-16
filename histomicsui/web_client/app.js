@@ -8,7 +8,7 @@ import './stylesheets/layout/layout.styl';
 const _ = girder._;
 const Backbone = girder.Backbone;
 const GirderApp = girder.views.App;
-const eventStream = girder.utilities.EventStream;
+const eventStream = girder.utilities.eventStream;
 const {getCurrentUser, setCurrentToken} = girder.auth;
 const {splitRoute} = girder.misc;
 
