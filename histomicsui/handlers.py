@@ -6,8 +6,6 @@ import time
 
 import cherrypy
 import girder.utility
-import girder_large_image_annotation
-import large_image.config
 import orjson
 from girder.constants import AccessType
 from girder.exceptions import RestException
@@ -16,124 +14,19 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.models.token import Token
-from girder.models.user import User
-from girder_large_image_annotation.models.annotation import Annotation
-from girder_worker.app import app
 
 from .constants import PluginSettings
 
 logger = logging.getLogger(__name__)
 
 
-def _itemFromEvent(info, identifierEnding, itemAccessLevel=AccessType.READ):  # noqa
-    """
-    If an event has a reference and an associated identifier that ends with a
-    specific string, return the associated item, user, and image file.
-
-    :param info: the "data.process" event.info dictionary.
-    :param identifierEnding: the required end of the identifier.
-    :returns: a dictionary with item, user, and file if there was a match.
-    """
-    identifier = None
-    reference = info.get('reference', None)
-    if reference is not None:
-        try:
-            reference = json.loads(reference)
-        except (ValueError, TypeError):
-            pass
-
-    if isinstance(reference, dict) and isinstance(reference.get('identifier'), str):
-        identifier = reference['identifier']
-
-    if identifier is not None and identifier.endswith(identifierEnding):
-        if 'itemId' not in reference and 'fileId' not in reference:
-            logger.error('Reference does not contain at least one of itemId or fileId.')
-            return
-        userId = reference.get('userId')
-        if not userId:
-            if 'itemId' in reference:
-                item = Item().load(reference['itemId'], force=True)
-            else:
-                file = File().load(reference['fileId'], force=True)
-                item = Item().load(file['itemId'], force=True)
-            if 'folderId' not in item:
-                logger.error('Reference does not contain userId.')
-                return
-            folder = Folder().load(item['folderId'], force=True)
-            userId = folder['creatorId']
-        user = User().load(userId, force=True)
-        imageId = reference.get('fileId')
-        if not imageId:
-            item = Item().load(reference['itemId'], force=True)
-            if 'largeImage' in item and 'fileId' in item['largeImage']:
-                imageId = item['largeImage']['fileId']
-        image = File().load(imageId, level=AccessType.READ, user=user)
-        item = Item().load(image['itemId'], level=itemAccessLevel, user=user)
-        return {'item': item, 'user': user, 'file': image, 'uuid': reference.get('uuid')}
-
-
-@app.task
-def process_annotations_task(info: dict) -> None:  # noqa: C901
-    results = _itemFromEvent(info, 'AnnotationFile')
-    if not results:
-        return
-    item = results['item']
-    user = results['user']
-
-    file = File().load(info['file']['_id'], level=AccessType.READ, user=user)
-    startTime = time.time()
-
-    if not file:
-        logger.error('Could not load models from the database')
-        return
-
-    try:
-        if file['size'] > int(large_image.config.getConfig(
-                'max_annotation_input_file_length', 1024 ** 3)):
-            raise Exception('File is larger than will be read into memory')
-        data = []
-        with File().open(file) as fptr:
-            while True:
-                chunk = fptr.read(1024 ** 2)
-                if not len(chunk):
-                    break
-                data.append(chunk)
-        data = orjson.loads(b''.join(data).decode())
-    except Exception:
-        logger.exception('Could not parse annotation file')
-        return
-
-    if time.time() - startTime > 10:
-        logger.info('Decoded json in %5.3fs', time.time() - startTime)
-
-    if not isinstance(data, list) or (
-            hasattr(girder_large_image_annotation.utils, 'isGeoJSON') and
-            girder_large_image_annotation.utilsisGeoJSON(data)):
-        data = [data]
-
-    for annotation in data:
-        try:
-            # TODO consider bulk insertion for performance
-            Annotation().createAnnotation(item, user, annotation)
-        except Exception:
-            logger.exception(f'Failed to save annotation: {annotation}')
-            return
-
-    if Setting().get(PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST):
-        item = Item().load(file['itemId'], force=True)
-        if item and len(list(Item().childFiles(item, limit=2))) == 1:
-            Item().remove(item)
-
-
-def process_annotations(event):  # noqa
+def process_annotations(event):
     """Add annotations to an image on a ``data.process`` event"""
-    if not _itemFromEvent(event.info, 'AnnotationFile'):
-        return
+    import girder_large_image_annotation.handlers
 
-    # We call this as a normal function rather than a celery task, because it needs direct
-    # access to the database.
-    # TODO figure out a better solution than doing this in the request thread.
-    process_annotations_task(event.info)
+    girder_large_image_annotation.handlers.process_annotations(
+        event, 'AnnotationFile',
+        Setting().get(PluginSettings.HUI_DELETE_ANNOTATIONS_AFTER_INGEST))
 
 
 def quarantine_item(item, user, makePlaceholder=True):
@@ -217,7 +110,9 @@ def restore_quarantine_item(item, user):
 
 def process_metadata(event):
     """Add metadata to an item on a ``data.process`` event"""
-    results = _itemFromEvent(event.info, 'ItemMetadata', AccessType.WRITE)
+    from girder_large_image_annotation.handlers import itemFromEvent
+
+    results = itemFromEvent(event.info, 'ItemMetadata', AccessType.WRITE)
     if not results:
         return
     file = File().load(

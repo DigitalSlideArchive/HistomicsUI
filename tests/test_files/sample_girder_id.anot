@@ -3,7 +3,7 @@
   "elements": [
     {
       "type": "image",
-      "girderId": "000011112222333344445555"
+      "girderId": "ImageRecord1"
     },
     {
       "type": "point",
