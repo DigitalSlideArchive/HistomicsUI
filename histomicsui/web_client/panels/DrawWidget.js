@@ -997,6 +997,14 @@ var DrawWidget = Panel.extend({
         this._setStyleGroup(this._groups.get(prevGroup).toJSON());
     },
 
+    setStyleGroupById(groupId) {
+        const group = this._groups.get(groupId);
+        if (!group) {
+            return;
+        }
+        this._setStyleGroup(group.toJSON());
+    },
+
     getStyleGroup() {
         return this._style;
     },

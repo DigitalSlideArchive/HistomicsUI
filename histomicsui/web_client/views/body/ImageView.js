@@ -1168,6 +1168,38 @@ var ImageView = View.extend({
             l: 'line',
             b: 'brush'
         };
+        if (this._hotkeys && this._hotkeys[evt.key.toLowerCase()]) {
+            let used = false;
+            this._hotkeys[evt.key.toLowerCase()].forEach((keyset) => {
+                if (keyset.ctrl !== undefined && evt.originalEvent.ctrlKey !== keyset.ctrl) {
+                    return;
+                }
+                if (keyset.alt !== undefined && evt.originalEvent.altKey !== keyset.alt) {
+                    return;
+                }
+                if (keyset.meta !== undefined && evt.originalEvent.metaKey !== keyset.meta) {
+                    return;
+                }
+                if (keyset.shift !== undefined && evt.originalEvent.shiftKey !== keyset.shift) {
+                    return;
+                }
+                if (keyset.shift === undefined && evt.originalEvent.shiftKey && evt.key.toLowerCase() === keyset.key) {
+                    return;
+                }
+                switch (keyset.action) {
+                    case 'group':
+                        if (this.drawWidget) {
+                            this.drawWidget.setStyleGroupById(keyset.param);
+                            used = true;
+                        }
+                        break;
+                }
+            });
+            if (used) {
+                evt.preventDefault();
+                return;
+            }
+        }
         switch (evt.key) {
             case 'a':
                 this._showOrHideAnnotations();
@@ -1663,10 +1695,33 @@ var ImageView = View.extend({
             return null;
         });
     },
+    _addHotKey(keyset) {
+        if (keyset.key === undefined || keyset.action === undefined || !keyset.key.length) {
+            return;
+        }
+        keyset = Object.assign({}, keyset);
+        let key = keyset.key;
+        const parts = key.replace(/([+-])(?!$)/g, '\n').split('\n');
+        const modifiers = ['ctrl', 'alt', 'meta', 'shift'];
+        for (let i = 0; i < parts.length - 1; i++) {
+            const mod = parts[i].toLowerCase();
+            if (modifiers.includes(mod)) {
+                keyset[mod] = true;
+            }
+        }
+        key = parts[parts.length - 1];
+        keyset.key = key;
+        key = key.toLowerCase();
+        if (!this._hotkeys[key]) {
+            this._hotkeys[key] = [];
+        }
+        this._hotkeys[key].push(keyset);
+    },
     _getConfig(modelId) {
         if (modelId !== this._folderConfigId) {
             this._folderConfigId = modelId;
             this._folderConfig = {};
+            this._hotkeys = {};
         }
         restRequest({
             url: `folder/${this.model.get('folderId')}/yaml_config/.histomicsui_config.yaml`
@@ -1676,7 +1731,18 @@ var ImageView = View.extend({
                 return;
             }
             this._folderConfig = val;
+            this._hotkeys = {};
+            if (val.hotkeys) {
+                (val.hotkeys || []).forEach((keyset) => {
+                    this._addHotKey(keyset);
+                });
+            }
             if (val.annotationGroups) {
+                (val.annotationGroups.groups || []).forEach((group) => {
+                    if (group.hotkey) {
+                        this._addHotKey({key: group.hotkey, action: 'group', param: group.id});
+                    }
+                });
                 const groups = new StyleCollection();
                 groups.fetch().done(() => {
                     if (!val || this.model.id !== modelId) {
