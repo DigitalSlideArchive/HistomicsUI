@@ -49,7 +49,11 @@
         runs(function () {
             app.bodyView.once('h:viewerWidgetCreated', function (viewerWidget) {
                 viewerWidget.once('g:beforeFirstRender', function () {
-                    window.geo.util.mockWebglRenderer();
+                    try {
+                        window.geo.util.mockWebglRenderer();
+                    } catch (err) {
+                        // if this is already mocked, do nothing.
+                    }
                 });
             });
             $('.h-open-image').click();

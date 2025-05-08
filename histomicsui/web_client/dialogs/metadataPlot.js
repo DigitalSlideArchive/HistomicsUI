@@ -1,4 +1,6 @@
 import $ from 'jquery';
+import 'select2';
+import 'select2/dist/css/select2.css';
 
 import View from '@girder/core/views/View';
 
@@ -23,6 +25,13 @@ const MetadataPlotDialog = View.extend({
                 plotOptions: this.plotOptions
             })
         ).girderModal(this);
+        // this adds search functionality to the select boxes, but not to the
+        // multiple select, since the select2 tool breaks some traditional
+        // aspects of multiple select
+        this.$('.h-plot-select').not('[multiple]').select2({
+            dropdownParent: $('.modal-body'),
+            width: '100%'
+        });
 
         return this;
     },

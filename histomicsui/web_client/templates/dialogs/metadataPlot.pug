@@ -11,18 +11,19 @@
           -
             var plotFormats = [
               {key: 'scatter', label: 'Scatter'},
-              {key: 'violin', label: 'Violin'}]
+              {key: 'violin', label: 'Violin'},
+              {key: 'distrib', label: 'Distributions'}]
           select#h-plot-format.form-control
             each opt in plotFormats
               option(value=opt.key, selected=plotConfig.format === opt.key) #{opt.label}
         -
           var seriesList = [
             {key: 'x', label: 'x-axis', number: true, comment: 'Not used in violin plots'},
-            {key: 'y', label: 'y-axis', number: true},
+            {key: 'y', label: 'y-axis', number: true, noNone: true},
             {key: 'r', label: 'Radius'},
             {key: 'c', label: 'Color'},
-            {key: 's', label: 'Symbol', string: true, comment: 'Grouping for violin plots'},
-            {key: 'u', label: 'Dimension Reducation', number: true, multiple: true}]
+            {key: 's', label: 'Symbol', string: true, comment: 'Grouping for violin and distribution plots'},
+            {key: 'u', label: 'Dimension Reduction', number: true, multiple: true}]
         -
           var numNumbers = 0;
           var numIndex = [];
@@ -32,13 +33,13 @@
             label(for='h-plot-series-' + series.key) #{series.label}
             if series.comment
               p.g-hui-description #{series.comment}
-            select.form-control(id='h-plot-series-' + series.key, multiple=series.multiple)
-              if !series.number
+            select.h-plot-select.form-control(id='h-plot-series-' + series.key, multiple=series.multiple)
+              if !series.noNone
                 option(value='_none_', selected=plotConfig[series.key] === undefined) None
               each opt, optidx in plotOptions
                 if (!series.number || opt.type === 'number') && (!series.string || opt.type === 'string' || opt.distinct)
                   - var selected = plotConfig[series.key] === opt.key
-                  - if (plotConfig[series.key] === undefined && series.number === true && numIndex[optidx] === seriesidx) { selected = true; }
+                  - if (plotConfig[series.key] === undefined && series.number === true && numIndex[optidx] === seriesidx && (!plotConfig.format || plotConfig.format === 'scatter')) { selected = true; }
                   - if (series.multiple) { selected = plotConfig[series.key] ? plotConfig[series.key].includes(opt.key) : false; }
                   option(value=opt.key, selected=selected) #{opt.title}#{opt.count > 1 && opt.distinctcount !== 1 ? ' *' : ''}
         .form-group

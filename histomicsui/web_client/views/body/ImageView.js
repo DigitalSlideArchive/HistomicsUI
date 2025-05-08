@@ -1168,6 +1168,38 @@ var ImageView = View.extend({
             l: 'line',
             b: 'brush'
         };
+        if (this._hotkeys && this._hotkeys[evt.key.toLowerCase()]) {
+            let used = false;
+            this._hotkeys[evt.key.toLowerCase()].forEach((keyset) => {
+                if (keyset.ctrl !== undefined && evt.originalEvent.ctrlKey !== keyset.ctrl) {
+                    return;
+                }
+                if (keyset.alt !== undefined && evt.originalEvent.altKey !== keyset.alt) {
+                    return;
+                }
+                if (keyset.meta !== undefined && evt.originalEvent.metaKey !== keyset.meta) {
+                    return;
+                }
+                if (keyset.shift !== undefined && evt.originalEvent.shiftKey !== keyset.shift) {
+                    return;
+                }
+                if (keyset.shift === undefined && evt.originalEvent.shiftKey && evt.key.toLowerCase() === keyset.key) {
+                    return;
+                }
+                switch (keyset.action) {
+                    case 'group':
+                        if (this.drawWidget) {
+                            this.drawWidget.setStyleGroupById(keyset.param);
+                            used = true;
+                        }
+                        break;
+                }
+            });
+            if (used) {
+                evt.preventDefault();
+                return;
+            }
+        }
         switch (evt.key) {
             case 'a':
                 this._showOrHideAnnotations();
@@ -1431,7 +1463,9 @@ var ImageView = View.extend({
 
     _editElementShape(element, annotationId) {
         this._preeditDrawMode = this.drawWidget ? this.drawWidget.drawingType() : undefined;
-        this.drawWidget.cancelDrawMode();
+        if (this.drawWidget && this.drawWidget.drawingType()) {
+            this.drawWidget.cancelDrawMode();
+        }
         const annotation = this.annotations.get(element.originalAnnotation || annotationId);
         this._editAnnotation(annotation);
         const geojson = convertToGeojson(element);
@@ -1584,6 +1618,12 @@ var ImageView = View.extend({
         });
     },
     _deselectAnnotationElements(evt) {
+        if (this.viewerWidget && this.viewerWidget.annotationLayer && this.viewerWidget.annotationLayer.mode() !== null) {
+            if (this.drawWidget) {
+                this.drawWidget._drawingType = null;
+            }
+            this.viewerWidget.annotationLayer.mode(null);
+        }
         const model = (evt || {}).model;
         if (this.selectedElements && this.selectedElements.length) {
             const elements = this.selectedElements.models.filter((el) => el.originalAnnotation.id === model.id);
@@ -1655,10 +1695,33 @@ var ImageView = View.extend({
             return null;
         });
     },
+    _addHotKey(keyset) {
+        if (keyset.key === undefined || keyset.action === undefined || !keyset.key.length) {
+            return;
+        }
+        keyset = Object.assign({}, keyset);
+        let key = keyset.key;
+        const parts = key.replace(/([+-])(?!$)/g, '\n').split('\n');
+        const modifiers = ['ctrl', 'alt', 'meta', 'shift'];
+        for (let i = 0; i < parts.length - 1; i++) {
+            const mod = parts[i].toLowerCase();
+            if (modifiers.includes(mod)) {
+                keyset[mod] = true;
+            }
+        }
+        key = parts[parts.length - 1];
+        keyset.key = key;
+        key = key.toLowerCase();
+        if (!this._hotkeys[key]) {
+            this._hotkeys[key] = [];
+        }
+        this._hotkeys[key].push(keyset);
+    },
     _getConfig(modelId) {
         if (modelId !== this._folderConfigId) {
             this._folderConfigId = modelId;
             this._folderConfig = {};
+            this._hotkeys = {};
         }
         restRequest({
             url: `folder/${this.model.get('folderId')}/yaml_config/.histomicsui_config.yaml`
@@ -1668,7 +1731,18 @@ var ImageView = View.extend({
                 return;
             }
             this._folderConfig = val;
+            this._hotkeys = {};
+            if (val.hotkeys) {
+                (val.hotkeys || []).forEach((keyset) => {
+                    this._addHotKey(keyset);
+                });
+            }
             if (val.annotationGroups) {
+                (val.annotationGroups.groups || []).forEach((group) => {
+                    if (group.hotkey) {
+                        this._addHotKey({key: group.hotkey, action: 'group', param: group.id});
+                    }
+                });
                 const groups = new StyleCollection();
                 groups.fetch().done(() => {
                     if (!val || this.model.id !== modelId) {
@@ -1703,11 +1777,13 @@ var ImageView = View.extend({
     },
 
     _drawModeChange(evt) {
-        if (this._drawingType) {
+        if (this.drawWidget && this.drawWidget._drawingType) {
             this.viewer.annotationLayer.mode(null);
             this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
         }
-        this._drawingType = null;
+        if (this.drawWidget) {
+            this.drawWidget._drawingType = null;
+        }
         $('#h-analysis-panel .input-group-btn').find('.s-select-region-button').removeClass('active');
     },
 
