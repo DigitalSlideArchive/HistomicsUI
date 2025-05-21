@@ -1009,16 +1009,23 @@ var DrawWidget = Panel.extend({
         return this._style;
     },
 
+    _debounceRender() {
+        if (this._debounceTimer) {
+            window.clearTimeout(this._debounceTimer);
+        }
+        this._debounceTimer = window.setTimeout(() => this.render(), 1);
+    },
+
     _styleGroupEditor() {
         var dlg = editStyleGroups(this._style, this._groups, this.parentView._defaultGroup);
         dlg.$el.on('hidden.bs.modal', () => {
-            this.render();
+            this._debounceRender();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
         });
     },
 
     _handleStyleGroupsUpdate() {
-        this.render();
+        this._debounceRender();
         this.trigger('h:styleGroupsUpdated', this._groups);
     },
 
