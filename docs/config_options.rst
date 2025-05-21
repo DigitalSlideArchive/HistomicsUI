@@ -50,6 +50,7 @@ _________________
           fillColor: rgba(255, 0, 0, 0.25)
           lineColor: rgb(255, 0, 0)
           lineWidth: 2
+          hotkey: r
         -
           id: Green
           fillColor: rgba(0, 128, 0, 0.25)
@@ -60,6 +61,19 @@ _________________
           fillColor: rgba(0, 0, 255, 0.25)
           lineColor: rgb(0, 0, 255)
           lineWidth: 2
+
+If a hotkey is specified for a group, it will only be active if the group was loaded from the config file.  That is, moving to another folder where the config file does not apply will disable the hotkey.  If you want hotkeys to have modifiers (e.g., require that alt, ctrl, or meta be pressed or explicitly NOT pressed), you can add a hotkey section:
+
+::
+
+    ---
+    hotkeys:
+      -
+        key: r
+        ctrl: true
+        alt: false
+        action: group
+        param: Red
 
 UI Settings
 ___________
