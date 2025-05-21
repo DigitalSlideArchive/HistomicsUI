@@ -435,7 +435,7 @@ var DrawWidget = Panel.extend({
             }
             return result;
         }).filter((annot) => !annot.points || annot.points.length);
-        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {silent: elements.length}));
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length}));
         this.addElements(
             _.map(elements, (el) => {
                 el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
