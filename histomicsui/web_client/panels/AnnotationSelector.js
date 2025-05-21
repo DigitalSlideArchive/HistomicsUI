@@ -441,7 +441,10 @@ var AnnotationSelector = Panel.extend({
         );
     },
 
-    _saveAnnotation(annotation) {
+    _saveAnnotation(annotation, options) {
+        if (options && options.delaySave) {
+            return;
+        }
         if (this.viewer && !this.viewer._saving) {
             this.viewer._saving = {};
         }
