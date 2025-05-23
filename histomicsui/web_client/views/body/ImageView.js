@@ -1286,6 +1286,11 @@ var ImageView = View.extend({
                     }
                 }
                 break;
+            case 'D':
+                if (evt.shiftKey && (evt.altKey || evt.metaKey)) {
+                    console.log(this);
+                }
+                break;
             default:
                 if (this.drawWidget && drawModes[evt.key] && this.activeAnnotation) {
                     const mode = drawModes[evt.key];
@@ -1375,6 +1380,9 @@ var ImageView = View.extend({
     getElementsInPolygon(poly) {
         const results = [];
         this.viewerWidget.featureLayer.features().forEach((feature) => {
+            if (feature._centroidFeature) {
+                return;
+            }
             const r = feature.polygonSearch(poly, {partial: false});
             r.found.forEach((feature) => {
                 const annotationId = feature.properties ? feature.properties.annotation : null;

@@ -118,7 +118,8 @@ var DrawWidget = Panel.extend({
                 drawingType: this._drawingType,
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 firstRender: true,
-                displayIdStart: 0
+                displayIdStart: 0,
+                partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
