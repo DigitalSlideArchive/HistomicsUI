@@ -118,7 +118,8 @@ var DrawWidget = Panel.extend({
                 drawingType: this._drawingType,
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 firstRender: true,
-                displayIdStart: 0
+                displayIdStart: 0,
+                partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
@@ -435,7 +436,7 @@ var DrawWidget = Panel.extend({
             }
             return result;
         }).filter((annot) => !annot.points || annot.points.length);
-        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {silent: elements.length}));
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length}));
         this.addElements(
             _.map(elements, (el) => {
                 el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
@@ -1009,16 +1010,23 @@ var DrawWidget = Panel.extend({
         return this._style;
     },
 
+    _debounceRender() {
+        if (this._debounceTimer) {
+            window.clearTimeout(this._debounceTimer);
+        }
+        this._debounceTimer = window.setTimeout(() => this.render(), 1);
+    },
+
     _styleGroupEditor() {
         var dlg = editStyleGroups(this._style, this._groups, this.parentView._defaultGroup);
         dlg.$el.on('hidden.bs.modal', () => {
-            this.render();
+            this._debounceRender();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
         });
     },
 
     _handleStyleGroupsUpdate() {
-        this.render();
+        this._debounceRender();
         this.trigger('h:styleGroupsUpdated', this._groups);
     },
 

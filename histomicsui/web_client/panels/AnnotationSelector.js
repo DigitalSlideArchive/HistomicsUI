@@ -15,11 +15,6 @@ import showSaveAnnotationDialog from '../dialogs/saveAnnotation';
 import annotationSelectorWidget from '../templates/panels/annotationSelector.pug';
 import '../stylesheets/panels/annotationSelector.styl';
 
-// Too many elements in the draw panel will crash the browser,
-// so we only allow editing of annotations with less than this
-// many elements.
-const MAX_ELEMENTS_LIST_LENGTH = 5000;
-
 /**
  * Create a panel controlling the visibility of annotations
  * on the image view.
@@ -401,24 +396,12 @@ var AnnotationSelector = Panel.extend({
     },
 
     _setActiveAnnotationWithoutLoad(model) {
-        const numElements = ((model.get('annotation') || {}).elements || []).length;
         if (this._activeAnnotation && this._activeAnnotation.id !== model.id) {
             return;
         }
         model.set('displayed', true);
 
-        if (numElements > MAX_ELEMENTS_LIST_LENGTH || model._pageElements) {
-            events.trigger('g:alert', {
-                text: 'This annotation has too many elements to be edited.',
-                type: 'warning',
-                timeout: 5000,
-                icon: 'info'
-            });
-            this._activeAnnotation = null;
-            this.trigger('h:editAnnotation', null);
-        } else {
-            this.trigger('h:editAnnotation', model);
-        }
+        this.trigger('h:editAnnotation', model);
     },
 
     createAnnotation(evt) {
@@ -441,7 +424,10 @@ var AnnotationSelector = Panel.extend({
         );
     },
 
-    _saveAnnotation(annotation) {
+    _saveAnnotation(annotation, options) {
+        if (options && options.delaySave) {
+            return;
+        }
         if (this.viewer && !this.viewer._saving) {
             this.viewer._saving = {};
         }
