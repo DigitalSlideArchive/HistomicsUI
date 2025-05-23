@@ -1,6 +1,10 @@
-import _ from 'underscore';
+// Importing the bootstrap-submenu jQuery plugin immediately
+// runs an IIFE, which modifies the global jQuery (i.e. require('jquery')).
+// We'd prefer to only use girder.$ as the jquery instance in this view, but
+// in order to use the jquery plugin, we have to bring in an additional instance.
+// Ideally, this is a temporary measure. This is documented in Github.
+// See: https://github.com/DigitalSlideArchive/HistomicsUI/issues/454
 import $ from 'jquery';
-import {restRequest} from '@girder/core/rest';
 
 import events from '../../events';
 import router from '../../router';
@@ -8,8 +12,12 @@ import View from '../View';
 import headerAnalysesTemplate from '../../templates/layout/headerAnalyses.pug';
 import '../../stylesheets/layout/headerAnalyses.styl';
 
-import 'bootstrap-submenu/dist/js/bootstrap-submenu';
-import 'bootstrap-submenu/dist/css/bootstrap-submenu.css';
+import 'bootstrap-submenu/dist/js/bootstrap-submenu'; // eslint-disable-line
+import 'bootstrap-submenu/dist/css/bootstrap-submenu.css'; // eslint-disable-line
+
+const _ = girder._;
+const _$ = girder.$;
+const {restRequest} = girder.rest;
 
 var HeaderUserView = View.extend({
     events: {
@@ -27,14 +35,20 @@ var HeaderUserView = View.extend({
             restRequest({
                 url: 'slicer_cli_web/docker_image'
             }).then((analyses) => {
-                const maxRows = Math.max(5, Math.floor((($('.h-image-view-body').height() || 0) - 8) / 26));
+                const maxRows = Math.max(5, Math.floor(((_$('.h-image-view-body').height() || 0) - 8) / 26));
                 if (_.keys(analyses || {}).length > 0) {
                     this.$el.removeClass('hidden');
                     this.$el.html(headerAnalysesTemplate({
                         analyses: analyses || {},
                         maxRows: maxRows
                     }));
-                    this.$('.h-analyses-dropdown-link').submenupicker();
+                    $('.h-analyses-dropdown-link').submenupicker();
+                    // Restore the "fully collapse" functionality
+                    $('.h-analyses-dropdown-link').on('click', function () {
+                        $('.dropdown-submenu').each(function () {
+                            $(this).removeClass('open');
+                        });
+                    });
                 } else {
                     this.$el.addClass('hidden');
                 }
@@ -48,6 +62,9 @@ var HeaderUserView = View.extend({
     _setAnalysis(evt) {
         evt.preventDefault();
         var target = $(evt.currentTarget).data();
+        $('.dropdown-submenu').each(function () {
+            $(this).removeClass('open');
+        });
 
         router.setQuery('analysis', target.api, {trigger: true});
     }

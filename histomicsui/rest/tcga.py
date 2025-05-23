@@ -2,10 +2,9 @@
 Endpoints providing a simplified interface for handling TCGA datasets.
 """
 
-
+import logging
 import re
 
-from girder import logger
 from girder.api import access
 from girder.api.describe import Description, describeRoute
 from girder.api.rest import Resource, RestException, loadmodel
@@ -29,6 +28,7 @@ from ..models.pathology import Pathology
 from ..models.slide import Slide
 
 invalid_key_re = re.compile(r'[.$]')
+logger = logging.getLogger(__name__)
 
 
 def import_recursive(job):

@@ -1,18 +1,13 @@
-/* global BUILD_TIMESTAMP */
-
-import $ from 'jquery';
-import _ from 'underscore';
 import {v4 as uuidv4} from 'uuid';
-
-import {restRequest} from '@girder/core/rest';
-
-import Panel from '@girder/slicer_cli_web/views/Panel';
-// import events from '@girder/core/events';
 
 import MetadataPlotDialog from '../dialogs/metadataPlot';
 import metadataPlotTemplate from '../templates/panels/metadataPlot.pug';
 import '../stylesheets/panels/metadataPlot.styl';
 
+const $ = girder.$;
+const _ = girder._;
+const {restRequest} = girder.rest;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
 const sessionId = uuidv4();
 
 function mean(arr) {
@@ -640,21 +635,9 @@ var MetadataPlot = Panel.extend({
                 this.$el.html('');
                 return;
             }
-            let root = '/static/built';
-            try {
-                root = __webpack_public_path__ || root; // eslint-disable-line
-            } catch (err) { }
-            root = root.replace(/\/$/, '');
             this.fetchPlottableData();
             $.when(
-                this.plottableDataPromise,
-                !window.Plotly
-                    ? $.ajax({ // like $.getScript, but allow caching
-                        url: root + '/plugins/histomicsui/extra/plotly.js' + (BUILD_TIMESTAMP ? '?_=' + BUILD_TIMESTAMP : ''),
-                        dataType: 'script',
-                        cache: true
-                    })
-                    : null
+                this.plottableDataPromise
             ).done(() => {
                 const plotData = this.getPlotData(this.plotConfig);
                 this.lastPlotData = plotData;

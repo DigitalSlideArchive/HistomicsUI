@@ -1,16 +1,4 @@
 /* globals geo */
-import _ from 'underscore';
-import $ from 'jquery';
-
-import events from '@girder/core/events';
-import Panel from '@girder/slicer_cli_web/views/Panel';
-import {getCurrentUser} from '@girder/core/auth';
-
-import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/convert';
-import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
-import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
-import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
-
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
@@ -18,6 +6,12 @@ import editStyleGroups from '../dialogs/editStyleGroups';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
 import '../stylesheets/panels/drawWidget.styl';
+
+const _ = girder._;
+const $ = girder.$;
+const events = girder.events;
+const {getCurrentUser} = girder.auth;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
 /**
  * Create a panel with controls to draw and edit
@@ -101,10 +95,14 @@ var DrawWidget = Panel.extend({
         }
         const name = (this.annotation.get('annotation') || {}).name || 'Untitled';
         if (!updatedElement || (updatedElement.attributes && updatedElement.get('type') !== 'pixelmap')) {
-            this.trigger('h:redraw', this.annotation);
+            if (this.annotationSelector) {
+                this.annotationSelector._debounceTriggerRedraw(this.annotation);
+            }
         }
         if (this._skipRenderHTML) {
-            delete this._skipRenderHTML;
+            if (this._skipRenderHTML !== 'skip') {
+                delete this._skipRenderHTML;
+            }
         } else {
             this.$el.html(drawWidget({
                 title: 'Draw',
@@ -118,7 +116,8 @@ var DrawWidget = Panel.extend({
                 drawingType: this._drawingType,
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 firstRender: true,
-                displayIdStart: 0
+                displayIdStart: 0,
+                partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
@@ -242,7 +241,7 @@ var DrawWidget = Panel.extend({
                     this.updateCount(group || this.parentView._defaultGroup, 1);
                 }
             }
-            this._skipRenderHTML = true;
+            this._skipRenderHTML = this._skipRenderHTML || true;
         });
     },
 
@@ -252,6 +251,9 @@ var DrawWidget = Panel.extend({
      */
     viewElement(evt) {
         const annot = this.collection._byId[$(evt.target).parent().attr('data-id')];
+        const convertRectangle = girder.plugins.large_image_annotation.annotations.geometry.rectangle;
+        const convertEllipse = girder.plugins.large_image_annotation.annotations.geometry.ellipse;
+        const convertCircle = girder.plugins.large_image_annotation.annotations.geometry.circle;
         let points;
         let pointAnnot = false;
         switch (annot.get('type')) {
@@ -311,7 +313,7 @@ var DrawWidget = Panel.extend({
             interp: distance < 500 ? undefined : window.d3.interpolateZoom,
             ease: window.d3.easeExpInOut
         });
-        this._skipRenderHTML = true;
+        this._skipRenderHTML = this._skipRenderHTML || true;
     },
 
     /**
@@ -328,7 +330,7 @@ var DrawWidget = Panel.extend({
             this.countPixelmap(this.collection.get(id), -1);
         }
         this.$(`.h-element[data-id="${id}"]`).remove();
-        this._skipRenderHTML = true;
+        this._skipRenderHTML = this._skipRenderHTML || true;
         this.collection.remove(id, opts);
         this.newElementDisplayIdStart = +(this.$el.find('.h-element>span.h-element-label[display_id]').last().attr('display_id') || 0);
     },
@@ -340,7 +342,7 @@ var DrawWidget = Panel.extend({
      *    collection.
      */
     addElements(elements) {
-        this._skipRenderHTML = true;
+        this._skipRenderHTML = this._skipRenderHTML || true;
         elements = this.collection.add(elements);
         this.$el.find('.h-elements-container').append(
             drawWidgetElement({
@@ -429,13 +431,14 @@ var DrawWidget = Panel.extend({
 
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
         const elements = newAnnot.map((annot) => {
+            const convertAnnotation = girder.plugins.large_image_annotation.annotations.geojs.convert;
             const result = convertAnnotation(annot);
             if (!result.id) {
                 result.id = this.viewer._guid();
             }
             return result;
         }).filter((annot) => !annot.points || annot.points.length);
-        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {silent: elements.length}));
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length}));
         this.addElements(
             _.map(elements, (el) => {
                 el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
@@ -489,6 +492,7 @@ var DrawWidget = Panel.extend({
      */
     _brushAction(evt) {
         let annotations = this.viewer.annotationLayer.toPolygonList({pixelTolerance: this._pixelTolerance()});
+        const convertAnnotation = girder.plugins.large_image_annotation.annotations.geojs.convert;
         let elements = [convertAnnotation(this.viewer.annotationLayer.annotations()[0])];
         if (!elements[0].id) {
             elements[0].id = this.viewer._guid();
@@ -1009,16 +1013,23 @@ var DrawWidget = Panel.extend({
         return this._style;
     },
 
+    _debounceRender() {
+        if (this._debounceTimer) {
+            window.clearTimeout(this._debounceTimer);
+        }
+        this._debounceTimer = window.setTimeout(() => this.render(), 1);
+    },
+
     _styleGroupEditor() {
         var dlg = editStyleGroups(this._style, this._groups, this.parentView._defaultGroup);
         dlg.$el.on('hidden.bs.modal', () => {
-            this.render();
+            this._debounceRender();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
         });
     },
 
     _handleStyleGroupsUpdate() {
-        this.render();
+        this._debounceRender();
         this.trigger('h:styleGroupsUpdated', this._groups);
     },
 

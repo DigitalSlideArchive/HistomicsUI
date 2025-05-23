@@ -1,8 +1,10 @@
 <script>
 import tinycolor from 'tinycolor2';
-import _ from 'underscore';
 
 import ColorPickerInput from './ColorPickerInput.vue';
+
+const _ = girder._;
+
 export default {
     components: {
         ColorPickerInput

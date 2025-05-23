@@ -15,9 +15,9 @@
 #############################################################################
 
 import datetime
+import logging
 import os
 
-from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import RestException, boundHandler, filtermodel
@@ -31,6 +31,10 @@ from girder.models.setting import Setting
 from girder.utility import path as path_util
 from girder.utility.model_importer import ModelImporter
 from girder_jobs.models.job import Job
+
+from histomicsui.constants import PluginSettings
+
+logger = logging.getLogger(__name__)
 
 
 def addSystemEndpoints(apiRoot):
@@ -48,6 +52,8 @@ def addSystemEndpoints(apiRoot):
     # Added to the system route
     apiRoot.system.route('PUT', ('restart',), restartServer)
     apiRoot.system.route('GET', ('setting', 'default'), getSettingDefault)
+    apiRoot.system.route('GET', ('setting', 'histomicsui'), getHistomicsUISettings)
+
     # Added to the job route
     apiRoot.job.route('GET', ('old',), getOldJobs)
     apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
@@ -406,6 +412,25 @@ def getSettingDefault(self, key, list, default=None):
     else:
         self.requireParams({'key': key})
         return getFunc(key)
+
+
+@access.public
+@autoDescribeRoute(
+    Description('Get all HistomicsUI publicly visible settings.'),
+)
+@boundHandler
+def getHistomicsUISettings(self):
+    return {
+        name: Setting().get(name)
+        for name in [
+            PluginSettings.HUI_BRAND_NAME,
+            PluginSettings.HUI_BRAND_COLOR,
+            PluginSettings.HUI_BANNER_COLOR,
+            PluginSettings.HUI_HELP_URL,
+            PluginSettings.HUI_HELP_TOOLTIP,
+            PluginSettings.HUI_HELP_TEXT,
+        ]
+    }
 
 
 @access.admin

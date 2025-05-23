@@ -19,10 +19,10 @@ import logging
 import os
 import re
 from functools import wraps
+from pathlib import Path
 
-import cherrypy
 from bson import json_util
-from girder import events, logger, plugin
+from girder import events, plugin
 from girder.api import access
 from girder.api.rest import getCurrentToken
 from girder.constants import AssetstoreType
@@ -32,13 +32,11 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
-from girder.models.token import Token
-from girder.settings import SettingDefault, SettingKey
+from girder.settings import SettingDefault
 from girder.utility import config
 from girder.utility import path as path_util
 from girder.utility import setting_utilities
 from girder.utility.model_importer import ModelImporter
-from girder.utility.webroot import Webroot
 from pkg_resources import DistributionNotFound, get_distribution
 
 from . import handlers, rest
@@ -56,16 +54,7 @@ except DistributionNotFound:
     # package is not installed
     pass
 
-# There are other packages that add to the root log handler; this makes the
-# system very noisy.  Stop that.
-while logging.root.hasHandlers():
-    logging.root.removeHandler(logging.root.handlers[0])
-logging.root.addHandler(logging.NullHandler())
-
-_template = os.path.join(
-    os.path.dirname(__file__),
-    'webroot.mako',
-)
+logger = logging.getLogger(__name__)
 
 
 def patchCookieParsing():
@@ -97,42 +86,6 @@ def patchCookieParsing():
                 http.cookies._CookiePattern, )
     except Exception:
         pass
-
-
-def betterInvalidateJSandCSSCaches(root):
-    from girder import constants
-
-    origRenderHTML = root._renderHTML
-
-    def _renderHTML(self):
-        topBuiltDir = os.path.join(constants.STATIC_ROOT_DIR, 'built')
-        result = origRenderHTML()
-        lastUpdate = 0
-        for filename in {
-                'girder_lib.min.js', 'girder_app.min.js', 'girder_lib.min.css',
-                'Girder_Favicon.png'}:
-            filepath = os.path.join(topBuiltDir, filename)
-            if os.path.exists(filepath):
-                lastUpdate = max(lastUpdate, os.path.getmtime(filepath))
-        builtDir = os.path.join(constants.STATIC_ROOT_DIR, 'built', 'plugins')
-        for pluginName in self.vars['plugins']:
-            for filepath in [
-                os.path.join(builtDir, pluginName, 'plugin.min.css'),
-                os.path.join(builtDir, pluginName, 'plugin.min.js'),
-            ]:
-                if os.path.exists(filepath):
-                    lastUpdate = max(lastUpdate, os.path.getmtime(filepath))
-        luParam = '?_=%d' % int(lastUpdate * 1000)
-        while True:
-            match = re.search(
-                r'<(link rel="(icon|stylesheet)" [^>]*href="[^>?"]*\.(css|png)|'
-                r'script src="[^>?"]*.js)">', result)
-            if not match:
-                break
-            result = result[:match.span()[1] - 2] + luParam + result[match.span()[1] - 2:]
-        return result
-
-    root._renderHTML = _renderHTML.__get__(root)
 
 
 @setting_utilities.validator({
@@ -276,37 +229,6 @@ def _saveJob(event):
         pass
 
 
-class WebrootHistomicsUI(Webroot):
-    def _renderHTML(self):
-        self.updateHtmlVars({
-            'title': Setting().get(PluginSettings.HUI_BRAND_NAME),
-            'huiBrandName': Setting().get(PluginSettings.HUI_BRAND_NAME),
-            'huiBrandColor': Setting().get(PluginSettings.HUI_BRAND_COLOR),
-            'huiBannerColor': Setting().get(PluginSettings.HUI_BANNER_COLOR),
-            'huiHelpURL': Setting().get(PluginSettings.HUI_HELP_URL),
-            'huiHelpTooltip': Setting().get(PluginSettings.HUI_HELP_TOOLTIP),
-            'huiHelpText': Setting().get(PluginSettings.HUI_HELP_TEXT),
-        })
-        return super()._renderHTML()
-
-    def GET(self, **params):
-        print(params)
-        if params.get('token'):
-            try:
-                token = Token().load(params['token'], force=True, objectId=False)
-                if token:
-                    cookie = cherrypy.response.cookie
-                    cookie['girderToken'] = str(token['_id'])
-                    cookie['girderToken']['path'] = '/'
-                    days = float(Setting().get(SettingKey.COOKIE_LIFETIME))
-                    cookie['girderToken']['expires'] = int(days * 3600 * 24)
-                    cookie['girderToken']['sameSite'] = 'None'
-                    cookie['girderToken']['secure'] = True
-            except Exception:
-                pass
-        return self._renderHTML()
-
-
 def restrict_downloads(info):
     """
     If restrict_downloads is configured, modify endpoints to do that.
@@ -397,7 +319,6 @@ def cleanupFSAssetstores():
 
 class GirderPlugin(plugin.GirderPlugin):
     DISPLAY_NAME = 'HistomicsUI'
-    CLIENT_SOURCE_PATH = 'web_client'
 
     def load(self, info):  # noqa
         plugin.getPlugin('jobs').load(info)
@@ -422,8 +343,8 @@ class GirderPlugin(plugin.GirderPlugin):
         ModelImporter.registerModel('slide', Slide, 'histomicsui')
 
         rest.addEndpoints(info['apiRoot'])
-        info['serverRoot'].updateHtmlVars({
-            'brandName': Setting().get(SettingKey.BRAND_NAME)})
+        # info['serverRoot'].updateHtmlVars({
+        #    'brandName': Setting().get(SettingKey.BRAND_NAME)})
         # Better virtual folder support
         if not getattr(Folder, '_childItemsBeforeHUI', None):
             Folder._childItemsBeforeHUI = Folder.childItems
@@ -443,24 +364,39 @@ class GirderPlugin(plugin.GirderPlugin):
 
         path_util.lookUpToken = lookUpToken
 
-        girderRoot = info['serverRoot']
-        huiRoot = WebrootHistomicsUI(_template)
-        huiRoot.updateHtmlVars(girderRoot.vars)
+        plugin.registerPluginStaticContent(
+            'histomicsui',
+            css=['/style.css'],
+            js=[
+                '/girder-plugin-histomics-ui.umd.cjs',
+                '/extra/plotly.js',
+            ],
+            staticDir=Path(__file__).parent / 'web_client' / 'dist',
+            tree=info['serverRoot'],
+        )
 
-        betterInvalidateJSandCSSCaches(girderRoot)
-        betterInvalidateJSandCSSCaches(huiRoot)
+        webroot = os.getenv('HUI_WEBROOT_PATH', False)
+        if webroot:
+            Setting().set(PluginSettings.HUI_WEBROOT_PATH, webroot)
+        info['serverRoot'].mount(None, f'/{Setting().get(PluginSettings.HUI_WEBROOT_PATH)}', {
+            '/': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': Path(__file__).parent / 'web_client' / 'dist-app',
+                'tools.staticdir.index': 'index.html',
+            },
+        })
 
         # The interface is always available under hui and also available
         # under the specified path.
-        info['serverRoot'].hui = huiRoot
-        webrootPath = Setting().get(PluginSettings.HUI_WEBROOT_PATH)
-        alternateWebrootPath = Setting().get(PluginSettings.HUI_ALTERNATE_WEBROOT_PATH)
-        setattr(info['serverRoot'], webrootPath, huiRoot)
-        if alternateWebrootPath:
-            for alt_webroot_path in alternateWebrootPath.split(','):
-                if alt_webroot_path:
-                    setattr(info['serverRoot'], alt_webroot_path, huiRoot)
-        info['serverRoot'].girder = girderRoot
+        # TODO is something using the "hui" path?
+        # info['serverRoot'].hui = huiRoot
+        # TODO these settings are not honored at this point
+        # setattr(info['serverRoot'], webrootPath, huiRoot)
+        # if alternateWebrootPath:
+        #    for alt_webroot_path in alternateWebrootPath.split(','):
+        #        if alt_webroot_path:
+        #            setattr(info['serverRoot'], alt_webroot_path, huiRoot)
+        # info['serverRoot'].girder = girderRoot
 
         # Auto-ingest annotations into database when a file with an identifier
         # ending in 'AnnotationFile' is uploaded (usually .anot files).
@@ -472,17 +408,6 @@ class GirderPlugin(plugin.GirderPlugin):
         events.bind('model.job.save', 'histomicsui', _saveJob)
 
         handlers.json_nans_as_nulls()
-
-        def updateWebroot(event):
-            """
-            If the webroot path setting is changed, bind the new path to the
-            hui webroot resource.  Note that a change to the alternate webroot
-            requires a restart.
-            """
-            if event.info.get('key') == PluginSettings.HUI_WEBROOT_PATH:
-                setattr(info['serverRoot'], event.info['value'], huiRoot)
-
-        events.bind('model.setting.save.after', 'histomicsui', updateWebroot)
 
         restrict_downloads(info)
         cleanupFSAssetstores()

@@ -1,14 +1,13 @@
-import $ from 'jquery';
-
-import {wrap} from '@girder/core/utilities/PluginUtils';
-import {AccessType} from '@girder/core/constants';
-import {restRequest} from '@girder/core/rest';
-import events from '@girder/core/events';
-import ItemListWidget from '@girder/large_image/views/itemList';
-
 import {HuiSettings} from './utils';
 
 import '../stylesheets/views/itemList.styl';
+
+const $ = girder.$;
+const {wrap} = girder.utilities.PluginUtils;
+const {AccessType} = girder.constants;
+const {restRequest} = girder.rest;
+const events = girder.events;
+const ItemListWidget = girder.views.widgets.ItemListWidget;
 
 wrap(ItemListWidget, 'render', function (render) {
     const root = this;
@@ -101,32 +100,34 @@ wrap(ItemListWidget, 'render', function (render) {
     }
 });
 
-HuiSettings.getSettings().then((settings) => {
-    const brandName = (settings['histomicsui.brand_name'] || 'HistomicsUI');
-    const webrootPath = (settings['histomicsui.webroot_path'] || 'histomics');
+events.on('g:appload.before', () => {
+    HuiSettings.getSettings().then((settings) => {
+        const brandName = (settings['histomicsui.brand_name'] || 'HistomicsUI');
+        const webrootPath = (settings['histomicsui.webroot_path'] || 'histomics');
 
-    ItemListWidget.registeredApplications.histomicsui = {
-        name: brandName,
-        // icon:
-        check: (modelType, model) => {
-            if (modelType !== 'item' || !model.get('largeImage')) {
-                return false;
-            }
-            const li = model.get('largeImage');
-            if (!li.fileId || li.expected === true) {
-                return false;
-            }
-            let priority = 0;
-            try {
-                if (model.get('meta') && model.get('meta').dicom && model.get('meta').dicom.Modality && model.get('meta').dicom.Modality !== 'SM') {
-                    priority = 1;
+        ItemListWidget.registeredApplications.histomicsui = {
+            name: brandName,
+            // icon:
+            check: (modelType, model) => {
+                if (modelType !== 'item' || !model.get('largeImage')) {
+                    return false;
                 }
-            } catch (e) {}
-            return {
-                url: `${webrootPath}#?image=${model.id}`,
-                priority: priority
-            };
-        }
-    };
-    return settings;
+                const li = model.get('largeImage');
+                if (!li.fileId || li.expected === true) {
+                    return false;
+                }
+                let priority = 0;
+                try {
+                    if (model.get('meta') && model.get('meta').dicom && model.get('meta').dicom.Modality && model.get('meta').dicom.Modality !== 'SM') {
+                        priority = 1;
+                    }
+                } catch (e) {}
+                return {
+                    url: `${webrootPath}#?image=${model.id}`,
+                    priority: priority
+                };
+            }
+        };
+        return settings;
+    });
 });
