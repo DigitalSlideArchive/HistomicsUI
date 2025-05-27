@@ -44,8 +44,8 @@ setup(
     ],
     install_requires=[
         'girder>=5.0.0a2',
-        'girder-large-image==1.32.2a115',
-        'girder-large-image-annotation==1.32.2a115',
+        'girder-large-image>=1.32.2a115',
+        'girder-large-image-annotation>=1.32.2a115',
         'large-image-tasks==1.32.2a115',
         'large-image-converter==1.32.2a115',
         # 'girder-slicer-cli-web',
