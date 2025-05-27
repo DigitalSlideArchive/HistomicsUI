@@ -13,11 +13,6 @@ const {getCurrentUser} = girder.auth;
 const girderEvents = girder.events;
 const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
-// Too many elements in the draw panel will crash the browser,
-// so we only allow editing of annotations with less than this
-// many elements.
-const MAX_ELEMENTS_LIST_LENGTH = 5000;
-
 /**
  * Create a panel controlling the visibility of annotations
  * on the image view.
@@ -226,6 +221,18 @@ var AnnotationSelector = Panel.extend({
         }
     },
 
+    _debounceTriggerRedraw(annotation) {
+        if (!this._debounceRedrawRequest) {
+            this._debounceRedrawRequest = {};
+        }
+        if (!this._debounceRedrawRequest[annotation.id]) {
+            this._debounceRedrawRequest[annotation.id] = window.requestAnimationFrame(() => {
+                this._debounceRedrawRequest[annotation.id] = null;
+                this.trigger('h:redraw', annotation);
+            });
+        }
+    },
+
     editAnnotationMetadata(evt) {
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
         const model = this.collection.get(id);
@@ -234,7 +241,7 @@ var AnnotationSelector = Panel.extend({
             'g:submit',
             () => {
                 if (model.get('displayed')) {
-                    this.trigger('h:redraw', model);
+                    this._debounceTriggerRedraw(model);
                 }
             }
         );
@@ -399,24 +406,12 @@ var AnnotationSelector = Panel.extend({
     },
 
     _setActiveAnnotationWithoutLoad(model) {
-        const numElements = ((model.get('annotation') || {}).elements || []).length;
         if (this._activeAnnotation && this._activeAnnotation.id !== model.id) {
             return;
         }
         model.set('displayed', true);
 
-        if (numElements > MAX_ELEMENTS_LIST_LENGTH || model._pageElements) {
-            events.trigger('g:alert', {
-                text: 'This annotation has too many elements to be edited.',
-                type: 'warning',
-                timeout: 5000,
-                icon: 'info'
-            });
-            this._activeAnnotation = null;
-            this.trigger('h:editAnnotation', null);
-        } else {
-            this.trigger('h:editAnnotation', model);
-        }
+        this.trigger('h:editAnnotation', model);
     },
 
     createAnnotation(evt) {
@@ -439,7 +434,13 @@ var AnnotationSelector = Panel.extend({
         );
     },
 
-    _saveAnnotation(annotation) {
+    _saveAnnotation(annotation, options) {
+        if (options && options.delaySave) {
+            return;
+        }
+        if (annotation._fromFetch) {
+            return;
+        }
         if (this.viewer && !this.viewer._saving) {
             this.viewer._saving = {};
         }
@@ -451,7 +452,7 @@ var AnnotationSelector = Panel.extend({
             annotation._saving = true;
             annotation._saveAgain = false;
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
-                this.trigger('h:redraw', annotation);
+                this._debounceTriggerRedraw(annotation);
             }
             annotation.save().fail(() => {
                 /* If we fail to save (possible because the server didn't
@@ -489,13 +490,13 @@ var AnnotationSelector = Panel.extend({
                 annotation._saveAgain = 0;
             }
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
-                this.trigger('h:redraw', annotation);
+                this._debounceTriggerRedraw(annotation);
             }
         } else {
             annotation._saveAgain = false;
             delete vsaving[annotation.id];
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
-                this.trigger('h:redraw', annotation);
+                this._debounceTriggerRedraw(annotation);
             }
             if (Object.keys(vsaving).length === 1 && vsaving.refresh) {
                 this._refreshAnnotations();

@@ -104,7 +104,10 @@ block content
             input.h-brush-screen(type="checkbox", checked=opts.brush_screen ? 'checked' : undefined)
             | Screen
   .h-group-count
-    b.h-group-count-label Count:
+    if partialCount
+      b.h-group-count-label(title='* These counts only apply to loaded elements') Count*:
+    else
+      b.h-group-count-label Count:
     span.h-group-count-options
   .h-elements-container
     include drawWidgetElement.pug

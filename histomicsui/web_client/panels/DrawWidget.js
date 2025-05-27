@@ -95,10 +95,14 @@ var DrawWidget = Panel.extend({
         }
         const name = (this.annotation.get('annotation') || {}).name || 'Untitled';
         if (!updatedElement || (updatedElement.attributes && updatedElement.get('type') !== 'pixelmap')) {
-            this.trigger('h:redraw', this.annotation);
+            if (this.annotationSelector) {
+                this.annotationSelector._debounceTriggerRedraw(this.annotation);
+            }
         }
         if (this._skipRenderHTML) {
-            delete this._skipRenderHTML;
+            if (this._skipRenderHTML !== 'skip') {
+                delete this._skipRenderHTML;
+            }
         } else {
             this.$el.html(drawWidget({
                 title: 'Draw',
@@ -112,7 +116,8 @@ var DrawWidget = Panel.extend({
                 drawingType: this._drawingType,
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 firstRender: true,
-                displayIdStart: 0
+                displayIdStart: 0,
+                partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
         }
@@ -236,7 +241,7 @@ var DrawWidget = Panel.extend({
                     this.updateCount(group || this.parentView._defaultGroup, 1);
                 }
             }
-            this._skipRenderHTML = true;
+            this._skipRenderHTML = this._skipRenderHTML || true;
         });
     },
 
@@ -308,7 +313,7 @@ var DrawWidget = Panel.extend({
             interp: distance < 500 ? undefined : window.d3.interpolateZoom,
             ease: window.d3.easeExpInOut
         });
-        this._skipRenderHTML = true;
+        this._skipRenderHTML = this._skipRenderHTML || true;
     },
 
     /**
@@ -325,7 +330,7 @@ var DrawWidget = Panel.extend({
             this.countPixelmap(this.collection.get(id), -1);
         }
         this.$(`.h-element[data-id="${id}"]`).remove();
-        this._skipRenderHTML = true;
+        this._skipRenderHTML = this._skipRenderHTML || true;
         this.collection.remove(id, opts);
         this.newElementDisplayIdStart = +(this.$el.find('.h-element>span.h-element-label[display_id]').last().attr('display_id') || 0);
     },
@@ -337,7 +342,7 @@ var DrawWidget = Panel.extend({
      *    collection.
      */
     addElements(elements) {
-        this._skipRenderHTML = true;
+        this._skipRenderHTML = this._skipRenderHTML || true;
         elements = this.collection.add(elements);
         this.$el.find('.h-elements-container').append(
             drawWidgetElement({
@@ -433,7 +438,7 @@ var DrawWidget = Panel.extend({
             }
             return result;
         }).filter((annot) => !annot.points || annot.points.length);
-        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {silent: elements.length}));
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length}));
         this.addElements(
             _.map(elements, (el) => {
                 el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
@@ -1008,16 +1013,23 @@ var DrawWidget = Panel.extend({
         return this._style;
     },
 
+    _debounceRender() {
+        if (this._debounceTimer) {
+            window.clearTimeout(this._debounceTimer);
+        }
+        this._debounceTimer = window.setTimeout(() => this.render(), 1);
+    },
+
     _styleGroupEditor() {
         var dlg = editStyleGroups(this._style, this._groups, this.parentView._defaultGroup);
         dlg.$el.on('hidden.bs.modal', () => {
-            this.render();
+            this._debounceRender();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
         });
     },
 
     _handleStyleGroupsUpdate() {
-        this.render();
+        this._debounceRender();
         this.trigger('h:styleGroupsUpdated', this._groups);
     },
 

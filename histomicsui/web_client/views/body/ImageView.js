@@ -1277,6 +1277,11 @@ var ImageView = View.extend({
                     }
                 }
                 break;
+            case 'D':
+                if (evt.shiftKey && (evt.altKey || evt.metaKey)) {
+                    console.log(this);
+                }
+                break;
             default:
                 if (this.drawWidget && drawModes[evt.key] && this.activeAnnotation) {
                     const mode = drawModes[evt.key];
@@ -1366,6 +1371,9 @@ var ImageView = View.extend({
     getElementsInPolygon(poly) {
         const results = [];
         this.viewerWidget.featureLayer.features().forEach((feature) => {
+            if (feature._centroidFeature) {
+                return;
+            }
             const r = feature.polygonSearch(poly, {partial: false});
             r.found.forEach((feature) => {
                 const annotationId = feature.properties ? feature.properties.annotation : null;
@@ -1583,12 +1591,11 @@ var ImageView = View.extend({
         const groupedAnnotations = this.selectedElements.groupBy((element) => element.originalAnnotation.id);
         _.each(groupedAnnotations, (elements, annotationId) => {
             const annotation = this.annotations.get(annotationId);
-            _.each(elements, (element) => { /* eslint-disable backbone/no-silent */
+            _.each(elements, (element) => {
                 const annotationElement = annotation.elements().get(element.id);
-                // silence the event because we want to make one save call for each annotation.
-                annotationElement.set(element.toJSON(), {silent: true});
+                annotationElement.set(element.toJSON(), {delaySave: true});
                 if (!element.get('group')) {
-                    annotationElement.unset('group', {silent: true});
+                    annotationElement.unset('group', {delaySave: true});
                 }
             });
             if (!elements.length) {
@@ -1604,7 +1611,7 @@ var ImageView = View.extend({
         _.each(groupedAnnotations, (elements, annotationId) => { /* eslint-disable backbone/no-silent */
             // silence the event because we want to make one save call for each annotation.
             const elementsCollection = this.annotations.get(annotationId).elements();
-            elementsCollection.remove(elements, {silent: true});
+            elementsCollection.remove(elements, {delaySave: true});
             elementsCollection.trigger('reset', elementsCollection);
         });
     },
