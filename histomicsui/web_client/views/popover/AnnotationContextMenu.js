@@ -68,6 +68,9 @@ const AnnotationContextMenu = View.extend({
             }
         });
         let refresh = false;
+        if (this.parentView.drawWidget) {
+            this.parentView.drawWidget._skipRenderHTML = 'skip';
+        }
         this.collection.each((element) => {
             if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id &&
                     element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
@@ -84,6 +87,9 @@ const AnnotationContextMenu = View.extend({
         });
         this.collection.trigger('h:save');
         this.trigger('h:close');
+        if (this.parentView.drawWidget) {
+            delete this.parentView.drawWidget._skipRenderHTML;
+        }
         if (this.parentView.drawWidget && refresh) {
             this.parentView.drawWidget.render();
         }
