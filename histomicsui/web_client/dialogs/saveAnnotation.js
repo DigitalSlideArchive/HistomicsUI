@@ -492,26 +492,26 @@ var SaveAnnotation = View.extend({
 
         // all valid
         if (setFillColor || setLineColor || setLineWidth) {
-            this.annotation.elements().each((element, idx) => { /* eslint-disable backbone/no-silent */
+            this.annotation.elements().each((element, idx) => {
                 if (setFillColor) {
                     if (setFillColor === 'func') {
                         fillColor = colorFromFunc(element, idx, fillColorParam, this._styleableFuncs[fillColorParam.key]);
                     }
-                    element.set('fillColor', fillColor, {silent: true});
+                    element.set('fillColor', fillColor, {delaySave: true});
                 }
                 if (setLineColor) {
                     if (setLineColor === 'func') {
                         lineColor = colorFromFunc(element, idx, lineColorParam, this._styleableFuncs[lineColorParam.key]);
                     }
-                    element.set('lineColor', lineColor, {silent: true});
+                    element.set('lineColor', lineColor, {delaySave: true});
                 }
                 if (setLineWidth) {
-                    element.set('lineWidth', lineWidth, {silent: true});
+                    element.set('lineWidth', lineWidth, {delaySave: true});
                 }
             });
             const annotationData = _.extend({}, this.annotation.get('annotation'));
             annotationData.elements = this.annotation.elements().toJSON();
-            this.annotation.set('annotation', annotationData, {silent: true});
+            this.annotation.set('annotation', annotationData, {delaySave: true});
         }
 
         const visible = this.$('#h-annotation-visible').prop('checked');
