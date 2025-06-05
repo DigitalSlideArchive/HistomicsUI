@@ -223,6 +223,18 @@ var AnnotationSelector = Panel.extend({
         }
     },
 
+    _debounceTriggerRedraw(annotation) {
+        if (!this._debounceRedrawRequest) {
+            this._debounceRedrawRequest = {};
+        }
+        if (!this._debounceRedrawRequest[annotation.id]) {
+            this._debounceRedrawRequest[annotation.id] = window.requestAnimationFrame(() => {
+                this._debounceRedrawRequest[annotation.id] = null;
+                this.trigger('h:redraw', annotation);
+            });
+        }
+    },
+
     editAnnotationMetadata(evt) {
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
         const model = this.collection.get(id);
@@ -231,7 +243,7 @@ var AnnotationSelector = Panel.extend({
             'g:submit',
             () => {
                 if (model.get('displayed')) {
-                    this.trigger('h:redraw', model);
+                    this._debounceTriggerRedraw(model);
                 }
             }
         );
@@ -428,6 +440,9 @@ var AnnotationSelector = Panel.extend({
         if (options && options.delaySave) {
             return;
         }
+        if (annotation._fromFetch) {
+            return;
+        }
         if (this.viewer && !this.viewer._saving) {
             this.viewer._saving = {};
         }
@@ -439,7 +454,7 @@ var AnnotationSelector = Panel.extend({
             annotation._saving = true;
             annotation._saveAgain = false;
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
-                this.trigger('h:redraw', annotation);
+                this._debounceTriggerRedraw(annotation);
             }
             annotation.save().fail(() => {
                 /* If we fail to save (possible because the server didn't
@@ -477,13 +492,13 @@ var AnnotationSelector = Panel.extend({
                 annotation._saveAgain = 0;
             }
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
-                this.trigger('h:redraw', annotation);
+                this._debounceTriggerRedraw(annotation);
             }
         } else {
             annotation._saveAgain = false;
             delete vsaving[annotation.id];
             if (annotation.elements().models.filter((model) => model.get('type') === 'pixelmap').length === 0) {
-                this.trigger('h:redraw', annotation);
+                this._debounceTriggerRedraw(annotation);
             }
             if (Object.keys(vsaving).length === 1 && vsaving.refresh) {
                 this._refreshAnnotations();
