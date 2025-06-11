@@ -1,0 +1,79 @@
+<script>
+import {formatDate, DATE_SECOND} from '@girder/core/misc';
+export default {
+    props: ['historyGroup'],
+    data() {
+        return {
+            collapsed: true,
+        };
+    },
+    computed: {
+        startingAnnotation() {
+            return this.historyGroup[0];
+        },
+        hiddenAnnotations() {
+            return this.historyGroup.slice(1);
+        },
+        iconClass() {
+            const classes = ['hidden-version-toggle'];
+            if (this.collapsed) {
+                classes.push('icon-right-open');
+            } else {
+                classes.push('icon-down-open');
+            }
+            if (!this.hiddenAnnotations.length) {
+                classes.push('display-none');
+            }
+            return classes;
+        }
+    },
+    methods: {
+        displayDate(dateString) {
+            return formatDate(dateString, DATE_SECOND);
+        }
+    },
+    mounted() {
+        console.log(this.historyGroup);
+    }
+}
+</script>
+
+<template>
+    <div>
+        <span class="history-group-header">
+            <i
+                v-if="hiddenAnnotations.length"
+                :class="iconClass"
+                @click="collapsed = !collapsed"
+            />
+            <span v-else class="hidden-version-toggle"></span>
+            <span>Version: {{ startingAnnotation._version }}</span>
+            <span>Author id: {{ startingAnnotation.creatorId }}</span>
+            <span>Edited: {{ displayDate(startingAnnotation.updated) }}</span>
+        </span>
+        <div
+            v-if="!collapsed && hiddenAnnotations.length"
+            class="hidden-version-container"
+        >
+            <div
+                v-for="entry in hiddenAnnotations"
+                class="hidden-version-entry"
+            >
+                <span class="hidden-version-toggle"></span>
+                <span>Version: {{ entry._version }}</span>
+                <span>Author id: {{ entry.creatorId }}</span>
+                <span>Edited: {{ displayDate(entry.updated) }}</span>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style scoped>
+.hidden-version-toggle {
+    display: inline-block;
+    min-width: 20px;
+}
+.display-none {
+    display: none;
+}
+</style>
