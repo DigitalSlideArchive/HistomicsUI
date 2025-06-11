@@ -14,6 +14,7 @@
 #  limitations under the License.
 #############################################################################
 
+import importlib.metadata
 import json
 import logging
 import os
@@ -39,7 +40,6 @@ from girder.utility import path as path_util
 from girder.utility import setting_utilities
 from girder.utility.model_importer import ModelImporter
 from girder.utility.webroot import Webroot
-from pkg_resources import DistributionNotFound, get_distribution
 
 from . import handlers, rest
 from .constants import PluginSettings
@@ -51,8 +51,8 @@ from .models.pathology import Pathology
 from .models.slide import Slide
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
+    __version__ = importlib.metadata.version(__name__)
+except importlib.metadata.PackageNotFoundError:
     # package is not installed
     pass
 
