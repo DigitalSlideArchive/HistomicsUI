@@ -1,7 +1,7 @@
 <script>
 import {formatDate, DATE_SECOND} from '@girder/core/misc';
 export default {
-    props: ['historyGroup'],
+    props: ['historyGroup', 'userIdMap'],
     data() {
         return {
             collapsed: true,
@@ -30,11 +30,14 @@ export default {
     methods: {
         displayDate(dateString) {
             return formatDate(dateString, DATE_SECOND);
+        },
+        getUser(userId) {
+            return (
+                this.userIdMap &&
+                this.userIdMap[userId]
+            ) ? this.userIdMap[userId] : userId;
         }
     },
-    mounted() {
-        console.log(this.historyGroup);
-    }
 }
 </script>
 
@@ -48,7 +51,7 @@ export default {
             />
             <span v-else class="hidden-version-toggle"></span>
             <span>Version: {{ startingAnnotation._version }}</span>
-            <span>Author id: {{ startingAnnotation.creatorId }}</span>
+            <span>Author: {{ getUser(startingAnnotation.updatedId) }}</span>
             <span>Edited: {{ displayDate(startingAnnotation.updated) }}</span>
         </span>
         <div
@@ -61,7 +64,7 @@ export default {
             >
                 <span class="hidden-version-toggle"></span>
                 <span>Version: {{ entry._version }}</span>
-                <span>Author id: {{ entry.creatorId }}</span>
+                <span>Author: {{ getUser(entry.updatedId) }}</span>
                 <span>Edited: {{ displayDate(entry.updated) }}</span>
             </div>
         </div>
@@ -72,6 +75,9 @@ export default {
 .hidden-version-toggle {
     display: inline-block;
     min-width: 20px;
+}
+.hidden-version-toggle:hover {
+    cursor: pointer;
 }
 .display-none {
     display: none;
