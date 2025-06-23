@@ -18,6 +18,7 @@ export default Vue.extend({
             history: null,
             loading: false,
             userIdToLogin: null,
+            waitingForRevert: false,
         };
     },
     methods: {
@@ -44,6 +45,7 @@ export default Vue.extend({
                 });
                 this.userIdToLogin = userMap;
                 this.loading = false;
+                this.waitingForRevert = false;
             });
         },
         updateAnnotationHistory() {
@@ -57,19 +59,35 @@ export default Vue.extend({
                 this.makeUserMap();
             });
         },
+        positionShield() {
+            const shield = this.$refs.shield;
+            if (shield && shield.parentNode !== document.body) {
+                document.body.appendChild(shield);
+            }
+        },
         onRevert(version) {
             this.loading = true;
+            // If an annotation takes > 1 second to be reverted, throw up a loading screen
+            setTimeout(() => {
+                if (this.loading) {
+                    this.waitingForRevert = true;
+                    this.$nextTick(() => {
+                        this.positionShield();
+                    });
+                }
+            }, 1000);
             restRequest({
                 url: `annotation/${this.annotationId}/history/revert`,
                 method: 'PUT',
                 data: { version },
                 error: null,
-            }).done((resp) => {
+            }).done(() => {
                 this.updateAnnotationHistory();
-            })
+            });
         },
     },
     mounted() {
+        this.positionShield();
         this.updateAnnotationHistory();
     }
 });
@@ -77,6 +95,16 @@ export default Vue.extend({
 
 <template>
     <div>
+        <div
+            v-if="waitingForRevert"
+            ref="shield"
+            class="loading-shield"
+        >
+            <div class="shield-content">
+                <i class="icon-spin3 animate-spin"></i>
+                Reverting to previous version. This may some time...
+            </div>
+        </div>
         <annotation-history-browser
             :annotation-history="history"
             :loading="loading"
@@ -86,3 +114,39 @@ export default Vue.extend({
         />
     </div>
 </template>
+
+<style scoped>
+.loading-shield {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    pointer-events: all;
+    cursor: wait;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    animation: fadeIn 0.3s ease-out;
+}
+.shield-content {
+    padding: 24px;
+    background-color: white;
+}
+.loading-shield > i, span {
+    font-size: 24px;
+    z-index: 9999;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+</style>
