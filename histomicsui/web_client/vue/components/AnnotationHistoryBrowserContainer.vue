@@ -48,16 +48,14 @@ export default Vue.extend({
         },
         updateAnnotationHistory() {
             this.loading = true;
-            setTimeout(() => {
-                restRequest({
-                    url: `annotation/${this.annotationId}/history`,
-                    method: 'GET',
-                    error: null,
-                }).done((annotationHistory) => {
-                    this.history = annotationHistory;
-                    this.makeUserMap();
-                });
-            }, 2000);
+            restRequest({
+                url: `annotation/${this.annotationId}/history`,
+                method: 'GET',
+                error: null,
+            }).done((annotationHistory) => {
+                this.history = annotationHistory;
+                this.makeUserMap();
+            });
         },
         onRevert(version) {
             this.loading = true;

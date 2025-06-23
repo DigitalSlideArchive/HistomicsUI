@@ -57,6 +57,7 @@ export default {
             class="history-body"
         >
             <div v-if="!annotationHistory || loading">
+                <i class="icon-spin4 animate-spin"></i>
                 Loading...
             </div>
             <div v-else>
