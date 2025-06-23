@@ -49,17 +49,17 @@ export default {
 
 <template>
     <div>
-        <span class="history-group-header">
+        <span class="history-group-header attribute-block">
             <i
                 v-if="hiddenAnnotations.length"
                 :class="iconClass"
                 @click="collapsed = !collapsed"
             />
             <span v-else class="hidden-version-toggle"></span>
-            <span>Edited: {{ displayDate(startingAnnotation.updated) }}</span>
-            <span>Author: {{ getUser(startingAnnotation.updatedId) }}</span>
-            <span>Version: {{ startingAnnotation._version }}</span>
-            <span>Groups: {{ displayGroups(startingAnnotation) }}</span>
+            <span class="attribute-display">Edited: {{ displayDate(startingAnnotation.updated) }}</span>
+            <span class="attribute-display">Author: {{ getUser(startingAnnotation.updatedId) }}</span>
+            <span class="attribute-display">Version: {{ startingAnnotation._version }}</span>
+            <span class="attribute-display">Groups: {{ displayGroups(startingAnnotation) }}</span>
             <i
                 v-if="allowRevertInitial"
                 class="revert-button icon-ccw"
@@ -72,13 +72,13 @@ export default {
         >
             <div
                 v-for="entry in hiddenAnnotations"
-                class="hidden-version-entry"
+                class="hidden-version-entry attribute-block"
             >
                 <span class="hidden-version-toggle"></span>
-                <span>Version: {{ entry._version }}</span>
-                <span>Author: {{ getUser(entry.updatedId) }}</span>
-                <span>Edited: {{ displayDate(entry.updated) }}</span>
-                <span>Groups: {{ displayGroups(entry) }}</span>
+                <span class="attribute-display">Edited: {{ displayDate(entry.updated) }}</span>
+                <span class="attribute-display">Author: {{ getUser(entry.updatedId) }}</span>
+                <span class="attribute-display">Version: {{ entry._version }}</span>
+                <span class="attribute-display">Groups: {{ displayGroups(entry) }}</span>
                 <i
                     class="revert-button icon-ccw"
                     @click="$emit('revertToAnnotation', entry._version)"
@@ -98,6 +98,18 @@ export default {
 }
 .revert-button:hover {
     cursor:pointer;
+}
+.attribute-block > span, i {
+    max-width: 250px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipses;
+}
+.attribute-block {
+    display: flex;
+}
+.attribute-block > span {
+    padding-right: 8px;
 }
 .display-none {
     display: none;
