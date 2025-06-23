@@ -3,7 +3,6 @@ import $ from 'jquery';
 import tinycolor from 'tinycolor2';
 
 import {AccessType} from '@girder/core/constants';
-import {restRequest} from '@girder/core/rest';
 import {formatDate, DATE_SECOND} from '@girder/core/misc';
 import AccessWidget from '@girder/core/views/widgets/AccessWidget';
 // import MetadataWidget from '@girder/core/views/widgets/MetadataWidget';
@@ -336,24 +335,20 @@ var SaveAnnotation = View.extend({
         this.$el.find('.modal-dialog').addClass('hui-save-annotation-dialog');
         this._updateFuncValues();
 
-        restRequest({
-            url: `annotation/${this.annotation.id}/history`,
-            method: 'GET',
-            error: null,
-        }).done((annotationHistory) => {
-            // Mount Vue component for annotation history
-            const historyBrowserElement = this.$('.vue-component-annotation-history').get(0);
-            const historyBrowser = new AnnotationHistoryBrowserContainer({
-                historyBrowserElement,
-                propsData: {
-                    parentView: this,
-                    annotationHistory,
-                },
-            });
-            historyBrowser.$mount()
-            historyBrowserElement.appendChild(historyBrowser.$el);
-            this.historyBrowser = historyBrowser;
+
+
+        // Mount Vue component for annotation history
+        const historyBrowserElement = this.$('.vue-component-annotation-history').get(0);
+        const historyBrowser = new AnnotationHistoryBrowserContainer({
+            historyBrowserElement,
+            propsData: {
+                annotationId: this.annotation.id,
+                parentView: this,
+            },
         });
+        historyBrowser.$mount()
+        historyBrowserElement.appendChild(historyBrowser.$el);
+        this.historyBrowser = historyBrowser;
 
         return this;
     },
