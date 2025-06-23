@@ -238,8 +238,9 @@ var AnnotationSelector = Panel.extend({
     editAnnotationMetadata(evt) {
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
         const model = this.collection.get(id);
+        const defaultGroup = this.parentView._defaultGroup;
         this.listenToOnce(
-            showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer}),
+            showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer, defaultGroup}),
             'g:submit',
             () => {
                 if (model.get('displayed')) {

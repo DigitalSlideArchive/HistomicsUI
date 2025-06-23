@@ -1,7 +1,7 @@
 <script>
 import {formatDate, DATE_SECOND} from '@girder/core/misc';
 export default {
-    props: ['historyGroup', 'userIdMap', 'allowRevertInitial'],
+    props: ['historyGroup', 'userIdMap', 'allowRevertInitial', 'defaultGroup'],
     emits: ['revertToAnnotation'],
     data() {
         return {
@@ -32,6 +32,11 @@ export default {
         displayDate(dateString) {
             return formatDate(dateString, DATE_SECOND);
         },
+        displayGroups(annotationVersion) {
+            return annotationVersion.groups.map((group) => (
+                group === null ? this.defaultGroup : group
+            )).join(', ');
+        },
         getUser(userId) {
             return (
                 this.userIdMap &&
@@ -51,9 +56,10 @@ export default {
                 @click="collapsed = !collapsed"
             />
             <span v-else class="hidden-version-toggle"></span>
-            <span>Version: {{ startingAnnotation._version }}</span>
-            <span>Author: {{ getUser(startingAnnotation.updatedId) }}</span>
             <span>Edited: {{ displayDate(startingAnnotation.updated) }}</span>
+            <span>Author: {{ getUser(startingAnnotation.updatedId) }}</span>
+            <span>Version: {{ startingAnnotation._version }}</span>
+            <span>Groups: {{ displayGroups(startingAnnotation) }}</span>
             <i
                 v-if="allowRevertInitial"
                 class="revert-button icon-ccw"
@@ -72,6 +78,7 @@ export default {
                 <span>Version: {{ entry._version }}</span>
                 <span>Author: {{ getUser(entry.updatedId) }}</span>
                 <span>Edited: {{ displayDate(entry.updated) }}</span>
+                <span>Groups: {{ displayGroups(entry) }}</span>
                 <i
                     class="revert-button icon-ccw"
                     @click="$emit('revertToAnnotation', entry._version)"

@@ -11,7 +11,7 @@ export default Vue.extend({
     components: {
         AnnotationHistoryBrowser,
     },
-    props: ['annotationId', 'parentView'],
+    props: ['annotationId', 'parentView', 'defaultGroup'],
     data() {
         return {
             annotationCopy: _.clone(this.annotation || {}),
@@ -83,6 +83,7 @@ export default Vue.extend({
             :annotation-history="history"
             :loading="loading"
             :user-map="userIdToLogin"
+            :default-group="defaultGroup"
             @revert="onRevert"
         />
     </div>

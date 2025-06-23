@@ -344,6 +344,7 @@ var SaveAnnotation = View.extend({
             propsData: {
                 annotationId: this.annotation.id,
                 parentView: this,
+                defaultGroup: this.options.defaultGroup || 'default',
             },
         });
         historyBrowser.$mount()
