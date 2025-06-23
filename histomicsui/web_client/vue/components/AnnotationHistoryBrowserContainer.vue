@@ -48,17 +48,27 @@ export default Vue.extend({
         },
         updateAnnotationHistory() {
             this.loading = true;
-            restRequest({
-                url: `annotation/${this.annotationId}/history`,
-                method: 'GET',
-                error: null,
-            }).done((annotationHistory) => {
-                this.history = annotationHistory;
-                this.makeUserMap();
-            });
+            setTimeout(() => {
+                restRequest({
+                    url: `annotation/${this.annotationId}/history`,
+                    method: 'GET',
+                    error: null,
+                }).done((annotationHistory) => {
+                    this.history = annotationHistory;
+                    this.makeUserMap();
+                });
+            }, 2000);
         },
-        close() {
-            this.parentView.closeVueModal();
+        onRevert(version) {
+            this.loading = true;
+            restRequest({
+                url: `annotation/${this.annotationId}/history/revert`,
+                method: 'PUT',
+                data: { version },
+                error: null,
+            }).done((resp) => {
+                this.updateAnnotationHistory();
+            })
         },
     },
     mounted() {
@@ -73,6 +83,7 @@ export default Vue.extend({
             :annotation-history="history"
             :loading="loading"
             :user-map="userIdToLogin"
+            @revert="onRevert"
         />
     </div>
 </template>

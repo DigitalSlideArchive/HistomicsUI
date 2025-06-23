@@ -1,7 +1,7 @@
 <script>
 import {formatDate, DATE_SECOND} from '@girder/core/misc';
 export default {
-    props: ['historyGroup', 'userIdMap'],
+    props: ['historyGroup', 'userIdMap', 'allowRevertInitial'],
     emits: ['revertToAnnotation'],
     data() {
         return {
@@ -54,8 +54,8 @@ export default {
             <span>Version: {{ startingAnnotation._version }}</span>
             <span>Author: {{ getUser(startingAnnotation.updatedId) }}</span>
             <span>Edited: {{ displayDate(startingAnnotation.updated) }}</span>
-            <!--This shouldn't appear for the very first (most recent) annotation!-->
             <i
+                v-if="allowRevertInitial"
                 class="revert-button icon-ccw"
                 @click="$emit('revertToAnnotation', startingAnnotation._version)"
             />

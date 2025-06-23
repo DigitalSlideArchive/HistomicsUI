@@ -2,7 +2,7 @@
 import AnnotationHistoryGroup from './AnnotationHistoryGroup.vue';
 export default {
     props: ['annotationHistory', 'loading', 'userMap'],
-    emits: ['revertToPreviousVersion'],
+    emits: ['revert'],
     components: {
         AnnotationHistoryGroup,
     },
@@ -35,7 +35,7 @@ export default {
     },
     methods: {
         handleRevert(version) {
-            console.log('revert clicked: ', version);
+            this.$emit('revert', version);
         }
     },
 }
@@ -61,9 +61,10 @@ export default {
             </div>
             <div v-else>
                 <annotation-history-group
-                    v-for="group in annotationGroups"
+                    v-for="(group, index) in annotationGroups"
                     :history-group="group"
                     :user-id-map="userMap"
+                    :allow-revert-initial="index !== 0"
                     @revertToAnnotation="handleRevert"
                 />
             </div>
