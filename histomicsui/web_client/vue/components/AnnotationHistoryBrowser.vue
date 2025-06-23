@@ -3,7 +3,7 @@ import {getCurrentUser} from '@girder/core/auth';
 import AnnotationHistoryGroup from './AnnotationHistoryGroup.vue';
 import UserModel from '@girder/core/models/UserModel';
 export default {
-    props: ['annotationData', 'annotationHistory'],
+    props: ['annotationHistory'],
     emits: ['revertToPreviousVersion'],
     components: {
         AnnotationHistoryGroup,
@@ -12,6 +12,7 @@ export default {
         return {
             collapsed: true,
             userIdToLogin: null,
+            loading: false,
         };
     },
     computed: {
@@ -38,6 +39,7 @@ export default {
     },
     methods: {
         makeUserMap() {
+            this.loading = true;
             const userMap = {};
             // First, see if we can use the logged in user
             const currentUser = getCurrentUser();
@@ -59,6 +61,7 @@ export default {
                     userMap[user._id] = user.login;
                 });
                 this.userIdToLogin = userMap;
+                this.loading = false;
             });
         }
     },
@@ -71,11 +74,11 @@ export default {
 <template>
     <div>
         <div class="history-header">
-            <span class="history-container-toggle">
-                <i
-                    :class="collapsed ? 'icon-down-open' : 'icon-up-open'"
-                    @click="collapsed = !collapsed"
-                />
+            <span
+                class="history-container-toggle"
+                @click="collapsed = !collapsed"
+            >
+                <i :class="collapsed ? 'icon-down-open' : 'icon-up-open'" />
                 Annotation edit history
             </span>
         </div>
@@ -83,11 +86,16 @@ export default {
             v-if="!collapsed && userIdToLogin"
             class="history-body"
         >
-            <annotation-history-group
-                v-for="group in annotationGroups"
-                :history-group="group"
-                :user-id-map="userIdToLogin"
-            />
+            <div v-if="loading">
+                Loading...
+            </div>
+            <div v-else>
+                <annotation-history-group
+                    v-for="group in annotationGroups"
+                    :history-group="group"
+                    :user-id-map="userIdToLogin"
+                />
+            </div>
         </div>
     </div>
 </template>

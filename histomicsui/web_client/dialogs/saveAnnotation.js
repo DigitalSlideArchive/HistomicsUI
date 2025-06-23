@@ -341,14 +341,12 @@ var SaveAnnotation = View.extend({
             method: 'GET',
             error: null,
         }).done((annotationHistory) => {
-            console.log(annotationHistory);
             // Mount Vue component for annotation history
             const historyBrowserElement = this.$('.vue-component-annotation-history').get(0);
             const historyBrowser = new AnnotationHistoryBrowserContainer({
                 historyBrowserElement,
                 propsData: {
                     parentView: this,
-                    annotation: this.annotation,
                     annotationHistory,
                 },
             });

@@ -8,7 +8,7 @@ export default Vue.extend({
     components: {
         AnnotationHistoryBrowser,
     },
-    props: ['annotation', 'annotationHistory', 'parentView'],
+    props: ['annotationHistory', 'parentView'],
     data() {
         return {
             annotationCopy: _.clone(this.annotation || {}),
@@ -28,7 +28,6 @@ export default Vue.extend({
 <template>
     <div>
         <annotation-history-browser
-            :annotation-data="annotationCopy"
             :annotation-history="annotationHistory"
         />
     </div>
