@@ -5,7 +5,7 @@ export default {
     emits: ['revertToAnnotation'],
     data() {
         return {
-            collapsed: true,
+            collapsed: true
         };
     },
     computed: {
@@ -38,80 +38,81 @@ export default {
             )).join(', ');
         },
         getUser(userId) {
-            return (
-                this.userIdMap &&
-                this.userIdMap[userId]
-            ) ? this.userIdMap[userId] : userId;
+            return (this.userIdMap && this.userIdMap[userId]) ? this.userIdMap[userId] : userId;
         }
-    },
-}
+    }
+};
 </script>
 
 <template>
-    <div>
-        <span class="history-group-header attribute-block">
-            <i
-                v-if="hiddenAnnotations.length"
-                :class="iconClass"
-                @click="collapsed = !collapsed"
-            />
-            <span v-else class="hidden-version-toggle"></span>
-            <span class="attribute-display">Edited: {{ displayDate(startingAnnotation.updated) }}</span>
-            <span class="attribute-display">Author: {{ getUser(startingAnnotation.updatedId) }}</span>
-            <span class="attribute-display">Version: {{ startingAnnotation._version }}</span>
-            <span class="attribute-display">Groups: {{ displayGroups(startingAnnotation) }}</span>
-            <i
-                v-if="allowRevertInitial"
-                class="revert-button icon-ccw"
-                @click="$emit('revertToAnnotation', startingAnnotation._version)"
-            />
-        </span>
-        <div
-            v-if="!collapsed && hiddenAnnotations.length"
-            class="hidden-version-container"
-        >
-            <div
-                v-for="entry in hiddenAnnotations"
-                class="hidden-version-entry attribute-block"
-            >
-                <span class="hidden-version-toggle"></span>
-                <span class="attribute-display">Edited: {{ displayDate(entry.updated) }}</span>
-                <span class="attribute-display">Author: {{ getUser(entry.updatedId) }}</span>
-                <span class="attribute-display">Version: {{ entry._version }}</span>
-                <span class="attribute-display">Groups: {{ displayGroups(entry) }}</span>
-                <i
-                    class="revert-button icon-ccw"
-                    @click="$emit('revertToAnnotation', entry._version)"
-                ></i>
-            </div>
-        </div>
+  <div>
+    <span class="history-group-header attribute-block">
+      <i
+        v-if="hiddenAnnotations.length"
+        :class="iconClass"
+        @click="collapsed = !collapsed"
+      />
+      <span
+        v-else
+        class="hidden-version-toggle"
+      />
+      <span class="attribute-display">Edited: {{ displayDate(startingAnnotation.updated) }}</span>
+      <span class="attribute-display">Author: {{ getUser(startingAnnotation.updatedId) }}</span>
+      <span class="attribute-display">Version: {{ startingAnnotation._version }}</span>
+      <span class="attribute-display">Groups: {{ displayGroups(startingAnnotation) }}</span>
+      <i
+        v-if="allowRevertInitial"
+        class="revert-button icon-ccw"
+        @click="$emit('revertToAnnotation', startingAnnotation._version)"
+      />
+    </span>
+    <div
+      v-if="!collapsed && hiddenAnnotations.length"
+      class="hidden-version-container"
+    >
+      <div
+        v-for="entry in hiddenAnnotations"
+        :key="entry._version"
+        class="hidden-version-entry attribute-block"
+      >
+        <span class="hidden-version-toggle" />
+        <span class="attribute-display">Edited: {{ displayDate(entry.updated) }}</span>
+        <span class="attribute-display">Author: {{ getUser(entry.updatedId) }}</span>
+        <span class="attribute-display">Version: {{ entry._version }}</span>
+        <span class="attribute-display">Groups: {{ displayGroups(entry) }}</span>
+        <i
+          class="revert-button icon-ccw"
+          @click="$emit('revertToAnnotation', entry._version)"
+        />
+      </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
 .hidden-version-toggle {
-    display: inline-block;
-    min-width: 20px;
+  display: inline-block;
+  min-width: 20px;
 }
 .hidden-version-toggle:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 .revert-button:hover {
-    cursor:pointer;
+  cursor:pointer;
 }
 .attribute-block > span, i {
-    max-width: 250px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipses;
+  max-width: 250px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipses;
 }
 .attribute-block {
-    display: flex;
+  display: flex;
 }
 .attribute-block > span {
-    padding-right: 8px;
+  padding-right: 8px;
 }
 .display-none {
-    display: none;
+  display: none;
 }
 </style>

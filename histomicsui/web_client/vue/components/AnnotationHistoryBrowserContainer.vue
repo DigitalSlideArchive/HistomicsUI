@@ -2,14 +2,17 @@
 import _ from 'underscore';
 import Vue from 'vue';
 
-import AnnotationHistoryBrowser from './AnnotationHistoryBrowser.vue';
 import UserModel from '@girder/core/models/UserModel';
 import {getCurrentUser} from '@girder/core/auth';
 import {restRequest} from '@girder/core/rest';
 
+import AnnotationHistoryBrowser from './AnnotationHistoryBrowser.vue';
+
+const Promise = require('bluebird');
+
 export default Vue.extend({
     components: {
-        AnnotationHistoryBrowser,
+        AnnotationHistoryBrowser
     },
     props: ['annotationId', 'parentView', 'defaultGroup'],
     data() {
@@ -18,8 +21,12 @@ export default Vue.extend({
             history: null,
             loading: false,
             userIdToLogin: null,
-            waitingForRevert: false,
+            waitingForRevert: false
         };
+    },
+    mounted() {
+        this.positionShield();
+        this.updateAnnotationHistory();
     },
     methods: {
         makeUserMap() {
@@ -34,7 +41,7 @@ export default Vue.extend({
             this.history.forEach((annotation) => {
                 if (!uniqueUserIds.has(annotation.updatedId)) {
                     uniqueUserIds.add(annotation.updatedId);
-                    const user = new UserModel()
+                    const user = new UserModel();
                     user.id = annotation.updatedId;
                     userRequestPromises.push(user.fetch());
                 }
@@ -46,6 +53,7 @@ export default Vue.extend({
                 this.userIdToLogin = userMap;
                 this.loading = false;
                 this.waitingForRevert = false;
+                return true;
             });
         },
         updateAnnotationHistory() {
@@ -53,7 +61,7 @@ export default Vue.extend({
             restRequest({
                 url: `annotation/${this.annotationId}/history`,
                 method: 'GET',
-                error: null,
+                error: null
             }).done((annotationHistory) => {
                 this.history = annotationHistory;
                 this.makeUserMap();
@@ -79,74 +87,70 @@ export default Vue.extend({
             restRequest({
                 url: `annotation/${this.annotationId}/history/revert`,
                 method: 'PUT',
-                data: { version },
-                error: null,
+                data: {version},
+                error: null
             }).done(() => {
                 this.updateAnnotationHistory();
             });
-        },
-    },
-    mounted() {
-        this.positionShield();
-        this.updateAnnotationHistory();
+        }
     }
 });
 </script>
 
 <template>
-    <div>
-        <div
-            v-if="waitingForRevert"
-            ref="shield"
-            class="loading-shield"
-        >
-            <div class="shield-content">
-                <i class="icon-spin3 animate-spin"></i>
-                Reverting to previous version. This may some time...
-            </div>
-        </div>
-        <annotation-history-browser
-            :annotation-history="history"
-            :loading="loading"
-            :user-map="userIdToLogin"
-            :default-group="defaultGroup"
-            @revert="onRevert"
-        />
+  <div>
+    <div
+      v-if="waitingForRevert"
+      ref="shield"
+      class="loading-shield"
+    >
+      <div class="shield-content">
+        <i class="icon-spin3 animate-spin" />
+        Reverting to previous version. This may some time...
+      </div>
     </div>
+    <annotation-history-browser
+      :annotation-history="history"
+      :loading="loading"
+      :user-map="userIdToLogin"
+      :default-group="defaultGroup"
+      @revert="onRevert"
+    />
+  </div>
 </template>
 
 <style scoped>
 .loading-shield {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.4);
-    z-index: 9999;
-    pointer-events: all;
-    cursor: wait;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  pointer-events: all;
+  cursor: wait;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 .shield-content {
-    padding: 24px;
-    background-color: white;
+  padding: 24px;
+  background-color: white;
 }
 .loading-shield > i, span {
-    font-size: 24px;
-    z-index: 9999;
+  font-size: 24px;
+  z-index: 9999;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>
