@@ -2,6 +2,7 @@
 import {formatDate, DATE_SECOND} from '@girder/core/misc';
 export default {
     props: ['historyGroup', 'userIdMap'],
+    emits: ['revertToAnnotation'],
     data() {
         return {
             collapsed: true,
@@ -53,6 +54,11 @@ export default {
             <span>Version: {{ startingAnnotation._version }}</span>
             <span>Author: {{ getUser(startingAnnotation.updatedId) }}</span>
             <span>Edited: {{ displayDate(startingAnnotation.updated) }}</span>
+            <!--This shouldn't appear for the very first (most recent) annotation!-->
+            <i
+                class="revert-button icon-ccw"
+                @click="$emit('revertToAnnotation', startingAnnotation._version)"
+            />
         </span>
         <div
             v-if="!collapsed && hiddenAnnotations.length"
@@ -66,6 +72,10 @@ export default {
                 <span>Version: {{ entry._version }}</span>
                 <span>Author: {{ getUser(entry.updatedId) }}</span>
                 <span>Edited: {{ displayDate(entry.updated) }}</span>
+                <i
+                    class="revert-button icon-ccw"
+                    @click="$emit('revertToAnnotation', entry._version)"
+                ></i>
             </div>
         </div>
     </div>
@@ -78,6 +88,9 @@ export default {
 }
 .hidden-version-toggle:hover {
     cursor: pointer;
+}
+.revert-button:hover {
+    cursor:pointer;
 }
 .display-none {
     display: none;

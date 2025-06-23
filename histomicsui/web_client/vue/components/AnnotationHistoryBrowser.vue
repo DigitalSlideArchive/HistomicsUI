@@ -63,6 +63,9 @@ export default {
                 this.userIdToLogin = userMap;
                 this.loading = false;
             });
+        },
+        handleRevert(version) {
+            console.log('revert clicked: ', version);
         }
     },
     mounted() {
@@ -94,6 +97,7 @@ export default {
                     v-for="group in annotationGroups"
                     :history-group="group"
                     :user-id-map="userIdToLogin"
+                    @revertToAnnotation="handleRevert"
                 />
             </div>
         </div>
