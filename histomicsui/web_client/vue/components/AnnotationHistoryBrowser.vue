@@ -31,6 +31,16 @@ export default {
             });
             annotationGroups.push(currentGroup);
             return annotationGroups;
+        },
+        annotationHistoryEnabled() {
+            if (!this.annotationHistory || this.annotationHistory.length === 0) {
+                return undefined;
+            }
+            if (this.annotationHistory.length > 1) {
+                return true;
+            }
+            const firstVersion = this.annotationHistory[0];
+            return firstVersion.created === firstVersion.updated;
         }
     },
     methods: {
@@ -52,24 +62,30 @@ export default {
         Annotation Edit History
       </span>
     </div>
-    <div
-      v-if="!collapsed && userMap"
-      class="history-body"
-    >
-      <div v-if="!annotationHistory || loading">
-        <i class="icon-spin4 animate-spin" />
-        Loading...
+    <div v-if="!collapsed">
+      <div v-if="!annotationHistoryEnabled">
+        <span>Ensure annotation history is turned on to track previous versions.</span>
       </div>
       <div v-else>
-        <annotation-history-group
-          v-for="(group, index) in annotationGroups"
-          :key="index"
-          :history-group="group"
-          :user-id-map="userMap"
-          :allow-revert-initial="index !== 0"
-          :default-group="defaultGroup"
-          @revertToAnnotation="handleRevert"
-        />
+        <div
+          class="history-body"
+        >
+          <div v-if="!annotationHistory || loading">
+            <i class="icon-spin4 animate-spin" />
+            Loading...
+          </div>
+          <div v-else>
+            <annotation-history-group
+              v-for="(group, index) in annotationGroups"
+              :key="index"
+              :history-group="group"
+              :user-id-map="userMap"
+              :allow-revert-initial="index !== 0"
+              :default-group="defaultGroup"
+              @revertToAnnotation="handleRevert"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
