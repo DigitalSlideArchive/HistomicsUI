@@ -53,11 +53,26 @@
   border-width 0
   white-space nowrap
   overflow hidden
+  display flex
+  gap 6px
 
   i
     margin-right 2px
     float left
     color #6b6b6b
+
+  .h-annotation-group-text
+    flex 1 1 auto
+    overflow hidden
+    white-space nowrap
+    min-width 0
+
+  .h-annotation-group-legend
+    width 18px
+    height 18px
+    border solid #0000
+    backrground #0000
+    flex-shrink 0
 
   &:hover
     background-color #eee
