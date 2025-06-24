@@ -57,6 +57,9 @@ export default Vue.extend({
             });
         },
         updateAnnotationHistory() {
+            if (!this.annotationId) {
+                return;
+            }
             this.loading = true;
             restRequest({
                 url: `annotation/${this.annotationId}/history`,
