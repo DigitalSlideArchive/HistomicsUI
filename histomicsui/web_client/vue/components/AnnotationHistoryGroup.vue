@@ -59,7 +59,12 @@ export default {
       <span class="attribute-display">Edited: {{ displayDate(startingAnnotation.updated) }}</span>
       <span class="attribute-display">Author: {{ getUser(startingAnnotation.updatedId) }}</span>
       <span class="attribute-display">Version: {{ startingAnnotation._version }}</span>
-      <span class="attribute-display">Groups: {{ displayGroups(startingAnnotation) }}</span>
+      <span
+        class="attribute-display"
+        :title="displayGroups(startingAnnotation)"
+      >
+        Groups: {{ displayGroups(startingAnnotation) }}
+      </span>
       <i
         v-if="allowRevertInitial"
         class="revert-button icon-ccw"
@@ -79,7 +84,12 @@ export default {
         <span class="attribute-display">Edited: {{ displayDate(entry.updated) }}</span>
         <span class="attribute-display">Author: {{ getUser(entry.updatedId) }}</span>
         <span class="attribute-display">Version: {{ entry._version }}</span>
-        <span class="attribute-display">Groups: {{ displayGroups(entry) }}</span>
+        <span
+          class="attribute-display"
+          :title="displayGroups(startingAnnotation)"
+        >
+          Groups: {{ displayGroups(entry) }}
+        </span>
         <i
           class="revert-button icon-ccw"
           @click="$emit('revertToAnnotation', entry._version)"
