@@ -53,27 +53,49 @@
     border-width 1px 0
     border-style solid
     border-color #bababa
-    padding 5px 4px 0 3px
-    margin 5px 5px 0
-    width fit-content
-    max-width calc(100% - 10px)
+    padding 5px 0 0
+    margin 0
+    display flex
+    flex-direction row
 
     .h-group-count-label
-      display inline-block
       vertical-align top
+      flex-shrink 0
 
     .h-group-count-options
-      display inline-block
       padding-left 5px
-      max-width 200px
+      flex-shrink 1
+      flex-grow 1
+      display flex
+      flex-direction column
+      overflow hidden
 
       .h-group-count-option
         white-space nowrap
         overflow hidden
         text-overflow ellipsis
+        flex-shrink 1
+        display flex
 
-    .h-group-count-select
-      padding-left 10px
+        .h-group-count-value
+          flex-shrink 1
+          text-overflow ellipsis
+          overflow hidden
+          min-width 0
+
+        .h-group-count-legend
+          width 16px
+          height 16px
+          vertical-align middle
+          flex-shrink 0
+          padding-left 4px
+          border solid #0000
+          margin-top 2px
+          margin-left auto
+
+      .h-group-count-select
+        flex-shrink 0
+        padding-left 6px
 
   .btn-default.active
     background-color #5790ff

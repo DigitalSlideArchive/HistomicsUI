@@ -1,6 +1,6 @@
-mixin analysisMenu(image, imageName, pos, maxRows)
+mixin analysisMenu(image, imageName, displayName, pos, maxRows)
   li.dropdown-submenu
-    a(tabindex='0', href='#', data-name=imageName) #{imageName}
+    a(tabindex='0', href='#', data-name=imageName) #{displayName}
     -
       let finalv = pos + Object.keys(image).length
       let posv = pos - (finalv > maxRows ? finalv - maxRows : 0)
@@ -27,7 +27,7 @@ a.h-analyses-dropdown-link(data-toggle='dropdown')
 -
   let depth = 0;
   let rows = maxRows;
-  let keyList = Object.keys(analyses).sort();
+  let keyList = Object.keys(keyMap).sort();
   let entries = keyList.length;
   if (entries > maxRows * maxRows * maxRows) {
     rows = Math.ceil(Math.pow(entries, 1./3));
@@ -62,9 +62,9 @@ ul.h-analyses-dropdown.dropdown-menu(role='menu')
               ul.dropdown-menu(row_offset=final0 > maxRows ? final0 - maxRows : 0)
                 for d0v, d0i in Array(end1 - start1)
                   -
-                    let imageName = keyList[start1 + d0i];
+                    let imageName = keyMap[keyList[start1 + d0i]];
                     let image = analyses[imageName];
-                  +analysisMenu(image, imageName, pos0, maxRows)
+                  +analysisMenu(image, imageName, keyList[start1 + d0i], pos0, maxRows)
                   - pos0 += 1
             - pos1 += 1
         - pos2 += 1
@@ -82,14 +82,16 @@ ul.h-analyses-dropdown.dropdown-menu(role='menu')
         ul.dropdown-menu(row_offset=final0 > maxRows ? final0 - maxRows : 0)
           for d0v, d0i in Array(end1 - start1)
             -
-              let imageName = keyList[start1 + d0i];
+              let imageName = keyMap[keyList[start1 + d0i]];
               let image = analyses[imageName];
-            +analysisMenu(image, imageName, pos0, maxRows)
+            +analysisMenu(image, imageName, keyList[start1 + d0i], pos0, maxRows)
             - pos0 += 1
       - pos1 += 1
   else
     - let pos0 = 0
-    each imageName in keyList
-      - let image = analyses[imageName];
-      +analysisMenu(image, imageName, pos0, maxRows)
+    each key in keyList
+      -
+        let imageName = keyMap[key];
+        let image = analyses[imageName];
+      +analysisMenu(image, imageName, key, pos0, maxRows)
       - pos0 += 1
