@@ -1,13 +1,18 @@
-- var counts = {};
-- var displayIdOffset = 0;
-- var pixelmap = false;
-- var typeCounts = {};
+-
+  var counts = {};
+  var displayIdOffset = 0;
+  var pixelmap = false;
+  var typeCounts = {};
+  var groupStyles = {};
 if elements.length
   each element in elements
     -
       var classes = highlighted[element.id] ? ['h-highlight-element'] : [];
       element = element.toJSON();
       var groupName = element['group'] ? element['group'] : defaultGroup;
+      if (!groupStyles[groupName]) {
+        groupStyles[groupName] = {};
+      }
       var type = element.type === 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type;
       var displayId = ++displayIdOffset + displayIdStart;
       var label = ((element.label || {}).value || type);
@@ -36,6 +41,15 @@ if elements.length
       if (element.type === 'pixelmap') {
         pixelmap = true;
       }
+      if (!groupStyles[groupName]['background-color'] && element['fillColor']) {
+        groupStyles[groupName]['background-color'] = element['fillColor'];
+      }
+      if (!groupStyles[groupName]['border-color'] && element['lineColor']) {
+        groupStyles[groupName]['border-color'] = element['lineColor'];
+      }
+      if (!groupStyles[groupName]['border-width'] && element['lineWidth']) {
+        groupStyles[groupName]['border-width'] = element['lineWidth'] + 'px';
+      }
     .h-element(data-id=element.id, class=classes)
       span.icon-cog.h-edit-element(title='Change style')
       span.h-element-label(title=label, display_id=displayId) #{label}
@@ -58,6 +72,7 @@ if firstRender
     .h-group-count-option(data-group=group[0], data-count=group[1])
       span.h-group-count-value #{group[1]} #{group[0]}
       span.icon-marquee.h-group-count-select(title="Select all elements in this group")
+      span.h-group-count-legend(style=groupStyles[group[0]])
 else
   - for (let group in counts)
     - updateCount(group, counts[group]);
