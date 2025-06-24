@@ -335,19 +335,21 @@ var SaveAnnotation = View.extend({
         this.$el.find('.modal-dialog').addClass('hui-save-annotation-dialog');
         this._updateFuncValues();
 
-        // Mount Vue component for annotation history
+        // Mount Vue component for annotation history if editing an existing annotation
         const historyBrowserElement = this.$('.vue-component-annotation-history').get(0);
-        const historyBrowser = new AnnotationHistoryBrowserContainer({
-            historyBrowserElement,
-            propsData: {
-                annotationId: this.annotation.id,
-                parentView: this,
-                defaultGroup: this.options.defaultGroup || 'default'
-            }
-        });
-        historyBrowser.$mount();
-        historyBrowserElement.appendChild(historyBrowser.$el);
-        this.historyBrowser = historyBrowser;
+        if (historyBrowserElement) {
+            const historyBrowser = new AnnotationHistoryBrowserContainer({
+                historyBrowserElement,
+                propsData: {
+                    annotationId: this.annotation.id,
+                    parentView: this,
+                    defaultGroup: this.options.defaultGroup || 'default'
+                }
+            });
+            historyBrowser.$mount();
+            historyBrowserElement.appendChild(historyBrowser.$el);
+            this.historyBrowser = historyBrowser;
+        }
 
         return this;
     },
