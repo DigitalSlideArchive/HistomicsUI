@@ -24,16 +24,40 @@ block content
   - var groups = _.keys(annotationGroups);
   - groups.sort();
   each groupName in groups
-    - var annotations = annotationGroups[groupName];
-    - var expanded = expandedGroups.has(groupName);
-    - var expandedClass = expanded ? 'h-group-expanded' : 'h-group-collapsed';
+    -
+      var annotations = annotationGroups[groupName];
+      var expanded = expandedGroups.has(groupName);
+      var expandedClass = expanded ? 'h-group-expanded' : 'h-group-collapsed';
+      var samplestyle={};
+      annotations.some((a) => {
+        var elems = (a.get('annotation') || {}).elements;
+        if (!elems) {
+          return false;
+        }
+        return elems.some((e) => {
+          if (e.group === groupName) {
+            if (e.fillColor) {
+              samplestyle.background = e.fillColor;
+            }
+            if (e.lineColor) {
+              samplestyle['border-color'] = e.lineColor;
+            }
+            if (e.lineWidth) {
+              samplestyle['border-width'] = e.lineWidth + 'px';
+            }
+            return samplestyle.background && samplestyle['border-color'] && samplestyle['border-width'];
+          }
+        });
+      })
     .h-annotation-group(class=[expandedClass], data-group-name=groupName)
-      .h-annotation-group-name.clearfix
+      .h-annotation-group-name
         if expanded
           i.icon-folder-open
         else
           i.icon-folder
-        = groupName
+        .h-annotation-group-text
+          = groupName
+        span.h-annotation-group-legend(style=samplestyle)
       if expanded
         each annotation in annotations
           - var name = annotation.get('annotation').name;
