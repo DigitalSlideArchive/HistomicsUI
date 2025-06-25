@@ -57,6 +57,7 @@ var AnnotationSelector = Panel.extend({
         this.listenTo(eventStream, 'g:eventStream.start', this._refreshAnnotations);
         this.listenTo(eventStream, 'g:event.large_image_annotation.create', this._refreshAnnotations);
         this.listenTo(eventStream, 'g:event.large_image_annotation.remove', this._refreshAnnotations);
+        this.listenTo(this.collection, 'revert:annotation', this._refreshAnnotations);
         this.listenTo(this.collection, 'change:annotation change:groups', this._saveAnnotation);
         this.listenTo(girderEvents, 'g:login', () => {
             this.collection.reset();

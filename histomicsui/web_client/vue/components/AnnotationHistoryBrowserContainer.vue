@@ -29,7 +29,7 @@ export default Vue.extend({
         this.updateAnnotationHistory();
     },
     methods: {
-        makeUserMap() {
+        makeUserMap(shouldRefresh) {
             this.loading = true;
             const userMap = {};
             // First, see if we can use the logged in user
@@ -53,10 +53,13 @@ export default Vue.extend({
                 this.userIdToLogin = userMap;
                 this.loading = false;
                 this.waitingForRevert = false;
+                if (shouldRefresh) {
+                    this.parentView.onRevert();
+                }
                 return true;
             });
         },
-        updateAnnotationHistory() {
+        updateAnnotationHistory(shouldRefresh) {
             if (!this.annotationId) {
                 return;
             }
@@ -67,7 +70,7 @@ export default Vue.extend({
                 error: null
             }).done((annotationHistory) => {
                 this.history = annotationHistory;
-                this.makeUserMap();
+                this.makeUserMap(shouldRefresh);
             });
         },
         positionShield() {
@@ -93,7 +96,7 @@ export default Vue.extend({
                 data: {version},
                 error: null
             }).done(() => {
-                this.updateAnnotationHistory();
+                this.updateAnnotationHistory(true);
             });
         }
     }

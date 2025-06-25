@@ -444,6 +444,15 @@ var SaveAnnotation = View.extend({
         return setValue;
     },
 
+    onRevert() {
+        if (this.annotation) {
+            delete this.annotation._meta;
+            delete this.annotation._styleFuncs;
+        }
+        this.annotation.trigger('revert:annotation', this.annotation, {});
+        this.$el.modal('hide');
+    },
+
     /**
      * Respond to form submission.  Triggers a `g:save` event on the
      * AnnotationModel.
