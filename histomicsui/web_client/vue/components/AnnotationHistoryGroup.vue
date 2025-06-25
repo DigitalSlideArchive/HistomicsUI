@@ -5,7 +5,7 @@ export default {
     emits: ['revertToAnnotation'],
     data() {
         return {
-            collapsed: true
+            collapsed: this.allowRevertInitial
         };
     },
     computed: {
