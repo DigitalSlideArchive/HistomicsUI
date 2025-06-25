@@ -93,7 +93,7 @@ export default {
   </div>
 </template>
 
-<style #scoped>
+<style scoped>
 .history-container-toggle:hover {
   cursor: pointer;
 }
