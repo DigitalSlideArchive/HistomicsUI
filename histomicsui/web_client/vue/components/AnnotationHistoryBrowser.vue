@@ -60,7 +60,7 @@ export default {
         class="history-container-toggle"
         @click="collapsed = !collapsed"
       >
-        <i :class="collapsed ? 'icon-down-open' : 'icon-up-open'" />
+        <i :class="collapsed ? 'icon-right-open' : 'icon-down-open'" />
         Annotation Edit History
       </span>
     </div>
