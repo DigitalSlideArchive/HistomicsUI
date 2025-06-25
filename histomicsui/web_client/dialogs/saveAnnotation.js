@@ -449,7 +449,7 @@ var SaveAnnotation = View.extend({
             delete this.annotation._meta;
             delete this.annotation._styleFuncs;
         }
-        this.annotation.trigger('revert:annotation', this.annotation, {});
+        this.annotation.trigger('h:revert:annotation', this.annotation, {});
         this.$el.modal('hide');
     },
 
