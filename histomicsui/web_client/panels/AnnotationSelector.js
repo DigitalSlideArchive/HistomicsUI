@@ -57,6 +57,7 @@ var AnnotationSelector = Panel.extend({
         this.listenTo(eventStream, 'g:eventStream.start', this._refreshAnnotations);
         this.listenTo(eventStream, 'g:event.large_image_annotation.create', this._refreshAnnotations);
         this.listenTo(eventStream, 'g:event.large_image_annotation.remove', this._refreshAnnotations);
+        this.listenTo(this.collection, 'h:revert:annotation', this._refreshAnnotations);
         this.listenTo(this.collection, 'change:annotation change:groups', this._saveAnnotation);
         this.listenTo(girderEvents, 'g:login', () => {
             this.collection.reset();
@@ -238,8 +239,9 @@ var AnnotationSelector = Panel.extend({
     editAnnotationMetadata(evt) {
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
         const model = this.collection.get(id);
+        const defaultGroup = this.parentView._defaultGroup;
         this.listenToOnce(
-            showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer}),
+            showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer, defaultGroup}),
             'g:submit',
             () => {
                 if (model.get('displayed')) {
