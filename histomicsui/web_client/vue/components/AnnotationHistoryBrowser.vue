@@ -18,16 +18,18 @@ export default {
             }
             const annotationGroups = [];
             let currentGroup = [this.annotationHistory[0]];
-            let currentStartTime = new Date(this.annotationHistory[0].updated);
+            let lastTime = new Date(this.annotationHistory[0].updated);
             this.annotationHistory.slice(1).forEach((annotation) => {
                 const updatedTime = new Date(annotation.updated);
-                if (Math.abs(updatedTime - currentStartTime) < (60 * 60 * 1000)) {
-                    currentGroup.push(annotation);
-                } else {
+                const timeDiff = Math.abs(updatedTime - lastTime);
+                if (timeDiff >= 60 * 60 * 1000) {
+                    // Start a new group
                     annotationGroups.push(currentGroup);
                     currentGroup = [annotation];
-                    currentStartTime = new Date(annotation.updated);
+                } else {
+                    currentGroup.push(annotation);
                 }
+                lastTime = updatedTime;
             });
             annotationGroups.push(currentGroup);
             return annotationGroups;
