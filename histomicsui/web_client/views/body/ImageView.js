@@ -75,6 +75,7 @@ var ImageView = View.extend({
         this.listenTo(events, 's:widgetDrawRegionEvent', this._widgetDrawRegion);
         this.listenTo(events, 'li:drawRegionUpdate', this._drawRegionUpdate);
         this.listenTo(events, 'li:drawModeChange', this._drawModeChange);
+        this.listenTo(events, 'li:drawRegionUpdate', this._setRouter);
         events.trigger('h:imageOpened', null);
         this.listenTo(events, 'query:image', this.openImage);
         this.annotations = new AnnotationCollection();
@@ -1801,6 +1802,11 @@ var ImageView = View.extend({
                 window.setTimeout(() => $(`#h-analysis-panel .s-select-region-button[shape="${$(evt.originalEvent.target).attr('shape')}"][multi="${$(evt.originalEvent.target).attr('multi')}"][parent-id="${$(evt.originalEvent.target).attr('parent-id')}"]`).eq(0).trigger('click'), 50);
             }
         }
-    }
+    },
+
+    _setRouter(evt) {
+        router.setQuery('roi', String(evt.values), {trigger: false});
+    },
+
 });
 export default ImageView;
