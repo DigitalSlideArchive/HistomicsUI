@@ -750,6 +750,11 @@ var ImageView = View.extend({
 
     _resetRegion() {
         var hasRegionParameter;
+        if(router.getQuery('roi')){
+            this._displayedRegion = router.getQuery('roi').slice();
+            hasRegionParameter = true;
+            this.showRegion(this._displayedRegion);
+        }
         if (!this._displayedRegion) {
             return;
         }
