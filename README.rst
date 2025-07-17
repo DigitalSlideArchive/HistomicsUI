@@ -39,7 +39,7 @@ Installation
 Linux
 =====
 
-In linux with Python 3.8 or newer:
+In linux with Python 3.9 or newer:
 
 Prerequisites:
 
