@@ -255,7 +255,7 @@ var ZoomWidget = Panel.extend({
         if (this.renderer && !this._inZoomChange) {
             this.renderer.zoom(this.magnificationToZoom(val));
         }
-        this.$('.h-zoom-value').text(val.toFixed(1));
+        this.$('.h-zoom-value').val(val.toFixed(1));
     },
 
     _zoomRangeControls() {
