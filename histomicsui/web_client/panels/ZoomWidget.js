@@ -34,6 +34,7 @@ var ZoomWidget = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .h-zoom-button': '_zoomButton',
         'input .h-zoom-slider': '_zoomSliderInput',
+        'blur .h-zoom-value': '_zoomTextInput',
         'click .h-download-button-view': '_downloadView',
         'click .h-download-button-area': '_downloadArea',
         'click #h-zoom-range-increase': '_increaseZoomRange',
@@ -130,15 +131,21 @@ var ZoomWidget = Panel.extend({
     /**
      * Set the controls to the given magnification level.
      */
-    setMagnification(val) {
+    setMagnification(val, textInput = false) {
         this._setSliderValue(val);
-        this._zoomSliderInput();
+        if (textInput){
+            this.renderer.zoom(this.magnificationToZoom(val));
+        }
+        else {
+            this._zoomSliderInput();
+        }
     },
 
     /**
      * Convert from magnification to zoom level.
      */
     magnificationToZoom(magnification) {
+        console.log(this._maxMag, magnification);
         return this._maxZoom - Math.log2(this._maxMag / magnification);
     },
 
@@ -262,6 +269,13 @@ var ZoomWidget = Panel.extend({
         if (this._increaseZoom2xRange) {
             this.$('#h-zoom-range-increase').toggleClass('disabled', this._increaseZoom2x >= this._increaseZoom2xRange.max);
             this.$('#h-zoom-range-decrease').toggleClass('disabled', this._increaseZoom2x <= this._increaseZoom2xRange.min);
+        }
+    },
+
+    _zoomTextInput() {
+        var val = parseFloat(this.$('.h-zoom-value').val());
+        if (this.renderer && !this._inZoomChange) {
+            this.setMagnification(val, true);
         }
     },
 
