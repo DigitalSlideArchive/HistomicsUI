@@ -34,6 +34,7 @@ var ZoomWidget = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .h-zoom-button': '_zoomButton',
         'input .h-zoom-slider': '_zoomSliderInput',
+        'focus .h-zoom-value': '_zoomTextFocus',
         'blur .h-zoom-value': '_zoomTextInput',
         'click .h-download-button-view': '_downloadView',
         'click .h-download-button-area': '_downloadArea',
@@ -46,6 +47,7 @@ var ZoomWidget = Panel.extend({
         this._maxZoom = 8;
         this._minZoom = 0;
         this._cancelSelection = false;
+        this._userEditingText = false;
         // bind the context of the viewer zoom handler
         this._zoomChanged = _.bind(this._zoomChanged, this);
     },
@@ -133,19 +135,13 @@ var ZoomWidget = Panel.extend({
      */
     setMagnification(val, textInput = false) {
         this._setSliderValue(val);
-        if (textInput){
-            this.renderer.zoom(this.magnificationToZoom(val));
-        }
-        else {
-            this._zoomSliderInput();
-        }
+        this._zoomSliderInput(textInput);
     },
 
     /**
      * Convert from magnification to zoom level.
      */
     magnificationToZoom(magnification) {
-        console.log(this._maxMag, magnification);
         return this._maxZoom - Math.log2(this._maxMag / magnification);
     },
 
@@ -166,13 +162,15 @@ var ZoomWidget = Panel.extend({
     /**
      * Set the slider value to a specific magnification.
      */
-    _setSliderValue(val) {
+    _setSliderValue(val, textInput = false) {
         if (val > 0) {
             val = Math.log2(val) - Math.log2(this._maxMag);
         } else {
             val = 0;
         }
-        this.$('.h-zoom-slider').val(val);
+        if (!textInput) {
+            this.$('.h-zoom-slider').val(val);
+        }
     },
 
     /**
@@ -183,7 +181,9 @@ var ZoomWidget = Panel.extend({
             return;
         }
         this._inZoomChange = true;
-        this.setMagnification(this.zoomToMagnification(this.renderer.zoom()));
+        if (!this._userEditingText) {
+            this.setMagnification(this.zoomToMagnification(this.renderer.zoom()));
+        }
         this._inZoomChange = false;
     },
 
@@ -257,12 +257,14 @@ var ZoomWidget = Panel.extend({
     /**
      * A handler called as the slider is moved.
      */
-    _zoomSliderInput() {
+    _zoomSliderInput(textInput = false) {
         var val = this._getSliderValue();
         if (this.renderer && !this._inZoomChange) {
             this.renderer.zoom(this.magnificationToZoom(val));
         }
-        this.$('.h-zoom-value').val(val.toFixed(1));
+        if (!textInput) {
+            this.$('.h-zoom-value').val(val.toFixed(1));
+        }
     },
 
     _zoomRangeControls() {
@@ -272,11 +274,16 @@ var ZoomWidget = Panel.extend({
         }
     },
 
+    _zoomTextFocus() {
+        this._userEditingText = true;
+    },
+
     _zoomTextInput() {
         var val = parseFloat(this.$('.h-zoom-value').val());
         if (this.renderer && !this._inZoomChange) {
             this.setMagnification(val, true);
         }
+        this._userEditingText = false;
     },
 
     _increaseZoomRange() {
