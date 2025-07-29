@@ -1,6 +1,8 @@
 import tinycolor from 'tinycolor2';
 import JsColor from '@eastdesire/jscolor';
 
+import AnnotationHistoryBrowserContainer from '../vue/components/AnnotationHistoryBrowserContainer.vue';
+
 import MetadataWidget from '../panels/MetadataWidget';
 import '../stylesheets/dialogs/saveAnnotation.styl';
 import saveAnnotation from '../templates/dialogs/saveAnnotation.pug';
@@ -357,6 +359,23 @@ var SaveAnnotation = View.extend({
 
         this.$el.find('.modal-dialog').addClass('hui-save-annotation-dialog');
         this._updateFuncValues();
+
+        // Mount Vue component for annotation history if editing an existing annotation
+        const historyBrowserElement = this.$('.vue-component-annotation-history').get(0);
+        if (historyBrowserElement) {
+            const historyBrowser = new AnnotationHistoryBrowserContainer({
+                historyBrowserElement,
+                propsData: {
+                    annotationId: this.annotation.id,
+                    parentView: this,
+                    defaultGroup: this.options.defaultGroup || 'default'
+                }
+            });
+            historyBrowser.$mount();
+            historyBrowserElement.appendChild(historyBrowser.$el);
+            this.historyBrowser = historyBrowser;
+        }
+
         return this;
     },
 
@@ -448,6 +467,15 @@ var SaveAnnotation = View.extend({
             setValue = false;
         }
         return setValue;
+    },
+
+    onRevert() {
+        if (this.annotation) {
+            delete this.annotation._meta;
+            delete this.annotation._styleFuncs;
+        }
+        this.annotation.trigger('h:revert:annotation', this.annotation, {});
+        this.$el.modal('hide');
     },
 
     /**
