@@ -16,7 +16,6 @@ import 'bootstrap-submenu/dist/js/bootstrap-submenu'; // eslint-disable-line
 import 'bootstrap-submenu/dist/css/bootstrap-submenu.css'; // eslint-disable-line
 
 const _ = girder._;
-const _$ = girder.$;
 const {restRequest} = girder.rest;
 
 var HeaderUserView = View.extend({
