@@ -52,12 +52,12 @@ const startServer = async (port: number) => {
   await new Promise<void>((resolve) => {
     serverProcess?.stdout.on('data', (data: string) => {
       console.log(`stdout: ${data}`);
-      if (data.includes('ENGINE Bus STARTED')) {
-        resolve();
-      }
     });
     serverProcess?.stderr.on('data', (data: string) => {
       console.error(`stderr: ${data}`);
+      if (data.includes('Application startup complete')) {
+        resolve();
+      }
     });
     serverProcess?.on('close', (code) => {
       console.log(`child process exited with code ${code}`);
