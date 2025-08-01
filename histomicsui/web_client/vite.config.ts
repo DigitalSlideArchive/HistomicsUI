@@ -1,4 +1,5 @@
-import { resolve } from 'path';
+import fs from 'fs';
+import path, { resolve } from 'path';
 
 import { defineConfig, type UserConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy'
@@ -19,12 +20,38 @@ function pugPlugin() {
   };
 }
 
+function inlineFaviconPlugin(relFaviconPath, mimeType) {
+  return {
+    name: 'inline-favicon',
+    transformIndexHtml(html, ctx) {
+      if (ctx && ctx.server) {
+        return html;
+      }
+
+      const faviconAbsPath = path.resolve(process.cwd(), relFaviconPath);
+      try {
+        const faviconData = fs.readFileSync(faviconAbsPath);
+        const base64 = faviconData.toString('base64');
+        const dataUri = `data:${mimeType};base64,${base64}`;
+        return html.replace(
+          /<link\s+rel="(?:shortcut\s+icon|icon)"[^>]*href=["'][^"']*["'][^>]*>/i,
+          `<link rel="icon" type="${mimeType}" href="${dataUri}">`
+        );
+      } catch (err) {
+        console.warn(`[inline-favicon] Failed to inline favicon ${relFaviconPath}:`, err);
+        return html;
+      }
+    }
+  };
+}
+
 const buildTarget = process.env.BUILD_TARGET;
 
 const config: UserConfig = {
   plugins: [
     pugPlugin(),
     vue(),
+    inlineFaviconPlugin('static/favicon.png', 'image/png'),
     viteStaticCopy({
       targets: [
         {
