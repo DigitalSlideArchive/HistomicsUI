@@ -349,7 +349,6 @@ class TestTCGARest:
             if status == JobStatus.SUCCESS:
                 return
             elif status in (JobStatus.ERROR, JobStatus.CANCELED):
-                open('/tmp/junk.txt', 'a').write(f'job: {resp.json}\n')
                 msg = 'TCGA import failed'
                 raise Exception(msg)
 
