@@ -1,6 +1,6 @@
 # Top level dependencies
-girder>=5.0.0a2
-girder-jobs>=5.0.0a2
+girder>=5.0.0a10
+girder-jobs>=5.0.0a10
 # We install only the tile sources we need for testing; using [all] is probably
 # better for development.
 large-image[openslide,pil]
