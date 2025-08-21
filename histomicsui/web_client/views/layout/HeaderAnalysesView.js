@@ -16,7 +16,6 @@ import 'bootstrap-submenu/dist/js/bootstrap-submenu'; // eslint-disable-line
 import 'bootstrap-submenu/dist/css/bootstrap-submenu.css'; // eslint-disable-line
 
 const _ = girder._;
-const _$ = girder.$;
 const {restRequest} = girder.rest;
 
 var HeaderUserView = View.extend({
@@ -35,11 +34,22 @@ var HeaderUserView = View.extend({
             restRequest({
                 url: 'slicer_cli_web/docker_image'
             }).then((analyses) => {
-                const maxRows = Math.max(5, Math.floor(((_$('.h-image-view-body').height() || 0) - 8) / 26));
+                const keyCount = {};
+                for (const key of Object.keys(analyses)) {
+                    const key2 = key.split('/').slice(-2).join('/');
+                    keyCount[key2] = (keyCount[key2] || 0) + 1;
+                }
+                const keyMap = {};
+                for (const key of Object.keys(analyses)) {
+                    const key2 = key.split('/').slice(-2).join('/');
+                    keyMap[keyCount[key2] === 1 ? key2 : key] = key;
+                }
+                const maxRows = Math.max(5, Math.floor((($('.h-image-view-body').height() || 0) - 8) / 26));
                 if (_.keys(analyses || {}).length > 0) {
                     this.$el.removeClass('hidden');
                     this.$el.html(headerAnalysesTemplate({
                         analyses: analyses || {},
+                        keyMap: keyMap,
                         maxRows: maxRows
                     }));
                     $('.h-analyses-dropdown-link').submenupicker();

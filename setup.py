@@ -35,7 +35,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
@@ -43,14 +42,12 @@ setup(
         'Programming Language :: Python :: 3.13',
     ],
     install_requires=[
-        'girder>=5.0.0a2',
-        'girder-large-image>=1.32.9a156',
-        'girder-large-image-annotation>=1.32.9a156',
-        'large-image-tasks==1.32.9a156',
-        'large-image-converter==1.32.9a156',
-        # 'girder-slicer-cli-web',
-        'cachetools',
-        'orjson',
+        'girder>=5.0.0a10',
+        'girder-jobs>=5.0.0a10',
+        'girder-large-image==1.32.12a167',
+        'girder-large-image-annotation==1.32.12a167',
+        'large-image-tasks==1.32.12a167',
+        'large-image-converter==1.32.12a167',
     ],
     extras_require={
         'analysis': [],  # kept for backwards compatibility
@@ -63,7 +60,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     url='https://github.com/DigitalSlideArchive/histomicsui',
     zip_safe=False,
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     entry_points={
         'girder.plugin': [
             'histomicsui = histomicsui:GirderPlugin',

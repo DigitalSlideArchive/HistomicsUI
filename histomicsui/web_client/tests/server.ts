@@ -52,7 +52,7 @@ const startServer = async (port: number) => {
   await new Promise<void>((resolve) => {
     serverProcess?.stdout.on('data', (data: string) => {
       console.log(`stdout: ${data}`);
-      if (data.includes('ENGINE Bus STARTED')) {
+      if (data.includes('Girder server running')) {
         resolve();
       }
     });

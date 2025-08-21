@@ -1789,7 +1789,7 @@ var ImageView = View.extend({
         if (evt.submit && evt.submit.hasClass('enabled')) {
             $('#h-analysis-panel .s-info-panel-submit').trigger('click');
             if (evt.originalEvent) {
-                $(`#h-analysis-panel .s-select-region-button[shape="${$(evt.originalEvent.target).attr('shape')}"][multi="${$(evt.originalEvent.target).attr('multi')}"][parent-id="${$(evt.originalEvent.target).attr('parent-id')}"]`).eq(0).trigger('click');
+                window.setTimeout(() => $(`#h-analysis-panel .s-select-region-button[shape="${$(evt.originalEvent.target).attr('shape')}"][multi="${$(evt.originalEvent.target).attr('multi')}"][parent-id="${$(evt.originalEvent.target).attr('parent-id')}"]`).eq(0).trigger('click'), 50);
             }
         }
     }
