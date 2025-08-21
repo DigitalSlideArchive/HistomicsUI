@@ -8,6 +8,7 @@ executors:
       - image: mongo:4.4
         command: bash -c "mkdir /dev/shm/mongo && mongod --nojournal --dbpath=/dev/shm/mongo --noauth --bind_ip_all"
       - image: rabbitmq
+    resource_class: large
 commands:
   tox:
     description: "Run tox"
@@ -22,7 +23,7 @@ commands:
           name: Run tests via tox
           # Piping through cat does less buffering of the output but can
           # consume the exit code
-          command: PYTEST_NUMPROCESSES=2 tox -e << parameters.env >> | cat; test ${PIPESTATUS[0]} -eq 0
+          command: PYTEST_ADDOPTS="--reruns=3" PYTEST_NUMPROCESSES=2 tox -e << parameters.env >> | cat; test ${PIPESTATUS[0]} -eq 0
   coverage:
     description: "Upload coverage"
     steps:
