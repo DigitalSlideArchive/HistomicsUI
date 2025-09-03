@@ -1,19 +1,3 @@
-#############################################################################
-#  Copyright Kitware Inc.
-#
-#  Licensed under the Apache License, Version 2.0 ( the "License" );
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#############################################################################
-
 import importlib.metadata
 import json
 import logging
@@ -22,6 +6,7 @@ import re
 from functools import wraps
 from pathlib import Path
 
+import cherrypy
 from bson import json_util
 from girder import events, plugin
 from girder.api import access
@@ -317,6 +302,16 @@ def cleanupFSAssetstores():
                     assetstore['name'], count, fullcount, total)
 
 
+class RootHandler:
+    @cherrypy.expose
+    def index(*args, **kwargs):
+        path = Path(__file__).parent / 'web_client' / 'dist-app' / 'index.html'
+        with open(path) as f:
+            content = f.read()
+        modified_content = content.replace('root=""', f'root="{os.getenv("GIRDER_URL_ROOT")}"')
+        return modified_content
+
+
 class GirderPlugin(plugin.GirderPlugin):
     DISPLAY_NAME = 'HistomicsUI'
 
@@ -378,25 +373,25 @@ class GirderPlugin(plugin.GirderPlugin):
         webroot = os.getenv('HUI_WEBROOT_PATH', False)
         if webroot:
             Setting().set(PluginSettings.HUI_WEBROOT_PATH, webroot)
-        info['serverRoot'].mount(None, f'/{Setting().get(PluginSettings.HUI_WEBROOT_PATH)}', {
-            '/': {
-                'tools.staticdir.on': True,
-                'tools.staticdir.dir': Path(__file__).parent / 'web_client' / 'dist-app',
-                'tools.staticdir.index': 'index.html',
-            },
-        })
+        else:
+            webroot = Setting().get(PluginSettings.HUI_WEBROOT_PATH)
+        custom_api_root = os.getenv('GIRDER_URL_ROOT')
+        custom_api_root = None if not custom_api_root or custom_api_root == '/' else custom_api_root
+        static_opts = {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': Path(__file__).parent / 'web_client' / 'dist-app',
+        }
+        if not custom_api_root:
+            static_opts['tools.staticdir.index'] = 'index.html'
 
-        # The interface is always available under hui and also available
-        # under the specified path.
-        # TODO is something using the "hui" path?
-        # info['serverRoot'].hui = huiRoot
-        # TODO these settings are not honored at this point
-        # setattr(info['serverRoot'], webrootPath, huiRoot)
-        # if alternateWebrootPath:
-        #    for alt_webroot_path in alternateWebrootPath.split(','):
-        #        if alt_webroot_path:
-        #            setattr(info['serverRoot'], alt_webroot_path, huiRoot)
-        # info['serverRoot'].girder = girderRoot
+        info['serverRoot'].mount(RootHandler if custom_api_root else None, f'/{webroot}', {
+            '/': static_opts,
+        })
+        altroot = Setting().get(PluginSettings.HUI_ALTERNATE_WEBROOT_PATH)
+        if altroot and altroot != webroot:
+            info['serverRoot'].mount(RootHandler if custom_api_root else None, f'/{altroot}', {
+                '/': static_opts,
+            })
 
         # Auto-ingest annotations into database when a file with an identifier
         # ending in 'AnnotationFile' is uploaded (usually .anot files).
