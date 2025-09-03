@@ -48,10 +48,16 @@ const initializeHistomicsApp = async (apiRoot: string, el: string | HTMLElement 
   });
 };
 
-const apiRoot = '/api/v1';
+const appElement = document.getElementById('app');
+let apiRoot = (appElement && appElement.getAttribute('root')) || '';
+apiRoot += (apiRoot.endsWith('/') ? '' : '/') + 'api/v1';
+if (!apiRoot.startsWith('/') && apiRoot.indexOf(':') < 0) {
+    apiRoot = '/' + apiRoot;
+}
 
 (async () => {
-  const origin = apiRoot.startsWith('/') ? window.origin : new URL(apiRoot).origin;
+  let origin = apiRoot.startsWith('/') ? window.origin : new URL(apiRoot).origin;
+  origin += apiRoot.includes('/api/') ? apiRoot.substring(0, apiRoot.indexOf('/api/')) + '/' : '';
   const staticFilesResp = await fetch(`${apiRoot}/system/plugin_static_files`);
   const staticFiles: StaticFilesSpec = await staticFilesResp.json();
 

@@ -79,7 +79,7 @@ if (buildTarget === 'plugin') {
   };
 } else {
   config.build.outDir = 'dist-app';
-  config.base = '/histomics/';
+  config.base = './';
 }
 
 export default defineConfig(config);
