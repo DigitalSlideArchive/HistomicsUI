@@ -681,7 +681,17 @@ var DrawWidget = Panel.extend({
                     }
                 });
         }
+        // TODO : When available check to see if 'actively' drawing an annotation
         this.$('button.h-draw[data-type]').removeClass('active');
+         this.viewer.annotationLayer.geoOn(geo.event.annotation.mode, (evt) => {
+                if (evt.reason === 'escape') {
+                    this._drawingType = null;
+                    this.viewer.annotationLayer.mode(null);
+                    this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
+                    $el.removeClass('active');
+                    return
+                }
+            });
         if (this._drawingType) {
             if (this.parentView.annotationSelector) {
                 this.parentView.annotationSelector.selectAnnotationByRegionCancel();
