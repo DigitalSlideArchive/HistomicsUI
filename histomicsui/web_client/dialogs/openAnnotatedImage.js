@@ -2,7 +2,7 @@ import $ from 'jquery';
 import _ from 'underscore';
 import backbone from 'backbone';
 
-import {restRequest} from '@girder/core/rest';
+import {restRequest, getApiRoot} from '@girder/core/rest';
 import ItemCollection from '@girder/core/collections/ItemCollection';
 import UserCollection from '@girder/core/collections/UserCollection';
 import View from '@girder/core/views/View';
@@ -27,7 +27,8 @@ const AnnotatedImageList = View.extend({
         this.$el.html(listTemplate({
             items: this.collection.toJSON(),
             paths,
-            inFetch: this.collection._inFetch
+            inFetch: this.collection._inFetch,
+            apiRoot: getApiRoot()
         }));
         return this;
     }
@@ -169,6 +170,8 @@ function createDialog() {
 events.on('h:openAnnotatedImageUi', function () {
     if (!dialog) {
         dialog = createDialog();
+    } else {
+        dialog._queueFetchImages();
     }
     dialog.setElement($('#g-dialog-container')).render();
 });
