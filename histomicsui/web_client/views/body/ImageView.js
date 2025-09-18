@@ -1281,7 +1281,6 @@ var ImageView = View.extend({
                         ) {
                             annotation.state(geo.annotation.state.done).modified().draw();
                         }
-
                         this.drawWidget.cancelDrawMode();
                     }
                 }
@@ -1290,6 +1289,11 @@ var ImageView = View.extend({
                 if (evt.shiftKey && (evt.altKey || evt.metaKey)) {
                     console.log(this);
                 }
+                break;
+            case 'Escape':
+                // TODO: Check if geojs is in focus
+                const button = this.$el.find('button.h-draw.active');
+                button.removeClass('active');
                 break;
             default:
                 if (this.drawWidget && drawModes[evt.key] && this.activeAnnotation) {
