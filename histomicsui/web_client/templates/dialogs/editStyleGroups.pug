@@ -39,17 +39,11 @@
         .form-group
           label(for='h-element-line-color') Line color
           .input-group.h-colorpicker
-            input#h-element-line-color.input-sm.form-control(
-              type='text', value=model.get('lineColor'))
-            span.input-group-addon
-              i
+            input#h-element-line-color.input-sm.form-control.h-colorpicker-line()
         .form-group
           label(for='h-element-fill-color') Fill color
           .input-group.h-colorpicker
-            input#h-element-fill-color.input-sm.form-control(
-              type='text', value=model.get('fillColor'))
-            span.input-group-addon
-              i
+            input#h-element-fill-color.input-sm.form-control()
         .g-validation-failed-message.hidden
       .modal-footer
         button#h-reset-defaults.btn.btn-sm.btn-default.h-btn-left(type='button') Reset to Defaults
