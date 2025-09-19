@@ -27,7 +27,7 @@
     },
     "dependencies": {
         "@eastdesire/jscolor": "^2.5.2",
-        "@girder/core": "^5.0.0-a10",
+        "@girder/core": "^5.0.0-a11",
         "@vue/compiler-sfc": "^3.2.33",
         "bootstrap-submenu": "^2.0.4",
         "copy-webpack-plugin": "^4.5.2",

@@ -42,8 +42,8 @@ setup(
         'Programming Language :: Python :: 3.13',
     ],
     install_requires=[
-        'girder>=5.0.0a10',
-        'girder-jobs>=5.0.0a10',
+        'girder>=5.0.0a11',
+        'girder-jobs>=5.0.0a11',
         'girder-large-image==1.32.12a167',
         'girder-large-image-annotation==1.32.12a167',
         'large-image-tasks==1.32.12a167',

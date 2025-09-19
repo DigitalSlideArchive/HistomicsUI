@@ -8,7 +8,7 @@ import '../stylesheets/dialogs/openAnnotatedImage.styl';
 const $ = girder.$;
 const _ = girder._;
 const Backbone = girder.Backbone;
-const {restRequest} = girder.rest;
+const {restRequest, getApiRoot} = girder.rest;
 const ItemCollection = girder.collections.ItemCollection;
 const UserCollection = girder.collections.UserCollection;
 const View = girder.views.View;
@@ -25,7 +25,8 @@ const AnnotatedImageList = View.extend({
         this.$el.html(listTemplate({
             items: this.collection.toJSON(),
             paths,
-            inFetch: this.collection._inFetch
+            inFetch: this.collection._inFetch,
+            apiRoot: getApiRoot()
         }));
         return this;
     }
@@ -167,6 +168,8 @@ function createDialog() {
 events.on('h:openAnnotatedImageUi', function () {
     if (!dialog) {
         dialog = createDialog();
+    } else {
+        dialog._queueFetchImages();
     }
     dialog.setElement($('#g-dialog-container')).render();
 });
