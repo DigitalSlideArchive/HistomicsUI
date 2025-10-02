@@ -1291,9 +1291,13 @@ var ImageView = View.extend({
                 }
                 break;
             case 'Escape':
-                // TODO: Check if geojs is in focus
-                const button = this.$el.find('button.h-draw.active');
-                button.removeClass('active');
+                // When geojs is engaged, this value will be false. This allows us to handle events where geojs is not engaged separately.
+                if (this.viewerWidget.annotationLayer.geoIsOn(geo.event.annotation.mode)) {
+                    const button = this.$el.find('button.h-draw.active');
+                    button.removeClass('active');
+                    this.drawWidget._drawingType = null;
+                    this.drawWidget.viewer.annotationLayer.mode(null);
+                }
                 break;
             default:
                 if (this.drawWidget && drawModes[evt.key] && this.activeAnnotation) {
