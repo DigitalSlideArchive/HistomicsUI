@@ -1281,7 +1281,6 @@ var ImageView = View.extend({
                         ) {
                             annotation.state(geo.annotation.state.done).modified().draw();
                         }
-
                         this.drawWidget.cancelDrawMode();
                     }
                 }
@@ -1289,6 +1288,15 @@ var ImageView = View.extend({
             case 'D':
                 if (evt.shiftKey && (evt.altKey || evt.metaKey)) {
                     console.log(this);
+                }
+                break;
+            case 'Escape':
+                // When geojs is engaged, this value will be false. This allows us to handle events where geojs is not engaged separately.
+                if (this.viewerWidget.annotationLayer.geoIsOn(geo.event.annotation.mode)) {
+                    const button = this.$el.find('button.h-draw.active');
+                    button.removeClass('active');
+                    this.drawWidget._drawingType = null;
+                    this.drawWidget.viewer.annotationLayer.mode(null);
                 }
                 break;
             default:
