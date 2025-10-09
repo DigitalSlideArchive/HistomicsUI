@@ -55,8 +55,8 @@ var AnnotationSelector = Panel.extend({
         this.listenTo(this.collection, 'change:highlight', this._changeAnnotationHighlight);
         this.listenTo(eventStream, 'g:event.job_status', _.debounce(this._onJobUpdate, 500));
         this.listenTo(eventStream, 'g:eventStream.start', this._refreshAnnotations);
-        this.listenTo(eventStream, 'g:event.large_image_annotation.create', this._refreshAnnotations);
-        this.listenTo(eventStream, 'g:event.large_image_annotation.remove', this._refreshAnnotations);
+        this.listenTo(eventStream, 'g:event.large_image_annotation.create', this._refreshAnnotationsCheck);
+        this.listenTo(eventStream, 'g:event.large_image_annotation.remove', this._refreshAnnotationsCheck);
         this.listenTo(this.collection, 'h:revert:annotation', this._refreshAnnotations);
         this.listenTo(this.collection, 'change:annotation change:groups', this._saveAnnotation);
         this.listenTo(girderEvents, 'g:login', () => {
@@ -277,6 +277,16 @@ var AnnotationSelector = Panel.extend({
         if (this.parentItem && evt.data.status > 2) {
             this._refreshAnnotations();
         }
+    },
+
+    _refreshAnnotationsCheck(evt) {
+        if (!evt.data || !evt.data.itemId) {
+            return;
+        }
+        if (!this.parentItem || !this.parentItem.id || evt.data.itemId !== this.parentItem.id) {
+            return;
+        }
+        this._refreshAnnotations();
     },
 
     _refreshAnnotations() {
