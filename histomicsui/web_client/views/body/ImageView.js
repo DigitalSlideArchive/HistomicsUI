@@ -1424,6 +1424,11 @@ var ImageView = View.extend({
             // If still not selected, then the user does not have access.
             return;
         }
+        // must have write access
+        const annotation = (element.collection || {}).annotation;
+        if (!annotation || annotation.get('_accessLevel') < AccessType.WRITE) {
+            return;
+        }
 
         // Defer the context menu action into the next animation frame
         // to work around a problem with preventDefault on Windows
@@ -1540,10 +1545,10 @@ var ImageView = View.extend({
     },
 
     _selectElement(element, options) {
-        // don't allow selecting annotations with no write access or
-        // elements not associated with a real annotation.
+        // don't allow selecting annotations not associated with a real
+        // annotation.
         const annotation = (element.collection || {}).annotation;
-        if (!annotation || annotation.get('_accessLevel') < AccessType.WRITE) {
+        if (!annotation) {
             return;
         }
 

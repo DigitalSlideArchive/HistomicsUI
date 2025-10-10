@@ -3,6 +3,7 @@
   pointer-events none
   margin-left 15px
   z-index 1000
+  --arrow-offset 0.001px
 
   .h-annotation-popover
     position absolute
@@ -14,28 +15,29 @@
     border-radius 3px
     border 1px solid #000
     box-shadow 0 5px 10px rgba(0, 0, 0, 0.5)
+    --arrow-size 13px
 
     &:before
       content ""
       border-color transparent #000 transparent transparent
       border-style solid
-      border-width 13px
+      border-width var(--arrow-size)
       height 0
       width 0
       position absolute
-      left -26px
-      top calc(50% - 13px)
+      left calc(-2 * var(--arrow-size))
+      top calc(50% - var(--arrow-size) + var(--arrow-offset))
 
     &:after
       content ""
       border-color transparent #fff transparent transparent
       border-style solid
-      border-width 13px
+      border-width var(--arrow-size)
       height 0
       width 0
       position absolute
-      left -25px
-      top calc(50% - 13px)
+      left calc(-2 * var(--arrow-size) + 1px)
+      top calc(50% - var(--arrow-size) + var(--arrow-offset))
 
     > :not(.h-annotation-name)
       padding 0 20px
