@@ -1,17 +1,16 @@
-import $ from 'jquery';
-import _ from 'underscore';
-import View from '@girder/core/views/View';
-
-import PluginConfigBreadcrumbWidget from '@girder/core/views/widgets/PluginConfigBreadcrumbWidget';
-import BrowserWidget from '@girder/core/views/widgets/BrowserWidget';
-import {restRequest} from '@girder/core/rest';
-import events from '@girder/core/events';
-import router from '@girder/core/router';
-
 import {HuiSettings} from '../utils';
 
 import ConfigViewTemplate from '../../templates/body/configView.pug';
 import '../../stylesheets/body/configView.styl';
+
+const $ = girder.$;
+const _ = girder._;
+const View = girder.views.View;
+const PluginConfigBreadcrumbWidget = girder.views.widgets.PluginConfigBreadcrumbWidget;
+const BrowserWidget = girder.views.widgets.BrowserWidget;
+const {restRequest} = girder.rest;
+const events = girder.events;
+const router = girder.router;
 
 /**
  * Show the default quota settings for users and collections.

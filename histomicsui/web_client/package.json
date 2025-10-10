@@ -12,29 +12,23 @@
         "type": "git",
         "url": "https://github.com/DigitalSlideArchive/histomicsui.git"
     },
-    "peerDependencies": {
-        "@girder/core": "*",
-        "@girder/jobs": "*"
-    },
     "main": "./index.js",
-    "girderPlugin": {
-        "name": "histomicsui",
-        "main": "./main.js",
-        "dependencies": [
-            "jobs",
-            "large_image",
-            "large_image_annotation",
-            "slicer_cli_web"
-        ],
-        "webpack": "webpack.helper"
-    },
+    "type": "module",
     "scripts": {
+        "build": "run-p build-app build-plugin",
+        "build-app": "BUILD_TARGET=app vite build",
+        "build-plugin": "BUILD_TARGET=plugin vite build",
+        "watch": "concurrently npm:watch-app npm:watch-plugin",
+        "watch-app": "BUILD_TARGET=app vite build --watch",
+        "watch-plugin": "BUILD_TARGET=plugin vite build --watch",
         "lint": "eslint --cache . && eslint --no-eslintrc -c ./package.json --cache ../../tests && pug-lint . && stylus-supremacy format --compare ./**/*.styl --options package.json",
-        "format": "eslint --cache --fix . && eslint --no-eslintrc -c ./package.json --cache --fix ../../tests && stylus-supremacy format ./**/*.styl --replace --options package.json"
+        "format": "eslint --cache --fix . && eslint --no-eslintrc -c ./package.json --cache --fix ../../tests && stylus-supremacy format ./**/*.styl --replace --options package.json",
+        "test": "playwright test"
     },
     "dependencies": {
+        "@eastdesire/jscolor": "^2.5.2",
+        "@girder/core": "^5.0.0-a11",
         "@vue/compiler-sfc": "^3.2.33",
-        "backbone.localstorage": "^2.0.2",
         "bootstrap-submenu": "^2.0.4",
         "copy-webpack-plugin": "^4.5.2",
         "petite-vue": "^0.4.1",
@@ -44,15 +38,18 @@
         "tinycolor2": "~1.4.1",
         "url-search-params-polyfill": "^8.1.1",
         "uuid": "^8.3.2",
-        "vue": "~2.6.14",
+        "vue": "^2.7.16",
         "vue-color": "^2.8.1",
         "vue-loader": "~15.9.8",
-        "vue-template-compiler": "~2.6.14",
-        "webpack": "^3"
+        "vue-template-compiler": "~2.6.14"
     },
     "devDependencies": {
         "@girder/eslint-config": "*",
         "@girder/pug-lint-config": "*",
+        "@playwright/test": "^1.47.2",
+        "@vitejs/plugin-vue2": "^2.3.1",
+        "autoprefixer": "^10.4.21",
+        "concurrently": "^8.2.2",
         "eslint": "^8.20.0",
         "eslint-config-semistandard": "^17.0.0",
         "eslint-config-standard": "^17.0.0",
@@ -61,8 +58,15 @@
         "eslint-plugin-n": "^15.2.4",
         "eslint-plugin-promise": "^6.0.0",
         "eslint-plugin-vue": "~9.14.0",
+        "npm-run-all": "^4.1.5",
+        "playwright": "^1.47.2",
+        "postcss": "^8.5.6",
+        "pug": "^3.0.3",
         "pug-lint": "^2",
-        "stylus-supremacy": "^2.17.5"
+        "stylus-supremacy": "^2.17.5",
+        "tailwindcss": "^3.4.17",
+        "vite": "^5.2.13",
+        "vite-plugin-static-copy": "^1.0.6"
     },
     "eslintConfig": {
         "extends": [
@@ -97,7 +101,14 @@
             "no-var": "off",
             "vue/require-prop-types": "off"
         },
-        "root": true
+        "root": true,
+        "ignorePatterns": [
+            "dist/**",
+            "dist-app/**"
+        ],
+        "globals": {
+            "girder": "readonly"
+        }
     },
     "eslintIgnore": [
         "**/node_modules/**"

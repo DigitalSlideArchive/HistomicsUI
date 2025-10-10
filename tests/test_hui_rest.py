@@ -48,7 +48,7 @@ class TestHUIResourceAndItem:
         self.itemD1 = Item().createItem('item D1', admin, self.folderD)
         self.itemD2 = Item().createItem('item D2', admin, self.folderD)
 
-    def testResourceItems(self, server, admin):
+    def testResourceItems(self, server, admin, eagerWorkerTasks):
         self.makeResources(admin)
         # Now test that we get the items we expect
         # From a user
@@ -317,22 +317,26 @@ class TestHUIEndpoints:
                 assert Setting().set(key, goodval['value'])['value'] == goodval['return']
 
     def testGetWebroot(self, server):
-        resp = server.request(path='/histomics', method='GET', isJson=False, prefix='')
+        resp = server.request(
+            path='/histomics/',
+            method='GET',
+            isJson=False,
+            prefix='',
+            appPrefix='/histomics')
         assert utilities.respStatus(resp) == 200
         body = utilities.getBody(resp)
-        assert '<title>HistomicsUI</title>' in body
-        resp = server.request(path='/alternate2', method='GET', isJson=False, prefix='')
-        assert utilities.respStatus(resp) == 404
-        Setting().set(PluginSettings.HUI_WEBROOT_PATH, 'alternate2')
-        Setting().set(PluginSettings.HUI_BRAND_NAME, 'Alternate')
-        resp = server.request(path='/histomics', method='GET', isJson=False, prefix='')
+        assert '<body class="hui-body">' in body
+
+    def testGetWebrootAlternate(self, alt_server):
+        resp = alt_server.request(
+            path='/alternate/',
+            method='GET',
+            isJson=False,
+            prefix='',
+            appPrefix='/alternate')
         assert utilities.respStatus(resp) == 200
         body = utilities.getBody(resp)
-        assert '<title>Alternate</title>' in body
-        resp = server.request(path='/alternate2', method='GET', isJson=False, prefix='')
-        assert utilities.respStatus(resp) == 200
-        body = utilities.getBody(resp)
-        assert '<title>Alternate</title>' in body
+        assert '<body class="hui-body">' in body
 
     def testRestrictDownloads(self, server, fsAssetstore, admin, user):
         self.makeResources(admin)
@@ -344,20 +348,20 @@ class TestHUIEndpoints:
             path='/item/%s/download' % file['itemId'], user=None)
         assert utilities.respStatus(resp) == 401
         resp = server.request(
-            path='/item/%s/tiles/images/noimage' % file['itemId'], user=self.user2)
-        assert utilities.respStatus(resp) == 400
+            path='/item/%s/tiles/images/noimage' % file['itemId'], user=self.user2, isJson=False)
+        assert utilities.respStatus(resp) == 200
         resp = server.request(
-            path='/item/%s/tiles/images/noimage' % file['itemId'], user=None)
+            path='/item/%s/tiles/images/noimage' % file['itemId'], user=None, isJson=False)
         assert utilities.respStatus(resp) == 401
 
     def testQuarantine(self, server, admin, user):
-        publicFolder = Folder().childFolders(  # noqa: B305
+        publicFolder = Folder().childFolders(  # noqa B305
             user, 'user', filters={'name': 'Public'},
         ).next()
-        adminFolder = Folder().childFolders(  # noqa: B305
+        adminFolder = Folder().childFolders(  # noqa B305
             admin, 'user', filters={'name': 'Public'},
         ).next()
-        privateFolder = Folder().childFolders(  # noqa: B305
+        privateFolder = Folder().childFolders(  # noqa B305
             admin, 'user', filters={'name': 'Private'}, user=admin,
         ).next()
         items = [Item().createItem(name, creator, folder) for name, creator, folder in [
