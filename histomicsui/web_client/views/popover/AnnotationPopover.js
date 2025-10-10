@@ -120,7 +120,19 @@ var AnnotationPopover = View.extend({
         if (!this._visible()) {
             this._hide();
         }
-        this._height = this.$('.h-annotation-popover').height();
+        this.$('.h-annotation-popover .additionalData').css('font-size', '');
+        this._height = this.$('.h-annotation-popover').outerHeight(true);
+        if (this._height > window.innerHeight) {
+            this.$('.h-annotation-popover .additionalData').css('font-size', '90%');
+            const delta = (this._height - this.$('.h-annotation-popover').outerHeight(true)) / 10;
+            if (delta > 0) {
+                const scale = 100 - (this._height - window.innerHeight) / delta;
+                if (scale > 10 && scale < 100) {
+                    this.$('.h-annotation-popover .additionalData').css('font-size', `${scale}%`);
+                }
+            }
+            this._height = this.$('.h-annotation-popover').outerHeight(true);
+        }
         this._position();
         return this;
     },
@@ -274,10 +286,13 @@ var AnnotationPopover = View.extend({
         } else {
             evt = this._lastPositionEvt;
         }
-        if (evt && this._visible()) {
+        if (evt && this._visible() && this._height) {
+            const idealPos = evt.pageY - this._height / 2;
+            const pos = Math.max(0, Math.min(window.innerHeight - this._height, idealPos));
             this.$el.css({
                 left: evt.pageX + 5,
-                top: evt.pageY - this._height / 2
+                top: pos,
+                '--arrow-offset': (idealPos - pos) + 'px'
             });
         }
     },

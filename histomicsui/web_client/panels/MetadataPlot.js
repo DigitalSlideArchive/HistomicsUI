@@ -459,7 +459,7 @@ var MetadataPlot = Panel.extend({
         return '<span class="hui-plotly-hover">' + parts.join('<br>') + '</span>';
     },
 
-    plotDataToPlotly: function (plotData) {
+    plotDataToPlotly: function (plotData, plotOptions) {
         let colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
         const viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
         // concatenate this so we have predictable colors for a longer scale
@@ -625,6 +625,13 @@ var MetadataPlot = Panel.extend({
             }
             plotlyData.type = 'scatter';
         }
+        if (plotOptions && (plotData.format === 'violin' || plotData.format === 'distrib')) {
+            if (!plotOptions.xaxis) {
+                plotOptions.xaxis = {};
+            }
+            plotOptions.xaxis.tickvals = Object.keys(plotData.series.s.distinct);
+            plotOptions.xaxis.ticktext = Object.keys(plotData.series.s.distinct).map((k, kidx) => plotData.series.s.distinct[kidx]);
+        }
         return [plotlyData];
     },
 
@@ -659,7 +666,7 @@ var MetadataPlot = Panel.extend({
                     plotOptions.yaxis = {title: {text: `${plotData.series.y.title}`}};
                 }
                 this._plotlyNode = elem;
-                window.Plotly.newPlot(elem[0], this.plotDataToPlotly(plotData), plotOptions);
+                window.Plotly.newPlot(elem[0], this.plotDataToPlotly(plotData, plotOptions), plotOptions);
                 elem[0].on('plotly_hover', (evt) => this.onHover(evt));
                 elem[0].on('plotly_selected', (evt) => this.onSelect(evt, plotData));
             });
