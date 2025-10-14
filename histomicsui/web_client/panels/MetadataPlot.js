@@ -15,6 +15,30 @@ import '../stylesheets/panels/metadataPlot.styl';
 
 const sessionId = uuidv4();
 
+const palettes = {
+    colorBrewerPaired12: {
+        name: 'Color Brewer Paired 12',
+        type: 'discrete',
+        palette: ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928',
+            // concatenate viridis this so we have predictable colors for a
+            // longer scale for discrete values.  It would probably be better
+            // to use a longer scale to start with
+            '#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724']
+    },
+    viridis: {name: 'Viridis', type: 'continuous', palette: ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724']},
+    'tol.BuRd': {name: 'Blue-Red', type: 'continuous', palette: ['#2166ac', '#4393c3', '#92c5de', '#d1e5f0', '#f7f7f7', '#fddbc7', '#f4a582', '#d6604d', '#b2182b']},
+    'tol.PRGn': {name: 'Purple-Green', type: 'continuous', palette: ['#762a83', '#9970ab', '#c2a5cf', '#e7d4e8', '#f7f7f7', '#d9f0d3', '#acd39e', '#5aae61', '#1b7837']},
+    'tol.WhOrBr': {name: 'White-Orange-Blue', type: 'continuous', palette: ['#ffffff', '#fff7bc', '#fee391', '#fec44f', '#fb9a29', '#ec7014', '#cc4c02', '#993404', '#662506']},
+    'tol.YlOrBr': {name: 'Yellow-Orange-Brown', type: 'continuous', palette: ['#ffffe5', '#fff7bc', '#fee391', '#fec44f', '#fb9a29', '#ec7014', '#cc4c02', '#993404', '#662506']},
+    'tol.iridescent': {name: 'Iridescent', type: 'continuous', palette: ['#fefbe9', '#fcf7d5', '#f5f3c1', '#eaf0b5', '#ddecbf', '#d0e7ca', '#c2e3d2', '#b5ddd8', '#a8d8dc', '#9bd2e1', '#8dcbe4', '#81c4e7', '#7bbce7', '#7eb2e4', '#88a5dd', '#9398d2', '#9b8ac4', '#9d7db2', '#9a709e', '#906388', '#805770', '#684957', '#46353a']},
+    'tol.rainbow': {name: 'Rainbow', type: 'continuous', palette: ['#e8ecfb', '#ddd8ef', '#d1c1e1', '#c3a8d1', '#b58fc2', '#a778b4', '#9b62a7', '#8c4e99', '#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222', '#b8221e', '#95211b', '#721e17', '#521a13']},
+    'tol.rainbow_PuBr': {name: 'Purple-Brown', type: 'continuous', palette: ['#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222', '#b8221e', '#95211b', '#721e17', '#521a13']},
+    'tol.rainbow_PuRd': {name: 'Purple-Red', type: 'continuous', palette: ['#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222']},
+    'tol.rainbow_WhBr': {name: 'White-Brown', type: 'continuous', palette: ['#e8ecfb', '#ddd8ef', '#d1c1e1', '#c3a8d1', '#b58fc2', '#a778b4', '#9b62a7', '#8c4e99', '#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222', '#b8221e', '#95211b', '#721e17', '#521a13']},
+    'tol.rainbow_WhRd': {name: 'White-Red', type: 'continuous', palette: ['#e8ecfb', '#ddd8ef', '#d1c1e1', '#c3a8d1', '#b58fc2', '#a778b4', '#9b62a7', '#8c4e99', '#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222']},
+    'tol.sunset': {name: 'Sunset', type: 'continuous', palette: ['#364b9a', '#4a7bb7', '#6ea6cd', '#98cae1', '#c2e4ef', '#eaeccc', '#feda8b', '#fdb366', '#f67e4b', '#dd3d2d', '#a50026']}
+};
+
 function mean(arr) {
     if (!arr.length) {
         return 0;
@@ -30,6 +54,32 @@ function stddev(arr) {
     return Math.sqrt(arr.map((x) => Math.pow(x - m, 2)).reduce((a, b) => a + b) / arr.length);
 }
 
+function shufflePalette(arr) {
+    const n = arr.length;
+    if (n <= 2) return arr;
+    const picked = new Set([0, n - 1]);
+    const order = [0, n - 1];
+    const remaining = new Set(Array.from({length: n}, (_, i) => i).filter((i) => !picked.has(i)));
+    while (remaining.size) {
+        let bestDist = -1;
+        let bestIdx = -1;
+        for (const i of remaining) {
+            let dist = Infinity;
+            for (const p of picked) {
+                dist = Math.min(dist, Math.abs(i - p));
+            }
+            if (dist > bestDist) {
+                bestDist = dist;
+                bestIdx = i;
+            }
+        }
+        picked.add(bestIdx);
+        order.push(bestIdx);
+        remaining.delete(bestIdx);
+    }
+    return order.map((i) => arr[i]);
+}
+
 var MetadataPlot = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .g-widget-metadata-plot-settings': function (event) {
@@ -37,6 +87,7 @@ var MetadataPlot = Panel.extend({
                 plotOptions: this.getPlotOptions(),
                 plotConfig: this.plotConfig,
                 plotPanel: this,
+                palettes: palettes,
                 el: $('#g-dialog-container'),
                 parentView: this
             }).render();
@@ -255,7 +306,8 @@ var MetadataPlot = Panel.extend({
             colDict: {},
             series: {},
             format: plotConfig.format || 'scatter',
-            adjacentItems: !!plotConfig.folder
+            adjacentItems: !!plotConfig.folder,
+            palette: plotConfig.palette
         };
         plotData.columns.forEach((col) => {
             plotData.colDict[col.key] = col;
@@ -465,18 +517,20 @@ var MetadataPlot = Panel.extend({
     },
 
     plotDataToPlotly: function (plotData, plotOptions) {
-        let colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
-        const viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
-        // concatenate this so we have predictable colors for a longer scale
-        // for discrete values.  It would probably be better to use a longer
-        // scale
-        colorBrewerPaired12 = colorBrewerPaired12.concat(viridis);
-        let colorScale, sColorScale;
-        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount || plotData.series.c.distinctcount > colorBrewerPaired12.length)) {
-            colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(viridis);
+        let discretePalette = palettes.colorBrewerPaired12.palette;
+        let continuousPalette = palettes.viridis.palette;
+        if (palettes[plotData.palette]) {
+            continuousPalette = palettes[plotData.palette].palette;
+            if (plotData.palette !== 'colorBrewerPaired12') {
+                discretePalette = shufflePalette(palettes[plotData.palette].palette.slice()).concat(palettes.colorBrewerPaired12.palette);
+            }
         }
-        if (plotData.series.s && (plotData.series.s.type === 'number' || !plotData.series.s.distinctcount || plotData.series.s.distinctcount > colorBrewerPaired12.length)) {
-            sColorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.s.max - plotData.series.s.min) || 0) + plotData.series.s.min)).range(viridis);
+        let colorScale, sColorScale;
+        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount || plotData.series.c.distinctcount > discretePalette.length)) {
+            colorScale = window.d3.scale.linear().domain(continuousPalette.map((_, i) => i / (continuousPalette.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(continuousPalette);
+        }
+        if (plotData.series.s && (plotData.series.s.type === 'number' || !plotData.series.s.distinctcount || plotData.series.s.distinctcount > discretePalette.length)) {
+            sColorScale = window.d3.scale.linear().domain(continuousPalette.map((_, i) => i / (continuousPalette.length - 1) * ((plotData.series.s.max - plotData.series.s.min) || 0) + plotData.series.s.min)).range(continuousPalette);
         }
         const plotlyData = {
             x: plotData.series.x ? plotData.data.map((d) => d[plotData.series.x.index]) : 0,
@@ -499,7 +553,7 @@ var MetadataPlot = Panel.extend({
                     ? (
                         colorScale
                             ? plotData.data.map((d) => colorScale(d[plotData.series.c.index]))
-                            : plotData.data.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
+                            : plotData.data.map((d) => discretePalette[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
                     )
                     : '#000000',
                 opacity: 0.5
@@ -536,7 +590,7 @@ var MetadataPlot = Panel.extend({
                                     target: kidx,
                                     value: {
                                         line: {
-                                            color: colorScale ? sColorScale[cval] : colorBrewerPaired12[cidx]
+                                            color: colorScale ? sColorScale[cval] : discretePalette[cidx]
                                         }
                                     }
                                 };
@@ -624,7 +678,7 @@ var MetadataPlot = Panel.extend({
                     ? (
                         !plotData.series.c.distinctcount
                             ? pv.c.map((c) => colorScale(c))
-                            : pv.dd.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
+                            : pv.dd.map((d) => discretePalette[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
                     )
                     : '#000000';
             }

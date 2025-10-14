@@ -21,7 +21,7 @@
             {key: 'x', label: 'x-axis', number: true, comment: 'Not used in violin plots'},
             {key: 'y', label: 'y-axis', number: true, noNone: true},
             {key: 'r', label: 'Radius'},
-            {key: 'c', label: 'Color'},
+            {key: 'c', label: 'Color', palette: true},
             {key: 's', label: 'Symbol', string: true, comment: 'Grouping for violin and distribution plots'},
             {key: 'u', label: 'Dimension Reduction', number: true, multiple: true}]
         -
@@ -33,6 +33,13 @@
             label(for='h-plot-series-' + series.key) #{series.label}
             if series.comment
               p.g-hui-description #{series.comment}
+            if series.palette && palettes
+              span.h-plot-right
+                label(for='h-plot-palette') Palette
+                select#h-plot-palette
+                  option(value='auto') Automatic
+                  for p, pkey in palettes
+                    option(value=pkey, selected=plotConfig.palette === pkey) #{p.name}
             select.h-plot-select.form-control(id='h-plot-series-' + series.key, multiple=series.multiple)
               if !series.noNone
                 option(value='_none_', selected=plotConfig[series.key] === undefined) None
