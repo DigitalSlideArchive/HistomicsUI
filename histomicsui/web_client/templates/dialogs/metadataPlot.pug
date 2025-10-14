@@ -39,7 +39,7 @@
                 select#h-plot-palette
                   option(value='auto') Automatic
                   for p, pkey in palettes
-                    option(value=pkey, selected=plotConfig.palette === pkey) #{p.name}
+                    option(value=pkey, selected=plotConfig.palette === pkey) #{p.name} (#{p.type})
             select.h-plot-select.form-control(id='h-plot-series-' + series.key, multiple=series.multiple)
               if !series.noNone
                 option(value='_none_', selected=plotConfig[series.key] === undefined) None
