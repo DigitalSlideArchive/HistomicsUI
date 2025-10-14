@@ -9,6 +9,8 @@ import {restRequest} from '@girder/core/rest';
 import Panel from '@girder/slicer_cli_web/views/Panel';
 // import events from '@girder/core/events';
 
+import * as d3 from 'd3';
+
 import MetadataPlotDialog from '../dialogs/metadataPlot';
 import metadataPlotTemplate from '../templates/panels/metadataPlot.pug';
 import '../stylesheets/panels/metadataPlot.styl';
@@ -26,19 +28,18 @@ const palettes = {
             '#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724']
     },
     viridis: {name: 'Viridis', type: 'continuous', palette: ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724']},
-    'tol.BuRd': {name: 'Blue-Red', type: 'continuous', palette: ['#2166ac', '#4393c3', '#92c5de', '#d1e5f0', '#f7f7f7', '#fddbc7', '#f4a582', '#d6604d', '#b2182b']},
-    'tol.PRGn': {name: 'Purple-Green', type: 'continuous', palette: ['#762a83', '#9970ab', '#c2a5cf', '#e7d4e8', '#f7f7f7', '#d9f0d3', '#acd39e', '#5aae61', '#1b7837']},
-    'tol.WhOrBr': {name: 'White-Orange-Blue', type: 'continuous', palette: ['#ffffff', '#fff7bc', '#fee391', '#fec44f', '#fb9a29', '#ec7014', '#cc4c02', '#993404', '#662506']},
-    'tol.YlOrBr': {name: 'Yellow-Orange-Brown', type: 'continuous', palette: ['#ffffe5', '#fff7bc', '#fee391', '#fec44f', '#fb9a29', '#ec7014', '#cc4c02', '#993404', '#662506']},
-    'tol.iridescent': {name: 'Iridescent', type: 'continuous', palette: ['#fefbe9', '#fcf7d5', '#f5f3c1', '#eaf0b5', '#ddecbf', '#d0e7ca', '#c2e3d2', '#b5ddd8', '#a8d8dc', '#9bd2e1', '#8dcbe4', '#81c4e7', '#7bbce7', '#7eb2e4', '#88a5dd', '#9398d2', '#9b8ac4', '#9d7db2', '#9a709e', '#906388', '#805770', '#684957', '#46353a']},
-    'tol.rainbow': {name: 'Rainbow', type: 'continuous', palette: ['#e8ecfb', '#ddd8ef', '#d1c1e1', '#c3a8d1', '#b58fc2', '#a778b4', '#9b62a7', '#8c4e99', '#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222', '#b8221e', '#95211b', '#721e17', '#521a13']},
-    'tol.rainbow_PuBr': {name: 'Purple-Brown', type: 'continuous', palette: ['#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222', '#b8221e', '#95211b', '#721e17', '#521a13']},
-    'tol.rainbow_PuRd': {name: 'Purple-Red', type: 'continuous', palette: ['#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222']},
-    'tol.rainbow_WhBr': {name: 'White-Brown', type: 'continuous', palette: ['#e8ecfb', '#ddd8ef', '#d1c1e1', '#c3a8d1', '#b58fc2', '#a778b4', '#9b62a7', '#8c4e99', '#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222', '#b8221e', '#95211b', '#721e17', '#521a13']},
-    'tol.rainbow_WhRd': {name: 'White-Red', type: 'continuous', palette: ['#e8ecfb', '#ddd8ef', '#d1c1e1', '#c3a8d1', '#b58fc2', '#a778b4', '#9b62a7', '#8c4e99', '#6f4c9b', '#6059a9', '#5568b8', '#4e79c5', '#4d8ac6', '#4e96bc', '#549eb3', '#59a5a9', '#60ab9e', '#69b190', '#77b77d', '#8cbc68', '#a6be54', '#bebc48', '#d1b541', '#ddaa3c', '#e49c39', '#e78c35', '#e67932', '#e4632d', '#df4828', '#da2222']},
-    'tol.sunset': {name: 'Sunset', type: 'continuous', palette: ['#364b9a', '#4a7bb7', '#6ea6cd', '#98cae1', '#c2e4ef', '#eaeccc', '#feda8b', '#fdb366', '#f67e4b', '#dd3d2d', '#a50026']}
+    category10: {name: 'Category 10', type: 'discrete', palette: d3.schemeCategory10},
+    dark2: {name: 'Dark 2', type: 'discrete', palette: d3.schemeDark2},
+    set1: {name: 'Set 1', type: 'discrete', palette: d3.schemeSet1},
+    observable10: {name: 'Observable 10', type: 'discrete', palette: d3.schemeObservable10},
+    tableau10: {name: 'Tableau 10', type: 'discrete', palette: d3.schemeTableau10},
+    turbo: {name: 'Turbo', type: 'continuous', palette: Array.from({length: 10}, (_, i) => d3.interpolateTurbo(i / 9))},
+    inferno: {name: 'Inferno', type: 'continuous', palette: Array.from({length: 10}, (_, i) => d3.interpolateInferno(i / 9))},
+    magma: {name: 'Magma', type: 'continuous', palette: Array.from({length: 10}, (_, i) => d3.interpolateMagma(i / 9))},
+    plasma: {name: 'Plasma', type: 'continuous', palette: Array.from({length: 10}, (_, i) => d3.interpolatePlasma(i / 9))},
+    cividis: {name: 'Cividis', type: 'continuous', palette: Array.from({length: 10}, (_, i) => d3.interpolateCividis(i / 9))},
+    warm: {name: 'Warm', type: 'continuous', palette: Array.from({length: 10}, (_, i) => d3.interpolateWarm(i / 9))}
 };
-
 function mean(arr) {
     if (!arr.length) {
         return 0;
