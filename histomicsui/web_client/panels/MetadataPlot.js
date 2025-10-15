@@ -7,13 +7,36 @@ import {v4 as uuidv4} from 'uuid';
 import {restRequest} from '@girder/core/rest';
 
 import Panel from '@girder/slicer_cli_web/views/Panel';
-// import events from '@girder/core/events';
 
 import MetadataPlotDialog from '../dialogs/metadataPlot';
 import metadataPlotTemplate from '../templates/panels/metadataPlot.pug';
 import '../stylesheets/panels/metadataPlot.styl';
 
 const sessionId = uuidv4();
+
+const palettes = {
+    colorBrewerPaired12: {
+        name: 'Color Brewer Paired 12',
+        type: 'discrete',
+        palette: ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928',
+            // concatenate viridis this so we have predictable colors for a
+            // longer scale for discrete values.  It would probably be better
+            // to use a longer scale to start with
+            '#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724']
+    },
+    viridis: {name: 'Viridis', type: 'continuous', palette: ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724']},
+    category10: {name: 'Category 10', type: 'discrete', palette: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']},
+    dark2: {name: 'Dark 2', type: 'discrete', palette: ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02', '#a6761d', '#666666']},
+    set1: {name: 'Set 1', type: 'discrete', palette: ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33', '#a65628', '#f781bf', '#999999']},
+    observable10: {name: 'Observable 10', type: 'discrete', palette: ['#4269d0', '#efb118', '#ff725c', '#6cc5b0', '#3ca951', '#ff8ab7', '#a463f2', '#97bbf5', '#9c6b4e', '#9498a0']},
+    tableau10: {name: 'Tableau 10', type: 'discrete', palette: ['#4e79a7', '#f28e2c', '#e15759', '#76b7b2', '#59a14f', '#edc949', '#af7aa1', '#ff9da7', '#9c755f', '#bab0ab']},
+    turbo: {name: 'Turbo', type: 'continuous', palette: ['rgb(35, 23, 27)', 'rgb(74, 81, 212)', 'rgb(52, 145, 248)', 'rgb(37, 201, 213)', 'rgb(58, 239, 154)', 'rgb(113, 254, 101)', 'rgb(184, 241, 64)', 'rgb(242, 203, 44)', 'rgb(255, 146, 32)', 'rgb(237, 82, 21)', 'rgb(180, 29, 7)', 'rgb(144, 12, 0)']},
+    inferno: {name: 'Inferno', type: 'continuous', palette: ['#000004', '#140b34', '#390963', '#5f136e', '#85216b', '#a92e5e', '#cb4149', '#e65d2f', '#f78410', '#fcae12', '#f5db4c', '#fcffa4']},
+    magma: {name: 'Magma', type: 'continuous', palette: ['#000004', '#120d31', '#331067', '#59157e', '#7e2482', '#a3307e', '#c83e73', '#e95462', '#fa7d5e', '#fea973', '#fed395', '#fcfdbf']},
+    plasma: {name: 'Plasma', type: 'continuous', palette: ['#0d0887', '#3e049c', '#6300a7', '#8606a6', '#a62098', '#c03a83', '#d5546e', '#e76f5a', '#f68d45', '#fdae32', '#fcd225', '#f0f921']},
+    cividis: {name: 'Cividis', type: 'continuous', palette: ['rgb(0, 32, 81)', 'rgb(8, 48, 105)', 'rgb(36, 65, 110)', 'rgb(68, 81, 109)', 'rgb(95, 98, 110)', 'rgb(117, 115, 114)', 'rgb(137, 132, 119)', 'rgb(157, 151, 120)', 'rgb(180, 170, 115)', 'rgb(208, 190, 103)', 'rgb(236, 211, 84)', 'rgb(253, 234, 69)']},
+    warm: {name: 'Warm', type: 'continuous', palette: ['rgb(110, 64, 170)', 'rgb(146, 61, 179)', 'rgb(184, 60, 176)', 'rgb(218, 63, 163)', 'rgb(246, 71, 141)', 'rgb(255, 85, 114)', 'rgb(255, 105, 86)', 'rgb(255, 130, 62)', 'rgb(245, 159, 48)', 'rgb(221, 189, 48)', 'rgb(196, 217, 62)', 'rgb(175, 240, 91)']}
+};
 
 function mean(arr) {
     if (!arr.length) {
@@ -30,6 +53,32 @@ function stddev(arr) {
     return Math.sqrt(arr.map((x) => Math.pow(x - m, 2)).reduce((a, b) => a + b) / arr.length);
 }
 
+function shufflePalette(arr) {
+    const n = arr.length;
+    if (n <= 2) return arr;
+    const picked = new Set([0, n - 1]);
+    const order = [0, n - 1];
+    const remaining = new Set(Array.from({length: n}, (_, i) => i).filter((i) => !picked.has(i)));
+    while (remaining.size) {
+        let bestDist = -1;
+        let bestIdx = -1;
+        for (const i of remaining) {
+            let dist = Infinity;
+            for (const p of picked) {
+                dist = Math.min(dist, Math.abs(i - p));
+            }
+            if (dist > bestDist) {
+                bestDist = dist;
+                bestIdx = i;
+            }
+        }
+        picked.add(bestIdx);
+        order.push(bestIdx);
+        remaining.delete(bestIdx);
+    }
+    return order.map((i) => arr[i]);
+}
+
 var MetadataPlot = Panel.extend({
     events: _.extend(Panel.prototype.events, {
         'click .g-widget-metadata-plot-settings': function (event) {
@@ -37,6 +86,7 @@ var MetadataPlot = Panel.extend({
                 plotOptions: this.getPlotOptions(),
                 plotConfig: this.plotConfig,
                 plotPanel: this,
+                palettes: palettes,
                 el: $('#g-dialog-container'),
                 parentView: this
             }).render();
@@ -255,7 +305,8 @@ var MetadataPlot = Panel.extend({
             colDict: {},
             series: {},
             format: plotConfig.format || 'scatter',
-            adjacentItems: !!plotConfig.folder
+            adjacentItems: !!plotConfig.folder,
+            palette: plotConfig.palette
         };
         plotData.columns.forEach((col) => {
             plotData.colDict[col.key] = col;
@@ -465,18 +516,20 @@ var MetadataPlot = Panel.extend({
     },
 
     plotDataToPlotly: function (plotData, plotOptions) {
-        let colorBrewerPaired12 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928'];
-        const viridis = ['#440154', '#482172', '#423d84', '#38578c', '#2d6f8e', '#24858d', '#1e9a89', '#2ab07e', '#51c468', '#86d449', '#c2df22', '#fde724'];
-        // concatenate this so we have predictable colors for a longer scale
-        // for discrete values.  It would probably be better to use a longer
-        // scale
-        colorBrewerPaired12 = colorBrewerPaired12.concat(viridis);
-        let colorScale, sColorScale;
-        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount || plotData.series.c.distinctcount > colorBrewerPaired12.length)) {
-            colorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(viridis);
+        let discretePalette = palettes.colorBrewerPaired12.palette;
+        let continuousPalette = palettes.viridis.palette;
+        if (palettes[plotData.palette]) {
+            continuousPalette = palettes[plotData.palette].palette;
+            if (plotData.palette !== 'colorBrewerPaired12') {
+                discretePalette = shufflePalette(palettes[plotData.palette].palette.slice()).concat(palettes.colorBrewerPaired12.palette);
+            }
         }
-        if (plotData.series.s && (plotData.series.s.type === 'number' || !plotData.series.s.distinctcount || plotData.series.s.distinctcount > colorBrewerPaired12.length)) {
-            sColorScale = window.d3.scale.linear().domain(viridis.map((_, i) => i / (viridis.length - 1) * ((plotData.series.s.max - plotData.series.s.min) || 0) + plotData.series.s.min)).range(viridis);
+        let colorScale, sColorScale;
+        if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount || plotData.series.c.distinctcount > discretePalette.length)) {
+            colorScale = window.d3.scale.linear().domain(continuousPalette.map((_, i) => i / (continuousPalette.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(continuousPalette);
+        }
+        if (plotData.series.s && (plotData.series.s.type === 'number' || !plotData.series.s.distinctcount || plotData.series.s.distinctcount > discretePalette.length)) {
+            sColorScale = window.d3.scale.linear().domain(continuousPalette.map((_, i) => i / (continuousPalette.length - 1) * ((plotData.series.s.max - plotData.series.s.min) || 0) + plotData.series.s.min)).range(continuousPalette);
         }
         const plotlyData = {
             x: plotData.series.x ? plotData.data.map((d) => d[plotData.series.x.index]) : 0,
@@ -499,7 +552,7 @@ var MetadataPlot = Panel.extend({
                     ? (
                         colorScale
                             ? plotData.data.map((d) => colorScale(d[plotData.series.c.index]))
-                            : plotData.data.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
+                            : plotData.data.map((d) => discretePalette[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
                     )
                     : '#000000',
                 opacity: 0.5
@@ -536,7 +589,7 @@ var MetadataPlot = Panel.extend({
                                     target: kidx,
                                     value: {
                                         line: {
-                                            color: colorScale ? sColorScale[cval] : colorBrewerPaired12[cidx]
+                                            color: colorScale ? sColorScale[cval] : discretePalette[cidx]
                                         }
                                     }
                                 };
@@ -624,13 +677,13 @@ var MetadataPlot = Panel.extend({
                     ? (
                         !plotData.series.c.distinctcount
                             ? pv.c.map((c) => colorScale(c))
-                            : pv.dd.map((d) => colorBrewerPaired12[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
+                            : pv.dd.map((d) => discretePalette[plotData.series.c.distinct.indexOf(d[plotData.series.c.index])] || '#000000')
                     )
                     : '#000000';
             }
             plotlyData.type = 'scatter';
         }
-        if (plotOptions && (plotData.format === 'violin' || plotData.format === 'distrib')) {
+        if (plotOptions && (plotData.format === 'violin' || plotData.format === 'distrib') && plotData.series.s) {
             if (!plotOptions.xaxis) {
                 plotOptions.xaxis = {};
             }
