@@ -16,17 +16,17 @@ const MetadataPlotDialog = View.extend({
     initialize(settings) {
         this.plotConfig = settings.plotConfig;
         this.plotOptions = settings.plotOptions;
+        this.palettes = settings.palettes;
     },
 
     render() {
-        this.$el
-            .html(
-                metadataPlotDialog({
-                    plotConfig: this.plotConfig,
-                    plotOptions: this.plotOptions
-                })
-            )
-            .girderModal(this);
+        this.$el.html(
+            metadataPlotDialog({
+                plotConfig: this.plotConfig,
+                plotOptions: this.plotOptions,
+                palettes: this.palettes
+            })
+        ).girderModal(this);
         // this adds search functionality to the select boxes, but not to the
         // multiple select, since the select2 tool breaks some traditional
         // aspects of multiple select
@@ -43,7 +43,8 @@ const MetadataPlotDialog = View.extend({
         evt.preventDefault();
         const configOptions = {
             folder: this.$('#h-plot-folder').is(':checked'),
-            format: this.$('#h-plot-format').val()
+            format: this.$('#h-plot-format').val(),
+            palette: this.$('#h-plot-palette').val()
         };
         ['x', 'y', 'r', 'c', 's'].forEach((series) => {
             const val = this.$('#h-plot-series-' + series).val();
