@@ -37,7 +37,6 @@
         "backbone.localstorage": "^2.0.2",
         "bootstrap-submenu": "^2.0.4",
         "copy-webpack-plugin": "^4.5.2",
-        "d3": "^7.9.0",
         "petite-vue": "^0.4.1",
         "plotly.js": "2.34.0",
         "select2": "4.1.0-rc.0",
