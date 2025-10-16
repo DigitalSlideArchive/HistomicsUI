@@ -1,4 +1,5 @@
-from girder import logger
+import logging
+
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute, describeRoute
 from girder.api.rest import Resource, filtermodel
@@ -11,6 +12,8 @@ from girder.utility.model_importer import ModelImporter
 from .. import handlers
 from ..constants import PluginSettings
 from .system import allChildFolders, allChildItems
+
+logger = logging.getLogger(__name__)
 
 
 class HistomicsUIResource(Resource):
