@@ -53,6 +53,8 @@ def addSystemEndpoints(apiRoot):
     apiRoot.job.route('DELETE', ('old',), deleteOldJobs)
     # Added to the file route
     apiRoot.file.route('POST', (':id', 'import', 'adjust_path'), adjustFileImportPath)
+    # Added to the assetstore route
+    apiRoot.assetstore.route('POST', (':id', 'import', 'single_path'), importSinglePath)
     # Added to the resource route
     apiRoot.resource.route('POST', ('paths',), getMultipleResourcePaths)
     # Added to the histomicui route
@@ -430,6 +432,42 @@ def adjustFileImportPath(self, file, path):
         raise RestException(msg)
     File().getAssetstoreAdapter(file).deleteFile(file)
     file['size'] = os.path.getsize(path)
+    file['imported'] = True
+    file['path'] = path
+    file = File().save(file)
+    try:
+        import girder_hashsum_download as hashsum_download
+
+        hashsum_download._computeHash(file)
+    except ImportError:
+        pass
+    return file
+
+
+@access.admin
+@filtermodel(model=File)
+@autoDescribeRoute(
+    Description('Import a single path into an assetstore.')
+    .responseClass('File')
+    .modelParam('id', model=Assetstore)
+    .modelParam('itemId', model=Item, level=AccessType.ADMIN)
+    .param('path', 'The new import path of the file.')
+    .param('name', 'The name to use for the file.')
+    .param('mimeType', 'The mimetyoe of the file.', required=False)
+    .errorResponse('ID was invalid.')
+    .errorResponse('Write access was denied on the parent folder.', 403),
+)
+@boundHandler()
+def importSinglePath(self, assetstore, path, item, name, mimeType):
+    if assetstore['type'] != AssetstoreType.FILESYSTEM:
+        msg = 'The file must be on a filesystem assetstore'
+        raise RestException(msg)
+    if not os.path.exists(path):
+        msg = 'The new import path does not exist or is unreachable'
+        raise RestException(msg)
+    user = self.getCurrentUser()
+    file = File().createFile(
+        user, item, name, os.path.getsize(path), assetstore, mimeType, saveFile=False)
     file['imported'] = True
     file['path'] = path
     file = File().save(file)
