@@ -110,7 +110,7 @@ export default {
   cursor:pointer;
 }
 .attribute-block > span, i {
-  max-width: 250px;
+  max-width: 275px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipses;
