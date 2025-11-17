@@ -325,6 +325,9 @@ var AnnotationSelector = Panel.extend({
                         } else {
                             model._centroids = models[model.id]._centroids;
                             model._elements = models[model.id]._elements;
+                            if (model.bindListeners) {
+                                model.bindListeners();
+                            }
                         }
                     }
                     if (!refreshed) {
