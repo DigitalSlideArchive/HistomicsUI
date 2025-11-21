@@ -387,14 +387,23 @@ var DrawWidget = Panel.extend({
      * @returns {boolean} true if the operation was handled.
      */
     _applyBooleanOp(annotations, evtOpts) {
-        if (!evtOpts.asPolygonList && (annotations.length !== 1 || !annotations[0].toPolygonList)) {
+        const op = evtOpts.currentBooleanOperation;
+        if (op !== 'cut' && !evtOpts.asPolygonList && (annotations.length !== 1 || !annotations[0].toPolygonList)) {
             return false;
         }
-        const op = evtOpts.currentBooleanOperation;
         const existing = this.viewer._annotations[this.annotation.id].features.filter((f) => ['polygon', 'marker'].indexOf(f.featureType) >= 0);
-        const polylist = evtOpts.asPolygonList ? annotations : annotations[0].toPolygonList({pixelTolerance: this._pixelTolerance()});
-        if (!existing.length && polylist.length < 2) {
-            return false;
+        let polylist;
+        if (op !== 'cut') {
+            polylist = evtOpts.asPolygonList ? annotations : annotations[0].toPolygonList({pixelTolerance: this._pixelTolerance()});
+            if (!existing.length && polylist.length < 2) {
+                return false;
+            }
+        } else {
+            const ptlist = annotations[0].coordinates().map((p) => [p.x, p.y]);
+            if (ptlist.length === 2) {
+                ptlist.splice(1, 0, [(ptlist[0][0] + ptlist[1][0]) / 2, (ptlist[0][1] + ptlist[1][1]) / 2]);
+            }
+            polylist = [[ptlist]];
         }
         const searchPoly = [];
         polylist.forEach((poly) => poly[0].forEach((pt) => searchPoly.push({x: pt[0], y: pt[1]})));
@@ -420,13 +429,21 @@ var DrawWidget = Panel.extend({
         }
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
         this.viewer.annotationLayer.geojson(geojson);
-        const opts = {
-            correspond: {},
-            keepAnnotations: 'exact',
-            style: this.viewer.annotationLayer,
-            pixelTolerance: this._pixelTolerance()
-        };
-        geo.util.polyops[op](this.viewer.annotationLayer, polylist, opts);
+        if (op !== 'cut') {
+            const opts = {
+                correspond: {},
+                keepAnnotations: 'exact',
+                style: this.viewer.annotationLayer,
+                pixelTolerance: this._pixelTolerance()
+            };
+            geo.util.polyops[op](this.viewer.annotationLayer, polylist, opts);
+        } else {
+            if (!this.viewer.annotationLayer.cutOperation) {
+                console.warn('Cut operations are not supported');
+                return true;
+            }
+            this.viewer.annotationLayer.cutOperation(annotations[0]);
+        }
         const newAnnot = this.viewer.annotationLayer.annotations();
 
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
