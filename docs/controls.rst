@@ -140,15 +140,22 @@ Annotation Controls
        :alt: Union operation
 
   - **ctrl**: When drawing an annotation element with area, switch to
-    **Subtract** mode.  The drawing annotation will be removed from any
+    **Subtract** mode.  The drawn annotation will be removed from any
     existing elements in the same annotation document and the same style group.
 
     .. image:: images/difference.gif
        :width: 256
        :alt: Difference operation
 
+  - **ctrl**: When drawing a line annotation, switch to **Cut** mode.  The
+    line will be used to split any area annotations with the same style group.
+
+    .. image:: images/cut.gif
+       :width: 256
+       :alt: Cut operation
+
   - **shift+ctrl**: When drawing an annotation element with area, switch to
-    **Union** mode.  The drawing annotation will be combined with nearby
+    **Union** mode.  The drawn annotation will be combined with nearby
     existing annotation elements in the same annotation document and the same
     style group, only keeping area that is in both the new and existing
     elements.
@@ -158,7 +165,7 @@ Annotation Controls
        :alt: Intersect operation
 
   - **shift+alt**: When drawing an annotation element with area, switch to
-    **XOR** mode.  The drawing annotation will be combined with nearby
+    **XOR** mode.  The drawn annotation will be combined with nearby
     existing annotation elements in the same annotation document and the same
     style group, keeping areas that is in either but not both the new and
     existing elements and removing areas that are in both.
