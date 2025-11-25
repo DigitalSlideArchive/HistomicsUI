@@ -86,4 +86,30 @@ var App = GirderApp.extend({
     bindRoutes
 });
 
+(function () {
+    const vp = document.querySelector('meta[name="viewport"]');
+
+    function update() {
+        const minWidth = 775, minHeight = 400;
+        const hasVV = !!window.visualViewport;
+        const ww = hasVV ? window.visualViewport.width : window.innerWidth;
+        const wh = hasVV ? window.visualViewport.height : window.innerHeight;
+        if (ww <= minWidth || wh <= minHeight) {
+            if (!hasVV || ww / (wh || 1) <= minWidth / minHeight) {
+                vp.setAttribute('content', `width=${minWidth}`);
+            } else {
+                const tw = Math.floor(ww * minHeight / wh);
+                vp.setAttribute('content', `width=${tw}`);
+            }
+        } else {
+            vp.setAttribute('content', 'width=device-width, initial-scale=1');
+        }
+    }
+
+    if (vp) {
+        update();
+        window.addEventListener('resize', update);
+    }
+})();
+
 export default App;
