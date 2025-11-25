@@ -7,6 +7,7 @@ import * as dialogs from './dialogs';
 import * as models from './models';
 import * as panels from './panels';
 import * as views from './views';
+import * as vue from './vue';
 
 export {
     App,
@@ -16,5 +17,6 @@ export {
     dialogs,
     models,
     panels,
-    views
+    views,
+    vue
 };
