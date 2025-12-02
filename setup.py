@@ -43,10 +43,10 @@ setup(
     install_requires=[
         'girder>=5.0.0a13',
         'girder-jobs>=5.0.0a13',
-        'girder-large-image==1.33.3a151',
-        'girder-large-image-annotation==1.33.3a151',
-        'large-image-tasks==1.33.3a151',
-        'large-image-converter==1.33.3a151',
+        'girder-large-image==1.33.6a155',
+        'girder-large-image-annotation==1.33.6a155',
+        'large-image-tasks==1.33.6a155',
+        'large-image-converter==1.33.6a155',
     ],
     extras_require={
         'analysis': [],  # kept for backwards compatibility

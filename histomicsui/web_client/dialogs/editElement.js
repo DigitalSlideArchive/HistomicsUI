@@ -89,6 +89,8 @@ var EditElement = View.extend({
         if (fillColor) {
             data.fillColor = this.convertColor(fillColor);
         }
+        var pattern = this.$('#h-element-fill-pattern').val();
+        data.pattern = pattern === 'none' ? undefined : pattern;
 
         if (validation) {
             this.$('.g-validation-failed-message').text(validation)

@@ -28,23 +28,9 @@
                     span.icon-minus(data-toggle='tooltip', title='Delete the listed style')
                 button.btn.btn-default.h-create-new-style
                   span.icon-plus(data-toggle='tooltip', title='Create a new style')
-        .form-group
-          label(for='h-element-label') Label
-          input#h-element-label.h-style-def.input-sm.form-control(
-            type='text', placeholder='Enter an optional label applied to all elements', value=label.value)
-        .form-group
-          label(for='h-element-line-width') Line width
-          input#h-element-line-width.h-style-def.input-sm.form-control(
-            type='number', min=0, step=0.1, value=model.get('lineWidth'))
-        .form-group
-          label(for='h-element-line-color') Line color
-          .input-group.h-colorpicker
-            input#h-element-line-color.input-sm.form-control.h-colorpicker-line()
-        .form-group
-          label(for='h-element-fill-color') Fill color
-          .input-group.h-colorpicker
-            input#h-element-fill-color.input-sm.form-control()
-        .g-validation-failed-message.hidden
+        include ../elementProps.pug
+        +elementProps(model.attributes)
+
       .modal-footer
         button#h-reset-defaults.btn.btn-sm.btn-default.h-btn-left(type='button') Reset to Defaults
         if user.get && user.get('admin')

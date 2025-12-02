@@ -223,6 +223,7 @@ var ImageView = View.extend({
                 events.trigger('h:imageOpened', this.model);
                 // store a reference to the underlying viewer
                 this.viewer = this.viewerWidget.viewer;
+                this.annotations._viewer = this.viewerWidget;
                 this.viewer.interactor().removeAction(geo.geo_action.zoomselect);
 
                 const currentOptions = this.viewer.interactor().options();
