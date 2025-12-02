@@ -1,7 +1,7 @@
 import _ from 'underscore';
 import Backbone from 'backbone';
 
-const AllowedKeys = ['fillColor', 'lineColor', 'lineWidth', 'label', 'group', 'id'];
+const AllowedKeys = ['fillColor', 'lineColor', 'lineWidth', 'label', 'group', 'id', 'pattern'];
 
 const StyleModel = Backbone.Model.extend({
     defaults: {
