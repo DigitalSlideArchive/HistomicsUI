@@ -1,6 +1,6 @@
 const _ = girder._;
 
-const AllowedKeys = ['fillColor', 'lineColor', 'lineWidth', 'label', 'group', 'id'];
+const AllowedKeys = ['fillColor', 'lineColor', 'lineWidth', 'label', 'group', 'id', 'pattern'];
 
 const StyleModel = girder.Backbone.Model.extend({
     defaults: {
