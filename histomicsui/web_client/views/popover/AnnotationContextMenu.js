@@ -63,7 +63,7 @@ const AnnotationContextMenu = View.extend({
         const style = this.styles.get({id: group}) || this.styles.get({id: this.parentView._defaultGroup});
         const styleAttrs = Object.assign({}, style ? style.toJSON() : {});
         Object.keys(styleAttrs).forEach((k) => {
-            if (!['fillColor', 'lineColor', 'lineWidth', 'label'].includes(k)) {
+            if (!['fillColor', 'lineColor', 'lineWidth', 'label', 'pattern'].includes(k)) {
                 delete styleAttrs[k];
             }
         });

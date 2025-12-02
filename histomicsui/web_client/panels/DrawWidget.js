@@ -882,7 +882,7 @@ var DrawWidget = Panel.extend({
     _setStyleGroup(group) {
         group = Object.assign({}, group);
         Object.keys(group).forEach((k) => {
-            if (!['fillColor', 'lineColor', 'lineWidth', 'label', 'group', 'id'].includes(k)) {
+            if (!['fillColor', 'lineColor', 'lineWidth', 'label', 'group', 'id', 'pattern'].includes(k)) {
                 delete group[k];
             }
         });

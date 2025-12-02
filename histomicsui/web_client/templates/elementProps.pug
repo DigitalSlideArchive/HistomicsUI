@@ -1,0 +1,44 @@
+mixin elementProps(element)
+  .form-group
+    label(for='h-element-label') Label
+    input#h-element-label.input-sm.form-control(
+      type='text', placeholder='Enter an optional label for the element', value=(element.label || {}).value)
+  .form-group
+    label(for='h-element-line-width') Line width
+    input#h-element-line-width.input-sm.form-control(
+      type='number', min=0, step=0.1, value=element.lineWidth)
+  .form-group
+    label(for='h-element-line-color') Line color
+    .input-group.h-colorpicker
+      input#h-element-line-color.input-sm.form-control(
+        type='text', value=element.lineColor)
+      span.input-group-addon
+        i
+  .form-group
+    label(for='h-element-fill-color') Fill color
+    .input-group.h-colorpicker
+      input#h-element-fill-color.input-sm.form-control(
+        type='text', value=element.fillColor)
+      span.input-group-addon
+        i
+  .form-group
+    label(for='h-element-fill-pattern') Fill pattern
+    -
+      var patterns = [
+        {key: 'none', label: 'None'},
+        {key: 'circle', label: 'Circle'},
+        {key: 'triangle', label: 'Triangle'},
+        {key: 'diamond', label: 'Diamond'},
+        {key: 'flower3', label: 'Flower 3'},
+        {key: 'flower5', label: 'Flower 5'},
+        {key: 'flower8', label: 'Flower 8'},
+        {key: 'star3', label: 'Star 3'},
+        {key: 'star5', label: 'Star 5'},
+        {key: 'star8', label: 'Star 8'},
+        {key: 'jack3', label: 'Jack 3'},
+        {key: 'jack5', label: 'Jack 5'},
+        {key: 'jack8', label: 'Jack 8'}]
+    select#h-element-fill-pattern.form-control
+      each opt in patterns
+        option(value=opt.key, selected=element.pattern === opt.key) #{opt.label}
+  .g-validation-failed-message.hidden
