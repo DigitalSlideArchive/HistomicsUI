@@ -453,7 +453,7 @@ var AnnotationSelector = Panel.extend({
         if (options && options.delaySave) {
             return;
         }
-        if (annotation._fromFetch) {
+        if (annotation._fromFetch || annotation._inBooleanOp) {
             return;
         }
         if (this.viewer && !this.viewer._saving) {
