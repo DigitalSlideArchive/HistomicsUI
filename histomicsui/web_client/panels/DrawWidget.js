@@ -402,7 +402,7 @@ var DrawWidget = Panel.extend({
                 return false;
             }
         } else {
-            const ptlist = annotations[0].coordinates().map((p) => [p.x, p.y]);
+            const ptlist = annotations[0].coordinates(null).map((p) => [p.x, p.y]);
             if (ptlist.length === 2) {
                 ptlist.splice(1, 0, [(ptlist[0][0] + ptlist[1][0]) / 2, (ptlist[0][1] + ptlist[1][1]) / 2]);
             }
