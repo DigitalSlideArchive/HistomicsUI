@@ -396,7 +396,7 @@ var DrawWidget = Panel.extend({
         }
         const existing = this.viewer._annotations[this.annotation.id].features.filter((f) => ['polygon', 'marker'].indexOf(f.featureType) >= 0);
         let polylist;
-        if (op !== 'cut') {
+        if (op !== 'cut' || !(annotations[0] instanceof window.geo.annotation.lineAnnotation)) {
             polylist = evtOpts.asPolygonList ? annotations : annotations[0].toPolygonList({pixelTolerance: this._pixelTolerance()});
             if (!existing.length && polylist.length < 2) {
                 return false;
@@ -457,6 +457,9 @@ var DrawWidget = Panel.extend({
             }
             return result;
         }).filter((annot) => !annot.points || annot.points.length);
+        if (this.parentView.annotationSelector) {
+            this.annotation._inBooleanOp = true;
+        }
         Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length}));
         this.addElements(
             _.map(elements, (el) => {
@@ -467,11 +470,15 @@ var DrawWidget = Panel.extend({
                 return el;
             })
         );
+        if (this.parentView.annotationSelector) {
+            delete this.annotation._inBooleanOp;
+            this.parentView.annotationSelector._saveAnnotation(this.annotation);
+        }
         return true;
     },
 
     /**
-     * When the brish is set to a specific screen size, adjust the size on zoom
+     * When the brush is set to a specific screen size, adjust the size on zoom
      * events.
      */
     _brushPan() {
