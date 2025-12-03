@@ -154,6 +154,10 @@ Annotation Controls
        :width: 256
        :alt: Cut operation
 
+  - **ctrl+alt**: When drawing an annotation with area, switch to **Cut** mode.
+    The drawn annotation will be used to split any area annotations with the
+    same style group.
+
   - **shift+ctrl**: When drawing an annotation element with area, switch to
     **Union** mode.  The drawn annotation will be combined with nearby
     existing annotation elements in the same annotation document and the same
