@@ -80,7 +80,9 @@ var EditElement = View.extend({
             data.fillColor = this.convertColor(fillColor);
         }
         var pattern = this.$('#h-element-fill-pattern').val();
-        data.pattern = pattern === 'none' ? undefined : pattern;
+        if (this.annotationElement.get('type') !== 'point') {
+            data.pattern = pattern === 'none' ? '' : pattern;
+        }
 
         if (validation) {
             this.$('.g-validation-failed-message').text(validation)
