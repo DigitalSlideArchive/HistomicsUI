@@ -1,20 +1,20 @@
-import _ from 'underscore';
 import Vue from 'vue';
-
-import {restRequest} from '@girder/core/rest';
-import Panel from '@girder/slicer_cli_web/views/Panel';
-import FrameSelector from '@girder/large_image/widgets/FrameSelector.vue';
-import DualInput from '@girder/large_image/widgets/DualInput.vue';
-import CompositeLayers from '@girder/large_image/widgets/CompositeLayers.vue';
-import HistogramEditor from '@girder/large_image/widgets/HistogramEditor.vue';
-import PresetsMenu from '@girder/large_image/vue/components/PresetsMenu.vue';
-import colors from '@girder/large_image/widgets/colors.json';
 
 import frameSelectorWidget from '../templates/panels/frameSelectorWidget.pug';
 import '../stylesheets/panels/frameSelectorWidget.styl';
 
+const _ = girder._;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
+const {restRequest} = girder.rest;
+
 var FrameSelectorWidget = Panel.extend({
     render() {
+        const FrameSelector = girder.plugins.large_image.widgets.FrameSelector;
+        const DualInput = girder.plugins.large_image.widgets.DualInput;
+        const CompositeLayers = girder.plugins.large_image.widgets.CompositeLayers;
+        const HistogramEditor = girder.plugins.large_image.widgets.HistogramEditor;
+        const PresetsMenu = girder.plugins.large_image.vue.PresetsMenu;
+        const colors = girder.plugins.large_image.widgets.colors;
         // if not a multi frame image, don't show (this means we can't do
         // band-only work on hyperspectral data, so we may want to change this
         // to also expose it if there are listed bands and there are more

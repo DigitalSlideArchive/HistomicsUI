@@ -1,22 +1,4 @@
 /* global geo */
-import _ from 'underscore';
-import $ from 'jquery';
-
-import {restRequest} from '@girder/core/rest';
-import {getCurrentUser} from '@girder/core/auth';
-import {AccessType} from '@girder/core/constants';
-import ItemModel from '@girder/core/models/ItemModel';
-import FileModel from '@girder/core/models/FileModel';
-import FolderCollection from '@girder/core/collections/FolderCollection';
-import {ViewerWidget} from '@girder/large_image_annotation/views';
-
-import SlicerPanelGroup from '@girder/slicer_cli_web/views/PanelGroup';
-import AnnotationModel from '@girder/large_image_annotation/models/AnnotationModel';
-import AnnotationCollection from '@girder/large_image_annotation/collections/AnnotationCollection';
-
-import {convert as convertToGeojson} from '@girder/large_image_annotation/annotations';
-import {convert as convertFromGeojson} from '@girder/large_image_annotation/annotations/geojs';
-
 import StyleCollection from '../../collections/StyleCollection';
 import StyleModel from '../../models/StyleModel';
 
@@ -39,6 +21,15 @@ import View from '../View';
 import imageTemplate from '../../templates/body/image.pug';
 import '../../stylesheets/body/image.styl';
 
+const _ = girder._;
+const $ = girder.$;
+const {restRequest} = girder.rest;
+const {getCurrentUser} = girder.auth;
+const {AccessType} = girder.constants;
+const ItemModel = girder.models.ItemModel;
+const FileModel = girder.models.FileModel;
+const FolderCollection = girder.collections.FolderCollection;
+
 var ImageView = View.extend({
     events: {
         'keydown .h-image-body': '_onKeyDown',
@@ -56,7 +47,7 @@ var ImageView = View.extend({
         this._selectElementsByRegionCanceled = false;
         this._debounceUpdatePixelmapValues = _.debounce(this._updatePixelmapValues, 500);
         this._overlayLayers = {};
-        this.selectedAnnotation = new AnnotationModel({_id: 'selected'});
+        this.selectedAnnotation = new girder.plugins.large_image_annotation.models.AnnotationModel({_id: 'selected'});
         this.selectedElements = this.selectedAnnotation.elements();
 
         // Allow zooming this many powers of 2 more than native pixel resolution
@@ -77,9 +68,9 @@ var ImageView = View.extend({
         this.listenTo(events, 'li:drawModeChange', this._drawModeChange);
         events.trigger('h:imageOpened', null);
         this.listenTo(events, 'query:image', this.openImage);
-        this.annotations = new AnnotationCollection();
+        this.annotations = new girder.plugins.large_image_annotation.collections.AnnotationCollection();
 
-        this.controlPanel = new SlicerPanelGroup({
+        this.controlPanel = new girder.plugins.slicer_cli_web.views.PanelGroup({
             parentView: this,
             closeButton: true
         });
@@ -197,7 +188,7 @@ var ImageView = View.extend({
                 this.viewerWidget.destroy();
             }
             /* eslint-disable new-cap */
-            this.viewerWidget = new ViewerWidget.geojs({
+            this.viewerWidget = new girder.plugins.large_image_annotation.views.ViewerWidget.geojs({
                 parentView: this,
                 el: this.$('.h-image-view-container'),
                 itemId: this.model.id,
@@ -772,7 +763,7 @@ var ImageView = View.extend({
         }
 
         this.viewerWidget.removeAnnotation(
-            new AnnotationModel({_id: 'region-selection'})
+            new girder.plugins.large_image_annotation.models.AnnotationModel({_id: 'region-selection'})
         );
         if (!region) {
             return;
@@ -783,7 +774,7 @@ var ImageView = View.extend({
         var lineWidth = 2;
         var annotation;
         if (region.elements) {
-            annotation = new AnnotationModel({
+            annotation = new girder.plugins.large_image_annotation.models.AnnotationModel({
                 _id: 'region-selection',
                 name: 'Region',
                 annotation: {
@@ -803,7 +794,7 @@ var ImageView = View.extend({
             var width = region.right - region.left;
             var height = region.bottom - region.top;
             var rotation = 0;
-            annotation = new AnnotationModel({
+            annotation = new girder.plugins.large_image_annotation.models.AnnotationModel({
                 _id: 'region-selection',
                 name: 'Region',
                 annotation: {
@@ -1490,7 +1481,7 @@ var ImageView = View.extend({
         }
         const annotation = this.annotations.get(element.originalAnnotation || annotationId);
         this._editAnnotation(annotation);
-        const geojson = convertToGeojson(element);
+        const geojson = girder.plugins.large_image_annotation.annotations.convert(element);
         this._currentAnnotationEditShape = {
             annotation,
             element: annotation.elements().get(element.id)
@@ -1519,7 +1510,7 @@ var ImageView = View.extend({
             return;
         }
         this.viewerWidget.annotationLayer.geoOff(geo.event.annotation.state, this._editElementShapeFinishBound);
-        const annot = convertFromGeojson(event.annotation);
+        const annot = girder.plugins.large_image_annotation.annotations.geojs.convert(event.annotation);
         var update = {};
         ['points', 'center', 'width', 'height', 'rotation'].forEach((key) => {
             if (annot[key] !== undefined) {

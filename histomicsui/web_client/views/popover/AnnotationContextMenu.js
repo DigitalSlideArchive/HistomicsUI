@@ -1,10 +1,10 @@
-import $ from 'jquery';
-
 import StyleCollection from '../../collections/StyleCollection';
 import View from '../View';
 
 import template from '../../templates/popover/annotationContextMenu.pug';
 import '../../stylesheets/popover/annotationContextMenu.styl';
+
+const $ = girder.$;
 
 const AnnotationContextMenu = View.extend({
     events: {

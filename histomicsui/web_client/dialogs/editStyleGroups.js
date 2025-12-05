@@ -1,16 +1,16 @@
 import tinycolor from 'tinycolor2';
-import _ from 'underscore';
-import $ from 'jquery';
-
-import View from '@girder/core/views/View';
-import events from '@girder/core/events';
-import {restRequest} from '@girder/core/rest';
-import {getCurrentUser} from '@girder/core/auth';
+import JsColor from '@eastdesire/jscolor';
 
 import StyleModel from '../models/StyleModel';
 import editStyleGroups from '../templates/dialogs/editStyleGroups.pug';
-import '@girder/core/utilities/jquery/girderModal';
 import '../stylesheets/dialogs/editStyleGroups.styl';
+
+const _ = girder._;
+const $ = girder.$;
+const View = girder.views.View;
+const events = girder.events;
+const {restRequest} = girder.rest;
+const {getCurrentUser} = girder.auth;
 
 /**
  * Create a modal dialog with fields to edit and create annotation
@@ -28,12 +28,12 @@ const EditStyleGroups = View.extend({
         'click #h-import-replace': '_toggleImportReplace',
         'change #h-import-groups': '_importGroups',
         'change .h-style-def': '_updateStyle',
-        'changeColor .h-colorpicker': '_updateStyle',
+        'change .h-colorpicker': '_updateStyle',
         'change select': '_setStyle'
     },
 
     render() {
-        this.$('.h-colorpicker').colorpicker('destroy');
+        // this.$('.h-colorpicker').colorpicker('destroy');
         this.$el.html(
             editStyleGroups({
                 collection: this.collection,
@@ -42,7 +42,19 @@ const EditStyleGroups = View.extend({
                 user: getCurrentUser() || {}
             })
         );
-        this.$('.h-colorpicker').colorpicker();
+        const inputLine = $('#h-element-line-color')[0];
+        const inputFill = $('#h-element-fill-color')[0];
+
+        // Initialize the color picker inputs with JsColor using the constructor.
+        // We don't need to track the objects created.
+        (() => new JsColor(inputLine, {
+            format: 'rgba',
+            value: this.model.get('lineColor')
+        }))();
+        (() => new JsColor(inputFill, {
+            format: 'rgba',
+            value: this.model.get('fillColor')
+        }))();
         return this;
     },
 

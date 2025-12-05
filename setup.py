@@ -17,7 +17,7 @@ def prerelease_local_scheme(version):
     """
     from setuptools_scm.version import get_local_node_and_date
 
-    if os.getenv('CIRCLE_BRANCH') in ('master', ):
+    if os.getenv('CIRCLE_BRANCH') in ('master', 'girder-5'):
         return ''
     else:
         return get_local_node_and_date(version)
@@ -41,10 +41,12 @@ setup(
         'Programming Language :: Python :: 3.13',
     ],
     install_requires=[
-        'girder-large-image-annotation>=1.33.5',
-        'girder-slicer-cli-web[girder]>=1.4.0',
-        'cachetools',
-        'orjson',
+        'girder>=5.0.0a13',
+        'girder-jobs>=5.0.0a13',
+        'girder-large-image==1.33.6a155',
+        'girder-large-image-annotation==1.33.6a155',
+        'large-image-tasks==1.33.6a155',
+        'large-image-converter==1.33.6a155',
     ],
     extras_require={
         'analysis': [],  # kept for backwards compatibility
@@ -61,6 +63,9 @@ setup(
     entry_points={
         'girder.plugin': [
             'histomicsui = histomicsui:GirderPlugin',
+        ],
+        'girder_worker_plugins': [
+            'slicer_cli_web = histomicsui.girder_worker_plugin:HistomicsUIWorkerPlugin',
         ],
     },
 )
