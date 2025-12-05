@@ -78,6 +78,7 @@ var ImageView = View.extend({
         events.trigger('h:imageOpened', null);
         this.listenTo(events, 'query:image', this.openImage);
         this.annotations = new AnnotationCollection();
+        this.listenTo(events, 's:widgetChanged', this._setRouter);
 
         this.controlPanel = new SlicerPanelGroup({
             parentView: this,
@@ -699,6 +700,7 @@ var ImageView = View.extend({
     },
 
     widgetRegion(model) {
+        console.log('widgetRegion', model);
         var value = model.get('value');
         if (!this.viewerWidget || !this.viewerWidget.viewer) {
             model.set('value', '-1,-1,-1,-1');
@@ -750,6 +752,13 @@ var ImageView = View.extend({
 
     _resetRegion() {
         var hasRegionParameter;
+        if(router.getQuery('region')){
+            var region = router.getQuery('region');
+            $('#region').val(region);
+            // this._displayedRegion = region;
+            // hasRegionParameter = true;
+            // this.showRegion(this._displayedRegion);
+        }
         if (!this._displayedRegion) {
             return;
         }
@@ -1815,6 +1824,11 @@ var ImageView = View.extend({
                 window.setTimeout(() => $(`#h-analysis-panel .s-select-region-button[shape="${$(evt.originalEvent.target).attr('shape')}"][multi="${$(evt.originalEvent.target).attr('multi')}"][parent-id="${$(evt.originalEvent.target).attr('parent-id')}"]`).eq(0).trigger('click'), 50);
             }
         }
-    }
+    },
+
+    _setRouter(evt) {
+        router.setQuery(evt.id, String(evt.changed.value), {trigger: false});
+    },
+
 });
 export default ImageView;
