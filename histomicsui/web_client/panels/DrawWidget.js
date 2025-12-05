@@ -345,6 +345,11 @@ var DrawWidget = Panel.extend({
      *    collection.
      */
     addElements(elements) {
+        elements.forEach((el) => {
+            if (el.pattern === '' || el.type === 'point') {
+                delete el.pattern;
+            }
+        });
         this._skipRenderHTML = this._skipRenderHTML || true;
         elements = this.collection.add(elements);
         this.$el.find('.h-elements-container').append(
