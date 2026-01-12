@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: check-added-large-files
   - id: check-ast
@@ -63,23 +63,23 @@ repos:
 #         - './histomicsui/web_client/package.json'
 - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff version.
-  rev: v0.11.2
+  rev: v0.14.11
   hooks:
     - id: ruff
       args: [--fix, --exit-non-zero-on-fix]
       types_or: [python, pyi, jupyter]
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.19.1
+  rev: v3.21.2
   hooks:
     - id: pyupgrade
       args:
         - --py310-plus
         - --keep-percent-format
-- repo: https://github.com/pre-commit/mirrors-autopep8
-  rev: v2.0.4
+- repo: https://github.com/hhatto/autopep8
+  rev: v2.3.2
   hooks:
     - id: autopep8
 - repo: https://github.com/PyCQA/flake8
-  rev: 7.1.2
+  rev: 7.3.0
   hooks:
     - id: flake8
