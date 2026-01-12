@@ -1,19 +1,17 @@
-import _ from 'underscore';
-import $ from 'jquery';
-
-import {restRequest} from '@girder/core/rest';
-import {AccessType} from '@girder/core/constants';
-import eventStream from '@girder/core/utilities/EventStream';
-import {getCurrentUser} from '@girder/core/auth';
-import Panel from '@girder/slicer_cli_web/views/Panel';
-import AnnotationModel from '@girder/large_image_annotation/models/AnnotationModel';
-import {events as girderEvents} from '@girder/core';
-
 import events from '../events';
 import showSaveAnnotationDialog from '../dialogs/saveAnnotation';
 
 import annotationSelectorWidget from '../templates/panels/annotationSelector.pug';
 import '../stylesheets/panels/annotationSelector.styl';
+
+const _ = girder._;
+const $ = girder.$;
+const {restRequest} = girder.rest;
+const {AccessType} = girder.constants;
+const eventStream = girder.utilities.eventStream;
+const {getCurrentUser} = girder.auth;
+const girderEvents = girder.events;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
 /**
  * Create a panel controlling the visibility of annotations
@@ -432,7 +430,7 @@ var AnnotationSelector = Panel.extend({
     },
 
     createAnnotation(evt) {
-        var model = new AnnotationModel({
+        var model = new girder.plugins.large_image_annotation.models.AnnotationModel({
             itemId: this.parentItem.id,
             annotation: {}
         });

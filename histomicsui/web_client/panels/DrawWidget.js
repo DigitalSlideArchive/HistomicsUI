@@ -1,16 +1,4 @@
 /* globals geo */
-import _ from 'underscore';
-import $ from 'jquery';
-
-import events from '@girder/core/events';
-import Panel from '@girder/slicer_cli_web/views/Panel';
-import {getCurrentUser} from '@girder/core/auth';
-
-import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/convert';
-import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
-import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
-import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
-
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
@@ -18,6 +6,12 @@ import editStyleGroups from '../dialogs/editStyleGroups';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
 import '../stylesheets/panels/drawWidget.styl';
+
+const _ = girder._;
+const $ = girder.$;
+const events = girder.events;
+const {getCurrentUser} = girder.auth;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
 /**
  * Create a panel with controls to draw and edit
@@ -257,6 +251,9 @@ var DrawWidget = Panel.extend({
      */
     viewElement(evt) {
         const annot = this.collection._byId[$(evt.target).parent().attr('data-id')];
+        const convertRectangle = girder.plugins.large_image_annotation.annotations.geometry.rectangle;
+        const convertEllipse = girder.plugins.large_image_annotation.annotations.geometry.ellipse;
+        const convertCircle = girder.plugins.large_image_annotation.annotations.geometry.circle;
         let points;
         let pointAnnot = false;
         switch (annot.get('type')) {
@@ -456,6 +453,7 @@ var DrawWidget = Panel.extend({
 
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
         const elements = newAnnot.map((annot) => {
+            const convertAnnotation = girder.plugins.large_image_annotation.annotations.geojs.convert;
             const result = convertAnnotation(annot);
             if (!result.id) {
                 result.id = this.viewer._guid();
@@ -523,6 +521,7 @@ var DrawWidget = Panel.extend({
      */
     _brushAction(evt) {
         let annotations = this.viewer.annotationLayer.toPolygonList({pixelTolerance: this._pixelTolerance()});
+        const convertAnnotation = girder.plugins.large_image_annotation.annotations.geojs.convert;
         let elements = [convertAnnotation(this.viewer.annotationLayer.annotations()[0])];
         if (!elements[0].id) {
             elements[0].id = this.viewer._guid();

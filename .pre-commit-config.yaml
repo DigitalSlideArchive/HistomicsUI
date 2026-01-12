@@ -48,7 +48,8 @@ repos:
   - id: codespell
     args:
       - --ignore-words-list
-      - "hist,indext,pixelx,thex,subtile"
+      - "hist,indext,pixelx,thex,subtile,afterAll"
+      - --exclude-file=histomicsui/web_client/package-lock.json
 - repo: https://github.com/syntaqx/git-hooks
   rev: v0.0.18
   hooks:
