@@ -230,6 +230,11 @@
             display: none;
         }
     }
+    .h-annotation {
+        [class*=" icon-"]:before, [class^=icon-]:before {
+        margin-right: 0;
+        }
+    }
   </style>
 
 
