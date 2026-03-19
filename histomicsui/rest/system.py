@@ -450,7 +450,7 @@ def adjustFileImportPath(self, file, path):
     Description('Import a single path into an assetstore.')
     .responseClass('File')
     .modelParam('id', model=Assetstore)
-    .modelParam('itemId', model=Item, level=AccessType.ADMIN)
+    .modelParam('itemId', model=Item, level=AccessType.ADMIN, paramType='query')
     .param('path', 'The new import path of the file.')
     .param('name', 'The name to use for the file.')
     .param('mimeType', 'The mimetyoe of the file.', required=False)
