@@ -42,12 +42,12 @@ setup(
         'Programming Language :: Python :: 3.14',
     ],
     install_requires=[
-        'girder>=5.0.0a13',
-        'girder-jobs>=5.0.0a13',
-        'girder-large-image==1.33.6a155',
-        'girder-large-image-annotation==1.33.6a155',
-        'large-image-tasks==1.33.6a155',
-        'large-image-converter==1.33.6a155',
+        'girder>=5',
+        'girder-jobs>=5',
+        'girder-large-image==1.34.2a166',
+        'girder-large-image-annotation==1.34.2a166',
+        'large-image-tasks==1.34.2a166',
+        'large-image-converter==1.34.2a166',
     ],
     extras_require={
         'analysis': [],  # kept for backwards compatibility
