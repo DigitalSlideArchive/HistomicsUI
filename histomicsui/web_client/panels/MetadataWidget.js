@@ -60,6 +60,10 @@ var MetadataWidgetPanel = Panel.extend({
 
     render: function () {
         if (this.item && this.item.id) {
+            if (!this.item.has('meta')) {
+                this.listenToOnce(this.item, 'g:fetched', this.render);
+                return this;
+            }
             let func = this.item.getAccessLevel;
             if (this.item.get('_modelType') === 'annotation') {
                 func = (callback) => {

@@ -691,7 +691,6 @@ var ImageView = View.extend({
     },
 
     widgetRegion(model) {
-        console.log('widgetRegion', model);
         var value = model.get('value');
         if (!this.viewerWidget || !this.viewerWidget.viewer) {
             model.set('value', '-1,-1,-1,-1');
@@ -743,12 +742,12 @@ var ImageView = View.extend({
 
     _resetRegion() {
         var hasRegionParameter;
-        if(router.getQuery('region')){
+        if (router.getQuery('region')) {
             var region = router.getQuery('region');
             $('#region').val(region);
-            // this._displayedRegion = region;
-            // hasRegionParameter = true;
-            // this.showRegion(this._displayedRegion);
+            this._displayedRegion = region.split(',');
+            hasRegionParameter = true;
+            this.showRegion(this._displayedRegion);
         }
         if (!this._displayedRegion) {
             return;
@@ -1818,8 +1817,9 @@ var ImageView = View.extend({
     },
 
     _setRouter(evt) {
-        router.setQuery(evt.id, String(evt.changed.value), {trigger: false, replace: true});
-    },
+        const value = evt.changed.value !== undefined ? String(evt.changed.value) : null;
+        router.setQuery(evt.id, value, {trigger: false, replace: true});
+    }
 
 });
 export default ImageView;
