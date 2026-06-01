@@ -93,9 +93,20 @@ The standard deployment of HistomicsUI is the `Digital Slide Archive`_.  The ass
 Development
 ===========
 
-The most convenient way to develop on HistomicsUI is to use the `devops scripts from the Digital Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops>`_.
+The most convenient way to develop on HistomicsUI is in conjunction with the `Digital Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive>`_.  Once both repos have been cloned locally,  mount your local HistomicsUI directory to the DSA docker container:
 
-If you are making changes to the HistomicsUI frontend, you can make Girder watch the source code and perform hot reloads on changes using the ``--watch-plugin`` argument to ``girder build``. See the `Girder docs <https://girder.readthedocs.io/en/stable/development.html#during-development>`_ for more information.
+.. code-block:: bash
+
+  # /devops/ver5/docker-compose.local.yml
+  services:
+
+    girder:
+      volumes:
+        - ../../../HistomicsUI:/opt/HistomicsUI
+
+Then use the `devops scripts from the Digital Slide Archive <https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops/ver5>`_.
+
+If you are making changes to the HistomicsUI frontend, you can have the Girder instance watch the local HistomicsUI source code and perform hot reloads on changes by running ``npm run build`` then ``npm run watch`` from ``histomicsui/web_client/``. See the `Girder docs <https://girder.readthedocs.io/en/stable/development.html#during-development>`_ for more information.
 
 Annotations and Metadata from Jobs
 ----------------------------------
