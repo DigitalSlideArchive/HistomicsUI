@@ -15,7 +15,7 @@ commands:
       parameters:
         node:
           type: string
-          default: v20
+          default: v22
       steps:
         - run:
             name: Use nvm
@@ -55,6 +55,7 @@ commands:
           name: Install playwright with dependencies
           command: |
             pushd histomicsui/web_client
+            # We need this version for ubuntu 26.04 base
             npx playwright install --with-deps
             popd
   tox:
@@ -117,6 +118,15 @@ jobs:
       - build_client
       - tox:
           env: py313
+      - coverage
+  py314:
+    executor: toxandnode
+    steps:
+      - checkout
+      - use_nvm
+      - build_client
+      - tox:
+          env: py314
       - coverage
   web_client:
     executor: toxandnode
@@ -191,6 +201,13 @@ workflows:
             branches:
               ignore:
                 - gh-pages
+      - py314:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore:
+                - gh-pages
       - noanalysis:
           filters:
             tags:
@@ -218,6 +235,7 @@ workflows:
             - py311
             - py312
             - py313
+            - py314
             - lint_and_docs
           filters:
             tags:
