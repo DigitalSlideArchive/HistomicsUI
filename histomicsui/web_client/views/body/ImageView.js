@@ -62,6 +62,7 @@ var ImageView = View.extend({
         this.listenTo(events, 'h:analysis:rendered', this._allowRootSelection);
         this.listenTo(events, 'h:analysis:rendered', this._setDefaultFileOutputs);
         this.listenTo(events, 'h:analysis:rendered', this._resetRegion);
+        this.listenTo(events, 'h:analysis:rendered', this._setFieldsFromRouter);
         this.listenTo(this.selectedElements, 'add remove reset', this._redrawSelection);
         this.listenTo(events, 's:widgetDrawRegionEvent', this._widgetDrawRegion);
         this.listenTo(events, 'li:drawRegionUpdate', this._drawRegionUpdate);
@@ -743,11 +744,8 @@ var ImageView = View.extend({
     _resetRegion() {
         var hasRegionParameter;
         if (router.getQuery('region')) {
-            var region = router.getQuery('region');
-            $('#region').val(region);
-            this._displayedRegion = region.split(',');
+            this._setFieldsFromRouter();
             hasRegionParameter = true;
-            this.showRegion(this._displayedRegion);
         }
         if (!this._displayedRegion) {
             return;
@@ -1819,6 +1817,19 @@ var ImageView = View.extend({
     _setRouter(evt) {
         const value = evt.changed.value !== undefined ? String(evt.changed.value) : null;
         router.setQuery(evt.id, value, {trigger: false, replace: true});
+    },
+
+    _setFieldsFromRouter() {
+        _.each(this.controlPanel.models(), (model) => {
+            const value = router.getQuery(model.id);
+            if (value) {
+                if (model.id === 'region') {
+                    this._displayedRegion = value;
+                    this.showRegion(this._displayedRegion);
+                }
+                model.set('value', value);
+            }
+        });
     }
 
 });
