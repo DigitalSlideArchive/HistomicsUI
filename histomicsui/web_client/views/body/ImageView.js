@@ -747,10 +747,6 @@ var ImageView = View.extend({
 
     _resetRegion() {
         var hasRegionParameter;
-        if (router.getQuery('region')) {
-            this._setFieldsFromRouter();
-            hasRegionParameter = true;
-        }
         if (!this._displayedRegion) {
             return;
         }
@@ -1847,7 +1843,6 @@ var ImageView = View.extend({
             if (value) {
                 if (model.id === 'region') {
                     this._displayedRegion = value;
-                    this.showRegion(this._displayedRegion);
                 }
                 model.set('value', value);
             }
