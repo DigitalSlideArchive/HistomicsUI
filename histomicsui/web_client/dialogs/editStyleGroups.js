@@ -29,7 +29,8 @@ const EditStyleGroups = View.extend({
         'change #h-import-groups': '_importGroups',
         'change .h-style-def': '_updateStyle',
         'change .h-colorpicker': '_updateStyle',
-        'change select': '_setStyle'
+        'change #h-element-fill-pattern': '_updateStyle',
+        'change .h-group-name': '_setStyle'
     },
 
     render() {
