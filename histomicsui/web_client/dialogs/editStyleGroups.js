@@ -289,7 +289,9 @@ const EditStyleGroupsDialog = View.extend({
         evt.preventDefault();
         this.model.set(this.form.model.toJSON());
         this.collection.add(this.form.model.toJSON(), {merge: true});
-        this.collection.get(this.model.id).save();
+        const group = this.collection.get(this.model.id);
+        group.save();
+        this.trigger('h:styleGroupSubmit', group);
         this.$el.modal('hide');
     },
 

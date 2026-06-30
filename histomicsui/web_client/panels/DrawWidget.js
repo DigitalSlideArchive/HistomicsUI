@@ -1064,6 +1064,7 @@ var DrawWidget = Panel.extend({
 
     _styleGroupEditor() {
         var dlg = editStyleGroups(this._style, this._groups, this.parentView._defaultGroup);
+        this.listenTo(dlg, 'h:styleGroupSubmit', this._propagateStyleGroupToElements);
         dlg.$el.on('hidden.bs.modal', () => {
             this._debounceRender();
             this.parentView.trigger('h:styleGroupsEdited', this._groups);
@@ -1073,6 +1074,37 @@ var DrawWidget = Panel.extend({
     _handleStyleGroupsUpdate() {
         this._debounceRender();
         this.trigger('h:styleGroupsUpdated', this._groups);
+    },
+
+    /**
+     * Apply a style group's style to every element belonging to that group
+     * and persist the annotation.  This is only invoked in response to an
+     * explicit user action (submitting the style group editor), so it does
+     * not run during the initial group fetch.
+     *
+     * @param {StyleModel} group The edited style group.
+     */
+    _propagateStyleGroupToElements(group) {
+        if (!group) {
+            return;
+        }
+        const groupId = group.get('id');
+        // Elements in the default group have no `group` attribute, so match
+        // both unset groups and the default group id in that case.
+        const isDefault = groupId === this.parentView._defaultGroup;
+        const styleUpdate = _.omit(group.toJSON(), 'id', 'group');
+        let changed = false;
+        this.collection.forEach((el) => {
+            const elGroup = el.get('group');
+            const match = isDefault ? (!elGroup || elGroup === groupId) : elGroup === groupId;
+            if (match) {
+                el.set(styleUpdate);
+                changed = true;
+            }
+        });
+        if (changed) {
+            this.annotation.save();
+        }
     },
 
     _highlightElement(evt) {
