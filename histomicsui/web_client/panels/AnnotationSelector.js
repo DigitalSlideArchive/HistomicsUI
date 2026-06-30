@@ -35,6 +35,7 @@ var AnnotationSelector = Panel.extend({
         'input #h-annotation-opacity': '_changeGlobalOpacity',
         'input #h-annotation-fill-opacity': '_changeGlobalFillOpacity',
         'click .h-annotation-select-by-region': 'selectAnnotationByRegion',
+        'click .h-toggle-group-annotations': 'toggleGroupAnnotations',
         'click .h-annotation-group-name': '_toggleExpandGroup'
     }),
 
@@ -622,6 +623,24 @@ var AnnotationSelector = Panel.extend({
         this.$('.h-annotation-fill-opacity-container')
             .attr('title', `Annotation fill opacity ${(this._fillOpacity * 100).toFixed()}%`);
         this.trigger('h:annotationFillOpacity', this._fillOpacity);
+    },
+
+    toggleGroupAnnotations(evt) {
+        // prevent the click from also expanding/collapsing the group
+        evt.stopPropagation();
+        const group = $(evt.currentTarget).closest('.h-annotation-group').data('groupName');
+        const annotations = this.collection.filter((model) => _.contains(model.get('groups'), group));
+        const allDisplayed = annotations.length && annotations.every((model) => model.get('displayed'));
+
+        this._showAllAnnotationsState = false;
+        annotations.forEach((model) => {
+            model.set('displayed', !allDisplayed);
+            if (allDisplayed) {
+                model.unset('highlight');
+                this._deselectAnnotationElements(model);
+                this._deactivateAnnotation(model);
+            }
+        });
     },
 
     _toggleExpandGroup(evt) {
