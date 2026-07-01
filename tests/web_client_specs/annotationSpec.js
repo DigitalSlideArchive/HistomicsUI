@@ -884,6 +884,32 @@ girderTest.promise.done(function () {
                 }, 'annotation to toggle on');
             });
 
+            it('toggle visibility of all annotations in a group', function () {
+                var $group = $('.h-annotation-selector .h-annotation-group[data-group-name="Other"]');
+                var wasExpanded = $group.hasClass('h-group-expanded');
+
+                runs(function () {
+                    expect($group.find('.icon-eye.h-toggle-group-annotations').length).toBe(1);
+                    $group.find('.h-toggle-group-annotations').click();
+                });
+                waitsFor(function () {
+                    $group = $('.h-annotation-selector .h-annotation-group[data-group-name="Other"]');
+                    return $group.find('.icon-eye-off.h-toggle-group-annotations').length === 1 &&
+                           $group.find('.icon-eye.h-toggle-annotation').length === 0;
+                }, 'all annotations in group to hide');
+
+                runs(function () {
+                    // clicking the group toggle must not collapse/expand the group
+                    expect($group.hasClass('h-group-expanded')).toBe(wasExpanded);
+                    $group.find('.h-toggle-group-annotations').click();
+                });
+                waitsFor(function () {
+                    $group = $('.h-annotation-selector .h-annotation-group[data-group-name="Other"]');
+                    return $group.find('.icon-eye.h-toggle-group-annotations').length === 1 &&
+                           $group.find('.icon-eye-off.h-toggle-annotation').length === 0;
+                }, 'all annotations in group to show');
+            });
+
             it('select annotations by rect - no hits', function () {
                 var interactor = huiTest.geojsMap().interactor();
                 expect($('.h-annotation-select-by-region').length).toBe(1);
