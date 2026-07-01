@@ -628,7 +628,10 @@ var AnnotationSelector = Panel.extend({
     toggleGroupAnnotations(evt) {
         // prevent the click from also expanding/collapsing the group
         evt.stopPropagation();
-        const group = $(evt.currentTarget).closest('.h-annotation-group').data('groupName');
+        let group = $(evt.currentTarget).closest('.h-annotation-group').data('groupName');
+        // The ungrouped annotations are displayed under the 'Other' group, but
+        // their group value is null
+        group = group === 'Other' ? null : group;
         const annotations = this.collection.filter((model) => _.contains(model.get('groups'), group));
         const allDisplayed = annotations.length && annotations.every((model) => model.get('displayed'));
 
