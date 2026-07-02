@@ -75,6 +75,11 @@ export const setupServer = () => {
         serverProcess = await startServer(port);
     });
 
+    test.beforeEach(async ({page}) => {
+        await page.goto(`http://0.0.0.0:${port}/`);
+        await expect(page.getByRole('link', {name: 'About'})).toBeVisible();
+    });
+
     test.afterAll(async () => {
         if (process.env.GIRDER_CLIENT_TESTING_KEEP_SERVER_ALIVE) {
             if (serverProcess) {
@@ -104,10 +109,5 @@ export const setupServer = () => {
                 resolve();
             });
         });
-    });
-
-    test.beforeEach(async ({page}) => {
-        await page.goto(`http://0.0.0.0:${port}/`);
-        await expect(page.getByRole('link', {name: 'About'})).toBeVisible();
     });
 };
