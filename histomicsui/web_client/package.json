@@ -73,6 +73,9 @@
             "@girder",
             "plugin:vue/recommended"
         ],
+        "env": {
+            "jquery": true
+        },
         "overrides": [
             {
                 "files": [
