@@ -2,7 +2,7 @@ import {spawn, ChildProcessWithoutNullStreams} from 'child_process';
 
 import {expect, test} from '@playwright/test';
 
-const mongoUri = process.env.GIRDER_CLIENT_TESTING_MONGO_URI ?? 'mongodb://mongodb:27017';
+const mongoUri = process.env.GIRDER_CLIENT_TESTING_MONGO_URI ? 'mongodb://mongodb:27017' : 'mongodb://localhost:27017';
 
 const startServer = async (port: number) => {
     const database = `${mongoUri}/girder-${port}`;
