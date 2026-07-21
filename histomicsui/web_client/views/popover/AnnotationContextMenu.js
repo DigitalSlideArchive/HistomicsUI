@@ -67,6 +67,7 @@ const AnnotationContextMenu = View.extend({
                 delete styleAttrs[k];
             }
         });
+        styleAttrs.pattern = styleAttrs.pattern || 'none';
         let refresh = false;
         if (this.parentView.drawWidget) {
             this.parentView.drawWidget._skipRenderHTML = 'skip';
