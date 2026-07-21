@@ -65,9 +65,13 @@ var DrawWidget = Panel.extend({
         this._groups = new StyleCollection();
         this._style = new StyleModel({id: this.parentView._defaultGroup});
         this.listenTo(this._groups, 'add change', this._handleStyleGroupsUpdate);
-        this.listenTo(this._groups, 'remove', this.render);
+        this.listenTo(this._groups, 'remove', this._handleStyleGroupsRemoved);
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
+        // if the annotation's metadata (including `allowed_groups`) is
+        // edited while this annotation is active, react immediately instead
+        // of requiring the annotation to be reselected or the page reloaded
+        this.listenTo(this.annotation, 'change:annotation', this._handleAnnotationAttributesChange);
         this._groups.fetch().done(() => {
             // ensure the default style exists
             if (this._groups.has(this.parentView._defaultGroup)) {
@@ -81,6 +85,7 @@ var DrawWidget = Panel.extend({
                 this._setStyleGroup(this._groups.get(this._editOptions.style).toJSON());
             }
             this._restrictStyleToAllowedGroups();
+            this._debounceRender();
         });
         this.on('h:mouseon', (model) => {
             if (model && model.id) {
@@ -1079,6 +1084,11 @@ var DrawWidget = Panel.extend({
         this.trigger('h:styleGroupsUpdated', this._groups);
     },
 
+    _handleStyleGroupsRemoved() {
+        this._restrictStyleToAllowedGroups();
+        this.render();
+    },
+
     /**
      * Get the current annotation's `allowed_groups` metadata, if any.
      *
@@ -1087,6 +1097,17 @@ var DrawWidget = Panel.extend({
      */
     _getAllowedGroups() {
         return getAllowedGroups(this.annotation);
+    },
+
+    /**
+     * Respond to the active annotation's metadata being edited (e.g. via the
+     * "Edit annotation" dialog), which may have changed its `allowed_groups`
+     * restriction.
+     */
+    _handleAnnotationAttributesChange() {
+        this._ensureAllowedGroupsExist();
+        this._restrictStyleToAllowedGroups();
+        this._debounceRender();
     },
 
     /**
