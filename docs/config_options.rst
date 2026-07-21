@@ -56,6 +56,10 @@ _________________
           fillColor: rgba(0, 128, 0, 0.25)
           lineColor: rgb(0, 128, 0)
           lineWidth: 2
+          # patterns can be none, circle, triangle, diamond, flower(number),
+          # star(number), jack(number), where number is from 1 to 16.  Not
+          # specifying a pattern is the same as none.
+          pattern: star5
         -
           id: Blue
           fillColor: rgba(0, 0, 255, 0.25)
