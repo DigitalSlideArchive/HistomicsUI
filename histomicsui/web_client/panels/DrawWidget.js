@@ -76,6 +76,7 @@ var DrawWidget = Panel.extend({
                 this._groups.add(this._style.toJSON());
                 this._groups.get(this._style.id).save();
             }
+            this._ensureAllowedGroupsExist();
             if (this._editOptions.style && this._groups.get(this._editOptions.style)) {
                 this._setStyleGroup(this._groups.get(this._editOptions.style).toJSON());
             }
@@ -1086,6 +1087,30 @@ var DrawWidget = Panel.extend({
      */
     _getAllowedGroups() {
         return getAllowedGroups(this.annotation);
+    },
+
+    /**
+     * If the current annotation restricts its elements to a set of allowed_groups, create any of
+     * those groups that don't already exist, copying the current default group's style.
+     */
+    _ensureAllowedGroupsExist() {
+        const allowed = this._getAllowedGroups();
+        if (!allowed) return;
+
+        const missing = allowed.filter((groupId) => !this._groups.has(groupId));
+        if (!missing.length) return;
+
+        const defaultGroup = this._groups.get(this.parentView._defaultGroup);
+        const baseAttributes = defaultGroup ? _.omit(defaultGroup.toJSON(), 'id', 'group') : {};
+        const saves = missing.map((groupId) => {
+            this._groups.add(Object.assign({}, baseAttributes, {id: groupId}));
+            return this._groups.get(groupId).save();
+        });
+        // Let other views know new groups exist after they're persisted so that a page refresh is
+        // not needed.
+        $.when(...saves).done(() => {
+            this.parentView.trigger('h:styleGroupsEdited', this._groups);
+        });
     },
 
     /**
