@@ -133,6 +133,7 @@ class MockSlicerCLIWebResource(Resource):
 
 @pytest.mark.plugin('histomicsui')
 @pytest.mark.parametrize('spec', [
+    'allowedGroupsSpec.js',
     'analysisSpec.js',
     'annotationSpec.js',
     'girderUISpec.js',
