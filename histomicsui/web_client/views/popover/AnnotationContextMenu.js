@@ -1,6 +1,7 @@
 import $ from 'jquery';
 
 import StyleCollection from '../../collections/StyleCollection';
+import getAllowedGroups from '../../utilities/allowedGroups';
 import View from '../View';
 
 import template from '../../templates/popover/annotationContextMenu.pug';
@@ -19,6 +20,8 @@ const AnnotationContextMenu = View.extend({
         this.styles = new StyleCollection();
         this.styles.fetch().done(() => this.render());
         this.listenTo(this.collection, 'add remove reset', this.render);
+        // react immediately if any annotation's metadata is edited
+        this.listenTo(this.parentView.annotations, 'change:annotation', this.render);
     },
     render() {
         this.$el.html(template({
@@ -28,7 +31,16 @@ const AnnotationContextMenu = View.extend({
         return this;
     },
     refetchStyles() {
-        this.styles.fetch().done(() => this.render());
+        // Prevent race conditions when multiple fetches happen in quick succession.
+        const requestId = (this._styleFetchRequestId = (this._styleFetchRequestId || 0) + 1);
+        this.styles.fetch({
+            success: (collection, resp, options) => {
+                if (requestId === this._styleFetchRequestId) {
+                    collection.set(resp, options);
+                    this.render();
+                }
+            }
+        });
     },
     setGroupCount(groupCount) {
         this._cachedGroupCount = groupCount;
@@ -96,7 +108,15 @@ const AnnotationContextMenu = View.extend({
         }
     },
     _getAnnotationGroups() {
-        const groups = this.styles.map((style) => style.id);
+        // restrict to the allowed groups of the annotation that owns the selected/right-clicked
+        // element, not whichever annotation happens to be active in the Annotations panel
+        const referenceElement = this.collection.at(0);
+        const referenceAnnotation = (referenceElement && referenceElement.originalAnnotation) || this.parentView.activeAnnotation;
+        const allowed = getAllowedGroups(referenceAnnotation);
+        let groups = this.styles.map((style) => style.id);
+        if (allowed) {
+            groups = groups.filter((groupId) => allowed.includes(groupId));
+        }
         groups.sort((a, b) => {
             const countA = this._cachedGroupCount[a] || 0;
             const countB = this._cachedGroupCount[b] || 0;

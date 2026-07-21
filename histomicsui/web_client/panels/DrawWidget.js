@@ -68,9 +68,7 @@ var DrawWidget = Panel.extend({
         this.listenTo(this._groups, 'remove', this._handleStyleGroupsRemoved);
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
-        // if the annotation's metadata (including `allowed_groups`) is
-        // edited while this annotation is active, react immediately instead
-        // of requiring the annotation to be reselected or the page reloaded
+        // if the annotation's metadata is edited while it is active, react immediately
         this.listenTo(this.annotation, 'change:annotation', this._handleAnnotationAttributesChange);
         this._groups.fetch().done(() => {
             // ensure the default style exists
@@ -1100,9 +1098,8 @@ var DrawWidget = Panel.extend({
     },
 
     /**
-     * Respond to the active annotation's metadata being edited (e.g. via the
-     * "Edit annotation" dialog), which may have changed its `allowed_groups`
-     * restriction.
+     * Respond to the active annotation's metadata being edited, which may have changed its
+     * `allowed_groups` restriction.
      */
     _handleAnnotationAttributesChange() {
         this._ensureAllowedGroupsExist();
