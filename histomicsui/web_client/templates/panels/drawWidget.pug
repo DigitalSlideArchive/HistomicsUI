@@ -6,7 +6,7 @@ block title
 block content
   .input-group.input-group-sm.h-style-group-row
     select.form-control.h-style-group
-      each group in groups.sortBy('id')
+      each group in groups
         option(value=group.id, selected=group.id === style)
           = group.id
     .input-group-btn
