@@ -1,3 +1,0 @@
---pre
-girder
-girder-worker

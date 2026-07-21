@@ -28,6 +28,7 @@ block content
       var annotations = annotationGroups[groupName];
       var expanded = expandedGroups.has(groupName);
       var expandedClass = expanded ? 'h-group-expanded' : 'h-group-collapsed';
+      var groupDisplayed = annotations.length && annotations.every((a) => a.get('displayed'));
       var samplestyle={};
       annotations.some((a) => {
         var elems = (a.get('annotation') || {}).elements;
@@ -57,6 +58,10 @@ block content
           i.icon-folder
         .h-annotation-group-text
           = groupName
+        if groupDisplayed
+          span.icon-eye.h-toggle-group-annotations(title='Hide all annotations in this group')
+        else
+          span.icon-eye-off.h-toggle-group-annotations(title='Show all annotations in this group')
         span.h-annotation-group-legend(style=samplestyle)
       if expanded
         each annotation in annotations
