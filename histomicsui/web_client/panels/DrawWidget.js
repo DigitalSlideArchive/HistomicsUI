@@ -822,7 +822,7 @@ var DrawWidget = Panel.extend({
         if (!opts.size_mode) {
             opts.size_mode = 'unconstrained';
         }
-        if (!opts.sort_mode || !['label', 'label-reverse'].includes(opts.sort_mode)) {
+        if (!opts.sort_mode || !['label', 'label-reverse', 'group'].includes(opts.sort_mode)) {
             opts.sort_mode = 'label';
         }
     },
@@ -1146,7 +1146,8 @@ var DrawWidget = Panel.extend({
     _sortElements() {
         const comparators = {
             label: (elementA, elementB) => this._elementSortKey(elementA).localeCompare(this._elementSortKey(elementB)),
-            'label-reverse': (elementA, elementB) => this._elementSortKey(elementB).localeCompare(this._elementSortKey(elementA))
+            'label-reverse': (elementA, elementB) => this._elementSortKey(elementB).localeCompare(this._elementSortKey(elementA)),
+            group: (elementA, elementB) => this._elementGroupName(elementA).toLowerCase().localeCompare(this._elementGroupName(elementB).toLowerCase())
         };
         const comparator = comparators[this._editOptions.sort_mode] || comparators.label;
         this.collection.models.sort(comparator);
