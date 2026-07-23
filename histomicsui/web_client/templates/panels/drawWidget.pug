@@ -107,6 +107,7 @@ block content
     label.h-sort-label(for='h-sort-mode') Sort By
     select#h-sort-mode.h-sort-mode.form-control.input-sm(title='Sort annotation elements')
       option(value='label', selected=sortMode === 'label') Label (A-Z)
+      option(value='label-reverse', selected=sortMode === 'label-reverse') Label (Z-A)
   .h-group-count
     if partialCount
       b.h-group-count-label(title='* These counts only apply to loaded elements') Count*:
