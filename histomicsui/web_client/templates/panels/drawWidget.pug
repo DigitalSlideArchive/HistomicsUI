@@ -109,6 +109,8 @@ block content
       option(value='label', selected=sortMode === 'label') Label (A-Z)
       option(value='label-reverse', selected=sortMode === 'label-reverse') Label (Z-A)
       option(value='group', selected=sortMode === 'group') Group
+      option(value='shape', selected=sortMode === 'shape') Shape
+      option(value='count', selected=sortMode === 'count') Count (rare first)
   .h-group-count
     if partialCount
       b.h-group-count-label(title='* These counts only apply to loaded elements') Count*:

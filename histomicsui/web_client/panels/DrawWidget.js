@@ -822,7 +822,7 @@ var DrawWidget = Panel.extend({
         if (!opts.size_mode) {
             opts.size_mode = 'unconstrained';
         }
-        if (!opts.sort_mode || !['label', 'label-reverse', 'group'].includes(opts.sort_mode)) {
+        if (!opts.sort_mode || !['label', 'label-reverse', 'group', 'shape'].includes(opts.sort_mode)) {
             opts.sort_mode = 'label';
         }
     },
@@ -1141,13 +1141,38 @@ var DrawWidget = Panel.extend({
     },
 
     /**
+     * Count how many elements in the current collection belong to each group.
+     *
+     * @returns {Object} A map of group name to element count.
+     */
+    _elementGroupCounts() {
+        const counts = {};
+        this.collection.models.forEach((model) => {
+            const group = this._elementGroupName(model);
+            counts[group] = (counts[group] || 0) + 1;
+        });
+        return counts;
+    },
+
+    /**
      * Sort the element collection's models in place according to the current sort mode.
      */
     _sortElements() {
+        const groupCounts = this._elementGroupCounts();
         const comparators = {
             label: (elementA, elementB) => this._elementSortKey(elementA).localeCompare(this._elementSortKey(elementB)),
             'label-reverse': (elementA, elementB) => this._elementSortKey(elementB).localeCompare(this._elementSortKey(elementA)),
-            group: (elementA, elementB) => this._elementGroupName(elementA).toLowerCase().localeCompare(this._elementGroupName(elementB).toLowerCase())
+            group: (elementA, elementB) => this._elementGroupName(elementA).toLowerCase().localeCompare(this._elementGroupName(elementB).toLowerCase()),
+            shape: (elementA, elementB) => this._elementShape(elementA).toLowerCase().localeCompare(this._elementShape(elementB).toLowerCase()),
+            count: (elementA, elementB) => {
+                const groupA = this._elementGroupName(elementA);
+                const groupB = this._elementGroupName(elementB);
+                const countDiff = groupCounts[groupA] - groupCounts[groupB];
+                if (countDiff !== 0) {
+                    return countDiff;
+                }
+                return groupA.toLowerCase().localeCompare(groupB.toLowerCase());
+            }
         };
         const comparator = comparators[this._editOptions.sort_mode] || comparators.label;
         this.collection.models.sort(comparator);
