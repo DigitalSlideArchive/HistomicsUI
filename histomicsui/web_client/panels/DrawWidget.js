@@ -31,6 +31,7 @@ var DrawWidget = Panel.extend({
         'click .h-draw': 'drawElement',
         'click .h-group-count-option .h-group-count-select': 'selectElementsInGroup',
         'change .h-style-group': '_setToSelectedStyleGroup',
+        'change .h-sort-mode': '_changeSortMode',
         'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
         'change .h-fixed-shape,.h-fixed-height,.h-fixed-width': '_changeShapeConstraint',
         'click .h-configure-style-group': '_styleGroupEditor',
@@ -124,6 +125,7 @@ var DrawWidget = Panel.extend({
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 firstRender: true,
                 displayIdStart: 0,
+                sortMode: this._editOptions.sort_mode || 'label',
                 partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
@@ -1170,6 +1172,11 @@ var DrawWidget = Panel.extend({
                 container.append(node);
             }
         });
+    },
+
+    _changeSortMode() {
+        this._saveEditOptions({sort_mode: this.$('.h-sort-mode').val()});
+        this.render();
     },
 
     _recalculateGroupAggregation() {

@@ -103,6 +103,10 @@ block content
           label(title="If checked, the size is in screen pixels.  If unchecked, the size is in base image pixels")
             input.h-brush-screen(type="checkbox", checked=opts.brush_screen ? 'checked' : undefined)
             | Screen
+  .h-sort-row
+    label.h-sort-label(for='h-sort-mode') Sort By
+    select#h-sort-mode.h-sort-mode.form-control.input-sm(title='Sort annotation elements')
+      option(value='label', selected=sortMode === 'label') Label (A-Z)
   .h-group-count
     if partialCount
       b.h-group-count-label(title='* These counts only apply to loaded elements') Count*:
