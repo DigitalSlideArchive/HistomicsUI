@@ -276,13 +276,21 @@ girderTest.promise.done(function () {
                     return $('.h-elements-container .h-element').length === 2;
                 }, 'point to be created');
                 runs(function () {
-                    expect($('.h-elements-container .h-element:last .h-element-label').text()).toBe('default point 2');
+                    // Elements are sorted lexically by label, so target the newly drawn point by
+                    // its label rather than by position.
+                    expect($('.h-elements-container .h-element .h-element-label').filter(function () {
+                        return $(this).text() === 'default point 2';
+                    }).length).toBe(1);
                 });
                 checkAutoSave('drawn 1', 2, annotationInfo);
             });
 
             it('delete the second point', function () {
-                $('.h-elements-container .h-element:last .h-delete-element').click();
+                // Elements are sorted lexically by label, so delete the just drawn point by its
+                // label rather than by position.
+                $('.h-elements-container .h-element').filter(function () {
+                    return $(this).find('.h-element-label').text() === 'default point 2';
+                }).find('.h-delete-element').click();
                 expect($('.h-elements-container .h-element').length).toBe(1);
                 checkAutoSave('drawn 1', 1, annotationInfo);
             });
@@ -312,7 +320,11 @@ girderTest.promise.done(function () {
                     return $('.h-elements-container .h-element').length === 2;
                 }, 'point to be created');
                 runs(function () {
-                    expect($('.h-elements-container .h-element:last .h-element-label').text()).toBe('default point 2');
+                    // Elements are sorted lexically by label, so target the newly drawn point by
+                    // its label rather than by position.
+                    expect($('.h-elements-container .h-element .h-element-label').filter(function () {
+                        return $(this).text() === 'default point 2';
+                    }).length).toBe(1);
                 });
                 checkAutoSave('drawn 1', 2, annotationInfo);
             });
@@ -349,7 +361,11 @@ girderTest.promise.done(function () {
             });
 
             it('delete the last point', function () {
-                $('.h-elements-container .h-element:last .h-delete-element').click();
+                // Elements are sorted lexically by label, so delete the just drawn point by its
+                // label rather than by position.
+                $('.h-elements-container .h-element').filter(function () {
+                    return $(this).find('.h-element-label').text() === 'default point 2';
+                }).find('.h-delete-element').click();
                 expect($('.h-elements-container .h-element').length).toBe(1);
 
                 // reset the draw state

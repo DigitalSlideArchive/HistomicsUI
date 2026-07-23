@@ -110,6 +110,7 @@ var DrawWidget = Panel.extend({
                 delete this._skipRenderHTML;
             }
         } else {
+            this._sortElements();
             this.$el.html(drawWidget({
                 title: 'Draw',
                 elements: this.collection.models,
@@ -372,6 +373,7 @@ var DrawWidget = Panel.extend({
                 }
             }
         }
+        this._reorderElementDom();
     },
 
     /**
@@ -818,6 +820,9 @@ var DrawWidget = Panel.extend({
         if (!opts.size_mode) {
             opts.size_mode = 'unconstrained';
         }
+        if (!opts.sort_mode || !['label'].includes(opts.sort_mode)) {
+            opts.sort_mode = 'label';
+        }
     },
 
     updateCount(groupName, change) {
@@ -1087,6 +1092,84 @@ var DrawWidget = Panel.extend({
     _unhighlightElement(evt) {
         $(evt.currentTarget).find('.h-view-element').hide();
         this.parentView.trigger('h:highlightAnnotation');
+    },
+
+    /**
+     * Resolve the displayed shape name of an element, matching the label logic in
+     * drawWidgetElement.pug (closed polylines are polygons, open ones are lines).
+     *
+     * @param {ElementModel} model The element to inspect.
+     * @returns {string} The shape name.
+     */
+    _elementShape(model) {
+        const element = model.attributes;
+        return element.type === 'polyline'
+            ? (element.closed ? 'polygon' : 'line')
+            : element.type;
+    },
+
+    /**
+     * Resolve the group name of an element, falling back to the default group.
+     *
+     * @param {ElementModel} model The element to inspect.
+     * @returns {string} The group name.
+     */
+    _elementGroupName(model) {
+        return model.attributes.group || this.parentView._defaultGroup;
+    },
+
+    /**
+     * Compute a lexical sort key for an element that matches its displayed label. The number is
+     * intentionally omitted so that elements sort by their base label before enumeration.
+     *
+     * @param {ElementModel} model The element to compute a key for.
+     * @returns {string} A lower-case sort key.
+     */
+    _elementSortKey(model) {
+        const element = model.attributes;
+        const userLabel = (element.label || {}).value;
+        if (userLabel) {
+            return ('' + userLabel).toLowerCase();
+        }
+        const shape = this._elementShape(model);
+        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
+            return `${this._elementGroupName(model)} ${shape}`.toLowerCase();
+        }
+        return ('' + shape).toLowerCase();
+    },
+
+    /**
+     * Sort the element collection's models in place according to the current sort mode.
+     */
+    _sortElements() {
+        const comparators = {
+            label: (elementA, elementB) => this._elementSortKey(elementA).localeCompare(this._elementSortKey(elementB))
+        };
+        const comparator = comparators[this._editOptions.sort_mode] || comparators.label;
+        this.collection.models.sort(comparator);
+    },
+
+    /**
+     * Reorder the already-rendered element rows to match the current sort without rebuilding the
+     * list. Auto-assigned enumeration numbers are left as-is here and are recomputed on the next
+     * full render.
+     */
+    _reorderElementDom() {
+        const container = this.$el.find('.h-elements-container');
+        if (!container.length) {
+            return;
+        }
+        this._sortElements();
+        const rowsById = {};
+        container.children('.h-element').each((index, node) => {
+            rowsById[$(node).attr('data-id')] = node;
+        });
+        this.collection.models.forEach((model) => {
+            const node = rowsById[model.id];
+            if (node) {
+                container.append(node);
+            }
+        });
     },
 
     _recalculateGroupAggregation() {
