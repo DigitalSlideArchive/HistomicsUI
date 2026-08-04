@@ -205,13 +205,17 @@ var ImageView = View.extend({
                 // it is very confusing if this value is smaller than the
                 // AnnotationSelector MAX_ELEMENTS_LIST_LENGTH
                 highlightFeatureSizeLimit: 5000,
-                scale: {position: {bottom: 20, right: 10}}
+                scale: {position: {bottom: 20, right: 10}},
+                unselectedOpacityMultiplier: typeof this._unselectedOpacityMultiplier !== 'number'
+                    ? 0.33
+                    : this._unselectedOpacityMultiplier
             });
             // Don't unclamp bounds for the image even if image overlays are present.
             if (this.viewerWidget.setUnclampBoundsForOverlay) {
                 this.viewerWidget.setUnclampBoundsForOverlay(false);
             }
             this.trigger('h:viewerWidgetCreated', this.viewerWidget);
+            this.viewerWidget.setUnselectedOpacityMultiplier(this._unselectedOpacityMultiplier);
 
             // handle annotation mouse events
             this.listenTo(this.viewerWidget, 'g:mouseOverAnnotation', this.mouseOverAnnotation);
@@ -1783,6 +1787,14 @@ var ImageView = View.extend({
                         groups.each((model) => { model.save(); });
                     }
                 });
+            }
+            if (val.unselectedOpacityMultiplier !== undefined) {
+                this._unselectedOpacityMultiplier = typeof val.unselectedOpacityMultiplier !== 'number'
+                    ? 0.33
+                    : val.unselectedOpacityMultiplier;
+                if (this.viewerWidget) {
+                    this.viewerWidget.setUnselectedOpacityMultiplier(val.unselectedOpacityMultiplier);
+                }
             }
         });
     },
