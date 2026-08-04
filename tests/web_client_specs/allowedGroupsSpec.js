@@ -206,10 +206,8 @@ girderTest.promise.done(function () {
             });
 
             it('auto-creates the restricted annotation\'s allowed groups (groupE/groupF) as styles', function () {
-                // _getAnnotationGroups() only ever returns groups that already exist as
-                // StyleModels; it never auto-creates them. Auto-creation only happens via the Draw
-                // panel's _editAnnotation() flow, so briefly edit the restricted annotation here
-                // to create groupE and groupF before switching the active annotation below.
+                // briefly edit the restricted annotation in the Draw panel to create groupE and
+                // groupF before switching the active annotation below.
                 var bodyView = huiTest.app.bodyView;
                 bodyView.annotations.add(restricted.annotation);
                 bodyView._editAnnotation(restricted.annotation);
@@ -241,6 +239,33 @@ girderTest.promise.done(function () {
 
                     var groups = bodyView.contextMenu._getAnnotationGroups();
                     expect(groups.sort()).toEqual(['groupE', 'groupF']);
+                });
+            });
+
+            it('renders the clicked annotation\'s restriction on selection, not the active annotation\'s (regression)', function () {
+                var bodyView = huiTest.app.bodyView;
+
+                runs(function () {
+                    // keep the *unrestricted* annotation active in the panel
+                    bodyView._editAnnotation(unrestricted.annotation);
+                });
+                waitsFor(function () {
+                    return !!bodyView.drawWidget && !!bodyView.drawWidget._groups.length;
+                });
+                runs(function () {
+                    // Selecting an element fires the context menu's render synchronously.
+                    // This asserts on the DOM produced by that render, which is the path that
+                    // regressed. Previously `originalAnnotation` was assigned only after `add`,
+                    // so the render fell back to the active annotation and offered the wrong
+                    // groups when the active annotation did not match the selected one.
+                    var element = restricted.annotation.elements().first();
+                    bodyView._resetSelection();
+                    bodyView._selectElement(element);
+
+                    var renderedGroups = bodyView.contextMenu.$('.h-set-group').map(function () {
+                        return window.$(this).data('group');
+                    }).get();
+                    expect(renderedGroups.sort()).toEqual(['groupE', 'groupF']);
                 });
             });
         });
@@ -303,6 +328,34 @@ girderTest.promise.done(function () {
                     var contextGroups = bodyView.contextMenu._getAnnotationGroups();
                     expect(contextGroups.sort()).toEqual(['groupG', 'groupH']);
                 });
+            });
+        });
+
+        describe('#3(consistency): the context menu auto-creates missing allowed groups', function () {
+            var restricted = {};
+
+            it('creates a restricted annotation that is never opened in the Draw panel', function () {
+                createAnnotation('context-only restricted annotation', {
+                    allowed_groups: ['groupK', 'groupL']
+                }, [rectangleElement(70, 70)], restricted);
+            });
+
+            it('auto-creates the allowed groups the first time the context menu sees them', function () {
+                var bodyView = huiTest.app.bodyView;
+                // the groups must not already exist from an earlier spec
+                expect(bodyView.contextMenu.styles.get('groupK')).toBe(undefined);
+                expect(bodyView.contextMenu.styles.get('groupL')).toBe(undefined);
+
+                // select an element of the restricted annotation without ever opening it in the
+                // Draw panel, so the context menu is the only code path that can create its groups
+                var element = restricted.annotation.elements().first();
+                bodyView._resetSelection();
+                bodyView._selectElement(element);
+
+                var groups = bodyView.contextMenu._getAnnotationGroups();
+                expect(groups.sort()).toEqual(['groupK', 'groupL']);
+                expect(bodyView.contextMenu.styles.get('groupK')).toBeTruthy();
+                expect(bodyView.contextMenu.styles.get('groupL')).toBeTruthy();
             });
         });
     });
