@@ -22,4 +22,36 @@ function getAllowedGroups(annotation) {
     return filtered.length ? filtered : null;
 }
 
+/**
+ * Ensure that every group in an `allowed_groups` restriction exists as a persisted style group.
+ * Create any that are missing by copying the style of the default group.
+ *
+ * Newly created groups are added to the collection synchronously and each is persisted
+ * asynchronously. The caller is responsible for reacting to the returned save promises.
+ *
+ * @param {StyleCollection} styles The style-group collection to populate.
+ * @param {string[]|null} allowed The validated `allowed_groups` restriction, or `null` for
+ *                                "unrestricted" (in which case nothing is created).
+ * @param {string} defaultGroupId The id of the default style group to copy.
+ * @returns {Array} The list of save promises for the newly created groups.
+ */
+function ensureAllowedGroupsExist(styles, allowed, defaultGroupId) {
+    if (!allowed) {
+        return [];
+    }
+    const missing = allowed.filter((groupId) => !styles.get(groupId));
+    if (!missing.length) {
+        return [];
+    }
+    // we assume the default group always exists; if it somehow does not, new groups are created
+    // with no inherited style rather than failing
+    const defaultGroup = styles.get(defaultGroupId);
+    const baseAttributes = defaultGroup ? _.omit(defaultGroup.toJSON(), 'id', 'group') : {};
+    return missing.map((groupId) => {
+        styles.add(Object.assign({}, baseAttributes, {id: groupId}));
+        return styles.get(groupId).save();
+    });
+}
+
 export default getAllowedGroups;
+export {ensureAllowedGroupsExist};

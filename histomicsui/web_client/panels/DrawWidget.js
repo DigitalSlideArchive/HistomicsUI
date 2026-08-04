@@ -15,7 +15,7 @@ import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
-import getAllowedGroups from '../utilities/allowedGroups';
+import getAllowedGroups, {ensureAllowedGroupsExist} from '../utilities/allowedGroups';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
 import '../stylesheets/panels/drawWidget.styl';
@@ -1112,18 +1112,11 @@ var DrawWidget = Panel.extend({
      * those groups that don't already exist, copying the current default group's style.
      */
     _ensureAllowedGroupsExist() {
-        const allowed = this._getAllowedGroups();
-        if (!allowed) return;
-
-        const missing = allowed.filter((groupId) => !this._groups.has(groupId));
-        if (!missing.length) return;
-
-        const defaultGroup = this._groups.get(this.parentView._defaultGroup);
-        const baseAttributes = defaultGroup ? _.omit(defaultGroup.toJSON(), 'id', 'group') : {};
-        const saves = missing.map((groupId) => {
-            this._groups.add(Object.assign({}, baseAttributes, {id: groupId}));
-            return this._groups.get(groupId).save();
-        });
+        const saves = ensureAllowedGroupsExist(
+            this._groups, this._getAllowedGroups(), this.parentView._defaultGroup);
+        if (!saves.length) {
+            return;
+        }
         // Let other views know new groups exist after they're persisted so that a page refresh is
         // not needed.
         $.when(...saves).done(() => {

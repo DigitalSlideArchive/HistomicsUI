@@ -1,7 +1,7 @@
 import $ from 'jquery';
 
 import StyleCollection from '../../collections/StyleCollection';
-import getAllowedGroups from '../../utilities/allowedGroups';
+import getAllowedGroups, {ensureAllowedGroupsExist} from '../../utilities/allowedGroups';
 import View from '../View';
 
 import template from '../../templates/popover/annotationContextMenu.pug';
@@ -113,6 +113,7 @@ const AnnotationContextMenu = View.extend({
         const referenceElement = this.collection.at(0);
         const referenceAnnotation = (referenceElement && referenceElement.originalAnnotation) || this.parentView.activeAnnotation;
         const allowed = getAllowedGroups(referenceAnnotation);
+        this._ensureAllowedGroupsExist(allowed);
         let groups = this.styles.map((style) => style.id);
         if (allowed) {
             groups = groups.filter((groupId) => allowed.includes(groupId));
@@ -132,6 +133,24 @@ const AnnotationContextMenu = View.extend({
             }
         });
         return groups;
+    },
+    /**
+     * Create any style groups required by the given `allowed_groups` restriction that don't
+     * already exist. Once the new groups are persisted, notify the other views so their style
+     * collections stay in sync.
+     *
+     * @param {string[]|null} allowed The validated `allowed_groups` restriction, or `null` when
+     *                                unrestricted.
+     */
+    _ensureAllowedGroupsExist(allowed) {
+        const saves = ensureAllowedGroupsExist(
+            this.styles, allowed, this.parentView._defaultGroup);
+        if (!saves.length) {
+            return;
+        }
+        $.when(...saves).done(() => {
+            this.parentView.trigger('h:styleGroupsEdited', this.styles);
+        });
     },
     _setGroup(evt) {
         evt.preventDefault();
