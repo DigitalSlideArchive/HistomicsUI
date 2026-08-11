@@ -15,6 +15,7 @@ import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
+import getAllowedGroups, {ensureAllowedGroupsExist} from '../utilities/allowedGroups';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
 import '../stylesheets/panels/drawWidget.styl';
@@ -31,6 +32,8 @@ var DrawWidget = Panel.extend({
         'click .h-draw': 'drawElement',
         'click .h-group-count-option .h-group-count-select': 'selectElementsInGroup',
         'change .h-style-group': '_setToSelectedStyleGroup',
+        'change .h-sort-mode': '_changeSortMode',
+        'click .h-sort-order': '_toggleSortOrder',
         'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
         'change .h-fixed-shape,.h-fixed-height,.h-fixed-width': '_changeShapeConstraint',
         'click .h-configure-style-group': '_styleGroupEditor',
@@ -64,9 +67,11 @@ var DrawWidget = Panel.extend({
         this._groups = new StyleCollection();
         this._style = new StyleModel({id: this.parentView._defaultGroup});
         this.listenTo(this._groups, 'add change', this._handleStyleGroupsUpdate);
-        this.listenTo(this._groups, 'remove', this.render);
+        this.listenTo(this._groups, 'remove', this._handleStyleGroupsRemoved);
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
+        // if the annotation's metadata is edited while it is active, react immediately
+        this.listenTo(this.annotation, 'change:annotation', this._handleAnnotationAttributesChange);
         this._groups.fetch().done(() => {
             // ensure the default style exists
             if (this._groups.has(this.parentView._defaultGroup)) {
@@ -75,9 +80,12 @@ var DrawWidget = Panel.extend({
                 this._groups.add(this._style.toJSON());
                 this._groups.get(this._style.id).save();
             }
+            this._ensureAllowedGroupsExist();
             if (this._editOptions.style && this._groups.get(this._editOptions.style)) {
                 this._setStyleGroup(this._groups.get(this._editOptions.style).toJSON());
             }
+            this._restrictStyleToAllowedGroups();
+            this._debounceRender();
         });
         this.on('h:mouseon', (model) => {
             if (model && model.id) {
@@ -110,10 +118,11 @@ var DrawWidget = Panel.extend({
                 delete this._skipRenderHTML;
             }
         } else {
+            this._sortElements();
             this.$el.html(drawWidget({
                 title: 'Draw',
                 elements: this.collection.models,
-                groups: this._groups,
+                groups: this._groupsForDisplay(),
                 style: this._style.id,
                 defaultGroup: this.parentView._defaultGroup,
                 highlighted: this._highlighted,
@@ -123,6 +132,8 @@ var DrawWidget = Panel.extend({
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 firstRender: true,
                 displayIdStart: 0,
+                sortMode: this._editOptions.sort_mode || 'label',
+                sortOrder: this._editOptions.sort_order || 'asc',
                 partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
@@ -372,6 +383,7 @@ var DrawWidget = Panel.extend({
                 }
             }
         }
+        this._reorderElementDom();
     },
 
     /**
@@ -818,6 +830,17 @@ var DrawWidget = Panel.extend({
         if (!opts.size_mode) {
             opts.size_mode = 'unconstrained';
         }
+        if (opts.sort_mode === 'label-reverse') {
+            // migrate the legacy combined mode/order value
+            opts.sort_mode = 'label';
+            opts.sort_order = 'desc';
+        }
+        if (!opts.sort_mode || !['label', 'group', 'shape', 'count'].includes(opts.sort_mode)) {
+            opts.sort_mode = 'label';
+        }
+        if (!opts.sort_order || !['asc', 'desc'].includes(opts.sort_order)) {
+            opts.sort_order = 'asc';
+        }
     },
 
     updateCount(groupName, change) {
@@ -1071,8 +1094,79 @@ var DrawWidget = Panel.extend({
     },
 
     _handleStyleGroupsUpdate() {
+        this._restrictStyleToAllowedGroups();
         this._debounceRender();
         this.trigger('h:styleGroupsUpdated', this._groups);
+    },
+
+    _handleStyleGroupsRemoved() {
+        this._restrictStyleToAllowedGroups();
+        this.render();
+    },
+
+    /**
+     * Get the current annotation's `allowed_groups` metadata, if any.
+     *
+     * @returns {string[]|null} The list of allowed group names, or null if the current annotation
+     *                          has no valid restriction.
+     */
+    _getAllowedGroups() {
+        return getAllowedGroups(this.annotation);
+    },
+
+    /**
+     * Respond to the active annotation's metadata being edited, which may have changed its
+     * `allowed_groups` restriction.
+     */
+    _handleAnnotationAttributesChange() {
+        this._ensureAllowedGroupsExist();
+        this._restrictStyleToAllowedGroups();
+        this._debounceRender();
+    },
+
+    /**
+     * If the current annotation restricts its elements to a set of allowed_groups, create any of
+     * those groups that don't already exist, copying the current default group's style.
+     */
+    _ensureAllowedGroupsExist() {
+        const saves = ensureAllowedGroupsExist(
+            this._groups, this._getAllowedGroups(), this.parentView._defaultGroup);
+        if (!saves.length) {
+            return;
+        }
+        // Let other views know new groups exist after they're persisted so that a page refresh is
+        // not needed.
+        $.when(...saves).done(() => {
+            this.parentView.trigger('h:styleGroupsEdited', this._groups);
+        });
+    },
+
+    /**
+     * Return the style groups that should be offered to the user given the current annotation's
+     * `allowed_groups` restriction, if any, sorted alphabetically by id.
+     *
+     * @returns {object[]} A list of plain style group attribute objects.
+     */
+    _groupsForDisplay() {
+        const allowed = this._getAllowedGroups();
+        const groups = allowed ? this._groups.filter((group) => allowed.includes(group.id)) : this._groups.models;
+        return _.sortBy(groups, 'id').map((group) => group.toJSON());
+    },
+
+    /**
+     * If the current annotation restricts its elements to a set of `allowed_groups` and the
+     * currently selected style is not one of them, switch to the first allowed group that exists.
+     */
+    _restrictStyleToAllowedGroups() {
+        const allowed = this._getAllowedGroups();
+        if (!allowed || allowed.includes(this._style.id)) return;
+
+        const candidates = this._groups.filter((group) => allowed.includes(group.id))
+            .map((group) => group.id)
+            .sort();
+        if (candidates.length) {
+            this._setStyleGroup(this._groups.get(candidates[0]).toJSON());
+        }
     },
 
     _highlightElement(evt) {
@@ -1087,6 +1181,128 @@ var DrawWidget = Panel.extend({
     _unhighlightElement(evt) {
         $(evt.currentTarget).find('.h-view-element').hide();
         this.parentView.trigger('h:highlightAnnotation');
+    },
+
+    /**
+     * Resolve the displayed shape name of an element, matching the label logic in
+     * drawWidgetElement.pug (closed polylines are polygons, open ones are lines).
+     *
+     * @param {ElementModel} model The element to inspect.
+     * @returns {string} The shape name.
+     */
+    _elementShape(model) {
+        const element = model.attributes;
+        return element.type === 'polyline'
+            ? (element.closed ? 'polygon' : 'line')
+            : element.type;
+    },
+
+    /**
+     * Resolve the group name of an element, falling back to the default group.
+     *
+     * @param {ElementModel} model The element to inspect.
+     * @returns {string} The group name.
+     */
+    _elementGroupName(model) {
+        return model.attributes.group || this.parentView._defaultGroup;
+    },
+
+    /**
+     * Compute a lexical sort key for an element that matches its displayed label. The number is
+     * intentionally omitted so that elements sort by their base label before enumeration.
+     *
+     * @param {ElementModel} model The element to compute a key for.
+     * @returns {string} A lower-case sort key.
+     */
+    _elementSortKey(model) {
+        const element = model.attributes;
+        const userLabel = (element.label || {}).value;
+        if (userLabel) {
+            return ('' + userLabel).toLowerCase();
+        }
+        const shape = this._elementShape(model);
+        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
+            return `${this._elementGroupName(model)} ${shape}`.toLowerCase();
+        }
+        return ('' + shape).toLowerCase();
+    },
+
+    /**
+     * Count how many elements in the current collection belong to each group.
+     *
+     * @returns {Object} A map of group name to element count.
+     */
+    _elementGroupCounts() {
+        const counts = {};
+        this.collection.models.forEach((model) => {
+            const group = this._elementGroupName(model);
+            counts[group] = (counts[group] || 0) + 1;
+        });
+        return counts;
+    },
+
+    /**
+     * Sort the element collection's models in place according to the current sort mode.
+     */
+    _sortElements() {
+        const groupCounts = this._elementGroupCounts();
+        const comparators = {
+            label: (elementA, elementB) => this._elementSortKey(elementA).localeCompare(this._elementSortKey(elementB)),
+            group: (elementA, elementB) => this._elementGroupName(elementA).toLowerCase().localeCompare(this._elementGroupName(elementB).toLowerCase()),
+            shape: (elementA, elementB) => this._elementShape(elementA).toLowerCase().localeCompare(this._elementShape(elementB).toLowerCase()),
+            count: (elementA, elementB) => {
+                const groupA = this._elementGroupName(elementA);
+                const groupB = this._elementGroupName(elementB);
+                const countDiff = groupCounts[groupA] - groupCounts[groupB];
+                if (countDiff !== 0) {
+                    return countDiff;
+                }
+                return groupA.toLowerCase().localeCompare(groupB.toLowerCase());
+            }
+        };
+        const comparator = comparators[this._editOptions.sort_mode] || comparators.label;
+        const ordered = this._editOptions.sort_order === 'desc'
+            ? (elementA, elementB) => -comparator(elementA, elementB)
+            : comparator;
+        this.collection.models.sort(ordered);
+    },
+
+    /**
+     * Reorder the already-rendered element rows to match the current sort without rebuilding the
+     * list. Auto-assigned enumeration numbers are left as-is here and are recomputed on the next
+     * full render.
+     */
+    _reorderElementDom() {
+        const container = this.$el.find('.h-elements-container');
+        if (!container.length) {
+            return;
+        }
+        this._sortElements();
+        const rowsById = {};
+        container.children('.h-element').each((index, node) => {
+            rowsById[$(node).attr('data-id')] = node;
+        });
+        this.collection.models.forEach((model) => {
+            const node = rowsById[model.id];
+            if (node) {
+                container.append(node);
+            }
+        });
+    },
+
+    _changeSortMode() {
+        this._saveEditOptions({sort_mode: this.$('.h-sort-mode').val()});
+        this.render();
+    },
+
+    /**
+     * Toggle between ascending and descending order for the current sort
+     * mode, persist the choice, and re-render.
+     */
+    _toggleSortOrder() {
+        const order = this._editOptions.sort_order === 'desc' ? 'asc' : 'desc';
+        this._saveEditOptions({sort_order: order});
+        this.render();
     },
 
     _recalculateGroupAggregation() {
