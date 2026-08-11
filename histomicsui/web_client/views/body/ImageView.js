@@ -1544,8 +1544,12 @@ var ImageView = View.extend({
             return;
         }
 
-        var elementModel = this.selectedElements.add(element.attributes, options);
+        // Assign `originalAnnotation` before the element enters the collection. Setting it after
+        // `add` would leave that first render seeing an undefined reference and falling back to
+        // the panel's active annotation instead of the clicked one.
+        var elementModel = new this.selectedElements.model(element.attributes);
         elementModel.originalAnnotation = annotation;
+        this.selectedElements.add(elementModel, options);
         this.viewerWidget.highlightAnnotation(this.selectedAnnotation.id);
     },
 
