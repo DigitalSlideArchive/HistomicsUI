@@ -15,6 +15,7 @@ import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
+import getAllowedGroups, {ensureAllowedGroupsExist} from '../utilities/allowedGroups';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
 import '../stylesheets/panels/drawWidget.styl';
@@ -64,9 +65,11 @@ var DrawWidget = Panel.extend({
         this._groups = new StyleCollection();
         this._style = new StyleModel({id: this.parentView._defaultGroup});
         this.listenTo(this._groups, 'add change', this._handleStyleGroupsUpdate);
-        this.listenTo(this._groups, 'remove', this.render);
+        this.listenTo(this._groups, 'remove', this._handleStyleGroupsRemoved);
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
+        // if the annotation's metadata is edited while it is active, react immediately
+        this.listenTo(this.annotation, 'change:annotation', this._handleAnnotationAttributesChange);
         this._groups.fetch().done(() => {
             // ensure the default style exists
             if (this._groups.has(this.parentView._defaultGroup)) {
@@ -75,9 +78,12 @@ var DrawWidget = Panel.extend({
                 this._groups.add(this._style.toJSON());
                 this._groups.get(this._style.id).save();
             }
+            this._ensureAllowedGroupsExist();
             if (this._editOptions.style && this._groups.get(this._editOptions.style)) {
                 this._setStyleGroup(this._groups.get(this._editOptions.style).toJSON());
             }
+            this._restrictStyleToAllowedGroups();
+            this._debounceRender();
         });
         this.on('h:mouseon', (model) => {
             if (model && model.id) {
@@ -113,7 +119,7 @@ var DrawWidget = Panel.extend({
             this.$el.html(drawWidget({
                 title: 'Draw',
                 elements: this.collection.models,
-                groups: this._groups,
+                groups: this._groupsForDisplay(),
                 style: this._style.id,
                 defaultGroup: this.parentView._defaultGroup,
                 highlighted: this._highlighted,
@@ -1071,8 +1077,79 @@ var DrawWidget = Panel.extend({
     },
 
     _handleStyleGroupsUpdate() {
+        this._restrictStyleToAllowedGroups();
         this._debounceRender();
         this.trigger('h:styleGroupsUpdated', this._groups);
+    },
+
+    _handleStyleGroupsRemoved() {
+        this._restrictStyleToAllowedGroups();
+        this.render();
+    },
+
+    /**
+     * Get the current annotation's `allowed_groups` metadata, if any.
+     *
+     * @returns {string[]|null} The list of allowed group names, or null if the current annotation
+     *                          has no valid restriction.
+     */
+    _getAllowedGroups() {
+        return getAllowedGroups(this.annotation);
+    },
+
+    /**
+     * Respond to the active annotation's metadata being edited, which may have changed its
+     * `allowed_groups` restriction.
+     */
+    _handleAnnotationAttributesChange() {
+        this._ensureAllowedGroupsExist();
+        this._restrictStyleToAllowedGroups();
+        this._debounceRender();
+    },
+
+    /**
+     * If the current annotation restricts its elements to a set of allowed_groups, create any of
+     * those groups that don't already exist, copying the current default group's style.
+     */
+    _ensureAllowedGroupsExist() {
+        const saves = ensureAllowedGroupsExist(
+            this._groups, this._getAllowedGroups(), this.parentView._defaultGroup);
+        if (!saves.length) {
+            return;
+        }
+        // Let other views know new groups exist after they're persisted so that a page refresh is
+        // not needed.
+        $.when(...saves).done(() => {
+            this.parentView.trigger('h:styleGroupsEdited', this._groups);
+        });
+    },
+
+    /**
+     * Return the style groups that should be offered to the user given the current annotation's
+     * `allowed_groups` restriction, if any, sorted alphabetically by id.
+     *
+     * @returns {object[]} A list of plain style group attribute objects.
+     */
+    _groupsForDisplay() {
+        const allowed = this._getAllowedGroups();
+        const groups = allowed ? this._groups.filter((group) => allowed.includes(group.id)) : this._groups.models;
+        return _.sortBy(groups, 'id').map((group) => group.toJSON());
+    },
+
+    /**
+     * If the current annotation restricts its elements to a set of `allowed_groups` and the
+     * currently selected style is not one of them, switch to the first allowed group that exists.
+     */
+    _restrictStyleToAllowedGroups() {
+        const allowed = this._getAllowedGroups();
+        if (!allowed || allowed.includes(this._style.id)) return;
+
+        const candidates = this._groups.filter((group) => allowed.includes(group.id))
+            .map((group) => group.id)
+            .sort();
+        if (candidates.length) {
+            this._setStyleGroup(this._groups.get(candidates[0]).toJSON());
+        }
     },
 
     _highlightElement(evt) {
