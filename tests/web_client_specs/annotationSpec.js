@@ -625,6 +625,106 @@ girderTest.promise.done(function () {
             });
         });
 
+        describe('Sort By', function () {
+            var drawWidget;
+            var testLabels = ['Alpha', 'Bravo', 'Charlie', 'Delta'];
+            var testIds = ['sort-test-alpha', 'sort-test-bravo', 'sort-test-charlie', 'sort-test-delta'];
+
+            function testElementLabels() {
+                return $('.h-elements-container .h-element-label').map(function () {
+                    return $(this).text();
+                }).get().filter(function (text) {
+                    return testLabels.indexOf(text) !== -1;
+                });
+            }
+
+            it('add elements with distinct labels, groups, and shapes', function () {
+                runs(function () {
+                    drawWidget = huiTest.app.bodyView.drawWidget;
+                    drawWidget.collection.add([
+                        {id: 'sort-test-charlie', type: 'point', label: {value: 'Charlie'}, group: 'rareGroup'},
+                        {id: 'sort-test-alpha', type: 'point', label: {value: 'Alpha'}, group: 'commonGroup'},
+                        {id: 'sort-test-bravo', type: 'rectangle', label: {value: 'Bravo'}, group: 'commonGroup'},
+                        {id: 'sort-test-delta', type: 'polyline', closed: false, label: {value: 'Delta'}, group: 'commonGroup'}
+                    ]);
+                });
+                waitsFor(function () {
+                    return testElementLabels().length === testLabels.length;
+                }, 'test elements to be added');
+            });
+
+            it('defaults to sorting by label, ascending', function () {
+                runs(function () {
+                    expect($('.h-sort-mode').val()).toBe('label');
+                    expect($('.h-sort-order i').hasClass('icon-sort-alt-up')).toBe(true);
+                    expect(testElementLabels()).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta']);
+                });
+            });
+
+            it('toggles to descending order', function () {
+                runs(function () {
+                    $('.h-sort-order').click();
+                });
+                runs(function () {
+                    expect($('.h-sort-order i').hasClass('icon-sort-alt-down')).toBe(true);
+                    expect($('.h-sort-order').attr('title')).toMatch(/^Sort descending/);
+                    expect(testElementLabels()).toEqual(['Delta', 'Charlie', 'Bravo', 'Alpha']);
+                });
+            });
+
+            it('toggles back to ascending order', function () {
+                runs(function () {
+                    $('.h-sort-order').click();
+                });
+                runs(function () {
+                    expect($('.h-sort-order i').hasClass('icon-sort-alt-up')).toBe(true);
+                    expect($('.h-sort-order').attr('title')).toMatch(/^Sort ascending/);
+                    expect(testElementLabels()).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta']);
+                });
+            });
+
+            it('sorts by group', function () {
+                runs(function () {
+                    $('.h-sort-mode').val('group').trigger('change');
+                });
+                runs(function () {
+                    var order = testElementLabels();
+                    // "commonGroup" sorts before "rareGroup" lexically.
+                    expect(order.indexOf('Charlie')).toBe(order.length - 1);
+                });
+            });
+
+            it('sorts by shape', function () {
+                runs(function () {
+                    $('.h-sort-mode').val('shape').trigger('change');
+                });
+                runs(function () {
+                    var order = testElementLabels();
+                    expect(order.indexOf('Delta')).toBeLessThan(order.indexOf('Bravo'));
+                });
+            });
+
+            it('sorts by count, rare groups first', function () {
+                runs(function () {
+                    $('.h-sort-mode').val('count').trigger('change');
+                });
+                runs(function () {
+                    var order = testElementLabels();
+                    expect(order[0]).toBe('Charlie');
+                });
+            });
+
+            it('removes the test elements and restores label sort', function () {
+                runs(function () {
+                    drawWidget.collection.remove(testIds);
+                    $('.h-sort-mode').val('label').trigger('change');
+                });
+                waitsFor(function () {
+                    return testElementLabels().length === 0;
+                }, 'test elements to be removed');
+            });
+        });
+
         describe('Annotation styles', function () {
             it('create a new annotation', function () {
                 $('.h-create-annotation').click();
