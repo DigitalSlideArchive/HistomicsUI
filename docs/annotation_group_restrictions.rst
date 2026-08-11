@@ -28,7 +28,7 @@ When this restriction is present, the Draw panel and the annotation element cont
 Validation
 ----------
 
-``allowed_groups`` is only honored when it is a non-empty array of non-empty strings, or a string that parses as JSON into such an array. Any other value - a missing key, a non-array/non-JSON-array value, an unparseable string, an empty array, or an array containing no valid strings - is treated as *unrestricted*, and every existing style group is offered as usual. Duplicate entries are ignored.
+``allowed_groups`` is only honored when it is a non-empty array of non-empty strings, or a string that parses as JSON into such an array. Any other value - a missing key, a non-array/non-JSON-array value, an unparsable string, an empty array, or an array containing no valid strings - is treated as *unrestricted*, and every existing style group is offered as usual. Duplicate entries are ignored.
 
 Auto-creation of missing groups
 --------------------------------
