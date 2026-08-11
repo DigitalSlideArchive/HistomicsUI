@@ -65,6 +65,7 @@ var DrawWidget = Panel.extend({
         this.listenTo(this.collection, 'add remove reset', this._recalculateGroupAggregation);
         this.listenTo(this.collection, 'change update reset', this.render);
         // if the annotation's metadata is edited while it is active, react immediately
+        this._lastAllowedGroupsKey = this._allowedGroupsKey();
         this.listenTo(this.annotation, 'change:annotation', this._handleAnnotationAttributesChange);
         this._groups.fetch().done(() => {
             // ensure the default style exists
@@ -1114,10 +1115,28 @@ var DrawWidget = Panel.extend({
     },
 
     /**
+     * Compute a stable, order-independent key for the current `allowed_groups` restriction, used
+     * to detect whether it actually changed. Returns an empty string for "unrestricted".
+     *
+     * @returns {string} The restriction key.
+     */
+    _allowedGroupsKey() {
+        const allowed = this._getAllowedGroups();
+        return allowed ? allowed.slice().sort().join('\u0000') : '';
+    },
+
+    /**
      * Respond to the active annotation's metadata being edited, which may have changed its
-     * `allowed_groups` restriction.
+     * `allowed_groups` restriction. The annotation's `change:annotation` event also fires on
+     * every autosave refetch, regardless of whether `allowed_groups` changed, so this bails out
+     * early when the restriction is unchanged to avoid re-rendering on unrelated edits.
      */
     _handleAnnotationAttributesChange() {
+        const key = this._allowedGroupsKey();
+        if (key === this._lastAllowedGroupsKey) {
+            return;
+        }
+        this._lastAllowedGroupsKey = key;
         this._ensureAllowedGroupsExist();
         this._restrictStyleToAllowedGroups();
         this._debounceRender();

@@ -79,6 +79,15 @@ If a hotkey is specified for a group, it will only be active if the group was lo
         action: group
         param: Red
 
+Unselected Annotation Capacity
+______________________________
+When annotation elements are selected, the annotations not included in the user's selection have their opacity decreased to 0.33 times their specified opacity. This can be modified:
+::
+    ---
+    # A lower value will make unselected annotations more transparent.
+    unselectedOpacityMultiplier: 0.33
+
+
 UI Settings
 ___________
 
