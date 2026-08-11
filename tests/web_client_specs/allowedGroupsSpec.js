@@ -117,6 +117,15 @@ girderTest.promise.done(function () {
                 result.annotation.get('annotation').attributes = {allowed_groups: 'not-an-array'};
                 expect(drawWidget._getAllowedGroups()).toBe(null);
             });
+
+            it('accepts a JSON-stringified array as allowed_groups', function () {
+                result.annotation.get('annotation').attributes = {
+                    allowed_groups: '["groupA", "groupB"]'
+                };
+                expect(drawWidget._getAllowedGroups()).toEqual(['groupA', 'groupB']);
+                result.annotation.get('annotation').attributes = {allowed_groups: '[]'};
+                expect(drawWidget._getAllowedGroups()).toBe(null);
+            });
         });
 
         describe('#3/#4: restricted annotation, including auto-created groups', function () {

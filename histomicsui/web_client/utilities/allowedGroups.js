@@ -4,8 +4,10 @@ import _ from 'underscore';
  * Read and validate the `allowed_groups` metadata on an annotation.
  *
  * The value is expected to live at `annotation.get('annotation').attributes.allowed_groups`
- * and be an array of strings. Any other value (missing, not an array, empty array, etc.) is
- * treated as "unrestricted" and returns `null`.
+ * and be an array of strings. As a convenience for the UI metadata editor, a JSON-stringified
+ * array (e.g. `'["groupA", "groupB"]'`) is also accepted and parsed. Any other value (missing,
+ * not an array or JSON array string, empty array, unparseable string, etc.) is treated as
+ * "unrestricted" and returns `null`.
  *
  * @param {AnnotationModel} annotation The annotation to check.
  * @returns {string[]|null} The list of allowed group names, or null if there are no restrictions.
@@ -14,7 +16,15 @@ function getAllowedGroups(annotation) {
     if (!annotation) return null;
 
     const attributes = (annotation.get('annotation') || {}).attributes || {};
-    const allowedGroups = attributes.allowed_groups;
+    let allowedGroups = attributes.allowed_groups;
+
+    if (_.isString(allowedGroups)) {
+        try {
+            allowedGroups = JSON.parse(allowedGroups);
+        } catch (err) {
+            return null;
+        }
+    }
 
     if (!_.isArray(allowedGroups)) return null;
 
