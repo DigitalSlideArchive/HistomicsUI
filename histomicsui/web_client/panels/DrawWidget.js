@@ -32,6 +32,7 @@ var DrawWidget = Panel.extend({
         'click .h-group-count-option .h-group-count-select': 'selectElementsInGroup',
         'change .h-style-group': '_setToSelectedStyleGroup',
         'change .h-sort-mode': '_changeSortMode',
+        'click .h-sort-order': '_toggleSortOrder',
         'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
         'change .h-fixed-shape,.h-fixed-height,.h-fixed-width': '_changeShapeConstraint',
         'click .h-configure-style-group': '_styleGroupEditor',
@@ -126,6 +127,7 @@ var DrawWidget = Panel.extend({
                 firstRender: true,
                 displayIdStart: 0,
                 sortMode: this._editOptions.sort_mode || 'label',
+                sortOrder: this._editOptions.sort_order || 'asc',
                 partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
@@ -822,8 +824,16 @@ var DrawWidget = Panel.extend({
         if (!opts.size_mode) {
             opts.size_mode = 'unconstrained';
         }
-        if (!opts.sort_mode || !['label', 'label-reverse', 'group', 'shape'].includes(opts.sort_mode)) {
+        if (opts.sort_mode === 'label-reverse') {
+            // migrate the legacy combined mode/order value
             opts.sort_mode = 'label';
+            opts.sort_order = 'desc';
+        }
+        if (!opts.sort_mode || !['label', 'group', 'shape', 'count'].includes(opts.sort_mode)) {
+            opts.sort_mode = 'label';
+        }
+        if (!opts.sort_order || !['asc', 'desc'].includes(opts.sort_order)) {
+            opts.sort_order = 'asc';
         }
     },
 
@@ -1161,7 +1171,6 @@ var DrawWidget = Panel.extend({
         const groupCounts = this._elementGroupCounts();
         const comparators = {
             label: (elementA, elementB) => this._elementSortKey(elementA).localeCompare(this._elementSortKey(elementB)),
-            'label-reverse': (elementA, elementB) => this._elementSortKey(elementB).localeCompare(this._elementSortKey(elementA)),
             group: (elementA, elementB) => this._elementGroupName(elementA).toLowerCase().localeCompare(this._elementGroupName(elementB).toLowerCase()),
             shape: (elementA, elementB) => this._elementShape(elementA).toLowerCase().localeCompare(this._elementShape(elementB).toLowerCase()),
             count: (elementA, elementB) => {
@@ -1175,7 +1184,10 @@ var DrawWidget = Panel.extend({
             }
         };
         const comparator = comparators[this._editOptions.sort_mode] || comparators.label;
-        this.collection.models.sort(comparator);
+        const ordered = this._editOptions.sort_order === 'desc'
+            ? (elementA, elementB) => -comparator(elementA, elementB)
+            : comparator;
+        this.collection.models.sort(ordered);
     },
 
     /**
@@ -1203,6 +1215,16 @@ var DrawWidget = Panel.extend({
 
     _changeSortMode() {
         this._saveEditOptions({sort_mode: this.$('.h-sort-mode').val()});
+        this.render();
+    },
+
+    /**
+     * Toggle between ascending and descending order for the current sort
+     * mode, persist the choice, and re-render.
+     */
+    _toggleSortOrder() {
+        const order = this._editOptions.sort_order === 'desc' ? 'asc' : 'desc';
+        this._saveEditOptions({sort_order: order});
         this.render();
     },
 
