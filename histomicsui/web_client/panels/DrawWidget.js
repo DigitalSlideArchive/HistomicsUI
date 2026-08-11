@@ -32,6 +32,8 @@ var DrawWidget = Panel.extend({
         'click .h-draw': 'drawElement',
         'click .h-group-count-option .h-group-count-select': 'selectElementsInGroup',
         'change .h-style-group': '_setToSelectedStyleGroup',
+        'change .h-sort-mode': '_changeSortMode',
+        'click .h-sort-order': '_toggleSortOrder',
         'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
         'change .h-fixed-shape,.h-fixed-height,.h-fixed-width': '_changeShapeConstraint',
         'click .h-configure-style-group': '_styleGroupEditor',
@@ -116,6 +118,7 @@ var DrawWidget = Panel.extend({
                 delete this._skipRenderHTML;
             }
         } else {
+            this._sortElements();
             this.$el.html(drawWidget({
                 title: 'Draw',
                 elements: this.collection.models,
@@ -129,6 +132,8 @@ var DrawWidget = Panel.extend({
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 firstRender: true,
                 displayIdStart: 0,
+                sortMode: this._editOptions.sort_mode || 'label',
+                sortOrder: this._editOptions.sort_order || 'asc',
                 partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
@@ -378,6 +383,7 @@ var DrawWidget = Panel.extend({
                 }
             }
         }
+        this._reorderElementDom();
     },
 
     /**
@@ -824,6 +830,17 @@ var DrawWidget = Panel.extend({
         if (!opts.size_mode) {
             opts.size_mode = 'unconstrained';
         }
+        if (opts.sort_mode === 'label-reverse') {
+            // migrate the legacy combined mode/order value
+            opts.sort_mode = 'label';
+            opts.sort_order = 'desc';
+        }
+        if (!opts.sort_mode || !['label', 'group', 'shape', 'count'].includes(opts.sort_mode)) {
+            opts.sort_mode = 'label';
+        }
+        if (!opts.sort_order || !['asc', 'desc'].includes(opts.sort_order)) {
+            opts.sort_order = 'asc';
+        }
     },
 
     updateCount(groupName, change) {
@@ -1164,6 +1181,128 @@ var DrawWidget = Panel.extend({
     _unhighlightElement(evt) {
         $(evt.currentTarget).find('.h-view-element').hide();
         this.parentView.trigger('h:highlightAnnotation');
+    },
+
+    /**
+     * Resolve the displayed shape name of an element, matching the label logic in
+     * drawWidgetElement.pug (closed polylines are polygons, open ones are lines).
+     *
+     * @param {ElementModel} model The element to inspect.
+     * @returns {string} The shape name.
+     */
+    _elementShape(model) {
+        const element = model.attributes;
+        return element.type === 'polyline'
+            ? (element.closed ? 'polygon' : 'line')
+            : element.type;
+    },
+
+    /**
+     * Resolve the group name of an element, falling back to the default group.
+     *
+     * @param {ElementModel} model The element to inspect.
+     * @returns {string} The group name.
+     */
+    _elementGroupName(model) {
+        return model.attributes.group || this.parentView._defaultGroup;
+    },
+
+    /**
+     * Compute a lexical sort key for an element that matches its displayed label. The number is
+     * intentionally omitted so that elements sort by their base label before enumeration.
+     *
+     * @param {ElementModel} model The element to compute a key for.
+     * @returns {string} A lower-case sort key.
+     */
+    _elementSortKey(model) {
+        const element = model.attributes;
+        const userLabel = (element.label || {}).value;
+        if (userLabel) {
+            return ('' + userLabel).toLowerCase();
+        }
+        const shape = this._elementShape(model);
+        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
+            return `${this._elementGroupName(model)} ${shape}`.toLowerCase();
+        }
+        return ('' + shape).toLowerCase();
+    },
+
+    /**
+     * Count how many elements in the current collection belong to each group.
+     *
+     * @returns {Object} A map of group name to element count.
+     */
+    _elementGroupCounts() {
+        const counts = {};
+        this.collection.models.forEach((model) => {
+            const group = this._elementGroupName(model);
+            counts[group] = (counts[group] || 0) + 1;
+        });
+        return counts;
+    },
+
+    /**
+     * Sort the element collection's models in place according to the current sort mode.
+     */
+    _sortElements() {
+        const groupCounts = this._elementGroupCounts();
+        const comparators = {
+            label: (elementA, elementB) => this._elementSortKey(elementA).localeCompare(this._elementSortKey(elementB)),
+            group: (elementA, elementB) => this._elementGroupName(elementA).toLowerCase().localeCompare(this._elementGroupName(elementB).toLowerCase()),
+            shape: (elementA, elementB) => this._elementShape(elementA).toLowerCase().localeCompare(this._elementShape(elementB).toLowerCase()),
+            count: (elementA, elementB) => {
+                const groupA = this._elementGroupName(elementA);
+                const groupB = this._elementGroupName(elementB);
+                const countDiff = groupCounts[groupA] - groupCounts[groupB];
+                if (countDiff !== 0) {
+                    return countDiff;
+                }
+                return groupA.toLowerCase().localeCompare(groupB.toLowerCase());
+            }
+        };
+        const comparator = comparators[this._editOptions.sort_mode] || comparators.label;
+        const ordered = this._editOptions.sort_order === 'desc'
+            ? (elementA, elementB) => -comparator(elementA, elementB)
+            : comparator;
+        this.collection.models.sort(ordered);
+    },
+
+    /**
+     * Reorder the already-rendered element rows to match the current sort without rebuilding the
+     * list. Auto-assigned enumeration numbers are left as-is here and are recomputed on the next
+     * full render.
+     */
+    _reorderElementDom() {
+        const container = this.$el.find('.h-elements-container');
+        if (!container.length) {
+            return;
+        }
+        this._sortElements();
+        const rowsById = {};
+        container.children('.h-element').each((index, node) => {
+            rowsById[$(node).attr('data-id')] = node;
+        });
+        this.collection.models.forEach((model) => {
+            const node = rowsById[model.id];
+            if (node) {
+                container.append(node);
+            }
+        });
+    },
+
+    _changeSortMode() {
+        this._saveEditOptions({sort_mode: this.$('.h-sort-mode').val()});
+        this.render();
+    },
+
+    /**
+     * Toggle between ascending and descending order for the current sort
+     * mode, persist the choice, and re-render.
+     */
+    _toggleSortOrder() {
+        const order = this._editOptions.sort_order === 'desc' ? 'asc' : 'desc';
+        this._saveEditOptions({sort_order: order});
+        this.render();
     },
 
     _recalculateGroupAggregation() {
