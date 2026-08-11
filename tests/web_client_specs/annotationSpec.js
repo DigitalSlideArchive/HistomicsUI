@@ -1928,6 +1928,11 @@ girderTest.promise.done(function () {
         it('open image', function () {
             huiTest.openImage('image.svs', ['subfolder']);
         });
+        it('respects unselected opacity config', function () {
+            girderTest.waitForLoad();
+            expect(huiTest.app.bodyView._unselectedOpacityMultiplier).toBe(0.5);
+            expect(huiTest.app.bodyView.viewerWidget._unselectedOpacityMultiplier).toBe(0.5);
+        });
         it('create a new annotation', function () {
             girderTest.waitForLoad();
             runs(function () {
