@@ -15,12 +15,18 @@ import '../stylesheets/panels/frameSelectorWidget.styl';
 
 var FrameSelectorWidget = Panel.extend({
     render() {
-        // if not a multi frame image, don't show (this means we can't do
-        // band-only work on hyperspectral data, so we may want to change this
-        // to also expose it if there are listed bands and there are more
-        // than 3 of them).  Maybe instead we should just keep the frame
-        // selector collapsed.
-        if (!this._tiles || !this._tiles.frames || this._tiles.frames.length <= 1 || !this.viewer) {
+        let hideControls = !this._tiles || !this.viewer;
+        // if not a multi frame image, uint8, and an "ordinary" number of
+        // bands, don't show. This might hide the controls from images with
+        // more than 1 band that aren't LA, RGB, or RGBA.  We probably should
+        // also check if there is band interpretation.
+        if (!hideControls) {
+            const multiFrame = this._tiles.frames && this._tiles.frames.length > 1;
+            const highBand = this._tiles.bandCount && this._tiles.bandCount > 4;
+            const not8bit = this._tiles.dtype !== 'uint8';
+            hideControls = !multiFrame && !highBand && !not8bit;
+        }
+        if (hideControls) {
             this.$el.html('');
             return this;
         }
