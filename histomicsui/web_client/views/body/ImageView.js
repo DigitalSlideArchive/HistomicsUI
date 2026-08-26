@@ -1788,7 +1788,13 @@ var ImageView = View.extend({
                             group.label = group.label ? {value: group.label} : undefined;
                             groups.add(group);
                         });
-                        groups.each((model) => { model.save(); });
+                        const saves = groups.map((model) => model.save());
+                        // Other views (e.g. the annotation context menu) may have already
+                        // fetched their own style collection from localStorage before this
+                        // config finished loading; let them know to refetch now that it has.
+                        $.when(...saves).done(() => {
+                            this.trigger('h:styleGroupsEdited', groups);
+                        });
                     }
                 });
             }
