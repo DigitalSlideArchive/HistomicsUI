@@ -6,7 +6,7 @@ import _ from 'underscore';
  * The value is expected to live at `annotation.get('annotation').attributes.allowed_groups`
  * and be an array of strings. As a convenience for the UI metadata editor, a JSON-stringified
  * array (e.g. `'["groupA", "groupB"]'`) is also accepted and parsed. Any other value (missing,
- * not an array or JSON array string, empty array, unparseable string, etc.) is treated as
+ * not an array or JSON array string, empty array, unparsable string, etc.) is treated as
  * "unrestricted" and returns `null`.
  *
  * @param {AnnotationModel} annotation The annotation to check.
