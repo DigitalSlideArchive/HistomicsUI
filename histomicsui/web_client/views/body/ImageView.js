@@ -1841,7 +1841,7 @@ var ImageView = View.extend({
         _.each(this.controlPanel.models(), (model) => {
             const value = router.getQuery(model.id);
             if (value) {
-                if (model.id === 'region') {
+                if (model.attributes.type === 'region') {
                     this._displayedRegion = value;
                 }
                 model.set('value', value);
