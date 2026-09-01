@@ -6,3 +6,6 @@ graft histomicsui
 graft docs
 prune test
 global-exclude *.py[co] *.cmake __pycache__ node_modules
+
+prune histomicsui/web_client
+recursive-include histomicsui/web_client/dist/*

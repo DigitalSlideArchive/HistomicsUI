@@ -1,9 +1,8 @@
-import _ from 'underscore';
-import Backbone from 'backbone';
+const _ = girder._;
 
 const AllowedKeys = ['fillColor', 'lineColor', 'lineWidth', 'label', 'group', 'id', 'pattern'];
 
-const StyleModel = Backbone.Model.extend({
+const StyleModel = girder.Backbone.Model.extend({
     defaults: {
         lineWidth: 2,
         lineColor: 'rgb(0,0,0)',
@@ -18,7 +17,7 @@ const StyleModel = Backbone.Model.extend({
                 }
             });
         }
-        Backbone.Model.prototype.initialize.call(this, attributes, options);
+        girder.Backbone.Model.prototype.initialize.call(this, attributes, options);
     },
     set: function (key, value, options) {
         if (_.isObject(key) && !_.isFunction(key)) {
@@ -28,9 +27,9 @@ const StyleModel = Backbone.Model.extend({
                     delete key[k];
                 }
             });
-            Backbone.Model.prototype.set.call(this, key, value, options);
+            girder.Backbone.Model.prototype.set.call(this, key, value, options);
         } else if (AllowedKeys.includes(key)) {
-            Backbone.Model.prototype.set.call(this, key, value, options);
+            girder.Backbone.Model.prototype.set.call(this, key, value, options);
         }
     }
 });

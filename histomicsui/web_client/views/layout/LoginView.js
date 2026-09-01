@@ -1,7 +1,7 @@
-import {wrap} from '@girder/core/utilities/PluginUtils';
-import LoginView from '@girder/core/views/layout/LoginView';
-
 import {HuiSettings} from '../utils';
+
+const {wrap} = girder.utilities.PluginUtils;
+const LoginView = girder.views.layout.LoginView;
 
 wrap(LoginView, 'render', function (render) {
     render.call(this);
@@ -13,3 +13,5 @@ wrap(LoginView, 'render', function (render) {
         return null;
     });
 });
+
+export default LoginView;

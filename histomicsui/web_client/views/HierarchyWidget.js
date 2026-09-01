@@ -1,6 +1,6 @@
-import {wrap} from '@girder/core/utilities/PluginUtils';
-import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
-import ItemCollection from '@girder/core/collections/ItemCollection';
+const {wrap} = girder.utilities.PluginUtils;
+const HierarchyWidget = girder.views.widgets.HierarchyWidget;
+const ItemCollection = girder.collections.ItemCollection;
 
 wrap(HierarchyWidget, 'initialize', function (initialize, settings) {
     settings = settings || {};

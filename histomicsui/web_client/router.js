@@ -1,9 +1,9 @@
-import _ from 'underscore';
-import $ from 'jquery';
-import Backbone from 'backbone';
-import {splitRoute, parseQueryString} from '@girder/core/misc';
-
 import events from './events';
+
+const Backbone = girder.Backbone;
+const $ = girder.$;
+const _ = girder._;
+const {splitRoute, parseQueryString} = girder.misc;
 
 var router = new Backbone.Router();
 

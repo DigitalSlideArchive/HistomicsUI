@@ -1,12 +1,11 @@
-import $ from 'jquery';
-import _ from 'underscore';
-
-import Panel from '@girder/slicer_cli_web/views/Panel';
-import {AccessType} from '@girder/core/constants';
-import {MetadataWidget, liMetadataKeyEntry} from '@girder/large_image/views/metadataWidget';
-
 import metadataWidgetPanelTemplate from '../templates/panels/metadataWidgetPanel.pug';
 import '../stylesheets/panels/metadataWidget.styl';
+
+const $ = girder.$;
+const _ = girder._;
+const {AccessType} = girder.constants;
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
+const {MetadataWidget, liMetadataKeyEntry} = girder.plugins.large_image.views.MetadataWidget;
 
 /**
  * This widget shows a list of metadata in a given item.
