@@ -173,6 +173,26 @@ girderTest.promise.done(function () {
                 });
                 girderTest.waitForLoad();
             });
+
+            it('respects the showDownload setting', function () {
+                var originalShowDownlaod;
+
+                runs(function () {
+                    originalShowDownlaod = huiTest.app.showDownload;
+                    huiTest.app.showDownload = function () { return false; };
+                    huiTest.app.bodyView.zoomWidget.render();
+                });
+
+                runs(function () {
+                    expect($('.h-download-button-container').length).toBe(0);
+                });
+
+                runs(function () {
+                    huiTest.app.showDownload = originalShowDownlaod;
+                    huiTest.app.bodyView.zoomWidget.render();
+                    expect($('.h-download-button-container').length).toBe(1);
+                });
+            });
         });
 
         describe('Draw panel', function () {

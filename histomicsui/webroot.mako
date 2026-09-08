@@ -27,7 +27,8 @@
         bannerColor: '${huiBannerColor | js}',
         helpURL: '${huiHelpURL | js}',
         helpTooltip: '${huiHelpTooltip | js}',
-        helpText: '${huiHelpText | js}'
+        helpText: '${huiHelpText | js}',
+        showDownload: '${showDownload | js}'
       });
       app.bindRoutes();
       girder.events.trigger('g:appload.after');
