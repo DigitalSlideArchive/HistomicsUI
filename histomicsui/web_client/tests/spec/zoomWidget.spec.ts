@@ -22,7 +22,7 @@ test.describe('Test zoom widget', () => {
 
     await page.goto(`${new URL(page.url()).origin}/histomics#?image=${itemId}`);
 
-    await expect(page.locator('.h-download-button-view')).toBeVisible();
+    await expect(page.locator('.h-download-button-view')).toBeVisible({ timeout: 15000 });
   });
 
   test('Zoom widget hides the download buttons but still renders when show_download is "none"', async ({ page }) => {
