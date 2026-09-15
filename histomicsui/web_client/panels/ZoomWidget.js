@@ -2,6 +2,7 @@ import _ from 'underscore';
 import $ from 'jquery';
 
 import Panel from '@girder/slicer_cli_web/views/Panel';
+import {showDownload} from '@girder/core/utilities/ShowDownload';
 
 import editRegionOfInterest from '../dialogs/editRegionOfInterest';
 
@@ -85,7 +86,8 @@ var ZoomWidget = Panel.extend({
             value: Math.log2(value) - Math.log2(this._maxMag),
             disabled: !this.renderer,
             buttons,
-            collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
+            collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
+            showDownload: showDownload(this)
         }));
 
         // enable or disable zoom range buttons
