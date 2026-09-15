@@ -286,11 +286,11 @@ class WebrootHistomicsUI(Webroot):
             'huiHelpURL': Setting().get(PluginSettings.HUI_HELP_URL),
             'huiHelpTooltip': Setting().get(PluginSettings.HUI_HELP_TOOLTIP),
             'huiHelpText': Setting().get(PluginSettings.HUI_HELP_TEXT),
+            'showDownload': Setting().get(SettingKey.SHOW_DOWNLOAD),
         })
         return super()._renderHTML()
 
     def GET(self, **params):
-        print(params)
         if params.get('token'):
             try:
                 token = Token().load(params['token'], force=True, objectId=False)
