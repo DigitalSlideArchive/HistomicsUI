@@ -23,10 +23,11 @@ block content
         - val = minMag;
       .btn-group
         button.btn.btn-default.h-zoom-button(type="button", data-value=val, class={'btn-sm': val > maxNaturalMag}) #{text}
-  .h-download-button-container
-    a#download-view-link.h-download-link
-      button.btn-default.btn-sm.h-download-button.h-download-button-view(type="button", data-toggle="tooltip", title="Download current view")
-        | #{title_download_view}
+  if (showDownload)
+    .h-download-button-container
+      a#download-view-link.h-download-link
+        button.btn-default.btn-sm.h-download-button.h-download-button-view(type="button", data-toggle="tooltip", title="Download current view")
+          | #{title_download_view}
 
-    button.btn-default.btn-sm.h-download-button.h-download-button-area(type="button", data-toggle="tooltip", title="Draw the region of interest")
-      | #{title_download_area}
+      button.btn-default.btn-sm.h-download-button.h-download-button-area(type="button", data-toggle="tooltip", title="Draw the region of interest")
+        | #{title_download_area}

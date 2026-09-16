@@ -8,6 +8,7 @@ executors:
       - image: mongo:4.4
         command: bash -c "mkdir /dev/shm/mongo && mongod --nojournal --dbpath=/dev/shm/mongo --noauth --bind_ip_all"
       - image: rabbitmq
+      - image: redis
     resource_class: large
 commands:
   use_nvm:
@@ -134,6 +135,7 @@ jobs:
       CI: "true"
       HEADLESS: "true"
       GIRDER_CLIENT_TESTING_MONGO_URI: mongodb://localhost:27017
+      GIRDER_NOTIFICATION_REDIS_URL: redis://localhost:6379
     steps:
       - checkout
       - use_nvm
@@ -141,6 +143,14 @@ jobs:
       - install_playwright
       - tox:
           env: webtest
+      - store_artifacts:
+          path: histomicsui/web_client/test-results
+          destination: playwright-test-results
+          when: always
+      - store_artifacts:
+          path: histomicsui/web_client/playwright-report
+          destination: playwright-report
+          when: always
   noanalysis:
     executor: toxandnode
     steps:

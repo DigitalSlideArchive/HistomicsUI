@@ -5,6 +5,7 @@ import '../stylesheets/panels/zoomWidget.styl';
 
 const _ = girder._;
 const $ = girder.$;
+const showDownload = girder.utilities.showDownload;
 const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
 /**
@@ -84,7 +85,8 @@ var ZoomWidget = Panel.extend({
             value: Math.log2(value) - Math.log2(this._maxMag),
             disabled: !this.renderer,
             buttons,
-            collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in')
+            collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
+            showDownload: showDownload(this)
         }));
 
         // enable or disable zoom range buttons
