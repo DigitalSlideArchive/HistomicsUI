@@ -96,6 +96,7 @@ The ``group`` action selects the style group named by ``param``.  The other acti
 - Navigation: ``pan.left``, ``pan.right``, ``pan.up``, ``pan.down``, ``zoom.in``, ``zoom.out``, ``rotate.ccw``, ``rotate.cw``, ``rotate.0`` (reset rotation), and ``zoom.0``, ``zoom.3``, ... ``zoom.18`` (jump to a zoom level).  For the panning, zooming, and rotating actions, only the base key is set; holding shift or ctrl+shift with it still makes a larger step.
 - Annotations: ``annotations.toggle``, ``annotation.create``, ``element.edit``, ``element.menu``, ``select.rectangle``, ``select.polygon``, ``select.clear``.
 - Drawing: ``draw.point``, ``draw.rectangle``, ``draw.ellipse``, ``draw.circle``, ``draw.polygon``, ``draw.line``, ``draw.brush``, ``draw.finish``, ``draw.cancel``, ``brush.shape``, ``brush.smaller``, ``brush.larger``, ``group.previous``, ``group.next``.
+- Channels and bands: ``layer.1`` through ``layer.20`` toggle the visibility of that channel or band when compositing in the frame selector.  By default these are ctrl+1 through ctrl+0 and ctrl+alt+1 through ctrl+alt+0.
 
 User Hotkeys
 ~~~~~~~~~~~~
