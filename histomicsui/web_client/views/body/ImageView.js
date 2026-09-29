@@ -32,7 +32,7 @@ import MetadataPlot from '../../panels/MetadataPlot';
 import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
 import router from '../../router';
-import {actionForEvent, resolveHotkeys} from '../../hotkeys';
+import {USER_CONFIG_NAME, actionForEvent, resolveHotkeys} from '../../hotkeys';
 import events from '../../events';
 import {HuiSettings} from '../utils';
 import View from '../View';
@@ -169,6 +169,7 @@ var ImageView = View.extend({
             }
             this._closePixelmapContextMenu();
         });
+        this.listenTo(events, 'g:login', () => this.updateHotkeys());
         $(document).on('keydown.h-image-view', (evt) => {
             if (evt.keyCode === 27) {
                 this._closeContextMenu();
@@ -1716,9 +1717,35 @@ var ImageView = View.extend({
         });
     },
     /**
-     * Recompute hotkeys from the current folder config.
+     * Get the user's hotkey preferences file.  This is cached until the next
+     * image is opened; it is empty for anonymous users.
+     *
+     * @returns {Promise} resolves with the user config object.
      */
-    updateHotkeys() {
+    _getUserConfig() {
+        const user = getCurrentUser();
+        if (!user) {
+            return $.Deferred().resolve({}).promise();
+        }
+        if (!this._userConfigRequest || this._userConfigUserId !== user.id) {
+            this._userConfigUserId = user.id;
+            this._userConfigRequest = restRequest({
+                url: `user/${user.id}/yaml_config/${USER_CONFIG_NAME}`,
+                error: null
+            }).then((val) => val || {}, () => $.Deferred().resolve({}).promise());
+        }
+        return this._userConfigRequest;
+    },
+
+    /**
+     * Recompute hotkeys from the current folder config and the user's file.
+     *
+     * @param {object} [userConfig] The user's config, if it has changed.
+     */
+    updateHotkeys(userConfig) {
+        if (userConfig) {
+            this._userConfigRequest = $.Deferred().resolve(userConfig).promise();
+        }
         const val = this._folderConfig || {};
         const config = [];
         ((val.annotationGroups || {}).groups || []).forEach((group) => {
@@ -1729,13 +1756,18 @@ var ImageView = View.extend({
         if (Array.isArray(val.hotkeys)) {
             config.push(...val.hotkeys);
         }
-        this._configHotkeys = config;
-        this.hotkeys = resolveHotkeys({config: this._configHotkeys});
-        this.trigger('h:hotkeysChanged', this.hotkeys);
-        return this.hotkeys;
+        return this._getUserConfig().then((user) => {
+            this._configHotkeys = config;
+            this._userHotkeys = Array.isArray((user || {}).hotkeys) ? user.hotkeys : [];
+            this.hotkeys = resolveHotkeys({config: this._configHotkeys, user: this._userHotkeys});
+            this.trigger('h:hotkeysChanged', this.hotkeys);
+            return this.hotkeys;
+        });
     },
 
     _getConfig(modelId) {
+        // reload the user's file too, so manual edits apply to the next image
+        this._userConfigRequest = null;
         if (modelId !== this._folderConfigId) {
             this._folderConfigId = modelId;
             this._folderConfig = {};
