@@ -1,6 +1,8 @@
 Mouse and Keyboard Controls
 ===========================
 
+The keys listed here are the defaults.  Most of them can be changed by an administrator in a folder's config file (see :doc:`config_options`) or by each user from **Keyboard shortcuts** in the user menu.
+
 Basic Image Controls
 --------------------
 
