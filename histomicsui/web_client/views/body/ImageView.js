@@ -31,6 +31,7 @@ import MetadataWidget from '../../panels/MetadataWidget';
 import MetadataPlot from '../../panels/MetadataPlot';
 import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
+import editHotkeys from '../../dialogs/editHotkeys';
 import router from '../../router';
 import {USER_CONFIG_NAME, actionForEvent, geojsKeyboardActions, resolveHotkeys} from '../../hotkeys';
 import events from '../../events';
@@ -170,6 +171,12 @@ var ImageView = View.extend({
             this._closePixelmapContextMenu();
         });
         this.listenTo(events, 'g:login', () => this.updateHotkeys());
+        this.listenTo(events, 'h:editHotkeys', (handled) => {
+            if (this.$el.is(':visible')) {
+                handled.done = true;
+                this.editHotkeys();
+            }
+        });
         $(document).on('keydown.h-image-view', (evt) => {
             if (evt.keyCode === 27) {
                 this._closeContextMenu();
@@ -1754,6 +1761,16 @@ var ImageView = View.extend({
             }).then((val) => val || {}, () => $.Deferred().resolve({}).promise());
         }
         return this._userConfigRequest;
+    },
+
+    /**
+     * Show the keyboard shortcut dialog, applying any changes to this view.
+     */
+    editHotkeys() {
+        return editHotkeys({
+            configHotkeys: this._configHotkeys,
+            onSave: (userConfig) => this.updateHotkeys(userConfig)
+        });
     },
 
     /**
