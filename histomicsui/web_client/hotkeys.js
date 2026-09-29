@@ -34,6 +34,21 @@ const KEY_NAMES = {
     os: 'meta'
 };
 
+/* KeyboardEvent.code values for punctuation keys, used when alt is held. */
+const CODE_KEYS = {
+    Minus: '-',
+    Equal: '=',
+    BracketLeft: '[',
+    BracketRight: ']',
+    Backslash: '\\',
+    Semicolon: ';',
+    Quote: "'",
+    Comma: ',',
+    Period: '.',
+    Slash: '/',
+    Backquote: '`'
+};
+
 const DISPLAY_NAMES = {
     space: 'Space',
     left: '←',
@@ -219,6 +234,17 @@ function displayKey(binding) {
 }
 
 /**
+ * Get the key name for a physical key code, e.g. "KeyQ" -> "q".
+ */
+function keyFromCode(code) {
+    const match = /^(?:Key([A-Z])|Digit([0-9]))$/.exec(code || '');
+    if (match) {
+        return (match[1] || match[2]).toLowerCase();
+    }
+    return CODE_KEYS[code];
+}
+
+/**
  * Get the binding for a keyboard event.
  *
  * @param {object} evt A DOM or jQuery keyboard event.
@@ -229,7 +255,10 @@ function displayKey(binding) {
 function bindingFromEvent(evt, sized) {
     const oe = evt.originalEvent || evt;
     const raw = oe.key !== undefined ? oe.key : evt.key;
-    const key = normalizeKeyName(raw);
+    // With alt held, macOS reports the option character (e.g. alt+q gives
+    // "œ", alt+e is a dead key), so use the physical key instead.
+    const codeKey = oe.altKey ? keyFromCode(oe.code) : undefined;
+    const key = codeKey || normalizeKeyName(raw);
     if (!key || MODIFIERS.includes(key) || key === 'dead' || key === 'unidentified') {
         return null;
     }
@@ -238,7 +267,7 @@ function bindingFromEvent(evt, sized) {
         ctrl: !!oe.ctrlKey,
         alt: !!oe.altKey,
         meta: !!oe.metaKey,
-        shift: !!oe.shiftKey || (isLetter(raw) && raw !== raw.toLowerCase())
+        shift: !!oe.shiftKey || (!codeKey && isLetter(raw) && raw !== raw.toLowerCase())
     };
     if (!usesShift(key)) {
         binding.shift = false;
