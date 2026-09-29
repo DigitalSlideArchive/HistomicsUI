@@ -1,0 +1,41 @@
+.modal-dialog.modal-lg(role='document')
+  .modal-content
+    form.modal-form(role='form')
+      .modal-header
+        button.close(type='button', data-dismiss='modal', aria-label='Close')
+          span(aria-hidden='true') &times;
+        h4.modal-title Keyboard shortcuts
+      .modal-body
+        p.help-block
+          | Click #[b Change] and press the new key.  Press Esc to cancel.
+          | Navigation keys also work with Shift (large step) and Ctrl+Shift (medium step).
+        input.form-control.input-sm.h-hotkeys-filter(type='search', placeholder='Filter actions', value=filter)
+        if message
+          .alert.h-hotkeys-message(class=`alert-${message.type}`)= message.text
+        each category in categories
+          h5.h-hotkeys-category= category.name
+          table.table.table-condensed.h-hotkeys-table
+            tbody
+              each row in category.rows
+                tr.h-hotkey-row(data-action=row.id)
+                  td.h-hotkey-label= row.label
+                  td.h-hotkey-keys
+                    if capturing === row.id
+                      span.h-hotkey-capturing Press a key…
+                    else if row.keys.length
+                      each key in row.keys
+                        kbd= key
+                    else
+                      span.text-muted None
+                    if row.source === 'user'
+                      span.label.label-info.h-hotkey-source(title='Your setting') custom
+                  td.h-hotkey-buttons
+                    .btn-group.btn-group-xs
+                      button.btn.btn-default.h-hotkey-change(type='button') Change
+                      button.btn.btn-default.h-hotkey-clear(type='button', title='Remove all keys') Clear
+                      if row.source === 'user'
+                        button.btn.btn-default.h-hotkey-reset(type='button', title='Restore the default') Reset
+      .modal-footer
+        button.btn.btn-default.h-hotkeys-reset-all.pull-left(type='button') Reset all
+        button.btn.btn-default.h-cancel(type='button', data-dismiss='modal') Cancel
+        button.btn.btn-primary.h-submit(type='submit') Save
