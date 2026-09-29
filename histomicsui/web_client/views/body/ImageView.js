@@ -32,7 +32,7 @@ import MetadataPlot from '../../panels/MetadataPlot';
 import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
 import router from '../../router';
-import {USER_CONFIG_NAME, actionForEvent, resolveHotkeys} from '../../hotkeys';
+import {USER_CONFIG_NAME, actionForEvent, geojsKeyboardActions, resolveHotkeys} from '../../hotkeys';
 import events from '../../events';
 import {HuiSettings} from '../utils';
 import View from '../View';
@@ -245,6 +245,12 @@ var ImageView = View.extend({
                 const currentOptions = this.viewer.interactor().options();
                 currentOptions.click.cancelOnMove = 10; // a click can move up to 10 pixels before it is considered a move
                 this.viewer.interactor().options(currentOptions);
+                if (this._geojsDefaultViewer !== this.viewer) {
+                    // remember geojs's own keys so overrides can be undone
+                    this._geojsDefaultViewer = this.viewer;
+                    this._geojsDefaultKeyboard = this.viewer.interactor().keyboard();
+                }
+                this._applyGeojsHotkeys();
 
                 this.imageWidth = this.viewer.maxBounds().right;
                 this.imageHeight = this.viewer.maxBounds().bottom;
@@ -1309,6 +1315,19 @@ var ImageView = View.extend({
         return false;
     },
 
+    /**
+     * Apply hotkeys for navigation actions to the geojs map interactor.
+     */
+    _applyGeojsHotkeys() {
+        // the viewer may be in the middle of being replaced
+        if (!this.viewer || this._geojsDefaultViewer !== this.viewer || !this.viewer.interactor()) {
+            return;
+        }
+        const keyboard = JSON.parse(JSON.stringify(this._geojsDefaultKeyboard));
+        Object.assign(keyboard.actions, geojsKeyboardActions(this.hotkeys));
+        this.viewer.interactor().keyboard(keyboard);
+    },
+
     _trackMousePosition(evt) {
         this._currentMousePosition = {
             page: {
@@ -1760,6 +1779,7 @@ var ImageView = View.extend({
             this._configHotkeys = config;
             this._userHotkeys = Array.isArray((user || {}).hotkeys) ? user.hotkeys : [];
             this.hotkeys = resolveHotkeys({config: this._configHotkeys, user: this._userHotkeys});
+            this._applyGeojsHotkeys();
             this.trigger('h:hotkeysChanged', this.hotkeys);
             return this.hotkeys;
         });
