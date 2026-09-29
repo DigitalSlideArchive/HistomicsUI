@@ -32,6 +32,7 @@ import MetadataPlot from '../../panels/MetadataPlot';
 import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
 import router from '../../router';
+import {actionForEvent, resolveHotkeys} from '../../hotkeys';
 import events from '../../events';
 import {HuiSettings} from '../utils';
 import View from '../View';
@@ -48,6 +49,7 @@ var ImageView = View.extend({
     },
     initialize(settings) {
         this._defaultGroup = 'default';
+        this.hotkeys = resolveHotkeys();
         this.viewerWidget = null;
         this._mouseClickQueue = [];
         this._openId = null;
@@ -1164,68 +1166,61 @@ var ImageView = View.extend({
         if (/^(input|textarea|select)$/.test((document.activeElement.tagName || '').toLowerCase())) {
             return;
         }
-        const drawModes = {
-            o: 'point',
-            r: 'rectangle',
-            i: 'ellipse',
-            c: 'circle',
-            p: 'polygon',
-            l: 'line',
-            b: 'brush'
-        };
-        if (this._hotkeys && this._hotkeys[evt.key.toLowerCase()]) {
-            let used = false;
-            this._hotkeys[evt.key.toLowerCase()].forEach((keyset) => {
-                if (keyset.ctrl !== undefined && evt.originalEvent.ctrlKey !== keyset.ctrl) {
-                    return;
-                }
-                if (keyset.alt !== undefined && evt.originalEvent.altKey !== keyset.alt) {
-                    return;
-                }
-                if (keyset.meta !== undefined && evt.originalEvent.metaKey !== keyset.meta) {
-                    return;
-                }
-                if (keyset.shift !== undefined && evt.originalEvent.shiftKey !== keyset.shift) {
-                    return;
-                }
-                if (keyset.shift === undefined && evt.originalEvent.shiftKey && evt.key.toLowerCase() === keyset.key) {
-                    return;
-                }
-                switch (keyset.action) {
-                    case 'group':
-                        if (this.drawWidget) {
-                            this.drawWidget.setStyleGroupById(keyset.param);
-                            used = true;
-                        }
-                        break;
-                }
-            });
-            if (used) {
-                evt.preventDefault();
-                return;
-            }
+        if (evt.key === 'D' && evt.shiftKey && (evt.altKey || evt.metaKey)) {
+            console.log(this);
+            return;
         }
-        switch (evt.key) {
-            case 'a':
+        const action = actionForEvent(this.hotkeys, evt);
+        if (action && this._runHotkeyAction(action.action, action.param)) {
+            evt.preventDefault();
+        }
+    },
+
+    /**
+     * Perform a hotkey action.
+     *
+     * @param {string} action The action id (see hotkeys.js).
+     * @param {string} [param] The group id for the `group` action.
+     * @returns {boolean} true if the default browser behavior should be
+     *      prevented.
+     */
+    _runHotkeyAction(action, param) {
+        const drawModes = {
+            'draw.point': 'point',
+            'draw.rectangle': 'rectangle',
+            'draw.ellipse': 'ellipse',
+            'draw.circle': 'circle',
+            'draw.polygon': 'polygon',
+            'draw.line': 'line',
+            'draw.brush': 'brush'
+        };
+        switch (action) {
+            case 'group':
+                if (this.drawWidget) {
+                    this.drawWidget.setStyleGroupById(param);
+                    return true;
+                }
+                break;
+            case 'annotations.toggle':
                 this._showOrHideAnnotations();
                 break;
-            case 'e':
+            case 'element.edit':
                 if (this._lastMouseOnElement) {
                     const annotation = this.annotations.get(this._lastMouseOnElement.annotationId);
                     const elementModel = annotation.elements().get(this._lastMouseOnElement.element.id);
                     this._editElementShape(elementModel, annotation.id);
                 }
                 break;
-            case 's':
+            case 'select.rectangle':
                 this.annotationSelector.selectAnnotationByRegion();
                 break;
-            case 'S':
+            case 'select.polygon':
                 this.annotationSelector.selectAnnotationByRegion(true);
                 break;
-            case 'C':
+            case 'select.clear':
                 this._resetSelection();
                 break;
-            case 'm':
+            case 'element.menu':
                 if (this._currentMousePosition && (this.selectedElements.length > 0 || this._lastMouseOnElement)) {
                     let annotationId, element;
                     if (this.selectedElements.length > 0) {
@@ -1240,35 +1235,35 @@ var ImageView = View.extend({
                     });
                 }
                 break;
-            case ' ': // pressing space bar creates a new annotation
+            case 'annotation.create':
                 this.annotationSelector.createAnnotation();
                 break;
-            case 'B':
+            case 'brush.shape':
                 if (this.activeAnnotation) {
                     this.drawWidget.nextBrushShape();
                 }
                 break;
-            case '[':
+            case 'brush.smaller':
                 if (this.activeAnnotation) {
                     this.drawWidget.adjustBrushSize(-1);
                 }
                 break;
-            case ']':
+            case 'brush.larger':
                 if (this.activeAnnotation) {
                     this.drawWidget.adjustBrushSize(1);
                 }
                 break;
-            case 'q':
+            case 'group.previous':
                 if (this.activeAnnotation) {
                     this.drawWidget.setToPrevStyleGroup();
                 }
                 break;
-            case 'w':
+            case 'group.next':
                 if (this.activeAnnotation) {
                     this.drawWidget.setToNextStyleGroup();
                 }
                 break;
-            case 'Enter':
+            case 'draw.finish':
                 {
                     const drawingType = this.drawWidget && this.drawWidget._drawingType;
                     if (this.activeAnnotation && ['polygon', 'line'].includes(drawingType)) {
@@ -1290,12 +1285,7 @@ var ImageView = View.extend({
                     }
                 }
                 break;
-            case 'D':
-                if (evt.shiftKey && (evt.altKey || evt.metaKey)) {
-                    console.log(this);
-                }
-                break;
-            case 'Escape':
+            case 'draw.cancel':
                 // When geojs is engaged, this value will be false. This allows us to handle events where geojs is not engaged separately.
                 if (this.viewerWidget.annotationLayer.geoIsOn(geo.event.annotation.mode)) {
                     const button = this.$el.find('button.h-draw.active');
@@ -1305,8 +1295,8 @@ var ImageView = View.extend({
                 }
                 break;
             default:
-                if (this.drawWidget && drawModes[evt.key] && this.activeAnnotation) {
-                    const mode = drawModes[evt.key];
+                if (this.drawWidget && drawModes[action] && this.activeAnnotation) {
+                    const mode = drawModes[action];
                     if (this.drawWidget._drawingType === mode) {
                         this.drawWidget.cancelDrawMode();
                     } else {
@@ -1315,6 +1305,7 @@ var ImageView = View.extend({
                 }
                 break;
         }
+        return false;
     },
 
     _trackMousePosition(evt) {
@@ -1724,33 +1715,30 @@ var ImageView = View.extend({
             return null;
         });
     },
-    _addHotKey(keyset) {
-        if (keyset.key === undefined || keyset.action === undefined || !keyset.key.length) {
-            return;
-        }
-        keyset = Object.assign({}, keyset);
-        let key = keyset.key;
-        const parts = key.replace(/([+-])(?!$)/g, '\n').split('\n');
-        const modifiers = ['ctrl', 'alt', 'meta', 'shift'];
-        for (let i = 0; i < parts.length - 1; i++) {
-            const mod = parts[i].toLowerCase();
-            if (modifiers.includes(mod)) {
-                keyset[mod] = true;
+    /**
+     * Recompute hotkeys from the current folder config.
+     */
+    updateHotkeys() {
+        const val = this._folderConfig || {};
+        const config = [];
+        ((val.annotationGroups || {}).groups || []).forEach((group) => {
+            if (group.hotkey) {
+                config.push({key: group.hotkey, action: 'group', param: group.id});
             }
+        });
+        if (Array.isArray(val.hotkeys)) {
+            config.push(...val.hotkeys);
         }
-        key = parts[parts.length - 1];
-        keyset.key = key;
-        key = key.toLowerCase();
-        if (!this._hotkeys[key]) {
-            this._hotkeys[key] = [];
-        }
-        this._hotkeys[key].push(keyset);
+        this._configHotkeys = config;
+        this.hotkeys = resolveHotkeys({config: this._configHotkeys});
+        this.trigger('h:hotkeysChanged', this.hotkeys);
+        return this.hotkeys;
     },
+
     _getConfig(modelId) {
         if (modelId !== this._folderConfigId) {
             this._folderConfigId = modelId;
             this._folderConfig = {};
-            this._hotkeys = {};
         }
         restRequest({
             url: `folder/${this.model.get('folderId')}/yaml_config/.histomicsui_config.yaml`
@@ -1760,18 +1748,8 @@ var ImageView = View.extend({
                 return;
             }
             this._folderConfig = val;
-            this._hotkeys = {};
-            if (val.hotkeys) {
-                (val.hotkeys || []).forEach((keyset) => {
-                    this._addHotKey(keyset);
-                });
-            }
+            this.updateHotkeys();
             if (val.annotationGroups) {
-                (val.annotationGroups.groups || []).forEach((group) => {
-                    if (group.hotkey) {
-                        this._addHotKey({key: group.hotkey, action: 'group', param: group.id});
-                    }
-                });
                 const groups = new StyleCollection();
                 groups.fetch().done(() => {
                     if (!val || this.model.id !== modelId) {
