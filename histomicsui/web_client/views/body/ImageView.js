@@ -94,7 +94,7 @@ var ImageView = View.extend({
         });
         this.frameSelectorWidget = new FrameSelectorWidget({
             parentView: this
-        });
+        }).setHotkeys(this.hotkeys);
         this.metadataWidget = new MetadataWidget({
             parentView: this
         });
@@ -1797,6 +1797,7 @@ var ImageView = View.extend({
             setCurrentHotkeys(this.hotkeys);
             applyHotkeyTitles(this.el);
             this._applyGeojsHotkeys();
+            this.frameSelectorWidget.setHotkeys(this.hotkeys);
             return this.hotkeys;
         });
     },
