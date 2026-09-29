@@ -137,6 +137,7 @@ class MockSlicerCLIWebResource(Resource):
     'analysisSpec.js',
     'annotationSpec.js',
     'girderUISpec.js',
+    'hotkeysSpec.js',
     'huiSpec.js',
     'itemSpec.js',
     'metadataPanelSpec.js',
