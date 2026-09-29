@@ -417,6 +417,33 @@ function actionForEvent(resolved, evt) {
 }
 
 /**
+ * Get the `layerHotkeys` value for large_image's frame selector.
+ *
+ * @param {object} resolved The result of resolveHotkeys.
+ * @returns {object} {layerForEvent(evt) -> 0-based layer index or undefined,
+ *      labels: display text of the keys for each layer index}.
+ */
+function layerHotkeys(resolved) {
+    const layerActions = hotkeyActions.filter((action) => action.layer !== undefined);
+    const labels = [];
+    layerActions.forEach((action) => {
+        labels[action.layer] = (resolved.bindings[action.id] || []).map(displayKey).join(' or ');
+    });
+    return {
+        layerForEvent(evt) {
+            const pressed = bindingFromEvent(evt);
+            if (!pressed) {
+                return undefined;
+            }
+            const key = formatKey(pressed);
+            const action = layerActions.find((action) => (resolved.bindings[action.id] || []).some((binding) => formatKey(binding) === key));
+            return action ? action.layer : undefined;
+        },
+        labels
+    };
+}
+
+/**
  * Convert a map of user overrides to `hotkeys` entries for the user's file.
  *
  * @param {object} overrides Action key to a list of bindings.  An empty list
@@ -495,5 +522,6 @@ export {
     findConflicts,
     geojsKeyboardActions,
     actionForEvent,
+    layerHotkeys,
     overridesToEntries
 };
