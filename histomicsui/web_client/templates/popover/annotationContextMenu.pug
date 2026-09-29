@@ -8,7 +8,7 @@
         span.icon-right-big
         = group
   if numberSelected === 1
-    a.list-group-item.h-edit-shape(href='#', title='Keyboard shortcut: e')
+    a.list-group-item.h-edit-shape(href='#', data-hotkey-title='Keyboard shortcut: {element.edit}')
       | #[span.icon-pencil] Edit Shape
     a.list-group-item.h-edit-elements(href='#')
       | #[span.icon-cog] Edit Properties
