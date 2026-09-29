@@ -56,8 +56,10 @@ const DISPLAY_NAMES = {
 /**
  * The built-in actions that can be rebound.  `geojs` actions are handled by
  * the geojs map interactor; `sized` geojs actions take shift or ctrl+shift for
- * larger steps, so only the base key is rebindable.  Style group actions are
- * added dynamically with the id `group` and a `param` of the group id.
+ * larger steps, so only the base key is rebindable.  `layer` actions toggle
+ * a channel or band in large_image's frame selector, which handles the keys
+ * itself.  Style group actions are added dynamically with the id `group` and
+ * a `param` of the group id.
  */
 const hotkeyActions = [
     {id: 'pan.left', category: 'Navigation', label: 'Pan left', geojs: true, sized: true, keys: ['left']},
@@ -100,6 +102,16 @@ const hotkeyActions = [
     {id: 'group.previous', category: 'Drawing', label: 'Previous style group', keys: ['q']},
     {id: 'group.next', category: 'Drawing', label: 'Next style group', keys: ['w']}
 ];
+// ctrl+1 ... ctrl+0 toggle layers 1-10; ctrl+alt+1 ... ctrl+alt+0 layers 11-20
+for (let idx = 0; idx < 20; idx += 1) {
+    hotkeyActions.push({
+        id: `layer.${idx + 1}`,
+        category: 'Channels and bands',
+        label: `Toggle layer ${idx + 1}`,
+        layer: idx,
+        keys: [`ctrl+${idx >= 10 ? 'alt+' : ''}${(idx + 1) % 10}`]
+    });
+}
 
 const actionsById = {};
 hotkeyActions.forEach((action) => { actionsById[action.id] = action; });
@@ -394,7 +406,7 @@ function actionForEvent(resolved, evt) {
     const key = formatKey(pressed);
     for (const [ak, list] of Object.entries(resolved.bindings)) {
         const action = actionsById[ak];
-        if (action && action.geojs) {
+        if (action && (action.geojs || action.layer !== undefined)) {
             continue;
         }
         if ((list || []).some((binding) => formatKey(binding) === key)) {
