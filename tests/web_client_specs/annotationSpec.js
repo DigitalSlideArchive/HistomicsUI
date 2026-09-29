@@ -643,6 +643,82 @@ girderTest.promise.done(function () {
                     expect($('.h-draw.active').length).toBe(0);
                 });
             });
+            describe('customize keyboard shortcuts', function () {
+                function openHotkeysDialog() {
+                    runs(function () {
+                        $('.h-user-dropdown-link').click();
+                        $('a.h-edit-hotkeys').click();
+                    });
+                    girderTest.waitForDialog();
+                    waitsFor(function () {
+                        return $('.h-hotkey-row[data-action="draw.rectangle"]').length > 0;
+                    }, 'hotkey dialog to render');
+                }
+                function pressKey(key) {
+                    // the dialog listens with a native capture listener
+                    var evt;
+                    try {
+                        evt = new KeyboardEvent('keydown', {key: key, bubbles: true, cancelable: true});
+                    } catch (err) {
+                        evt = document.createEvent('Event');
+                        evt.initEvent('keydown', true, true);
+                        Object.defineProperty(evt, 'key', {value: key});
+                    }
+                    document.dispatchEvent(evt);
+                }
+
+                openHotkeysDialog();
+                it('rebind draw rectangle to x', function () {
+                    runs(function () {
+                        expect($('.h-hotkey-row[data-action="draw.rectangle"] kbd').text()).toBe('R');
+                        $('.h-hotkey-row[data-action="draw.rectangle"] .h-hotkey-change').click();
+                        expect($('.h-hotkey-capturing').length).toBe(1);
+                        pressKey('x');
+                        expect($('.h-hotkey-row[data-action="draw.rectangle"] kbd').text()).toBe('X');
+                        expect($('.h-hotkey-row[data-action="draw.rectangle"] .h-hotkey-source').text()).toBe('custom');
+                        $('.h-submit').click();
+                    });
+                    girderTest.waitForLoad();
+                    runs(function () {
+                        $('.h-image-body').trigger($.Event('keydown', {key: 'x'}));
+                        expect($('.h-draw.active').attr('data-type')).toBe('rectangle');
+                        $('.h-image-body').trigger($.Event('keydown', {key: 'x'}));
+                        expect($('.h-draw.active').length).toBe(0);
+                        $('.h-image-body').trigger($.Event('keydown', {key: 'r'}));
+                        expect($('.h-draw.active').length).toBe(0);
+                        expect($('button.h-draw[data-type="rectangle"]').attr('title')).toBe('Draw a new rectangle (keyboard shortcut: X)');
+                    });
+                    var userConfig;
+                    runs(function () {
+                        girder.rest.restRequest({
+                            url: 'user/' + girder.auth.getCurrentUser().id + '/yaml_config/.histomicsui_user_config.yaml'
+                        }).done(function (result) {
+                            userConfig = result;
+                        });
+                    });
+                    waitsFor(function () {
+                        return userConfig !== undefined;
+                    }, 'user config to load');
+                    runs(function () {
+                        expect(userConfig.hotkeys).toEqual([{action: 'draw.rectangle', key: 'x'}]);
+                    });
+                });
+                openHotkeysDialog();
+                it('reset all keyboard shortcuts', function () {
+                    runs(function () {
+                        $('.h-hotkeys-reset-all').click();
+                        expect($('.h-hotkey-row[data-action="draw.rectangle"] kbd').text()).toBe('R');
+                        $('.h-submit').click();
+                    });
+                    girderTest.waitForLoad();
+                    runs(function () {
+                        $('.h-image-body').trigger($.Event('keydown', {key: 'r'}));
+                        expect($('.h-draw.active').attr('data-type')).toBe('rectangle');
+                        $('.h-image-body').trigger($.Event('keydown', {key: 'r'}));
+                        expect($('.h-draw.active').length).toBe(0);
+                    });
+                });
+            });
         });
 
         describe('Sort By', function () {
