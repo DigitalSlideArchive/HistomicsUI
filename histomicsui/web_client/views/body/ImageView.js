@@ -33,7 +33,7 @@ import DrawWidget from '../../panels/DrawWidget';
 import editElement from '../../dialogs/editElement';
 import editHotkeys from '../../dialogs/editHotkeys';
 import router from '../../router';
-import {USER_CONFIG_NAME, actionForEvent, geojsKeyboardActions, resolveHotkeys} from '../../hotkeys';
+import {USER_CONFIG_NAME, actionForEvent, applyHotkeyTitles, geojsKeyboardActions, resolveHotkeys, setCurrentHotkeys} from '../../hotkeys';
 import events from '../../events';
 import {HuiSettings} from '../utils';
 import View from '../View';
@@ -1796,6 +1796,8 @@ var ImageView = View.extend({
             this._configHotkeys = config;
             this._userHotkeys = Array.isArray((user || {}).hotkeys) ? user.hotkeys : [];
             this.hotkeys = resolveHotkeys({config: this._configHotkeys, user: this._userHotkeys});
+            setCurrentHotkeys(this.hotkeys);
+            applyHotkeyTitles(this.el);
             this._applyGeojsHotkeys();
             this.trigger('h:hotkeysChanged', this.hotkeys);
             return this.hotkeys;

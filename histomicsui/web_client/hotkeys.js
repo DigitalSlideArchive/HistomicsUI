@@ -427,7 +427,48 @@ function overridesToEntries(overrides, params) {
     return entries;
 }
 
+let currentHotkeys = resolveHotkeys();
+
+/**
+ * Set the hotkeys used for tooltips.
+ */
+function setCurrentHotkeys(resolved) {
+    currentHotkeys = resolved;
+}
+
+/**
+ * Get the display text for an action's keys, e.g. "Shift+S".
+ */
+function hotkeyText(ak, resolved) {
+    const list = ((resolved || currentHotkeys).bindings[ak] || []).map(displayKey);
+    return list.length ? list.join(' or ') : 'none';
+}
+
+/**
+ * Set the title of every element with a `data-hotkey-title` attribute under
+ * a root element.  In the attribute, `{action.id}` is replaced with the keys
+ * for that action.
+ *
+ * @param {Element} root A DOM element.
+ */
+function applyHotkeyTitles(root) {
+    if (!root || !root.querySelectorAll) {
+        return;
+    }
+    const nodes = Array.from(root.querySelectorAll('[data-hotkey-title]'));
+    if (root.matches && root.matches('[data-hotkey-title]')) {
+        nodes.push(root);
+    }
+    nodes.forEach((node) => {
+        node.setAttribute('title', node.getAttribute('data-hotkey-title').replace(
+            /\{([\w.:-]+)\}/g, (match, ak) => hotkeyText(ak)));
+    });
+}
+
 export {
+    setCurrentHotkeys,
+    hotkeyText,
+    applyHotkeyTitles,
     USER_CONFIG_NAME,
     hotkeyActions,
     getHotkeyAction,
