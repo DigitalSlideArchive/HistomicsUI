@@ -33,6 +33,21 @@ function getAllowedGroups(annotation) {
 }
 
 /**
+ * Combine the `allowed_groups` restrictions of several annotations.
+ *
+ * Unrestricted annotations don't constrain the result. If any annotation is restricted, the
+ * result is the intersection of the restricted annotations' allowed groups, which may be empty.
+ *
+ * @param {AnnotationModel[]} annotations The annotations to check.
+ * @returns {string[]|null} The groups allowed by every annotation, or null if none are
+ *                          restricted.
+ */
+function getCommonAllowedGroups(annotations) {
+    const restrictions = _.uniq(annotations).map(getAllowedGroups).filter((allowed) => allowed);
+    return restrictions.length ? _.intersection(...restrictions) : null;
+}
+
+/**
  * Ensure that every group in an `allowed_groups` restriction exists as a persisted style group.
  * Create any that are missing by copying the style of the default group.
  *
@@ -64,4 +79,4 @@ function ensureAllowedGroupsExist(styles, allowed, defaultGroupId) {
 }
 
 export default getAllowedGroups;
-export {ensureAllowedGroupsExist};
+export {ensureAllowedGroupsExist, getCommonAllowedGroups};
