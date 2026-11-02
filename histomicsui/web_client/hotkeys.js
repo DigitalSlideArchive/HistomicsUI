@@ -13,6 +13,8 @@ const USER_CONFIG_NAME = '.histomicsui_user_config.yaml';
 
 const MODIFIERS = ['ctrl', 'alt', 'meta', 'shift'];
 
+const IGNORED_KEYS = MODIFIERS.concat(['capslock', 'numlock']);
+
 const KEY_NAMES = {
     ' ': 'space',
     arrowleft: 'left',
@@ -208,7 +210,7 @@ function bindingFromEvent(evt, sized) {
     const oe = evt.originalEvent || evt;
     const raw = oe.key;
     const key = normalizeKeyName(raw);
-    if (!key || MODIFIERS.includes(key)) {
+    if (!key || IGNORED_KEYS.includes(key)) {
         return null;
     }
     const binding = {
