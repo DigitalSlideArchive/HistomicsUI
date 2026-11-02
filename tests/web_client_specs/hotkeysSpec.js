@@ -38,6 +38,8 @@ girderTest.promise.done(function () {
                 expect(fk(ev(' '))).toBe('space');
                 expect(fk({originalEvent: {key: 'x', altKey: true}})).toBe('alt+x');
                 expect(hotkeys.bindingFromEvent(ev('Shift', {shiftKey: true}))).toBe(null);
+                expect(hotkeys.bindingFromEvent(ev('CapsLock'))).toBe(null);
+                expect(hotkeys.bindingFromEvent(ev('NumLock'))).toBe(null);
             });
             it('ignores shift and ctrl for sized navigation actions', function () {
                 expect(hotkeys.formatKey(hotkeys.bindingFromEvent(ev('H', {shiftKey: true, ctrlKey: true}), true))).toBe('h');

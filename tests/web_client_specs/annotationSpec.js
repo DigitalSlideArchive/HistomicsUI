@@ -1796,12 +1796,51 @@ girderTest.promise.done(function () {
                 girderTest.waitForLoad();
             });
 
+            it('edit the user hotkey file directly', function () {
+                var done;
+                runs(function () {
+                    girder.rest.restRequest({
+                        url: 'user/' + girder.auth.getCurrentUser().id + '/yaml_config/.histomicsui_user_config.yaml',
+                        method: 'PUT',
+                        contentType: 'application/x-yaml',
+                        processData: false,
+                        data: 'hotkeys:\n  - action: draw.rectangle\n    key: y\n'
+                    }).done(function () {
+                        done = true;
+                    });
+                });
+                waitsFor(function () {
+                    return done;
+                }, 'user config to save');
+            });
+
             it('open a different image', function () {
                 huiTest.waitsForPromise(
                     huiTest.openImage('copy').done(function () {
                         expect($('.h-annotation-selector .h-annotation').length).toBe(0);
                     }), 'Annotation selector to appear'
                 );
+            });
+
+            it('loads the user hotkey file with the image', function () {
+                var done;
+                waitsFor(function () {
+                    return girder.plugins.histomicsui.hotkeys.hotkeyText('draw.rectangle', huiTest.app.bodyView.hotkeys) === 'Y';
+                }, 'user hotkeys to load');
+                runs(function () {
+                    girder.rest.restRequest({
+                        url: 'user/' + girder.auth.getCurrentUser().id + '/yaml_config/.histomicsui_user_config.yaml',
+                        method: 'PUT',
+                        contentType: 'application/x-yaml',
+                        processData: false,
+                        data: '{}\n'
+                    }).done(function () {
+                        done = true;
+                    });
+                });
+                waitsFor(function () {
+                    return done;
+                }, 'user config to reset');
             });
 
             it('open the original image', function () {
@@ -2263,8 +2302,22 @@ girderTest.promise.done(function () {
                 return $('.h-annotation-selector .h-annotation:contains("drawn c1")').length === 0;
             }, '"drawn c1" to be deleted');
         });
+        it('uses group hotkeys from the config', function () {
+            waitsFor(function () {
+                var bindings = huiTest.app.bodyView.hotkeys.bindings['group:Red'];
+                return bindings && bindings.length === 1;
+            }, 'config hotkeys to load');
+            runs(function () {
+                expect(girder.plugins.histomicsui.hotkeys.hotkeyText('group:Red', huiTest.app.bodyView.hotkeys)).toBe('Shift+R');
+            });
+        });
         it('open original image', function () {
             huiTest.openImage('image');
+        });
+        it('drops config hotkeys in a folder without a config', function () {
+            waitsFor(function () {
+                return huiTest.app.bodyView.hotkeys.bindings['group:Red'] === undefined;
+            }, 'config hotkeys to be removed');
         });
     });
 });
