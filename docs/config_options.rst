@@ -101,7 +101,7 @@ The `group` action selects the style group named by `param`. The other actions a
 User Hotkeys
 ~~~~~~~~~~~~
 
-Logged-in users can choose their own keys from **Keyboard shortcuts** in the user menu. These are saved as a `hotkeys` section, in the same format as above, in a `.histomicsui_user_config.yaml` file in the user's `Private` folder, which can also be edited directly. User hotkeys apply in every folder and take precedence over the folder's config file. **Reset all** in the dialog removes them.
+Logged-in users can choose their own keys from **Keyboard shortcuts** in the user menu.  These are saved as a  `hotkeys ` section, in the same format as above, in a  `.histomicsui_user_config.yaml ` file in the user's private folder (normally  `Private `; see large_image's per-user configuration files), which can also be edited directly.  If the user makes that folder public, their hotkeys no longer apply.  User hotkeys apply in every folder and take precedence over the folder's config file.  **Reset all** in the dialog removes them.
 
 Unselected Annotation Capacity
 ______________________________

@@ -671,6 +671,9 @@ girderTest.promise.done(function () {
                 it('rebind draw rectangle to x', function () {
                     runs(function () {
                         expect($('.h-hotkey-row[data-action="draw.rectangle"] kbd').text()).toBe('R');
+                        var enter = $.Event('keydown', {key: 'Enter'});
+                        $('.h-hotkeys-filter').trigger(enter);
+                        expect(enter.isDefaultPrevented()).toBe(true);
                         $('.h-hotkey-row[data-action="draw.rectangle"] .h-hotkey-change').click();
                         expect($('.h-hotkey-capturing').length).toBe(1);
                         pressKey('x');

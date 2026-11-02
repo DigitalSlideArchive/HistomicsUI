@@ -18,7 +18,7 @@ import '../stylesheets/dialogs/editHotkeys.styl';
 /**
  * A modal dialog that lists every rebindable action and lets the current
  * user choose their own keys.  The choices are saved to a file in the user's
- * Private folder.
+ * private folder (normally Private).
  */
 const EditHotkeysDialog = View.extend({
     events: {
@@ -27,6 +27,7 @@ const EditHotkeysDialog = View.extend({
         'click .h-hotkey-reset': '_resetAction',
         'click .h-hotkeys-reset-all': '_resetAll',
         'input .h-hotkeys-filter': '_filter',
+        'keydown .h-hotkeys-filter': '_filterKeydown',
         'click .h-submit': '_submit'
     },
 
@@ -137,6 +138,13 @@ const EditHotkeysDialog = View.extend({
         this.$('.h-hotkey-row').each((idx, row) => {
             $(row).toggleClass('hidden', !!text && !$(row).text().toLowerCase().includes(text));
         });
+    },
+
+    _filterKeydown(evt) {
+        // Enter would otherwise submit the form and save
+        if (evt.key === 'Enter') {
+            evt.preventDefault();
+        }
     },
 
     _rowAction(evt) {
