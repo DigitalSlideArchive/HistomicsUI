@@ -662,10 +662,12 @@ girderTest.promise.done(function () {
                 runs(function () {
                     drawWidget = huiTest.app.bodyView.drawWidget;
                     drawWidget.collection.add([
-                        {id: 'sort-test-charlie', type: 'point', label: {value: 'Charlie'}, group: 'rareGroup'},
-                        {id: 'sort-test-alpha', type: 'point', label: {value: 'Alpha'}, group: 'commonGroup'},
-                        {id: 'sort-test-bravo', type: 'rectangle', label: {value: 'Bravo'}, group: 'commonGroup'},
-                        {id: 'sort-test-delta', type: 'polyline', closed: false, label: {value: 'Delta'}, group: 'commonGroup'}
+                        // give each element valid geometry; the viewer may redraw the
+                        // annotation and fails on shapes without coordinates
+                        {id: 'sort-test-charlie', type: 'point', center: [100, 100, 0], label: {value: 'Charlie'}, group: 'rareGroup'},
+                        {id: 'sort-test-alpha', type: 'point', center: [120, 100, 0], label: {value: 'Alpha'}, group: 'commonGroup'},
+                        {id: 'sort-test-bravo', type: 'rectangle', center: [140, 100, 0], width: 10, height: 10, rotation: 0, label: {value: 'Bravo'}, group: 'commonGroup'},
+                        {id: 'sort-test-delta', type: 'polyline', points: [[160, 100, 0], [170, 110, 0]], closed: false, label: {value: 'Delta'}, group: 'commonGroup'}
                     ]);
                 });
                 waitsFor(function () {
