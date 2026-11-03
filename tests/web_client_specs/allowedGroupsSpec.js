@@ -279,6 +279,48 @@ girderTest.promise.done(function () {
             });
         });
 
+        describe('context menu offers the intersection of restrictions across a multi-selection', function () {
+            var first = {};
+            var second = {};
+            var unrestricted = {};
+
+            it('creates annotations with overlapping restrictions', function () {
+                createAnnotation('restricted annotation 1 for intersection', {
+                    allowed_groups: ['groupM', 'groupN']
+                }, [rectangleElement(80, 80)], first);
+            });
+
+            it('creates the second restricted annotation', function () {
+                createAnnotation('restricted annotation 2 for intersection', {
+                    allowed_groups: ['groupN', 'groupO']
+                }, [rectangleElement(90, 90)], second);
+            });
+
+            it('creates an unrestricted annotation', function () {
+                createAnnotation('unrestricted annotation for intersection', {}, [rectangleElement(100, 100)], unrestricted);
+            });
+
+            it('offers only groups allowed by every selected element\'s annotation', function () {
+                var bodyView = huiTest.app.bodyView;
+                bodyView._resetSelection();
+                bodyView._selectElement(first.annotation.elements().first());
+                bodyView._selectElement(second.annotation.elements().first());
+                expect(bodyView.contextMenu._getAnnotationGroups()).toEqual(['groupN']);
+
+                bodyView._selectElement(unrestricted.annotation.elements().first());
+                expect(bodyView.contextMenu._getAnnotationGroups()).toEqual(['groupN']);
+            });
+
+            it('offers no groups when the restrictions are disjoint', function () {
+                var bodyView = huiTest.app.bodyView;
+                first.annotation.get('annotation').attributes = {allowed_groups: ['groupM']};
+                bodyView._resetSelection();
+                bodyView._selectElement(first.annotation.elements().first());
+                bodyView._selectElement(second.annotation.elements().first());
+                expect(bodyView.contextMenu._getAnnotationGroups()).toEqual([]);
+            });
+        });
+
         describe('#3/#5: live metadata updates without reselecting or reloading', function () {
             var result = {};
             var drawWidget;
