@@ -1,7 +1,7 @@
 import $ from 'jquery';
 
 import StyleCollection from '../../collections/StyleCollection';
-import getAllowedGroups, {ensureAllowedGroupsExist} from '../../utilities/allowedGroups';
+import {ensureAllowedGroupsExist, getCommonAllowedGroups} from '../../utilities/allowedGroups';
 import View from '../View';
 
 import template from '../../templates/popover/annotationContextMenu.pug';
@@ -108,11 +108,11 @@ const AnnotationContextMenu = View.extend({
         }
     },
     _getAnnotationGroups() {
-        // restrict to the allowed groups of the annotation that owns the selected/right-clicked
-        // element, not whichever annotation happens to be active in the Annotations panel
-        const referenceElement = this.collection.at(0);
-        const referenceAnnotation = (referenceElement && referenceElement.originalAnnotation) || this.parentView.activeAnnotation;
-        const allowed = getAllowedGroups(referenceAnnotation);
+        let annotations = this.collection.map((element) => element.originalAnnotation).filter((a) => a);
+        if (!annotations.length && this.parentView.activeAnnotation) {
+            annotations = [this.parentView.activeAnnotation];
+        }
+        const allowed = getCommonAllowedGroups(annotations);
         this._ensureAllowedGroupsExist(allowed);
         let groups = this.styles.map((style) => style.id);
         if (allowed) {
