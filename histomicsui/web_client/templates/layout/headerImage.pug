@@ -9,7 +9,7 @@ if parentChain
     ol.breadcrumb(title=parts.join('/'))
       each parent in parentChain
         li
-          span.g-item-breadcrumb-link(data-id=parent.object._id, data-type=parent.type)
+          a.g-item-breadcrumb-link(data-id=parent.object._id, data-type=parent.type, href=`../girder#${parent.type}/${parent.object._id}`, target='girder')
             if (parent.type === "user")
               i.icon-user
               = parent.object.login
@@ -19,7 +19,7 @@ if parentChain
             else
               = parent.object.name
       li
-        span.g-item-breadcrumb-link(data-id=image.id, data-type='item')
+        a.g-item-breadcrumb-link(data-id=image.id, data-type='item', href=`../girder#item/${image.id}`, target='girder')
           = image.name()
 button.btn.btn-default.navbar-btn.h-open-annotated-image(type='button')
   | #[span.icon-list] Annotated images...
