@@ -19,28 +19,36 @@ const initializeHistomicsApp = async (apiRoot: string, el: string | HTMLElement 
           girder.rest.setApiRoot(apiRoot);
           girder.router.enabled(false);
           girder.events.trigger('g:appload.before');
-          girder.rest.restRequest({
+          const coreSettingsPromise = girder.rest.restRequest({
+            url: 'system/public_settings',
+            method: 'GET',
+          });
+          const histomicsSettingsPromise = girder.rest.restRequest({
               url: 'system/setting/histomicsui',
               method: 'GET',
-          }).done(async (resp: any) => {
+          });
+          Promise.all([coreSettingsPromise, histomicsSettingsPromise]).then(async (resp: any) => {
+            const [coreSettings, histomicsSettings] = resp;
               // We use dynamic import because this app's code depends on other plugins'
               // code having been loaded under `girder.plugins.xxx` at import time.
               const App = (await import('./app') as any).default;
               const app = new App({
                   el,
                   parentView: null,
-                  brandName: resp['histomicsui.brand_name'],
-                  brandColor: resp['histomicsui.brand_color'],
-                  bannerColor: resp['histomicsui.banner_color'],
-                  helpURL: resp['histomicsui.help_url'],
-                  helpTooltip: resp['histomicsui.help_tooltip'],
-                  helpText: resp['histomicsui.help_text'],
+                  brandName: histomicsSettings['histomicsui.brand_name'],
+                  brandColor: histomicsSettings['histomicsui.brand_color'],
+                  bannerColor: histomicsSettings['histomicsui.banner_color'],
+                  helpURL: histomicsSettings['histomicsui.help_url'],
+                  helpTooltip: histomicsSettings['histomicsui.help_tooltip'],
+                  helpText: histomicsSettings['histomicsui.help_text'],
+                  showDownload: coreSettings['core.show_download'],
               });
-              document.title = resp['histomicsui.brand_name'];
+              document.title = histomicsSettings['histomicsui.brand_name'];
               app.bindRoutes();
               girder.events.trigger('g:appload.after', app);
               resolve(app);
-          }).fail((resp: any) => {
+
+          }).catch((resp: any) => {
               girder.events.trigger('g:error', resp);
               reject(new Error("Could not retrieve public settings from server."));
           });

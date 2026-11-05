@@ -44,10 +44,11 @@ setup(
     install_requires=[
         'girder>=5',
         'girder-jobs>=5',
-        'girder-large-image==1.34.2a166',
-        'girder-large-image-annotation==1.34.2a166',
-        'large-image-tasks==1.34.2a166',
-        'large-image-converter==1.34.2a166',
+        'girder-slicer-cli-web>=5',
+        'girder-large-image==1.35.5a199',
+        'girder-large-image-annotation==1.35.5a199',
+        'large-image-tasks==1.35.5a199',
+        'large-image-converter==1.35.5a199',
     ],
     extras_require={
         'analysis': [],  # kept for backwards compatibility
