@@ -1,4 +1,4 @@
-import {test} from '@playwright/test';
+import {expect, test} from '@playwright/test';
 
 import {createUser, uploadSampleFile} from '../util';
 import {setupServer} from '../server';
@@ -13,7 +13,6 @@ test.describe('Test image viewer', () => {
         await page.getByRole('link', {name: ' Private '}).click();
         await uploadSampleFile(page, 'sample_svs_image.TCGA-DU-6399-01A-01-TS1.e8eb65de-d63e-42db-af6f-14fefbbdf7bd.svs');
 
-        const locator = page.locator('.large_image_thumbnail>img.loaded');
-        await locator.waitFor({state: 'visible'});
+        await expect(page.locator('.large_image_thumbnail>img.loaded')).toBeVisible({timeout: 30000});
     });
 });

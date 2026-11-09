@@ -46,6 +46,7 @@ const initializeHistomicsApp = async (apiRoot: string, el: string | HTMLElement 
                 app.bindRoutes();
                 girder.events.trigger('g:appload.after', app);
                 resolve(app);
+                return app;
             }).catch((resp: any) => {
                 girder.events.trigger('g:error', resp);
                 reject(new Error('Could not retrieve public settings from server.'));
