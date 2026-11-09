@@ -1,0 +1,56 @@
+mixin legendLineFields(entry)
+  .input-group.h-colorpicker.h-legend-field(title='Line color')
+    input.h-legend-line-color.input-sm.form-control(
+      type='text', placeholder='Line color', value=entry.lineColor)
+    span.input-group-addon
+      i
+  .h-legend-field.h-legend-line-width-field
+    input.h-legend-line-width.input-sm.form-control(
+      type='number', min=0, step=0.1, placeholder='Width', title='Line width', value=entry.lineWidth)
+
+mixin legendEntryControls
+  span.h-legend-entry-controls
+    span.icon-up-open.h-legend-move-up(title='Move entry up')
+    span.icon-down-open.h-legend-move-down(title='Move entry down')
+    span.icon-cancel.h-legend-remove(title='Remove entry')
+
+mixin legendStop(color, label)
+  .h-legend-stop
+    .input-group.h-colorpicker.h-legend-field(title='Color at this position')
+      input.h-legend-stop-color.input-sm.form-control(
+        type='text', placeholder='Color', value=color)
+      span.input-group-addon
+        i
+    .h-legend-field.h-legend-stop-label-field
+      input.h-legend-stop-label.input-sm.form-control(
+        type='text', placeholder='Label (optional)', title='Text shown at this position', value=label)
+    span.h-legend-entry-controls
+      span.icon-cancel.h-legend-remove-stop(title='Remove color')
+
+mixin legendEntry(entry)
+  if Array.isArray(entry.fillColor)
+    .h-legend-entry.h-legend-range-entry
+      .h-legend-entry-main
+        .h-legend-field.h-legend-label-field
+          input.h-legend-label.input-sm.form-control(
+            type='text', placeholder='Title', title='Title of the color range', value=entry.label)
+        +legendLineFields(entry)
+        +legendEntryControls
+      .h-legend-stops
+        each color, idx in entry.fillColor
+          +legendStop(color, (entry.labels || [])[idx])
+      button.btn.btn-xs.btn-default.h-legend-add-stop(type='button', title='Colors are evenly spaced along the range')
+        span.icon-plus
+        | Add color
+  else
+    .h-legend-entry
+      .h-legend-field.h-legend-label-field
+        input.h-legend-label.input-sm.form-control(
+          type='text', placeholder='Label', title='Legend text', value=entry.label)
+      .input-group.h-colorpicker.h-legend-field(title='Fill color')
+        input.h-legend-fill-color.input-sm.form-control(
+          type='text', placeholder='Fill color', value=entry.fillColor)
+        span.input-group-addon
+          i
+      +legendLineFields(entry)
+      +legendEntryControls

@@ -43,3 +43,55 @@ label.unstyled
 .hui-save-annotation-dialog
   input[type="checkbox"]
     margin-left 5px
+
+.hui-save-annotation-dialog
+  .h-legend-entries
+    .h-legend-entry
+      display flex
+      align-items center
+      margin-bottom 5px
+
+      .h-legend-field
+        margin-right 5px
+
+      .h-legend-label-field
+        flex 2 1 120px
+
+      .h-colorpicker
+        flex 1 1 110px
+
+      .h-legend-line-width-field
+        flex 0 0 80px
+
+      .h-legend-entry-controls
+        flex 0 0 auto
+        white-space nowrap
+
+        span
+          cursor pointer
+          padding 0 2px
+
+      &.h-legend-range-entry
+        display block
+
+        .h-legend-entry-main, .h-legend-stop
+          display flex
+          align-items center
+
+        .h-legend-stops
+          margin-left 20px
+
+          .h-legend-stop
+            margin-top 3px
+
+          .h-legend-stop-label-field
+            flex 2 1 120px
+
+        .h-legend-add-stop
+          margin 3px 0 0 20px
+
+          &.has-error
+            border-color #a94442
+
+  .h-add-legend-range
+    margin-left 5px
