@@ -3,6 +3,7 @@ import StyleCollection from '../../collections/StyleCollection';
 import StyleModel from '../../models/StyleModel';
 
 import AnnotationContextMenu from '../popover/AnnotationContextMenu';
+import AnnotationLegend from '../popover/AnnotationLegend';
 import AnnotationPopover from '../popover/AnnotationPopover';
 import PixelmapContextMenu from '../popover/PixelmapContextMenu';
 import AnnotationSelector from '../../panels/AnnotationSelector';
@@ -98,6 +99,10 @@ var ImageView = View.extend({
         this.popover = new AnnotationPopover({
             parentView: this
         });
+        this.annotationLegend = new AnnotationLegend({
+            parentView: this,
+            collection: this.annotations
+        });
         this.contextMenu = new AnnotationContextMenu({
             parentView: this,
             collection: this.selectedElements
@@ -178,6 +183,7 @@ var ImageView = View.extend({
             return;
         }
         this.$el.html(imageTemplate());
+        this.annotationLegend.setElement(this.$('.h-annotation-legend-container')).render();
         this.contextMenu.setElement(this.$('#h-annotation-context-menu')).render();
         this.pixelmapContextMenu.setElement(this.$('#h-pixelmap-context-menu')).render();
 

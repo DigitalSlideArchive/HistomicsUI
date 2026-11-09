@@ -1,0 +1,26 @@
+.h-annotation-legend-header(title=collapsed ? 'Expand legend' : 'Collapse legend')
+  span.h-annotation-legend-title Legend
+  if collapsed
+    span.icon-up-open.h-annotation-legend-toggle
+  else
+    span.icon-down-open.h-annotation-legend-toggle
+if !collapsed
+  .h-annotation-legend-body
+    each annotation in annotations
+      - var name = (annotation.get('annotation') || {}).name || ''
+      .h-annotation-legend-annotation(data-id=annotation.id)
+        .h-annotation-legend-name(title=name) #{name}
+        each entry in annotation.get('annotation').legend
+          if isRange(entry)
+            .h-annotation-legend-entry.h-annotation-legend-range
+              .h-annotation-legend-label(title=entry.label) #{entry.label}
+              .h-annotation-legend-bar(style=swatchStyle(entry))
+              - var labels = rangeLabels(entry)
+              if labels.length
+                .h-annotation-legend-range-labels
+                  each label in labels
+                    span.h-annotation-legend-range-label(style=label.style, title=label.text) #{label.text}
+          else
+            .h-annotation-legend-entry
+              span.h-annotation-legend-swatch(style=swatchStyle(entry))
+              span.h-annotation-legend-label(title=entry.label) #{entry.label}

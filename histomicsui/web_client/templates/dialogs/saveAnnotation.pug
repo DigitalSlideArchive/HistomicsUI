@@ -1,3 +1,5 @@
+include saveAnnotationLegendEntry.pug
+
 mixin functional(name, key, title, color)
   .form-group.h-functional-value
     label(for='h-annotation-' + name) #{title}
@@ -100,6 +102,18 @@ mixin functional(name, key, title, color)
               type='number', min=0, step=0.1, value=defaultStyles.lineWidth)
           +functional('line-color', 'lineColor', 'Line color', true)
           +functional('fill-color', 'fillColor', 'Fill color', true)
+        hr
+        .form-group.h-legend-section(title='A legend is shown on the image when the annotation is displayed.  Each entry has a label and the colors it describes.  A color range shows a continuous blend between its colors.')
+          label Legend
+          .h-legend-entries
+            each entry in annotation.legend || []
+              +legendEntry(entry)
+          button.btn.btn-sm.btn-default.h-add-legend-entry(type='button')
+            span.icon-plus
+            | Add legend entry
+          button.btn.btn-sm.btn-default.h-add-legend-range(type='button')
+            span.icon-plus
+            | Add color range
         .g-validation-failed-message.hidden
       .modal-footer
         if hasAdmin
