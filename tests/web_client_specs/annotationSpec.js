@@ -1151,6 +1151,207 @@ girderTest.promise.done(function () {
                 });
             });
 
+            it('edit annotation legend', function () {
+                runs(function () {
+                    expect($('.h-annotation-legend-container').hasClass('hidden')).toBe(true);
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-edit-annotation-metadata').click();
+                });
+
+                girderTest.waitForDialog();
+                runs(function () {
+                    expect($('#h-annotation-name').val()).toBe('drawn 2');
+                    expect($('.h-legend-entry').length).toBe(0);
+                    $('.h-add-legend-entry').click();
+                    $('.h-add-legend-entry').click();
+                    expect($('.h-legend-entry').length).toBe(2);
+                    $('.h-legend-entry:first .h-legend-label').val('High');
+                    $('.h-legend-entry:first .h-legend-fill-color').val('red');
+                    $('.h-legend-entry:last .h-legend-label').val('Low');
+                    $('.h-legend-entry:last .h-legend-fill-color').val('blue');
+                    $('.h-legend-entry:last .h-legend-line-color').val('black');
+                    $('.h-legend-entry:last .h-legend-line-width').val(2);
+                    // reorder the entries
+                    $('.h-legend-entry:last .h-legend-move-up').click();
+                    expect($('.h-legend-entry:first .h-legend-label').val()).toBe('Low');
+                    $('.h-legend-entry:first .h-legend-move-up').click();
+                    expect($('.h-legend-entry:first .h-legend-label').val()).toBe('Low');
+                    $('.h-legend-entry:first .h-legend-move-down').click();
+                    expect($('.h-legend-entry:first .h-legend-label').val()).toBe('High');
+                    $('.h-legend-entry:last .h-legend-move-up').click();
+                    expect($('.h-legend-entry:first .h-legend-label').val()).toBe('Low');
+                    // entries without a label or with invalid colors are rejected
+                    $('.h-add-legend-entry').click();
+                    $('.h-legend-entry:last .h-legend-fill-color').val('not a color');
+                    $('.h-submit').click();
+
+                    var validationEl = $('.g-validation-failed-message');
+                    expect(validationEl.hasClass('hidden')).toBe(false);
+                    expect(validationEl.text()).toBe('Legend entries must have a label. Invalid legend color.');
+                    expect($('.h-legend-entry:last .has-error').length).toBe(2);
+                    expect($('.h-legend-entry:first .has-error').length).toBe(0);
+                    // entries without any color are rejected
+                    $('.h-legend-entry:last .h-legend-label').val('No color');
+                    $('.h-legend-entry:last .h-legend-fill-color').val('');
+                    $('.h-submit').click();
+                    expect(validationEl.text()).toBe('Legend entries must have a fill or line color.');
+                    expect($('.h-legend-entry:last .has-error').length).toBe(2);
+
+                    $('.h-legend-entry:last .h-legend-remove').click();
+                    expect($('.h-legend-entry').length).toBe(2);
+                    $('.h-submit').click();
+                });
+
+                girderTest.waitForLoad();
+                runs(function () {
+                    var annotation = huiTest.app.bodyView.annotations.filter(function (annotation) {
+                        return annotation.get('annotation').name === 'drawn 2';
+                    })[0];
+                    expect(annotation.get('annotation').legend).toEqual([
+                        {label: 'Low', fillColor: 'rgb(0, 0, 255)', lineColor: 'rgb(0, 0, 0)', lineWidth: 2},
+                        {label: 'High', fillColor: 'rgb(255, 0, 0)'}
+                    ]);
+                });
+                waitsFor(function () {
+                    return $('.h-annotation-legend-container:not(.hidden) .h-annotation-legend-entry').length === 2;
+                }, 'legend to be shown');
+                runs(function () {
+                    var $legend = $('.h-annotation-legend-container');
+                    expect($legend.find('.h-annotation-legend-name').text()).toBe('drawn 2');
+                    expect($legend.find('.h-annotation-legend-label').first().text()).toBe('Low');
+                    expect($legend.find('.h-annotation-legend-label').last().text()).toBe('High');
+                    var swatch = $legend.find('.h-annotation-legend-swatch').first();
+                    expect(swatch.css('background-color')).toBe('rgb(0, 0, 255)');
+                    expect(swatch.css('border-top-color')).toBe('rgb(0, 0, 0)');
+                    expect(swatch.css('border-top-width')).toBe('2px');
+                    // collapse and expand the legend
+                    $legend.find('.h-annotation-legend-header').click();
+                    expect($legend.find('.h-annotation-legend-entry').length).toBe(0);
+                    expect($legend.find('.icon-up-open').length).toBe(1);
+                    $legend.find('.h-annotation-legend-header').click();
+                    expect($legend.find('.h-annotation-legend-entry').length).toBe(2);
+                    // hiding the annotation hides the legend
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-toggle-annotation').click();
+                });
+                waitsFor(function () {
+                    return $('.h-annotation-legend-container').hasClass('hidden');
+                }, 'legend to be hidden');
+                runs(function () {
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-toggle-annotation').click();
+                });
+                waitsFor(function () {
+                    return $('.h-annotation-legend-container:not(.hidden) .h-annotation-legend-entry').length === 2;
+                }, 'legend to be shown again');
+                runs(function () {
+                    // remove the legend
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-edit-annotation-metadata').click();
+                });
+                girderTest.waitForDialog();
+                runs(function () {
+                    expect($('.h-legend-entry').length).toBe(2);
+                    expect($('.h-legend-entry:first .h-legend-label').val()).toBe('Low');
+                    expect($('.h-legend-entry:first .h-legend-fill-color').val()).toMatch(/^rgb\(0, ?0, ?255\)$/);
+                    $('.h-legend-entry .h-legend-remove').click();
+                    expect($('.h-legend-entry').length).toBe(0);
+                    $('.h-submit').click();
+                });
+                girderTest.waitForLoad();
+                runs(function () {
+                    var annotation = huiTest.app.bodyView.annotations.filter(function (annotation) {
+                        return annotation.get('annotation').name === 'drawn 2';
+                    })[0];
+                    expect(annotation.get('annotation').legend).toEqual([]);
+                });
+                waitsFor(function () {
+                    return $('.h-annotation-legend-container').hasClass('hidden');
+                }, 'legend to be removed');
+            });
+
+            it('edit annotation legend color range', function () {
+                runs(function () {
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-edit-annotation-metadata').click();
+                });
+
+                girderTest.waitForDialog();
+                runs(function () {
+                    expect($('.h-legend-entry').length).toBe(0);
+                    $('.h-add-legend-range').click();
+                    expect($('.h-legend-entry.h-legend-range-entry').length).toBe(1);
+                    expect($('.h-legend-stop').length).toBe(2);
+                    $('.h-legend-range-entry .h-legend-label').val('Patch IoU');
+                    $('.h-legend-stop:first .h-legend-stop-color').val('blue');
+                    // every color must be filled in
+                    $('.h-submit').click();
+                    var validationEl = $('.g-validation-failed-message');
+                    expect(validationEl.hasClass('hidden')).toBe(false);
+                    expect(validationEl.text()).toBe('Invalid legend color.');
+                    expect($('.h-legend-stop:last .has-error').length).toBe(1);
+                    // a range needs at least two colors
+                    $('.h-legend-stop:last .h-legend-remove-stop').click();
+                    expect($('.h-legend-stop').length).toBe(1);
+                    $('.h-submit').click();
+                    expect(validationEl.text()).toBe('Color ranges need at least two colors.');
+                    expect($('.h-legend-add-stop').hasClass('has-error')).toBe(true);
+                    $('.h-legend-add-stop').click();
+                    $('.h-legend-add-stop').click();
+                    expect($('.h-legend-stop').length).toBe(3);
+                    $('.h-legend-stop:eq(1) .h-legend-stop-color').val('white');
+                    $('.h-legend-stop:last .h-legend-stop-color').val('rgb(255, 0, 0)');
+                    $('.h-legend-stop:first .h-legend-stop-label').val('Low');
+                    $('.h-legend-stop:last .h-legend-stop-label').val('High');
+                    $('.h-legend-range-entry .h-legend-line-color').val('black');
+                    $('.h-submit').click();
+                });
+
+                girderTest.waitForLoad();
+                runs(function () {
+                    var annotation = huiTest.app.bodyView.annotations.filter(function (annotation) {
+                        return annotation.get('annotation').name === 'drawn 2';
+                    })[0];
+                    expect(annotation.get('annotation').legend).toEqual([{
+                        label: 'Patch IoU',
+                        fillColor: ['rgb(0, 0, 255)', 'rgb(255, 255, 255)', 'rgb(255, 0, 0)'],
+                        labels: ['Low', '', 'High'],
+                        lineColor: 'rgb(0, 0, 0)'
+                    }]);
+                });
+                waitsFor(function () {
+                    return $('.h-annotation-legend-container:not(.hidden) .h-annotation-legend-range').length === 1;
+                }, 'legend range to be shown');
+                runs(function () {
+                    var $range = $('.h-annotation-legend-container .h-annotation-legend-range');
+                    expect($range.find('.h-annotation-legend-label').text()).toBe('Patch IoU');
+                    expect($range.find('.h-annotation-legend-bar').attr('style')).toMatch(/linear-gradient\(to right, rgb\(0, 0, 255\), rgb\(255, 255, 255\), rgb\(255, 0, 0\)\)/);
+                    expect($range.find('.h-annotation-legend-bar').css('border-top-color')).toBe('rgb(0, 0, 0)');
+                    var $labels = $range.find('.h-annotation-legend-range-label');
+                    expect($labels.length).toBe(2);
+                    expect($labels.first().text()).toBe('Low');
+                    expect($labels.last().text()).toBe('High');
+                    // remove the legend
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-edit-annotation-metadata').click();
+                });
+                girderTest.waitForDialog();
+                runs(function () {
+                    expect($('.h-legend-range-entry').length).toBe(1);
+                    expect($('.h-legend-stop').length).toBe(3);
+                    expect($('.h-legend-stop:first .h-legend-stop-color').val()).toMatch(/^rgb\(0, ?0, ?255\)$/);
+                    expect($('.h-legend-stop:first .h-legend-stop-label').val()).toBe('Low');
+                    expect($('.h-legend-stop:eq(1) .h-legend-stop-label').val()).toBe('');
+                    $('.h-legend-entry .h-legend-remove').click();
+                    expect($('.h-legend-entry').length).toBe(0);
+                    $('.h-submit').click();
+                });
+                girderTest.waitForLoad();
+                runs(function () {
+                    var annotation = huiTest.app.bodyView.annotations.filter(function (annotation) {
+                        return annotation.get('annotation').name === 'drawn 2';
+                    })[0];
+                    expect(annotation.get('annotation').legend).toEqual([]);
+                });
+                waitsFor(function () {
+                    return $('.h-annotation-legend-container').hasClass('hidden');
+                }, 'legend to be removed');
+            });
+
             it('set annotation permissions to WRITE', function () {
                 runs(function () {
                     $('.h-annotation-selector .h-annotation:contains("edited 1") .h-edit-annotation-metadata').click();

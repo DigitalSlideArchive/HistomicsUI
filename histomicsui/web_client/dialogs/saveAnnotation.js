@@ -13,6 +13,8 @@ import AnnotationHistoryBrowserContainer from '../vue/components/AnnotationHisto
 import MetadataWidget from '../panels/MetadataWidget';
 import '../stylesheets/dialogs/saveAnnotation.styl';
 import saveAnnotation from '../templates/dialogs/saveAnnotation.pug';
+import saveAnnotationLegendEntryRow from '../templates/dialogs/saveAnnotationLegendEntryRow.pug';
+import saveAnnotationLegendStopRow from '../templates/dialogs/saveAnnotationLegendStopRow.pug';
 import {elementAreaAndEdgeLength} from '../views/utils';
 
 /**
@@ -230,6 +232,14 @@ var SaveAnnotation = View.extend({
         'input #h-annotation-line-color-min-val': () => $('.h-functional-value #h-annotation-line-color-min-setval').prop('checked', true),
         'input #h-annotation-line-color-max-val': () => $('.h-functional-value #h-annotation-line-color-max-setval').prop('checked', true),
 
+        'click .h-add-legend-entry': 'addLegendEntry',
+        'click .h-add-legend-range': 'addLegendRange',
+        'click .h-legend-add-stop': 'addLegendStop',
+        'click .h-legend-remove-stop': 'removeLegendStop',
+        'click .h-legend-remove': 'removeLegendEntry',
+        'click .h-legend-move-up': 'moveLegendEntryUp',
+        'click .h-legend-move-down': 'moveLegendEntryDown',
+
         'submit form': 'save'
     },
 
@@ -444,6 +454,154 @@ var SaveAnnotation = View.extend({
         return setValue;
     },
 
+    /**
+     * Add an empty row to the legend editor.
+     */
+    addLegendEntry(evt) {
+        evt.preventDefault();
+        const row = $(saveAnnotationLegendEntryRow({entry: {}}));
+        this.$('.h-legend-entries').append(row);
+        row.find('.h-colorpicker').colorpicker();
+        row.find('.h-legend-label').focus();
+    },
+
+    /**
+     * Add a color range with two empty colors to the legend editor.
+     */
+    addLegendRange(evt) {
+        evt.preventDefault();
+        const row = $(saveAnnotationLegendEntryRow({entry: {fillColor: ['', '']}}));
+        this.$('.h-legend-entries').append(row);
+        row.find('.h-colorpicker').colorpicker();
+        row.find('.h-legend-label').focus();
+    },
+
+    /**
+     * Add an empty color to the end of a color range.
+     */
+    addLegendStop(evt) {
+        evt.preventDefault();
+        const row = $(evt.currentTarget).closest('.h-legend-entry');
+        const stop = $(saveAnnotationLegendStopRow({color: '', label: ''}));
+        row.find('.h-legend-stops').append(stop);
+        stop.find('.h-colorpicker').colorpicker();
+        stop.find('.h-legend-stop-color').focus();
+    },
+
+    /**
+     * Remove a color from a color range.
+     */
+    removeLegendStop(evt) {
+        const stop = $(evt.currentTarget).closest('.h-legend-stop');
+        stop.find('.h-colorpicker').colorpicker('destroy');
+        stop.remove();
+    },
+
+    /**
+     * Remove a row from the legend editor.
+     */
+    removeLegendEntry(evt) {
+        const row = $(evt.currentTarget).closest('.h-legend-entry');
+        row.find('.h-colorpicker').colorpicker('destroy');
+        row.remove();
+    },
+
+    moveLegendEntryUp(evt) {
+        const row = $(evt.currentTarget).closest('.h-legend-entry');
+        const prev = row.prev('.h-legend-entry');
+        if (prev.length) {
+            row.insertBefore(prev);
+        }
+    },
+
+    moveLegendEntryDown(evt) {
+        const row = $(evt.currentTarget).closest('.h-legend-entry');
+        const next = row.next('.h-legend-entry');
+        if (next.length) {
+            row.insertAfter(next);
+        }
+    },
+
+    /**
+     * Collect the legend entries from the editor.
+     *
+     * @returns {object} An object with a `legend` list of entries and a
+     *      `validation` string that is empty if all entries are valid.
+     */
+    _getLegend() {
+        const legend = [];
+        const problems = {};
+        this.$('.h-legend-entry .h-legend-field, .h-legend-add-stop').removeClass('has-error');
+        this.$('.h-legend-entry').each((idx, row) => {
+            row = $(row);
+            const isRange = row.hasClass('h-legend-range-entry');
+            const entry = {label: (row.find('.h-legend-label').val() || '').trim()};
+            let invalidColor = false;
+            if (!entry.label) {
+                row.find('.h-legend-label').closest('.h-legend-field').addClass('has-error');
+                problems.label = 'Legend entries must have a label. ';
+            }
+            if (isRange) {
+                const colors = [];
+                const labels = [];
+                row.find('.h-legend-stop').each((idx, stop) => {
+                    stop = $(stop);
+                    const value = (stop.find('.h-legend-stop-color').val() || '').trim();
+                    const color = tinycolor(value);
+                    if (!value || !color.isValid()) {
+                        stop.find('.h-legend-stop-color').closest('.h-legend-field').addClass('has-error');
+                        problems.color = 'Invalid legend color. ';
+                        invalidColor = true;
+                    }
+                    colors.push(color.toRgbString());
+                    labels.push((stop.find('.h-legend-stop-label').val() || '').trim());
+                });
+                if (colors.length < 2) {
+                    row.find('.h-legend-add-stop').addClass('has-error');
+                    problems.range = 'Color ranges need at least two colors. ';
+                }
+                entry.fillColor = colors;
+                if (labels.some((label) => label)) {
+                    entry.labels = labels;
+                }
+            }
+            const colorFields = [['lineColor', '.h-legend-line-color']];
+            if (!isRange) {
+                colorFields.unshift(['fillColor', '.h-legend-fill-color']);
+            }
+            colorFields.forEach(([key, selector]) => {
+                const value = (row.find(selector).val() || '').trim();
+                if (!value) {
+                    return;
+                }
+                const color = tinycolor(value);
+                if (!color.isValid()) {
+                    row.find(selector).closest('.h-legend-field').addClass('has-error');
+                    problems.color = 'Invalid legend color. ';
+                    invalidColor = true;
+                    return;
+                }
+                entry[key] = color.toRgbString();
+            });
+            if (!entry.fillColor && !entry.lineColor && !invalidColor) {
+                row.find('.h-legend-fill-color, .h-legend-line-color').closest('.h-legend-field').addClass('has-error');
+                problems.nocolor = 'Legend entries must have a fill or line color. ';
+            }
+            const widthValue = row.find('.h-legend-line-width').val();
+            if (widthValue !== undefined && widthValue !== '') {
+                const lineWidth = parseFloat(widthValue);
+                if (!isFinite(lineWidth) || lineWidth < 0) {
+                    row.find('.h-legend-line-width').closest('.h-legend-field').addClass('has-error');
+                    problems.width = 'Invalid legend line width. ';
+                } else {
+                    entry.lineWidth = lineWidth;
+                }
+            }
+            legend.push(entry);
+        });
+        return {legend, validation: Object.values(problems).join('')};
+    },
+
     onRevert() {
         if (this.annotation) {
             delete this.annotation._meta;
@@ -486,6 +644,9 @@ var SaveAnnotation = View.extend({
             setFillColor = this._getFunctionalProps('fill-color', 'fillColor', fillColorParam, setFillColor, true);
             setLineColor = this._getFunctionalProps('line-color', 'lineColor', lineColorParam, setLineColor, true);
         }
+
+        const legendInfo = this._getLegend();
+        validation += legendInfo.validation;
 
         if (validation) {
             this.$('.g-validation-failed-message').text(validation.trim())
@@ -530,6 +691,12 @@ var SaveAnnotation = View.extend({
         });
         if (display !== {}) {
             this.annotation.get('annotation').display = display;
+        }
+        if (legendInfo.legend.length || this.annotation.get('annotation').legend) {
+            // Existing annotations may be saved via PATCH, which does not
+            // remove absent keys, so clear the legend with an empty list
+            // rather than deleting it.
+            this.annotation.get('annotation').legend = legendInfo.legend;
         }
         this.annotation.attributes.annotation.attributes = Object.assign({}, this.annotation._meta);
         this.annotation.attributes.annotation.attributes._styleFuncs = this.annotation._styleFuncs;
