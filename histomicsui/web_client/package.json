@@ -21,8 +21,8 @@
         "watch": "concurrently npm:watch-app npm:watch-plugin",
         "watch-app": "BUILD_TARGET=app vite build --watch",
         "watch-plugin": "BUILD_TARGET=plugin vite build --watch",
-        "lint": "eslint --cache . && eslint --cache --ext .ts ./tests && eslint --no-eslintrc -c ./package.json --cache ../../tests && pug-lint . && stylus-supremacy format --compare ./**/*.styl --options package.json",
-        "format": "eslint --cache --fix . && eslint --cache --fix --ext .ts ./tests && eslint --no-eslintrc -c ./package.json --cache --fix ../../tests && stylus-supremacy format ./**/*.styl --replace --options package.json",
+        "lint": "eslint --cache . && eslint --no-eslintrc -c ./package.json --cache ../../tests && pug-lint . && stylus-supremacy format --compare ./**/*.styl --options package.json",
+        "format": "eslint --cache --fix . && eslint --no-eslintrc -c ./package.json --cache --fix ../../tests && stylus-supremacy format ./**/*.styl --replace --options package.json",
         "test": "playwright test"
     },
     "dependencies": {
@@ -91,7 +91,7 @@
                 "plugins": [
                     "@typescript-eslint"
                 ],
-                 "parserOptions": {
+                "parserOptions": {
                     "ecmaVersion": 2022,
                     "sourceType": "module"
                 },
