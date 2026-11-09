@@ -1,8 +1,10 @@
 <script>
-import _ from 'underscore';
 import Vue from 'vue';
 
 import EditHeatmapOrGridData from './EditHeatmapOrGridData.vue';
+
+const _ = girder._;
+
 export default Vue.extend({
     components: {
         EditHeatmapOrGridData

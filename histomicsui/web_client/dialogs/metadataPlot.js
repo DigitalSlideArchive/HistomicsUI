@@ -1,12 +1,12 @@
-import $ from 'jquery';
-import 'select2';
+import select2 from 'select2';
+
 import 'select2/dist/css/select2.css';
-
-import View from '@girder/core/views/View';
-
 import metadataPlotDialog from '../templates/dialogs/metadataPlot.pug';
-import '@girder/core/utilities/jquery/girderModal';
 import '../stylesheets/dialogs/metadataPlot.styl';
+
+const View = girder.views.View;
+const $ = girder.$;
+select2(window, girder.$);
 
 const MetadataPlotDialog = View.extend({
     events: {
@@ -30,11 +30,12 @@ const MetadataPlotDialog = View.extend({
         // this adds search functionality to the select boxes, but not to the
         // multiple select, since the select2 tool breaks some traditional
         // aspects of multiple select
-        this.$('.h-plot-select').not('[multiple]').select2({
-            dropdownParent: $('.modal-body'),
-            width: '100%'
-        });
-
+        this.$('.h-plot-select')
+            .not('[multiple]')
+            .select2({
+                dropdownParent: $('.modal-body'),
+                width: '100%'
+            });
         return this;
     },
 
@@ -53,7 +54,10 @@ const MetadataPlotDialog = View.extend({
         });
         ['u'].forEach((series) => {
             const opts = this.$('#h-plot-series-' + series + ' option');
-            const val = opts.filter((idx, o) => o.selected).map((idx, o) => $(o).val()).get();
+            const val = opts
+                .filter((idx, o) => o.selected)
+                .map((idx, o) => $(o).val())
+                .get();
             configOptions[series] = val.length ? val : undefined;
         });
         this.result = configOptions;

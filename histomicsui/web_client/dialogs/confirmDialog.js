@@ -1,13 +1,11 @@
-import $ from 'jquery';
-import _ from 'underscore';
-
-import View from '@girder/core/views/View';
-import '@girder/core/utilities/jquery/girderModal';
-
 import events from '../events';
 
 import template from '../templates/dialogs/confirmDialog.pug';
 // import '../stylesheets/dialogs/openAnnotatedImage.styl';
+
+const $ = girder.$;
+const _ = girder._;
+const View = girder.views.View;
 
 let dialog = null;
 const defaultOptions = {
@@ -51,3 +49,5 @@ events.on('h:confirmDialog', function (options = {}) {
     dialog.on('h:submit', options.onSubmit);
     dialog.setElement($('#g-dialog-container')).render();
 });
+
+export default ConfirmDialog;

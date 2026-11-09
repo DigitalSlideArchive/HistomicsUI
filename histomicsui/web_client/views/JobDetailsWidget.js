@@ -1,7 +1,7 @@
-import $ from 'jquery';
-import {wrap} from '@girder/core/utilities/PluginUtils';
-import {restRequest} from '@girder/core/rest';
-import JobDetailsWidget from '@girder/jobs/views/JobDetailsWidget';
+const $ = girder.$;
+const {wrap} = girder.utilities.PluginUtils;
+const {restRequest} = girder.rest;
+const JobDetailsWidget = girder.plugins.jobs.views.JobDetailsWidget;
 
 wrap(JobDetailsWidget, 'render', function (render) {
     render.call(this);

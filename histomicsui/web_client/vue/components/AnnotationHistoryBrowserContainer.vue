@@ -1,14 +1,9 @@
 <script>
 import _ from 'underscore';
 import Vue from 'vue';
-
-import UserModel from '@girder/core/models/UserModel';
-import {getCurrentUser} from '@girder/core/auth';
-import {restRequest} from '@girder/core/rest';
+import Promise from 'bluebird';
 
 import AnnotationHistoryBrowser from './AnnotationHistoryBrowser.vue';
-
-const Promise = require('bluebird');
 
 export default Vue.extend({
     components: {
@@ -33,7 +28,7 @@ export default Vue.extend({
             this.loading = true;
             const userMap = {};
             // First, see if we can use the logged in user
-            const currentUser = getCurrentUser();
+            const currentUser = girder.auth.getCurrentUser();
             userMap[currentUser.id] = currentUser.get('login');
             // Then, get all annotation editor IDs that aren't the logged in user
             const userRequestPromises = [];
@@ -41,7 +36,7 @@ export default Vue.extend({
             this.history.forEach((annotation) => {
                 if (!uniqueUserIds.has(annotation.updatedId)) {
                     uniqueUserIds.add(annotation.updatedId);
-                    const user = new UserModel();
+                    const user = new girder.models.UserModel();
                     user.id = annotation.updatedId;
                     userRequestPromises.push(user.fetch());
                 }
@@ -64,7 +59,7 @@ export default Vue.extend({
                 return;
             }
             this.loading = true;
-            restRequest({
+            girder.rest.restRequest({
                 url: `annotation/${this.annotationId}/history`,
                 method: 'GET',
                 error: null
@@ -90,7 +85,7 @@ export default Vue.extend({
                     });
                 }
             }, 1000);
-            restRequest({
+            girder.rest.restRequest({
                 url: `annotation/${this.annotationId}/history/revert`,
                 method: 'PUT',
                 data: {version},
