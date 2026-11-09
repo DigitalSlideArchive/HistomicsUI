@@ -164,6 +164,7 @@ jobs:
     executor: toxandnode
     steps:
       - checkout
+      - use_nvm
       - tox:
           env: lint,lintclient
   release:
