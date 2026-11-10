@@ -709,6 +709,15 @@ girderTest.promise.done(function () {
                 openHotkeysDialog();
                 it('reset all keyboard shortcuts', function () {
                     runs(function () {
+                        var list = $('.h-hotkeys-list');
+                        expect(list[0].scrollHeight).toBeGreaterThan(list.innerHeight());
+                        list.scrollTop(200);
+                        $('.h-hotkey-row[data-action="layer.20"] .h-hotkey-clear').click();
+                        expect($('.h-hotkeys-list').scrollTop()).toBe(200);
+                        $('.h-hotkey-row[data-action="layer.20"] .h-hotkey-change').click();
+                        pressKey('r');
+                        expect($('.h-hotkeys-message').text()).toBe('R was removed from "Draw a rectangle".');
+                        expect($('.modal-footer')[0].getBoundingClientRect().bottom).not.toBeGreaterThan(window.innerHeight);
                         $('.h-hotkeys-reset-all').click();
                         expect($('.h-hotkey-row[data-action="draw.rectangle"] kbd').text()).toBe('R');
                         $('.h-submit').click();

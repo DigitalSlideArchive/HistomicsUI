@@ -68,7 +68,9 @@ const EditHotkeysDialog = View.extend({
             this.$el.girderModal(this).on('hidden.bs.modal', () => this._stopCapture());
             this._rendered = true;
         } else {
+            const scrollTop = this.$('.h-hotkeys-list').scrollTop();
             this.$('.modal-body').replaceWith($(html).find('.modal-body'));
+            this.$('.h-hotkeys-list').scrollTop(scrollTop);
         }
         this._filter();
         if (this._capturing) {
