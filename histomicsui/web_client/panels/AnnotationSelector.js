@@ -11,6 +11,7 @@ import {events as girderEvents} from '@girder/core';
 
 import events from '../events';
 import showSaveAnnotationDialog from '../dialogs/saveAnnotation';
+import {applyHotkeyTitles} from '../hotkeys';
 
 import annotationSelectorWidget from '../templates/panels/annotationSelector.pug';
 import '../stylesheets/panels/annotationSelector.styl';
@@ -110,6 +111,7 @@ var AnnotationSelector = Panel.extend({
                 collapsed: this.$('.s-panel-content.collapse').length && !this.$('.s-panel-content').hasClass('in'),
                 _
             }));
+            applyHotkeyTitles(this.el);
             this._changeGlobalOpacity();
             this._changeGlobalFillOpacity();
             if (this._showAllAnnotationsState) {
