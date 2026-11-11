@@ -34,6 +34,8 @@ var AnnotationSelector = Panel.extend({
         'change #h-toggle-interactive': 'toggleInteractiveMode',
         'input #h-annotation-opacity': '_changeGlobalOpacity',
         'input #h-annotation-fill-opacity': '_changeGlobalFillOpacity',
+        'click .h-toggle-layer-opacity': '_toggleLayerOpacity',
+        'input .h-layer-opacity-slider': '_changeLayerOpacity',
         'click .h-annotation-select-by-region': 'selectAnnotationByRegion',
         'click .h-toggle-group-annotations': 'toggleGroupAnnotations',
         'click .h-annotation-group-name': '_toggleExpandGroup'
@@ -51,6 +53,7 @@ var AnnotationSelector = Panel.extend({
         this._expandedGroups = new Set();
         this._opacity = settings.opacity || 0.9;
         this._fillOpacity = settings.fillOpacity || 1.0;
+        this._layerOpacity = {};
         this._showAllAnnotationsState = false;
         this.listenTo(this.collection, 'sync remove update reset change:displayed change:loading', this._debounceRender);
         this.listenTo(this.collection, 'change:highlight', this._changeAnnotationHighlight);
@@ -103,6 +106,8 @@ var AnnotationSelector = Panel.extend({
                 writeAccess: this._writeAccess,
                 opacity: this._opacity,
                 fillOpacity: this._fillOpacity,
+                layerOpacityId: this._layerOpacityId,
+                layerOpacity: (id) => this._getLayerOpacity(id),
                 interactiveMode: this._interactiveMode,
                 expandedGroups: this._expandedGroups,
                 annotationGroups,
@@ -145,6 +150,8 @@ var AnnotationSelector = Panel.extend({
         this._parentId = item.id;
         delete this._setCreationRequest;
         delete this._annotationAccess;
+        this._layerOpacity = {};
+        delete this._layerOpacityId;
 
         if (!this._parentId) {
             this.collection.reset();
@@ -612,10 +619,44 @@ var AnnotationSelector = Panel.extend({
     },
 
     _changeGlobalOpacity() {
-        this._opacity = parseFloat(this.$('#h-annotation-opacity').val());
+        const opacity = parseFloat(this.$('#h-annotation-opacity').val());
+        const change = opacity - this._opacity;
+        this._opacity = opacity;
         this.$('.h-annotation-opacity-container')
             .attr('title', `Annotation total opacity ${(this._opacity * 100).toFixed()}%`);
         this.trigger('h:annotationOpacity', this._opacity);
+        if (change) {
+            // move annotation opacities by the same amount
+            _.each(this._layerOpacity, (value, id) => {
+                this._layerOpacity[id] = Math.round(Math.min(Math.max(value + change, 0), 1) * 100) / 100;
+                this._updateLayerOpacity(id);
+            });
+        }
+    },
+
+    _getLayerOpacity(id) {
+        const opacity = this._layerOpacity[id];
+        return opacity === undefined ? this._opacity : opacity;
+    },
+
+    _updateLayerOpacity(id) {
+        const opacity = this._getLayerOpacity(id);
+        this.trigger('h:annotationLayerOpacity', id, this._layerOpacity[id]);
+        this.$(`.h-annotation[data-id="${id}"] .h-layer-opacity`)
+            .attr('title', `Annotation opacity ${(opacity * 100).toFixed()}%`)
+            .find('.h-layer-opacity-slider').val(opacity);
+    },
+
+    _toggleLayerOpacity(evt) {
+        const id = $(evt.currentTarget).parents('.h-annotation').data('id');
+        this._layerOpacityId = this._layerOpacityId === id ? undefined : id;
+        this.render();
+    },
+
+    _changeLayerOpacity(evt) {
+        const id = $(evt.currentTarget).parents('.h-annotation').data('id');
+        this._layerOpacity[id] = parseFloat($(evt.currentTarget).val());
+        this._updateLayerOpacity(id);
     },
 
     _changeGlobalFillOpacity() {

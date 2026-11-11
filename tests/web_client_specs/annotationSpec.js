@@ -1002,6 +1002,35 @@ girderTest.promise.done(function () {
                 huiTest.app.bodyView.viewerWidget.setGlobalAnnotationFillOpacity = setGlobalAnnotationFillOpacityFunc;
             });
 
+            it('set an annotation opacity', function () {
+                var widget = huiTest.app.bodyView.viewerWidget;
+                var setAnnotationOpacityFunc = widget.setAnnotationOpacity;
+                var call;
+                widget.setAnnotationOpacity = function (id, opacity) {
+                    call = [id, opacity];
+                    return setAnnotationOpacityFunc.apply(this, arguments);
+                };
+
+                var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
+                $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity').click();
+                var $slider = $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider');
+                expect($slider.length).toBe(1);
+                expect($slider.val()).toBe('0.5');
+                $slider.val(0.75).trigger('input');
+                expect(call).toEqual([id, 0.75]);
+
+                // the global opacity moves annotation opacities by the same amount
+                $('#h-annotation-opacity').val(0.6).trigger('input');
+                expect(call).toEqual([id, 0.85]);
+                expect($slider.val()).toBe('0.85');
+                $('#h-annotation-opacity').val(1).trigger('input');
+                expect(call).toEqual([id, 1]);
+                $('#h-annotation-opacity').val(0.5).trigger('input');
+                expect(call).toEqual([id, 0.5]);
+
+                widget.setAnnotationOpacity = setAnnotationOpacityFunc;
+            });
+
             it('toggle visibility of an annotation', function () {
                 runs(function () {
                     var $el = $('.h-annotation-selector .h-annotation:contains("drawn 1")');

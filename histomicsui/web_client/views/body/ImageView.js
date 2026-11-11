@@ -139,6 +139,7 @@ var ImageView = View.extend({
         this.listenTo(this.annotationSelector, 'h:deleteAnnotation', this._deleteAnnotation);
         this.listenTo(this.annotationSelector, 'h:annotationOpacity', this._setAnnotationOpacity);
         this.listenTo(this.annotationSelector, 'h:annotationFillOpacity', this._setAnnotationFillOpacity);
+        this.listenTo(this.annotationSelector, 'h:annotationLayerOpacity', this._setAnnotationLayerOpacity);
         this.listenTo(this.annotationSelector, 'h:redraw', this._redrawAnnotation);
         this.listenTo(this, 'h:highlightAnnotation', this._highlightAnnotationForInteractiveMode);
         this.listenTo(this, 'h:selectElementsByRegion', this._selectElementsByRegion);
@@ -1163,6 +1164,10 @@ var ImageView = View.extend({
 
     _setAnnotationFillOpacity(opacity) {
         this.viewerWidget.setGlobalAnnotationFillOpacity(opacity);
+    },
+
+    _setAnnotationLayerOpacity(annotationId, opacity) {
+        this.viewerWidget.setAnnotationOpacity(annotationId, opacity);
     },
 
     _onKeyDown(evt) {

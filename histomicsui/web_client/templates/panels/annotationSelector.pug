@@ -86,6 +86,7 @@ block content
             span.h-annotation-name(title=name) #{name}
 
             span.h-annotation-right
+              span.icon-tint.h-toggle-layer-opacity(title='Annotation opacity')
               if writeAccess(annotation, true)
                 span.icon-cancel.h-delete-annotation(
                     title='Remove annotation')
@@ -96,6 +97,11 @@ block content
                   download=name + '.json')
                 span.icon-download.h-download-annotation(
                     title='Download annotation')
+            if annotation.id === layerOpacityId
+              - var value = layerOpacity(annotation.id);
+              .h-layer-opacity(title=`Annotation opacity ${(value * 100).toFixed()}%`)
+                input.h-layer-opacity-slider(
+                    type='range', min='0', max='1', step='0.01', value=value)
 
   .checkbox.h-annotation-toggle
     label(title='Show annotation labels when hovering with the mouse.')
