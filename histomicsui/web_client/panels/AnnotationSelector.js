@@ -648,6 +648,8 @@ var AnnotationSelector = Panel.extend({
         this.$(`.h-annotation[data-id="${id}"] .h-layer-opacity`)
             .attr('title', `Annotation opacity ${(opacity * 100).toFixed()}%`)
             .find('.h-layer-opacity-slider').val(opacity);
+        this.$(`.h-annotation[data-id="${id}"] .h-toggle-layer-opacity`)
+            .toggleClass('h-layer-opacity-changed', opacity !== this._opacity);
     },
 
     _toggleOpacityLock() {

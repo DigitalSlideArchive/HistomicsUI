@@ -1067,6 +1067,22 @@ girderTest.promise.done(function () {
                 widget.setAnnotationOpacity = setAnnotationOpacityFunc;
             });
 
+            it('highlight annotations with a different opacity', function () {
+                var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
+                var $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
+                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(true);
+                $toggle.click();
+                $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
+                $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider').val(0.7).trigger('input');
+                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(false);
+                $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider').val(0.25).trigger('input');
+                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(true);
+
+                $('.h-annotation-opacity-lock.icon-lock-open').click();
+                $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
+                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(false);
+            });
+
             it('toggle visibility of an annotation', function () {
                 runs(function () {
                     var $el = $('.h-annotation-selector .h-annotation:contains("drawn 1")');

@@ -93,7 +93,8 @@ block content
               if opacityLocked
                 span.icon-tint.h-toggle-layer-opacity.h-disabled(title='Unlock annotation opacities to change this')
               else
-                span.icon-tint.h-toggle-layer-opacity(title='Annotation opacity')
+                span.icon-tint.h-toggle-layer-opacity(
+                    title='Annotation opacity', class=layerOpacity(annotation.id) !== opacity ? 'h-layer-opacity-changed' : '')
               if writeAccess(annotation, true)
                 span.icon-cancel.h-delete-annotation(
                     title='Remove annotation')
