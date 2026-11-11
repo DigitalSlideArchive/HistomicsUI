@@ -437,18 +437,25 @@ var DrawWidget = Panel.extend({
         }
         const oldids = {};
         const geojson = {type: 'FeatureCollection', features: []};
+        const exclusive = op === 'union' && this._editOptions.exclusive_groups;
+        const otherGroups = [];
         near.forEach((n) => n.found.forEach((element) => {
             // filter to match current style group
             if (element.properties.element && element.properties.element.group !== this._style.get('group')) {
+                if (exclusive) {
+                    otherGroups.push(element);
+                    oldids[element.id] = true;
+                }
                 return;
             }
             element.properties.annotationId = element.properties.annotation.id;
             geojson.features.push(element);
             oldids[element.id] = true;
         }));
-        if (!geojson.features.length && polylist.length < 2) {
+        if (!geojson.features.length && !otherGroups.length && polylist.length < 2) {
             return false;
         }
+        const cutElements = this._cutElements(otherGroups, polylist);
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
         this.viewer.annotationLayer.geojson(geojson);
         if (op !== 'cut') {
@@ -479,7 +486,7 @@ var DrawWidget = Panel.extend({
         if (this.parentView.annotationSelector) {
             this.annotation._inBooleanOp = true;
         }
-        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length}));
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length + cutElements.length}));
         this.addElements(
             _.map(elements, (el) => {
                 el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
@@ -487,13 +494,49 @@ var DrawWidget = Panel.extend({
                     delete el.group;
                 }
                 return el;
-            })
+            }).concat(cutElements)
         );
         if (this.parentView.annotationSelector) {
             delete this.annotation._inBooleanOp;
             this.parentView.annotationSelector._saveAnnotation(this.annotation);
         }
         return true;
+    },
+
+    /**
+     * Remove an area from elements, keeping each element's own group, label,
+     * and style.
+     *
+     * @param {object[]} features GeoJSON features of the elements to cut.
+     * @param {geo.polygonList} polylist The area to remove.
+     * @returns {object[]} The remaining parts as new elements.
+     */
+    _cutElements(features, polylist) {
+        const layer = this.viewer.annotationLayer;
+        // geometry fields of the polyline, rectangle, ellipse, and circle
+        // schemas in large_image's girder_large_image_annotation/models/annotation.py;
+        // update this list if those schemas change
+        const geometryKeys = ['id', 'type', 'points', 'closed', 'holes', 'center', 'width', 'height', 'rotation', 'normal', 'radius'];
+        const results = [];
+        features.forEach((feature) => {
+            layer.removeAllAnnotations(undefined, false);
+            layer.geojson({type: 'FeatureCollection', features: [feature]});
+            const remaining = geo.util.polyops.difference(layer, polylist, {
+                style: 'flat-listlist',
+                pixelTolerance: this._pixelTolerance()
+            });
+            layer.removeAllAnnotations(undefined, false);
+            layer.fromPolygonList(remaining, {});
+            const props = _.omit(this.collection.get(feature.id).toJSON(), geometryKeys);
+            layer.annotations().forEach((annot) => {
+                const element = convertAnnotation(annot);
+                if (!element.points || element.points.length) {
+                    results.push(_.extend(element, props, {id: this.viewer._guid()}));
+                }
+            });
+        });
+        layer.removeAllAnnotations(undefined, false);
+        return results;
     },
 
     /**
