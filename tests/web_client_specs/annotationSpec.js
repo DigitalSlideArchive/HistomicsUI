@@ -715,8 +715,8 @@ girderTest.promise.done(function () {
                         $('.h-hotkey-row[data-action="layer.20"] .h-hotkey-clear').click();
                         expect($('.h-hotkeys-list').scrollTop()).toBe(200);
                         $('.h-hotkey-row[data-action="layer.20"] .h-hotkey-change').click();
-                        pressKey('r');
-                        expect($('.h-hotkeys-message').text()).toBe('R was removed from "Draw a rectangle".');
+                        pressKey('x');
+                        expect($('.h-hotkeys-message').text()).toBe('X was removed from "Draw a rectangle".');
                         expect($('.modal-footer')[0].getBoundingClientRect().bottom).not.toBeGreaterThan(window.innerHeight);
                         $('.h-hotkeys-reset-all').click();
                         expect($('.h-hotkey-row[data-action="draw.rectangle"] kbd').text()).toBe('R');
