@@ -645,6 +645,22 @@ girderTest.promise.done(function () {
             });
         });
 
+        describe('Exclusive groups', function () {
+            it('is off by default and is stored when toggled', function () {
+                var drawWidget = huiTest.app.bodyView.drawWidget;
+                expect($('.h-exclusive-groups').is(':checked')).toBe(false);
+                expect(drawWidget._editOptions.exclusive_groups).toBeFalsy();
+
+                $('.h-exclusive-groups').prop('checked', true).trigger('change');
+                expect(drawWidget._editOptions.exclusive_groups).toBe(true);
+                var stored = JSON.parse(window.localStorage.getItem('histomicsui'));
+                expect(stored[drawWidget._localId].exclusive_groups).toBe(true);
+
+                $('.h-exclusive-groups').prop('checked', false).trigger('change');
+                expect(drawWidget._editOptions.exclusive_groups).toBe(false);
+            });
+        });
+
         describe('Sort By', function () {
             var drawWidget;
             var testLabels = ['Alpha', 'Bravo', 'Charlie', 'Delta'];

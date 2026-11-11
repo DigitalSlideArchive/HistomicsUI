@@ -35,6 +35,7 @@ var DrawWidget = Panel.extend({
         'change .h-sort-mode': '_changeSortMode',
         'click .h-sort-order': '_toggleSortOrder',
         'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
+        'change .h-exclusive-groups': '_changeExclusiveGroups',
         'change .h-fixed-shape,.h-fixed-height,.h-fixed-width': '_changeShapeConstraint',
         'click .h-configure-style-group': '_styleGroupEditor',
         'mouseenter .h-element': '_highlightElement',
@@ -986,6 +987,13 @@ var DrawWidget = Panel.extend({
         if (this._drawingType === 'brush') {
             this.drawElement(undefined, 'brush', true);
         }
+    },
+
+    /**
+     * Store whether adding to a group removes the area from other groups.
+     */
+    _changeExclusiveGroups() {
+        this._saveEditOptions({exclusive_groups: this.$('.h-exclusive-groups').is(':checked')});
     },
 
     /**

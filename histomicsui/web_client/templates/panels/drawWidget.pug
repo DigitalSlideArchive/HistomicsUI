@@ -12,6 +12,10 @@ block content
     .input-group-btn
       button.btn.btn-default.h-configure-style-group(type='button')
         span.icon-cog(title='Configure style group. Keyboard shortcuts: "q" and "w" to select next and previous style group, respectively')
+  .checkbox.h-exclusive-groups-row
+    label(title='If checked, adding to a group with a union or brush removes that area from other groups')
+      input.h-exclusive-groups(type='checkbox', checked=opts.exclusive_groups ? 'checked' : undefined)
+      | Exclusive groups
   .btn-group.btn-justified.btn-group-sm.h-draw-tools
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
