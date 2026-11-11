@@ -983,7 +983,7 @@ girderTest.promise.done(function () {
                 };
 
                 $('#h-annotation-opacity').val(0.5).trigger('input');
-                expect(opacity).toBe('0.5');
+                expect(opacity).toBe(0.5);
 
                 huiTest.app.bodyView.viewerWidget.setGlobalAnnotationOpacity = setGlobalAnnotationOpacityFunc;
             });

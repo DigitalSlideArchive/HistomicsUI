@@ -612,7 +612,7 @@ var AnnotationSelector = Panel.extend({
     },
 
     _changeGlobalOpacity() {
-        this._opacity = this.$('#h-annotation-opacity').val();
+        this._opacity = parseFloat(this.$('#h-annotation-opacity').val());
         this.$('.h-annotation-opacity-container')
             .attr('title', `Annotation total opacity ${(this._opacity * 100).toFixed()}%`);
         this.trigger('h:annotationOpacity', this._opacity);
