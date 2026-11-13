@@ -39,12 +39,14 @@ girderTest.promise.done(function () {
 
         it('get dropdown values', function () {
             var $el = $('.h-analyses-dropdown');
-            expect($el.find('a:contains("huirchive/histomicstk")').length).toBe(1);
+            var image = $el.find('.h-analyses-image a:contains("huirchive/histomicstk")');
+            expect(image.length).toBe(1);
+            expect($el.find('.h-analyses-recent').length).toBe(0);
+            image.click();
 
-            $el = $el.find('.dropdown-submenu:first');
-            expect($el.find('a:contains("latest")').length).toBe(1);
+            $el = $el.find('.h-analyses-task-group.h-active');
+            expect($el.find('.h-analyses-version-name:contains("latest")').length).toBe(1);
 
-            $el = $el.find('.dropdown-menu:first');
             var link = $el.find('a:contains("NucleiDetection")');
             expect(link.length).toBe(1);
 
@@ -124,10 +126,12 @@ girderTest.promise.done(function () {
         });
         it('open a new analysis', function () {
             var $el = $('.h-analyses-dropdown');
-            expect($el.find('a:contains("huirchive/histomicstk")').length).toBe(1);
+            var image = $el.find('.h-analyses-image a:contains("huirchive/histomicstk")');
+            expect(image.length).toBe(1);
+            image.click();
 
-            $el = $el.find('.dropdown-submenu:first');
-            expect($el.find('a:contains("latest")').length).toBe(1);
+            $el = $el.find('.h-analyses-task-group.h-active');
+            expect($el.find('.h-analyses-version-name:contains("latest")').length).toBe(1);
 
             var link = $el.find('a:contains("ComputeNucleiFeatures")');
             expect(link.length).toBe(1);
@@ -157,9 +161,50 @@ girderTest.promise.done(function () {
             }, 'region annotation to be removed');
         });
     });
+    describe('analyses menu', function () {
+        it('recently used', function () {
+            var $el = $('.h-analyses-dropdown');
+            expect($el.find('.h-analyses-recent').length).toBe(1);
+            $el.find('.h-analyses-recent a').click();
+            var links = $el.find('.h-analyses-task-group.h-active .h-analysis-item');
+            expect(links.length).toBe(2);
+            expect(links.eq(0).attr('data-cli')).toBe('ComputeNucleiFeatures');
+            expect(links.eq(0).find('.h-analyses-item-source').text()).toBe('huirchive/histomicstk:latest');
+            expect(links.eq(1).attr('data-cli')).toBe('NucleiDetection');
+        });
+        it('filter', function () {
+            var $el = $('.h-analyses-dropdown');
+            $el.find('.h-analyses-filter').val('histomicstk detect').trigger('input');
+            var links = $el.find('li:not(.hidden) > .h-analysis-item');
+            // one in the recently used list and one in the image
+            expect(links.length).toBe(2);
+            expect(links.filter('[data-cli="NucleiDetection"]').length).toBe(2);
+            expect($el.find('.h-analyses-empty').hasClass('hidden')).toBe(true);
+
+            $el.find('.h-analyses-filter').val('nosuchanalysis').trigger('input');
+            expect($el.find('li:not(.hidden) > .h-analysis-item').length).toBe(0);
+            expect($el.find('.h-analyses-image:not(.hidden)').length).toBe(0);
+            expect($el.find('.h-analyses-empty').hasClass('hidden')).toBe(false);
+
+            $el.find('.h-analyses-filter').val('').trigger('input');
+            expect($el.find('li:not(.hidden) > .h-analysis-item').length).toBe(4);
+            expect($el.find('.h-analyses-image:not(.hidden)').length).toBe(2);
+            expect($el.find('.h-analyses-task-group.h-active').length).toBe(1);
+        });
+        it('keyboard', function () {
+            var $el = $('.h-analyses-dropdown');
+            $el.find('.h-analyses-recent a').click();
+            expect($el.find('.h-analyses-task-group.h-active').attr('data-key')).toBe(':recent');
+            // moving focus to an image shows its tasks
+            $el.find('.h-analyses-image a:contains("huirchive/histomicstk")').trigger('focusin');
+            var $group = $el.find('.h-analyses-task-group.h-active');
+            expect($group.attr('data-key')).toBe('huirchive/histomicstk');
+            expect($group.find('.h-analysis-item').length).toBe(2);
+        });
+    });
     describe('close analysis', function () {
         it('open analysis', function () {
-            var $el = $('.h-analyses-dropdown');
+            var $el = $('.h-analyses-dropdown .h-analyses-task-group[data-key="huirchive/histomicstk"]');
             var link = $el.find('a:contains("NucleiDetection")');
             link.click();
             girderTest.waitForLoad();
