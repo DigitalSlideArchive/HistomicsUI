@@ -5,6 +5,7 @@ import editElement from './editElement';
 import saveAnnotation from './saveAnnotation';
 import editRegionOfInterest from './editRegionOfInterest';
 import metadataPlot from './metadataPlot';
+import editHotkeys from './editHotkeys';
 
 export {
     confirmDialog,
@@ -12,5 +13,6 @@ export {
     editElement,
     saveAnnotation,
     editRegionOfInterest,
-    metadataPlot
+    metadataPlot,
+    editHotkeys
 };

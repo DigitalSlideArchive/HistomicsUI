@@ -1,5 +1,6 @@
 import StyleCollection from '../../collections/StyleCollection';
 import {ensureAllowedGroupsExist, getCommonAllowedGroups} from '../../utilities/allowedGroups';
+import {applyHotkeyTitles} from '../../hotkeys';
 import View from '../View';
 
 import template from '../../templates/popover/annotationContextMenu.pug';
@@ -28,6 +29,7 @@ const AnnotationContextMenu = View.extend({
             groups: this._getAnnotationGroups(),
             numberSelected: this.collection.length
         }));
+        applyHotkeyTitles(this.el);
         return this;
     },
     refetchStyles() {

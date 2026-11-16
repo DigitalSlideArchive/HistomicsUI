@@ -1,98 +1,99 @@
-ul.h-analyses-dropdown
-  min-width 120px
+.h-analyses-dropdown.dropdown-menu
+  padding 6px 0 0
+  // wide enough for the longest names; the view then fixes this width
+  width max-content
+  max-width calc(100vw - 20px)
 
+  .h-analyses-filter
+    margin 0 6px 6px
+    width calc(100% - 12px)
+
+  // The images are under the menu button and the tasks open to the left of
+  // them, as the menu is at the right of the window.
+  .h-analyses-columns
+    display flex
+    flex-direction row-reverse
+    border-top 1px solid #e5e5e5
+
+  .h-analyses-images, .h-analyses-tasks
+    max-height calc(100vh - 120px)
+    min-height 130px
+    min-width 0
+    overflow-x hidden
+    overflow-y auto
+    scrollbar-gutter stable
+    margin 0
+    padding 4px 0
+
+  .h-analyses-images
+    flex 0 1 auto
+    list-style none
+    border-left 1px solid #e5e5e5
+
+  .h-analyses-tasks
+    flex 1 1 auto
+
+    ul
+      list-style none
+      margin 0
+      padding 0
+
+  // names are never truncated; they only wrap if the window is too narrow
   li > a
-    padding 3px 20px
+    display block
+    padding 3px 16px
+    color #333
+    overflow-wrap anywhere
 
-  .dropdown-menu
-    min-width 120px
+    &:hover, &:focus
+      text-decoration none
+      background-color #f5f5f5
 
-ul.dropdown-menu[row_offset="1"]
-  top -26px
+  .h-analyses-image > a
+    position relative
+    padding-left 24px
 
-ul.dropdown-menu[row_offset="2"]
-  top -52px
+  // the selected image is marked with an arrow as well as shading
+  .h-analyses-image.h-active > a
+    background-color #e8e8e8
 
-ul.dropdown-menu[row_offset="3"]
-  top -78px
+    &:after
+      content "\25C2"
+      position absolute
+      left 8px
 
-ul.dropdown-menu[row_offset="4"]
-  top -104px
+  .h-analyses-recent
+    border-bottom 1px solid #e5e5e5
+    font-style italic
 
-ul.dropdown-menu[row_offset="5"]
-  top -130px
+  // unselected groups still take up width so the menu fits the longest name
+  .h-analyses-task-group
+    height 0
+    overflow hidden
+    visibility hidden
 
-ul.dropdown-menu[row_offset="6"]
-  top -156px
+    &.h-active
+      height auto
+      overflow visible
+      visibility visible
 
-ul.dropdown-menu[row_offset="7"]
-  top -182px
+  .h-analyses-version + .h-analyses-version
+    border-top 1px solid #e5e5e5
+    margin-top 4px
+    padding-top 4px
 
-ul.dropdown-menu[row_offset="8"]
-  top -208px
+  .h-analyses-version-name
+    padding 3px 12px
+    font-size 13px
+    font-weight bold
+    color #666
+    overflow-wrap anywhere
 
-ul.dropdown-menu[row_offset="9"]
-  top -234px
+  .h-analyses-item-source
+    display block
+    font-size 11px
+    color #666
 
-ul.dropdown-menu[row_offset="10"]
-  top -260px
-
-ul.dropdown-menu[row_offset="11"]
-  top -286px
-
-ul.dropdown-menu[row_offset="12"]
-  top -312px
-
-ul.dropdown-menu[row_offset="13"]
-  top -338px
-
-ul.dropdown-menu[row_offset="14"]
-  top -364px
-
-ul.dropdown-menu[row_offset="15"]
-  top -390px
-
-ul.dropdown-menu[row_offset="16"]
-  top -416px
-
-ul.dropdown-menu[row_offset="17"]
-  top -442px
-
-ul.dropdown-menu[row_offset="18"]
-  top -468px
-
-ul.dropdown-menu[row_offset="19"]
-  top -494px
-
-ul.dropdown-menu[row_offset="20"]
-  top -520px
-
-ul.dropdown-menu[row_offset="21"]
-  top -546px
-
-ul.dropdown-menu[row_offset="22"]
-  top -572px
-
-ul.dropdown-menu[row_offset="23"]
-  top -598px
-
-ul.dropdown-menu[row_offset="24"]
-  top -624px
-
-ul.dropdown-menu[row_offset="25"]
-  top -650px
-
-ul.dropdown-menu[row_offset="26"]
-  top -676px
-
-ul.dropdown-menu[row_offset="27"]
-  top -702px
-
-ul.dropdown-menu[row_offset="28"]
-  top -728px
-
-ul.dropdown-menu[row_offset="29"]
-  top -754px
-
-ul.dropdown-menu[row_offset="30"]
-  top -780px
+  .h-analyses-empty
+    padding 3px 16px
+    color #666

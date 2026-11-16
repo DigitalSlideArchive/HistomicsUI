@@ -206,7 +206,7 @@ girderTest.promise.done(function () {
 
             it('creates a restricted and an unrestricted annotation', function () {
                 createAnnotation('restricted annotation for #5', {
-                    allowed_groups: ['groupE', 'groupF']
+                    allowed_groups: ['groupF', 'groupG']
                 }, [rectangleElement(30, 30)], restricted);
             });
 
@@ -214,16 +214,16 @@ girderTest.promise.done(function () {
                 createAnnotation('unrestricted annotation for #5', {}, [rectangleElement(40, 40)], unrestricted);
             });
 
-            it('auto-creates the restricted annotation\'s allowed groups (groupE/groupF) as styles', function () {
-                // briefly edit the restricted annotation in the Draw panel to create groupE and
-                // groupF before switching the active annotation below.
+            it('auto-creates the restricted annotation\'s allowed groups (groupF/groupG) as styles', function () {
+                // briefly edit the restricted annotation in the Draw panel to create groupF and
+                // groupG before switching the active annotation below.
                 var bodyView = huiTest.app.bodyView;
                 bodyView.annotations.add(restricted.annotation);
                 bodyView._editAnnotation(restricted.annotation);
                 waitsFor(function () {
                     return !!bodyView.drawWidget &&
-                        bodyView.drawWidget._groups.has('groupE') &&
-                        bodyView.drawWidget._groups.has('groupF');
+                        bodyView.drawWidget._groups.has('groupF') &&
+                        bodyView.drawWidget._groups.has('groupG');
                 });
             });
 
@@ -247,7 +247,7 @@ girderTest.promise.done(function () {
                     bodyView._selectElement(element);
 
                     var groups = bodyView.contextMenu._getAnnotationGroups();
-                    expect(groups.sort()).toEqual(['groupE', 'groupF']);
+                    expect(groups.sort()).toEqual(['groupF', 'groupG']);
                 });
             });
 
@@ -274,7 +274,7 @@ girderTest.promise.done(function () {
                     var renderedGroups = bodyView.contextMenu.$('.h-set-group').map(function () {
                         return window.$(this).data('group');
                     }).get();
-                    expect(renderedGroups.sort()).toEqual(['groupE', 'groupF']);
+                    expect(renderedGroups.sort()).toEqual(['groupF', 'groupG']);
                 });
             });
         });
@@ -352,32 +352,32 @@ girderTest.promise.done(function () {
                 // simulate editing the annotation's metadata via the "Edit annotation" dialog,
                 // which mutates attributes directly and triggers 'change:annotation' rather than
                 // calling .set()
-                result.annotation.get('annotation').attributes = {allowed_groups: ['groupG', 'groupH']};
+                result.annotation.get('annotation').attributes = {allowed_groups: ['groupF', 'groupG']};
                 result.annotation.trigger('change:annotation', result.annotation, {});
 
                 waitsFor(function () {
                     // the Draw panel's `_groups` collection updates synchronously, but its dropdown
                     // DOM is refreshed via a debounced render, so also wait for the DOM to catch up
                     // before asserting on it
-                    return drawWidget._groups.has('groupG') && drawWidget._groups.has('groupH') &&
+                    return drawWidget._groups.has('groupF') && drawWidget._groups.has('groupG') &&
                         drawWidget.$('.h-style-group option').length === 2;
                 });
                 runs(function () {
-                    expect(drawWidget._style.id).toBe('groupG');
+                    expect(drawWidget._style.id).toBe('groupF');
                     var drawValues = drawWidget.$('.h-style-group option').map(function () {
                         return this.value;
                     }).get();
-                    expect(drawValues).toEqual(['groupG', 'groupH']);
+                    expect(drawValues).toEqual(['groupF', 'groupG']);
                 });
                 // the context menu keeps its own StyleCollection, refetched asynchronously via the
                 // 'h:styleGroupsEdited' event once the Draw panel auto-creates the newly allowed
                 // groups; wait for that refetch to complete before checking it
                 waitsFor(function () {
-                    return bodyView.contextMenu.styles.get('groupG') && bodyView.contextMenu.styles.get('groupH');
+                    return bodyView.contextMenu.styles.get('groupF') && bodyView.contextMenu.styles.get('groupG');
                 });
                 runs(function () {
                     var contextGroups = bodyView.contextMenu._getAnnotationGroups();
-                    expect(contextGroups.sort()).toEqual(['groupG', 'groupH']);
+                    expect(contextGroups.sort()).toEqual(['groupF', 'groupG']);
                 });
             });
         });
