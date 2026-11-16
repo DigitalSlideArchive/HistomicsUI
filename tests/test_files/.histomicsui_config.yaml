@@ -30,6 +30,7 @@ annotationGroups:
       lineWidth: 4
     -
       id: Red
+      hotkey: shift+r
       fillColor: rgba(255, 0, 0, 0.25)
       lineColor: rgb(255, 0, 0)
       lineWidth: 2
