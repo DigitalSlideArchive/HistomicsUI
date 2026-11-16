@@ -6,10 +6,10 @@ block title
 block content
   .btn-group.h-hide-show-buttons(role='group')
     .btn-group.btn-group-sm(role='group')
-      button.btn.btn-default.h-show-all-annotations(type='button', title='Show all annotations.  Keyboard shortcut: a')
+      button.btn.btn-default.h-show-all-annotations(type='button', data-hotkey-title='Show all annotations.  Keyboard shortcut: {annotations.toggle}')
         | #[span.icon-eye]
     .btn-group.btn-group-sm(role='group')
-      button.btn.btn-default.h-hide-all-annotations(type='button', title='Hide all annotations.  Keyboard shortcut: a')
+      button.btn.btn-default.h-hide-all-annotations(type='button', data-hotkey-title='Hide all annotations.  Keyboard shortcut: {annotations.toggle}')
         | #[span.icon-eye-off]
     span.h-annotation-opacity-container(title=`Annotation total opacity ${(opacity * 100).toFixed()}%`)
       input#h-annotation-opacity(
@@ -18,7 +18,7 @@ block content
       input#h-annotation-fill-opacity(
           type="range", min="0", max="1", step="0.01", value=fillOpacity)
     .btn-group.btn-group-sm(role='group')
-      button.btn.btn-default.h-annotation-select-by-region(type='button', title='Select annotations by region.  Keyboard shortcut: s; S selects using a polygon; C clears selection')
+      button.btn.btn-default.h-annotation-select-by-region(type='button', data-hotkey-title='Select annotations by region.  Keyboard shortcut: {select.rectangle}; {select.polygon} selects using a polygon; {select.clear} clears selection')
         | #[span.icon-marquee]
 
   - var groups = _.keys(annotationGroups);
@@ -104,6 +104,6 @@ block content
     label(title='Highlight annotations when hovering with the mouse.')
       input#h-toggle-interactive(type='checkbox', checked=interactiveMode)
       | Interactive
-    button.btn.btn-sm.btn-primary.h-create-annotation(title='Create a new annotation. Keyboard shortcut: space bar', class=annotationAccess ? '' : 'hidden')
+    button.btn.btn-sm.btn-primary.h-create-annotation(data-hotkey-title='Create a new annotation. Keyboard shortcut: {annotation.create}', class=annotationAccess ? '' : 'hidden')
       | #[span.icon-plus-squared] New
     .clearfix

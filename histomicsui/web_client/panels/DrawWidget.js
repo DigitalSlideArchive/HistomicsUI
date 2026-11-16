@@ -4,6 +4,7 @@ import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
 import getAllowedGroups, {ensureAllowedGroupsExist} from '../utilities/allowedGroups';
+import {applyHotkeyTitles} from '../hotkeys';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
 import '../stylesheets/panels/drawWidget.styl';
@@ -132,6 +133,7 @@ var DrawWidget = Panel.extend({
                 partialCount: this.annotation && this.annotation._pageElements
             }));
             this.$('.h-dropdown-content').collapse({toggle: false});
+            applyHotkeyTitles(this.el);
         }
         this.$('button.h-draw[data-type]').removeClass('active');
         if (this.$('.h-group-count-option').length > 0) {
