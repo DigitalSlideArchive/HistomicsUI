@@ -1,10 +1,10 @@
-import Panel from '@girder/slicer_cli_web/views/Panel';
-
 import router from '../router';
 import events from '../events';
 
 import regionSelector from '../templates/panels/regionSelector.pug';
 import '../stylesheets/panels/regionSelector.styl';
+
+const Panel = girder.plugins.slicer_cli_web.views.Panel;
 
 var RegionSelector = Panel.extend({
     events: {

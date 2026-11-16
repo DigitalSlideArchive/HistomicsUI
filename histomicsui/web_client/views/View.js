@@ -1,5 +1,5 @@
-import $ from 'jquery';
-import View from '@girder/core/views/View';
+const $ = girder.$;
+const View = girder.views.View;
 
 if (View.__super__ && View.__super__.initialize) {
     const oldInitialize = View.__super__.initialize;

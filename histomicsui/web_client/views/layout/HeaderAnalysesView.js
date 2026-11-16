@@ -1,13 +1,13 @@
-import _ from 'underscore';
-import $ from 'jquery';
-import {getCurrentUser} from '@girder/core/auth';
-import {restRequest} from '@girder/core/rest';
-
 import events from '../../events';
 import router from '../../router';
 import View from '../View';
 import headerAnalysesTemplate from '../../templates/layout/headerAnalyses.pug';
 import '../../stylesheets/layout/headerAnalyses.styl';
+
+const _ = girder._;
+const $ = girder.$;
+const {getCurrentUser} = girder.auth;
+const {restRequest} = girder.rest;
 
 const RECENT_KEY = ':recent';
 const RECENT_STORAGE = 'histomicsui.analyses.recent';

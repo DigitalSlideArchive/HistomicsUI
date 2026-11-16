@@ -1,5 +1,4 @@
 <script>
-import {formatDate, DATE_SECOND} from '@girder/core/misc';
 export default {
     props: ['historyGroup', 'userIdMap', 'allowRevertInitial', 'defaultGroup'],
     emits: ['revertToAnnotation'],
@@ -30,7 +29,7 @@ export default {
     },
     methods: {
         displayDate(dateString) {
-            return formatDate(dateString, DATE_SECOND);
+            return girder.misc.formatDate(dateString, girder.misc.DATE_SECOND);
         },
         displayGroups(annotationVersion) {
             return annotationVersion.groups.map((group) => (

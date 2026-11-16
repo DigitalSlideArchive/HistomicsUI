@@ -1,9 +1,4 @@
-import $ from 'jquery';
 import jsyaml from 'js-yaml';
-
-import View from '@girder/core/views/View';
-import {restRequest} from '@girder/core/rest';
-import {getCurrentUser} from '@girder/core/auth';
 
 import StyleCollection from '../collections/StyleCollection';
 import {
@@ -12,8 +7,12 @@ import {
     resolveHotkeys
 } from '../hotkeys';
 import editHotkeysTemplate from '../templates/dialogs/editHotkeys.pug';
-import '@girder/core/utilities/jquery/girderModal';
 import '../stylesheets/dialogs/editHotkeys.styl';
+
+const $ = girder.$;
+const View = girder.views.View;
+const {restRequest} = girder.rest;
+const {getCurrentUser} = girder.auth;
 
 /**
  * A modal dialog that lists every rebindable action and lets the current
