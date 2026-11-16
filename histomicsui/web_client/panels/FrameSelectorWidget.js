@@ -10,6 +10,8 @@ import HistogramEditor from '@girder/large_image/widgets/HistogramEditor.vue';
 import PresetsMenu from '@girder/large_image/vue/components/PresetsMenu.vue';
 import colors from '@girder/large_image/widgets/colors.json';
 
+import {layerHotkeys} from '../hotkeys';
+
 import frameSelectorWidget from '../templates/panels/frameSelectorWidget.pug';
 import '../stylesheets/panels/frameSelectorWidget.styl';
 
@@ -64,7 +66,8 @@ var FrameSelectorWidget = Panel.extend({
                 liConfig: this._liConfig,
                 frameHistograms: undefined,
                 getFrameHistogram,
-                colors
+                colors,
+                layerHotkeys: this._layerHotkeys
             }
         });
         this.vueApp = vm;
@@ -76,6 +79,19 @@ var FrameSelectorWidget = Panel.extend({
             this._itemId = itemId;
             this._tiles = tiles;
             this.render();
+        }
+        return this;
+    },
+
+    /**
+     * Set the hotkeys used to toggle channels and bands.
+     *
+     * @param {object} resolved The result of resolveHotkeys.
+     */
+    setHotkeys(resolved) {
+        this._layerHotkeys = layerHotkeys(resolved);
+        if (this.vueApp) {
+            this.vueApp._props.layerHotkeys = this._layerHotkeys;
         }
         return this;
     },
