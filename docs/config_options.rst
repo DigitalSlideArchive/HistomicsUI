@@ -71,9 +71,9 @@ If a hotkey is specified for a group, it will only be active if the group was lo
 Hotkeys
 _______
 
-Most keyboard shortcuts can be changed with a `hotkeys` section. Each entry names an `action` and a `key`. A key is a single key name, optionally preceded by modifiers joined with `+` or `-`, such as `r`, `shift+s`, `ctrl+alt+x`, `left`, `space`, `esc`, or `plus`. Modifiers can also be given as `ctrl`, `alt`, `meta`, or `shift` values of `true`. Modifiers that are not listed must not be pressed, except that `shift` is ignored for punctuation that needs it to be typed.
+Most keyboard shortcuts can be changed with a ``hotkeys`` section. Each entry names an ``action`` and a ``key``. A key is a single key name, optionally preceded by modifiers joined with ``+`` or ``-``, such as ``r``, ``shift+s``, ``ctrl+alt+x``, ``left``, ``space``, ``esc``, or ``plus``. Modifiers can also be given as ``ctrl``, ``alt``, ``meta``, or ``shift`` values of ``true``. Modifiers that are not listed must not be pressed, except that ``shift`` is ignored for punctuation that needs it to be typed.
 
-If any entry mentions an action, the listed keys replace that action's default keys, and any other action that had one of those keys by default loses it. An action can have more than one key by listing it more than once, and `key: null` removes all of its keys.
+If any entry mentions an action, the listed keys replace that action's default keys, and any other action that had one of those keys by default loses it. An action can have more than one key by listing it more than once, and ``key: null`` removes all of its keys.
 
 ::
 
@@ -91,17 +91,17 @@ If any entry mentions an action, the listed keys replace that action's default k
         key: x
         action: draw.rectangle
 
-The `group` action selects the style group named by `param`. The other actions are:
+The ``group`` action selects the style group named by ``param``. The other actions are:
 
-- Navigation:  `pan.left `,  `pan.right `,  `pan.up `,  `pan.down `,  `zoom.in `,  `zoom.out `,  `rotate.ccw `,  `rotate.cw `,  `rotate.0 ` (reset rotation), and  `zoom.0 `,  `zoom.3 `, ...  `zoom.18 ` (jump to a zoom level).  For the panning, zooming, and rotating actions, only the base key is set; holding shift or ctrl+shift with it still makes a larger step.
-- Annotations:  `annotations.toggle `,  `annotation.create `,  `element.edit `,  `element.menu `,  `select.rectangle `,  `select.polygon `,  `select.clear `.
-- Drawing:  `draw.point `,  `draw.rectangle `,  `draw.ellipse `,  `draw.circle `,  `draw.polygon `,  `draw.line `,  `draw.brush `,  `draw.finish `,  `draw.cancel `,  `brush.shape `,  `brush.smaller `,  `brush.larger `,  `group.previous `,  `group.next `.
-- Channels and bands:  `layer.1 ` through  `layer.20 ` toggle the visibility of that channel or band when compositing in the frame selector.  By default these are ctrl+1 through ctrl+0 and ctrl+alt+1 through ctrl+alt+0.
+- Navigation:  ``pan.left ``,  ``pan.right ``,  ``pan.up ``,  ``pan.down ``,  ``zoom.in ``,  ``zoom.out ``,  ``rotate.ccw ``,  ``rotate.cw ``,  ``rotate.0 `` (reset rotation), and  ``zoom.0 ``,  ``zoom.3 ``, ...  ``zoom.18 `` (jump to a zoom level).  For the panning, zooming, and rotating actions, only the base key is set; holding shift or ctrl+shift with it still makes a larger step.
+- Annotations:  ``annotations.toggle ``,  ``annotation.create ``,  ``element.edit ``,  ``element.menu ``,  ``select.rectangle ``,  ``select.polygon ``,  ``select.clear ``.
+- Drawing:  ``draw.point ``,  ``draw.rectangle ``,  ``draw.ellipse ``,  ``draw.circle ``,  ``draw.polygon ``,  ``draw.line ``,  ``draw.brush ``,  ``draw.finish ``,  ``draw.cancel ``,  ``brush.shape ``,  ``brush.smaller ``,  ``brush.larger ``,  ``group.previous ``,  ``group.next ``.
+- Channels and bands:  ``layer.1 `` through  ``layer.20 `` toggle the visibility of that channel or band when compositing in the frame selector.  By default these are ctrl+1 through ctrl+0 and ctrl+alt+1 through ctrl+alt+0.
 
 User Hotkeys
 ~~~~~~~~~~~~
 
-Logged-in users can choose their own keys from **Keyboard shortcuts** in the user menu.  These are saved as a  `hotkeys ` section, in the same format as above, in a  `.histomicsui_user_config.yaml ` file in the user's private folder (normally  `Private `; see large_image's per-user configuration files), which can also be edited directly.  If the user makes that folder public, their hotkeys no longer apply.  User hotkeys apply in every folder and take precedence over the folder's config file.  **Reset all** in the dialog removes them.
+Logged-in users can choose their own keys from **Keyboard shortcuts** in the user menu.  These are saved as a  ``hotkeys `` section, in the same format as above, in a  ``.histomicsui_user_config.yaml `` file in the user's private folder (normally  ``Private ``; see large_image's per-user configuration files), which can also be edited directly.  If the user makes that folder public, their hotkeys no longer apply.  User hotkeys apply in every folder and take precedence over the folder's config file.  **Reset all** in the dialog removes them.
 
 Unselected Annotation Capacity
 ______________________________
