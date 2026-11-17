@@ -58,6 +58,7 @@ var AnnotationSelector = Panel.extend({
         this._opacity = settings.opacity || 0.9;
         this._fillOpacity = settings.fillOpacity || 1.0;
         this._layerOpacity = {};
+        this._layerOpacityShown = {};
         this._opacityLocked = true;
         this._showAllAnnotationsState = false;
         this.listenTo(this.collection, 'sync remove update reset change:displayed change:loading', this._debounceRender);
@@ -112,7 +113,7 @@ var AnnotationSelector = Panel.extend({
                 opacity: this._opacity,
                 fillOpacity: this._fillOpacity,
                 opacityLocked: this._opacityLocked,
-                layerOpacityId: this._layerOpacityId,
+                layerOpacityShown: (id) => this._isLayerOpacityShown(id),
                 layerOpacity: (id) => this._getLayerOpacity(id),
                 interactiveMode: this._interactiveMode,
                 expandedGroups: this._expandedGroups,
@@ -158,7 +159,7 @@ var AnnotationSelector = Panel.extend({
         delete this._setCreationRequest;
         delete this._annotationAccess;
         this._layerOpacity = {};
-        delete this._layerOpacityId;
+        this._layerOpacityShown = {};
 
         if (!this._parentId) {
             this.collection.reset();
@@ -673,6 +674,18 @@ var AnnotationSelector = Panel.extend({
         return this._opacityLocked || opacity === undefined ? this._opacity : opacity;
     },
 
+    /**
+     * Annotation sliders are shown when they differ from the global opacity
+     * unless the user has opened or closed them.
+     */
+    _isLayerOpacityShown(id) {
+        if (this._opacityLocked) {
+            return false;
+        }
+        const shown = this._layerOpacityShown[id];
+        return shown === undefined ? this._getLayerOpacity(id) !== this._opacity : shown;
+    },
+
     _updateLayerOpacity(id) {
         const opacity = this._getLayerOpacity(id);
         this.trigger('h:annotationLayerOpacity', id, this._opacityLocked ? undefined : this._layerOpacity[id]);
@@ -685,14 +698,14 @@ var AnnotationSelector = Panel.extend({
 
     _toggleOpacityLock() {
         this._opacityLocked = !this._opacityLocked;
-        delete this._layerOpacityId;
+        this._layerOpacityShown = {};
         _.each(_.keys(this._layerOpacity), (id) => this._updateLayerOpacity(id));
         this.render();
     },
 
     _toggleLayerOpacity(evt) {
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
-        this._layerOpacityId = this._layerOpacityId === id ? undefined : id;
+        this._layerOpacityShown[id] = !this._isLayerOpacityShown(id);
         this.render();
     },
 

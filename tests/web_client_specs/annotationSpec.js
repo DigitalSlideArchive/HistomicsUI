@@ -1185,6 +1185,14 @@ girderTest.promise.done(function () {
                 expect($slider.val()).toBe('0.5');
                 $slider.val(0.75).trigger('input');
                 expect(call).toEqual([id, 0.75]);
+                expect($(row + '.h-reset-layer-opacity').length).toBe(1);
+
+                // an annotation that differs from the global opacity can be closed
+                $(row + '.h-toggle-layer-opacity').click();
+                expect($(row + '.h-layer-opacity-slider').length).toBe(0);
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(true);
+                $(row + '.h-toggle-layer-opacity').click();
+                expect($(row + '.h-layer-opacity-slider').length).toBe(1);
 
                 // the global opacity moves annotation opacities by the same amount
                 $('#h-annotation-opacity').val(0.6).trigger('input');
@@ -1218,19 +1226,50 @@ girderTest.promise.done(function () {
                 $('.h-annotation-opacity-lock.icon-lock').click();
                 expect(call).toEqual([id, 0.25]);
 
+                // a closed slider opens again the next time opacities are unlocked
+                $(row + '.h-toggle-layer-opacity').click();
+                expect($(row + '.h-layer-opacity-slider').length).toBe(0);
+                $('.h-annotation-opacity-lock.icon-lock-open').click();
+                $('.h-annotation-opacity-lock.icon-lock').click();
+                expect($(row + '.h-layer-opacity-slider').length).toBe(1);
+
                 widget.setAnnotationOpacity = setAnnotationOpacityFunc;
             });
 
             it('highlight annotations with a different opacity', function () {
                 var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
-                var $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
-                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(true);
-                $toggle.click();
-                $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
-                $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider').val(0.7).trigger('input');
-                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(false);
-                $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider').val(0.25).trigger('input');
-                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(true);
+                var row = '.h-annotation[data-id="' + id + '"] ';
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(true);
+                $(row + '.h-layer-opacity-slider').val(0.7).trigger('input');
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(false);
+                // an annotation that matches the global opacity closes when it isn't open
+                $(row + '.h-layer-opacity-slider').trigger('change');
+                expect($(row + '.h-layer-opacity-slider').length).toBe(0);
+
+                $(row + '.h-toggle-layer-opacity').click();
+                $(row + '.h-layer-opacity-slider').val(0.25).trigger('input').trigger('change');
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(true);
+            });
+
+            it('reset an annotation opacity', function () {
+                var widget = huiTest.app.bodyView.viewerWidget;
+                var setAnnotationOpacityFunc = widget.setAnnotationOpacity;
+                var call;
+                widget.setAnnotationOpacity = function (id, opacity) {
+                    call = [id, opacity];
+                    return setAnnotationOpacityFunc.apply(this, arguments);
+                };
+
+                var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
+                var row = '.h-annotation[data-id="' + id + '"] ';
+                // relock so the slider is open because it differs, not because it was clicked
+                $('.h-annotation-opacity-lock.icon-lock-open').click();
+                $('.h-annotation-opacity-lock.icon-lock').click();
+                expect($(row + '.h-layer-opacity-slider').length).toBe(1);
+                $(row + '.h-reset-layer-opacity').click();
+                expect(call).toEqual([id, undefined]);
+                expect($(row + '.h-layer-opacity-slider').length).toBe(0);
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(false);
 
                 $('.h-annotation-opacity-lock.icon-lock-open').click();
                 $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');

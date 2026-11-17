@@ -103,7 +103,7 @@ block content
                   download=name + '.json')
                 span.icon-download.h-download-annotation(
                     title='Download annotation')
-            if annotation.id === layerOpacityId
+            if layerOpacityShown(annotation.id)
               - var value = layerOpacity(annotation.id);
               .h-layer-opacity(title=`Annotation opacity ${(value * 100).toFixed()}%`)
                 input.h-layer-opacity-slider(
