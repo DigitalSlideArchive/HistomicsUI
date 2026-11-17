@@ -1506,7 +1506,8 @@ var ImageView = View.extend({
     _editElement(element) {
         const annotation = this.annotations.get(element.originalAnnotation);
         this._editAnnotation(annotation);
-        editElement(annotation.elements().get(element.id), this._defaultGroup);
+        const dialog = editElement(annotation.elements().get(element.id), this._defaultGroup);
+        this.annotationSelector.deferRefreshWhileOpen(dialog);
     },
 
     _editElementShape(element, annotationId) {
