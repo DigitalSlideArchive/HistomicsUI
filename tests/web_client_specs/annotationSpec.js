@@ -1158,15 +1158,13 @@ girderTest.promise.done(function () {
 
             it('annotation opacities are locked by default', function () {
                 var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
-                var $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
-                expect($toggle.hasClass('h-disabled')).toBe(true);
-                $toggle.click();
+                expect($('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity').length).toBe(0);
                 expect($('.h-layer-opacity-slider').length).toBe(0);
 
                 $('.h-annotation-opacity-lock.icon-lock').click();
                 expect($('.h-annotation-opacity-lock.icon-lock-open').length).toBe(1);
-                $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
-                expect($toggle.hasClass('h-disabled')).toBe(false);
+                expect($('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity.icon-ajust').length).toBe(1);
+                expect($('.h-layer-opacity-slider').length).toBe(0);
             });
 
             it('set an annotation opacity', function () {
@@ -1179,17 +1177,24 @@ girderTest.promise.done(function () {
                 };
 
                 var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
-                $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity').click();
-                var $slider = $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider');
-                expect($slider.length).toBe(1);
-                expect($slider.val()).toBe('0.5');
-                $slider.val(0.75).trigger('input');
+                var row = '.h-annotation[data-id="' + id + '"] ';
+                // an annotation that matches the global opacity opens on click
+                $(row + '.h-toggle-layer-opacity').click();
+                expect($(row + '.h-layer-opacity-slider').length).toBe(1);
+                expect($(row + '.h-layer-opacity-slider').val()).toBe('0.5');
+                expect($(row + '.h-reset-layer-opacity').length).toBe(0);
+                $(row + '.h-layer-opacity-slider').val(0.75).trigger('input').trigger('change');
                 expect(call).toEqual([id, 0.75]);
+                expect($(row + '.h-reset-layer-opacity').length).toBe(1);
+
+                // an annotation that differs from the global opacity can't be closed
+                $(row + '.h-toggle-layer-opacity').click();
+                expect($(row + '.h-layer-opacity-slider').length).toBe(1);
 
                 // the global opacity moves annotation opacities by the same amount
                 $('#h-annotation-opacity').val(0.6).trigger('input');
                 expect(call).toEqual([id, 0.85]);
-                expect($slider.val()).toBe('0.85');
+                expect($(row + '.h-layer-opacity-slider').val()).toBe('0.85');
                 $('#h-annotation-opacity').val(1).trigger('input');
                 expect(call).toEqual([id, 1]);
                 $('#h-annotation-opacity').val(0.5).trigger('input');
@@ -1208,33 +1213,65 @@ girderTest.promise.done(function () {
                 };
 
                 var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
-                $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider').val(0.25).trigger('input');
+                var row = '.h-annotation[data-id="' + id + '"] ';
+                if (!$(row + '.h-layer-opacity-slider').length) {
+                    $(row + '.h-toggle-layer-opacity').click();
+                }
+                $(row + '.h-layer-opacity-slider').val(0.25).trigger('input').trigger('change');
                 $('.h-annotation-opacity-lock.icon-lock-open').click();
                 expect(call).toEqual([id, undefined]);
                 expect($('.h-layer-opacity-slider').length).toBe(0);
+                expect($('.h-toggle-layer-opacity').length).toBe(0);
 
                 // locked annotation opacities don't move with the global opacity
                 $('#h-annotation-opacity').val(0.7).trigger('input');
                 $('.h-annotation-opacity-lock.icon-lock').click();
                 expect(call).toEqual([id, 0.25]);
+                // an annotation that differs from the global opacity shows its slider
+                expect($(row + '.h-layer-opacity-slider').length).toBe(1);
+                expect($(row + '.h-layer-opacity-slider').val()).toBe('0.25');
 
                 widget.setAnnotationOpacity = setAnnotationOpacityFunc;
             });
 
             it('highlight annotations with a different opacity', function () {
                 var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
-                var $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
-                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(true);
-                $toggle.click();
-                $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
-                $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider').val(0.7).trigger('input');
-                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(false);
-                $('.h-annotation[data-id="' + id + '"] .h-layer-opacity-slider').val(0.25).trigger('input');
-                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(true);
+                var row = '.h-annotation[data-id="' + id + '"] ';
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(true);
+                $(row + '.h-layer-opacity-slider').val(0.7).trigger('input');
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(false);
+                // an annotation that matches the global opacity closes when it isn't open
+                $(row + '.h-layer-opacity-slider').trigger('change');
+                expect($(row + '.h-layer-opacity-slider').length).toBe(0);
+
+                $(row + '.h-toggle-layer-opacity').click();
+                $(row + '.h-layer-opacity-slider').val(0.25).trigger('input').trigger('change');
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(true);
+            });
+
+            it('reset an annotation opacity', function () {
+                var widget = huiTest.app.bodyView.viewerWidget;
+                var setAnnotationOpacityFunc = widget.setAnnotationOpacity;
+                var call;
+                widget.setAnnotationOpacity = function (id, opacity) {
+                    call = [id, opacity];
+                    return setAnnotationOpacityFunc.apply(this, arguments);
+                };
+
+                var id = $('.h-annotation-selector .h-annotation:contains("drawn 1")').data('id');
+                var row = '.h-annotation[data-id="' + id + '"] ';
+                // close the slider so that reset hides it
+                $(row + '.h-toggle-layer-opacity').click();
+                expect($(row + '.h-layer-opacity-slider').length).toBe(1);
+                $(row + '.h-reset-layer-opacity').click();
+                expect(call).toEqual([id, undefined]);
+                expect($(row + '.h-layer-opacity-slider').length).toBe(0);
+                expect($(row + '.h-toggle-layer-opacity').hasClass('h-layer-opacity-changed')).toBe(false);
 
                 $('.h-annotation-opacity-lock.icon-lock-open').click();
-                $toggle = $('.h-annotation[data-id="' + id + '"] .h-toggle-layer-opacity');
-                expect($toggle.hasClass('h-layer-opacity-changed')).toBe(false);
+                expect($('.h-toggle-layer-opacity').length).toBe(0);
+
+                widget.setAnnotationOpacity = setAnnotationOpacityFunc;
             });
 
             it('toggle visibility of an annotation', function () {
