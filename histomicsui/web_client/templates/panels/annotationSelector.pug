@@ -110,6 +110,8 @@ block content
               .h-layer-opacity(title=`Annotation opacity ${(value * 100).toFixed()}%`)
                 input.h-layer-opacity-slider(
                     type='range', min='0', max='1', step='0.01', value=value)
+                if layerOpacity(annotation.id) !== opacity
+                  span.icon-ccw.h-reset-layer-opacity(title='Reset opacity to global opacity')
 
   .checkbox.h-annotation-toggle
     label(title='Show annotation labels when hovering with the mouse.')

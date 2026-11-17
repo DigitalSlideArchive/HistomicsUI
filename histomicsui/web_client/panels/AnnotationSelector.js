@@ -33,6 +33,7 @@ var AnnotationSelector = Panel.extend({
         'mouseleave .h-annotation': '_unhighlightAnnotation',
         'change #h-toggle-labels': 'toggleLabels',
         'change #h-toggle-interactive': 'toggleInteractiveMode',
+        'change .h-layer-opacity-slider': 'render',
         'input #h-annotation-opacity': '_changeGlobalOpacity',
         'input #h-annotation-fill-opacity': '_changeGlobalFillOpacity',
         'click .h-annotation-opacity-lock': '_toggleOpacityLock',
@@ -40,7 +41,8 @@ var AnnotationSelector = Panel.extend({
         'input .h-layer-opacity-slider': '_changeLayerOpacity',
         'click .h-annotation-select-by-region': 'selectAnnotationByRegion',
         'click .h-toggle-group-annotations': 'toggleGroupAnnotations',
-        'click .h-annotation-group-name': '_toggleExpandGroup'
+        'click .h-annotation-group-name': '_toggleExpandGroup',
+        'click .h-reset-layer-opacity': '_resetLayerOpacity'
     }),
 
     /**
@@ -708,6 +710,13 @@ var AnnotationSelector = Panel.extend({
         this.$('.h-annotation-fill-opacity-container')
             .attr('title', `Annotation fill opacity ${(this._fillOpacity * 100).toFixed()}%`);
         this.trigger('h:annotationFillOpacity', this._fillOpacity);
+    },
+
+    _resetLayerOpacity(evt) {
+        const id = $(evt.currentTarget).parents('.h-annotation').data('id');
+        delete this._layerOpacity[id];
+        this._updateLayerOpacity(id);
+        this.render();
     },
 
     toggleGroupAnnotations(evt) {
