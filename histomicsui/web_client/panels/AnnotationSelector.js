@@ -239,12 +239,34 @@ var AnnotationSelector = Panel.extend({
         }
     },
 
+    /**
+     * Defer refreshing the annotation list while a dialog that edits an
+     * annotation or one of its elements is open.  Refreshing replaces the
+     * annotation and element models.  If that happened while the dialog is
+     * open, the dialog would change a model that is no longer in use and
+     * the changes would not be saved.
+     *
+     * @param {View} dialog The dialog's view.
+     */
+    deferRefreshWhileOpen(dialog) {
+        this._editDialogOpen = true;
+        dialog.$el.one('hidden.bs.modal', () => {
+            this._editDialogOpen = false;
+            if (this._refreshAfterEdit) {
+                this._refreshAfterEdit = false;
+                this._refreshAnnotations();
+            }
+        });
+    },
+
     editAnnotationMetadata(evt) {
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
         const model = this.collection.get(id);
         const defaultGroup = this.parentView._defaultGroup;
+        const dialog = showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer, defaultGroup});
+        this.deferRefreshWhileOpen(dialog);
         this.listenToOnce(
-            showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer, defaultGroup}),
+            dialog,
             'g:submit',
             () => {
                 if (model.get('displayed')) {
@@ -298,6 +320,11 @@ var AnnotationSelector = Panel.extend({
             return;
         }
         if (!this.parentItem || !this.parentItem.id || !this.viewer) {
+            return;
+        }
+        // if an annotation or element is being edited, defer this
+        if (this._editDialogOpen) {
+            this._refreshAfterEdit = true;
             return;
         }
         // if any annotations are saving, defer this
