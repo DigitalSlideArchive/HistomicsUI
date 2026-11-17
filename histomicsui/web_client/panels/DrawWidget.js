@@ -234,6 +234,9 @@ var DrawWidget = Panel.extend({
     editElement(evt) {
         var origGroup = this.collection.get(this._getId(evt)).attributes.group;
         var dialog = editElement(this.collection.get(this._getId(evt)));
+        if (this.annotationSelector) {
+            this.annotationSelector.deferRefreshWhileOpen(dialog);
+        }
         this.listenToOnce(dialog, 'h:editElement', (obj) => {
             if (obj.edited) {
                 // update the html immediately instead of rerendering it

@@ -272,6 +272,72 @@ girderTest.promise.done(function () {
                 });
             });
 
+            it('keep element edits when the annotation list refreshes while editing', function () {
+                var refreshes = 0, annotationId, labels;
+                function countRefresh() {
+                    refreshes += 1;
+                }
+                function fetchLabels() {
+                    labels = undefined;
+                    girder.rest.restRequest({url: 'annotation/' + annotationId}).done(function (resp) {
+                        labels = resp.annotation.elements.map(function (element) {
+                            return (element.label || {}).value;
+                        });
+                    });
+                }
+
+                runs(function () {
+                    annotationId = huiTest.app.bodyView.annotationSelector._activeAnnotation.id;
+                    huiTest.app.bodyView.annotations.on('g:changed', countRefresh);
+                    $('.h-elements-container .h-edit-element').click();
+                });
+                girderTest.waitForDialog();
+                runs(function () {
+                    // a notification that asks to refresh the annotation list
+                    girder.utilities.eventStream.trigger('g:event.large_image_annotation.create', {
+                        data: {itemId: huiTest.app.bodyView.annotationSelector.parentItem.id}
+                    });
+                });
+                waitsFor(function () {
+                    return girder.rest.numberOutstandingRestRequests() === 0;
+                }, 'rest requests to finish');
+                runs(function () {
+                    expect(refreshes).toBe(0);
+                    $('#g-dialog-container #h-element-label').val('edited during a refresh');
+                    $('#g-dialog-container .h-submit').click();
+                });
+                girderTest.waitForLoad();
+                // the refresh happens once the dialog is closed
+                waitsFor(function () {
+                    return refreshes > 0;
+                }, 'annotation list to refresh');
+                girderTest.waitForLoad();
+                runs(function () {
+                    huiTest.app.bodyView.annotations.off('g:changed', countRefresh);
+                    fetchLabels();
+                });
+                waitsFor(function () {
+                    return labels !== undefined;
+                }, 'annotation to be fetched');
+                waitsFor(function () {
+                    return $('.h-elements-container .h-element .h-element-label').text() === 'edited during a refresh';
+                }, 'element list to show the new label');
+                runs(function () {
+                    expect(labels).toEqual(['edited during a refresh']);
+                    // restore the label for the following tests
+                    $('.h-elements-container .h-edit-element').click();
+                });
+                girderTest.waitForDialog();
+                runs(function () {
+                    $('#g-dialog-container #h-element-label').val('test');
+                    $('#g-dialog-container .h-submit').click();
+                });
+                girderTest.waitForLoad();
+                runs(function () {
+                    expect($('.h-elements-container .h-element .h-element-label').text()).toBe('test');
+                });
+            });
+
             it('draw another point', function () {
                 runs(function () {
                     $('.h-draw[data-type="point"]').click();
@@ -1329,6 +1395,14 @@ girderTest.promise.done(function () {
                 waitsFor(function () {
                     return $('.h-annotation-legend-container:not(.hidden) .h-annotation-legend-entry').length === 2;
                 }, 'legend to be shown again');
+                // Showing the annotation refetches it.  Edits made while it
+                // is loading are not saved, so wait for the fetch to finish.
+                waitsFor(function () {
+                    var annotation = huiTest.app.bodyView.annotations.filter(function (annotation) {
+                        return annotation.get('annotation').name === 'drawn 2';
+                    })[0];
+                    return annotation && !annotation.get('loading');
+                }, 'annotation to finish loading');
                 runs(function () {
                     // remove the legend
                     $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-edit-annotation-metadata').click();
@@ -1438,6 +1512,46 @@ girderTest.promise.done(function () {
                 waitsFor(function () {
                     return $('.h-annotation-legend-container').hasClass('hidden');
                 }, 'legend to be removed');
+            });
+
+            it('keep annotation edits when the list refreshes while editing', function () {
+                var refreshes = 0;
+                function countRefresh() {
+                    refreshes += 1;
+                }
+
+                runs(function () {
+                    huiTest.app.bodyView.annotations.on('g:changed', countRefresh);
+                    $('.h-annotation-selector .h-annotation:contains("drawn 2") .h-edit-annotation-metadata').click();
+                });
+                girderTest.waitForDialog();
+                runs(function () {
+                    // a notification that asks to refresh the annotation list
+                    girder.utilities.eventStream.trigger('g:event.large_image_annotation.create', {
+                        data: {itemId: huiTest.app.bodyView.annotationSelector.parentItem.id}
+                    });
+                });
+                waitsFor(function () {
+                    return girder.rest.numberOutstandingRestRequests() === 0;
+                }, 'rest requests to finish');
+                runs(function () {
+                    expect(refreshes).toBe(0);
+                    $('#h-annotation-description').val('edited during a refresh');
+                    $('.h-submit').click();
+                });
+                girderTest.waitForLoad();
+                // the refresh happens once the dialog is closed
+                waitsFor(function () {
+                    return refreshes > 0;
+                }, 'annotation list to refresh');
+                girderTest.waitForLoad();
+                runs(function () {
+                    huiTest.app.bodyView.annotations.off('g:changed', countRefresh);
+                    var annotation = huiTest.app.bodyView.annotations.filter(function (annotation) {
+                        return annotation.get('annotation').name === 'drawn 2';
+                    })[0];
+                    expect(annotation.get('annotation').description).toBe('edited during a refresh');
+                });
             });
 
             it('set annotation permissions to WRITE', function () {
