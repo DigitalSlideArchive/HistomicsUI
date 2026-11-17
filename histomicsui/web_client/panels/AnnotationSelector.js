@@ -691,9 +691,6 @@ var AnnotationSelector = Panel.extend({
     },
 
     _toggleLayerOpacity(evt) {
-        if (this._opacityLocked) {
-            return;
-        }
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
         this._layerOpacityId = this._layerOpacityId === id ? undefined : id;
         this.render();
