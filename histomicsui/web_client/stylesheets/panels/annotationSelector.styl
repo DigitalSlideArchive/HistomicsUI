@@ -24,6 +24,8 @@
   font-weight initial
   margin-left 5px
   border-radius 3px
+  display flex
+  flex-wrap wrap
 
   span
     cursor pointer
@@ -33,13 +35,13 @@
     margin-right 0.5em
 
   .h-annotation-right
-    float right
+    flex-shrink 0
 
   .h-layer-opacity-changed
     color #337ab7
 
   .h-layer-opacity
-    clear both
+    flex-basis 100%
     padding-top 2px
     display flex
 
@@ -47,8 +49,8 @@
     color #333
 
   .h-annotation-name
-    width 150px
-    display inline-block
+    flex 1 1 0%
+    min-width 0
     text-overflow ellipsis
     white-space nowrap
     overflow hidden
