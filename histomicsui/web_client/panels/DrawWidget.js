@@ -448,7 +448,7 @@ var DrawWidget = Panel.extend({
         }
         const oldids = {};
         const geojson = {type: 'FeatureCollection', features: []};
-        const exclusive = op === 'union' && this._editOptions.exclusive_groups;
+        const exclusive = ['union', 'xor'].includes(op) && this._editOptions.exclusive_groups;
         const otherGroups = [];
         near.forEach((n) => n.found.forEach((element) => {
             // filter to match current style group
@@ -466,7 +466,6 @@ var DrawWidget = Panel.extend({
         if (!geojson.features.length && !otherGroups.length && polylist.length < 2) {
             return false;
         }
-        const cutElements = this._cutElements(otherGroups, polylist);
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
         this.viewer.annotationLayer.geojson(geojson);
         if (op !== 'cut') {
@@ -485,6 +484,14 @@ var DrawWidget = Panel.extend({
             this.viewer.annotationLayer.cutOperation(annotations[0]);
         }
         const newAnnot = this.viewer.annotationLayer.annotations();
+        // other groups lose the part of the drawn shape now in this group
+        let cutArea = [];
+        if (otherGroups.length) {
+            cutArea = geo.util.polyops.intersect(this.viewer.annotationLayer, polylist, {
+                style: 'flat-listlist',
+                pixelTolerance: this._pixelTolerance()
+            });
+        }
 
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
         const elements = newAnnot.map((annot) => {
@@ -494,6 +501,7 @@ var DrawWidget = Panel.extend({
             }
             return result;
         }).filter((annot) => !annot.points || annot.points.length);
+        const cutElements = this._cutElements(otherGroups, cutArea);
         if (this.parentView.annotationSelector) {
             this.annotation._inBooleanOp = true;
         }

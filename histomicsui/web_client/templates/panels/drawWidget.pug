@@ -13,7 +13,7 @@ block content
       button.btn.btn-default.h-configure-style-group(type='button')
         span.icon-cog(data-hotkey-title='Configure style group. Keyboard shortcuts: {group.previous} and {group.next} to select previous and next style group, respectively')
   .checkbox.h-exclusive-groups-row
-    label(title='If checked, adding to a group with a union or brush removes that area from other groups')
+    label(title='If checked, adding to a group with a union, xor, or brush removes that area from other groups')
       input.h-exclusive-groups(type='checkbox', checked=opts.exclusive_groups ? 'checked' : undefined)
       | Exclusive groups
   .btn-group.btn-justified.btn-group-sm.h-draw-tools
