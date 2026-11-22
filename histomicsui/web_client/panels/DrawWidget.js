@@ -596,19 +596,47 @@ var DrawWidget = Panel.extend({
      *    specified, it is a union operation.
      */
     _brushAction(evt) {
-        let annotations = this.viewer.annotationLayer.toPolygonList({pixelTolerance: this._pixelTolerance()});
-        let elements = [convertAnnotation(this.viewer.annotationLayer.annotations()[0])];
-        if (!elements[0].id) {
-            elements[0].id = this.viewer._guid();
+        if (evt.event === geo.event.annotation.cursor_action && evt.operation &&
+                evt.operation !== 'union' && evt.operation !== 'difference') {
+            return;
+        }
+        const {polygons: annotations, blurred} = this._brushStrokePolygons(evt);
+        let elements;
+        if (blurred) {
+            elements = [{
+                type: 'polyline',
+                closed: true,
+                points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1], z: 0})),
+                id: this.viewer._guid()
+            }];
+        } else {
+            elements = [convertAnnotation(this.viewer.annotationLayer.annotations()[0])];
+            if (!elements[0].id) {
+                elements[0].id = this.viewer._guid();
+            }
         }
         const opts = {
             currentBooleanOperation: evt.operation || 'union',
             asPolygonList: true
         };
+        this._addDrawnElements(elements, annotations, opts);
+        this._setBrushMode(true);
+        // update sooner so that the hit test will work
+        this.viewer.drawAnnotation(this.annotation);
+    },
+
+    /**
+     * Get the area covered by the brush for a click or drag event.  A drag
+     * also covers the path from the previous brush position.
+     *
+     * @param {geo.event} evt A cursor_action or cursor_click event.
+     * @returns {object} `polygons`: the covered area as a geojs polygon list.
+     *    `blurred`: true if the path from the previous position was added.
+     */
+    _brushStrokePolygons(evt) {
+        let polygons = this.viewer.annotationLayer.toPolygonList({pixelTolerance: this._pixelTolerance()});
+        let blurred = false;
         if (evt.event === geo.event.annotation.cursor_action) {
-            if (evt.operation && evt.operation !== 'union' && evt.operation !== 'difference') {
-                return;
-            }
             // if this is the same action as the previous one, "blur" the brush
             // shapes along the direction of travel
             if (this._lastBrushState && this._lastBrushState.stateId && this._lastBrushState.stateId === evt.evt.state.stateId) {
@@ -642,13 +670,8 @@ var DrawWidget = Panel.extend({
                             [c2x + size / 2 * Math.cos(ang), c2y + size / 2 * Math.sin(ang)]
                         ]]];
                     }
-                    annotations = geo.util.polyops.union(annotations, blur);
-                    elements = [{
-                        type: 'polyline',
-                        closed: true,
-                        points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1], z: 0})),
-                        id: this.viewer._guid()
-                    }];
+                    polygons = geo.util.polyops.union(polygons, blur);
+                    blurred = true;
                 }
             }
             this._lastBrushState = evt.evt.state;
@@ -656,10 +679,7 @@ var DrawWidget = Panel.extend({
         } else {
             this._lastBrushState = null;
         }
-        this._addDrawnElements(elements, annotations, opts);
-        this._setBrushMode(true);
-        // update sooner so that the hit test will work
-        this.viewer.drawAnnotation(this.annotation);
+        return {polygons, blurred};
     },
 
     /**
