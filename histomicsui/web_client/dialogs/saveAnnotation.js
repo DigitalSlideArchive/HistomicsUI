@@ -682,7 +682,9 @@ var SaveAnnotation = View.extend({
         // all valid
         if (setFillColor || setLineColor || setLineWidth) {
             this.annotation.elements().each((element, idx) => {
-                if (setFillColor) {
+                // text only has a color
+                const isText = element.get('type') === 'text';
+                if (setFillColor && !isText) {
                     if (setFillColor === 'func') {
                         fillColor = colorFromFunc(element, idx, fillColorParam, this._styleableFuncs[fillColorParam.key]);
                     }
@@ -694,7 +696,7 @@ var SaveAnnotation = View.extend({
                     }
                     element.set('lineColor', lineColor, {delaySave: true});
                 }
-                if (setLineWidth) {
+                if (setLineWidth && !isText) {
                     element.set('lineWidth', lineWidth, {delaySave: true});
                 }
             });

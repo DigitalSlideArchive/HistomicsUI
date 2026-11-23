@@ -237,12 +237,51 @@ var AnnotationSelector = Panel.extend({
         }
     },
 
+    /**
+     * Defer refreshing the annotation list while an annotation or one of its
+     * elements is being edited.  Refreshing replaces the annotation and
+     * element models.  If that happened during an edit, the edit would
+     * change a model that is no longer in use and the changes would not be
+     * saved.
+     *
+     * @returns {function} A function to call when the edit is finished.  If
+     *      a refresh was asked for in the meantime, it happens once all edits
+     *      are finished.  Calling this more than once has no further effect.
+     */
+    deferRefresh() {
+        let released = false;
+        this._deferRefreshCount = (this._deferRefreshCount || 0) + 1;
+        return () => {
+            if (released) {
+                return;
+            }
+            released = true;
+            this._deferRefreshCount -= 1;
+            if (!this._deferRefreshCount && this._refreshAfterEdit) {
+                this._refreshAfterEdit = false;
+                this._refreshAnnotations();
+            }
+        };
+    },
+
+    /**
+     * Defer refreshing the annotation list while a dialog that edits an
+     * annotation or one of its elements is open.  See `deferRefresh`.
+     *
+     * @param {View} dialog The dialog's view.
+     */
+    deferRefreshWhileOpen(dialog) {
+        dialog.$el.one('hidden.bs.modal', this.deferRefresh());
+    },
+
     editAnnotationMetadata(evt) {
         const id = $(evt.currentTarget).parents('.h-annotation').data('id');
         const model = this.collection.get(id);
         const defaultGroup = this.parentView._defaultGroup;
+        const dialog = showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer, defaultGroup});
+        this.deferRefreshWhileOpen(dialog);
         this.listenToOnce(
-            showSaveAnnotationDialog(model, {title: 'Edit annotation', viewer: this.viewer, defaultGroup}),
+            dialog,
             'g:submit',
             () => {
                 if (model.get('displayed')) {
@@ -296,6 +335,11 @@ var AnnotationSelector = Panel.extend({
             return;
         }
         if (!this.parentItem || !this.parentItem.id || !this.viewer) {
+            return;
+        }
+        // if an annotation or element is being edited, defer this
+        if (this._deferRefreshCount) {
+            this._refreshAfterEdit = true;
             return;
         }
         // if any annotations are saving, defer this

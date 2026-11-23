@@ -41,8 +41,12 @@ class HuiSettings {
 function elementAreaAndEdgeLength(element) {
     const convert = girder.plugins.large_image_annotation.annotations.convert;
     const geojson = convert(element, {}).features[0];
-    const geogeom = geojson.geometry;
     let area, edge;
+    if (!geojson) {
+        // some elements, such as text, don't have a geometry
+        return {area, edge};
+    }
+    const geogeom = geojson.geometry;
     if (geogeom.type === 'Polygon') {
         area = edge = 0;
         const lens = [];

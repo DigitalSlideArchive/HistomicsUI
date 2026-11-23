@@ -18,7 +18,28 @@ else
               input#h-group-name.input-sm.form-control(
                 type='text', placeholder='Enter an optional group name for the element', value=element.group)
             include ../elementProps.pug
-            +elementProps(element)
+            if element.type === 'text'
+              .form-group
+                label(for='h-element-label') Label
+                input#h-element-label.input-sm.form-control(
+                  type='text', placeholder='Enter an optional label for the element', value=(element.label || {}).value)
+              .form-group
+                label(for='h-element-text') Text
+                textarea#h-element-text.form-control(rows=3)= element.text
+              .form-group
+                label(for='h-element-font-size') Font size
+                input#h-element-font-size.input-sm.form-control(
+                  type='number', min=1, step=1, placeholder='16', value=element.fontSize)
+              .form-group
+                label(for='h-element-line-color') Text color
+                .input-group.h-colorpicker
+                  input#h-element-line-color.input-sm.form-control(
+                    type='text', value=element.lineColor)
+                  span.input-group-addon
+                    i
+              .g-validation-failed-message.hidden
+            else
+              +elementProps(element)
       .modal-footer
         button.btn.btn-default(type='button', data-dismiss='modal') Cancel
         button.btn.btn-primary.h-submit(type='submit') Save

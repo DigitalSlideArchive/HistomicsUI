@@ -6,6 +6,7 @@ import EditHeatmapOrGridDataContainer from '../vue/components/EditHeatmapOrGridD
 import editElement from '../templates/dialogs/editElement.pug';
 
 const View = girder.views.View;
+const sanitizeText = girder.plugins.large_image_annotation.annotations.text.sanitizeText;
 
 /**
  * Create a modal dialog with fields to edit the properties of
@@ -90,8 +91,23 @@ var EditElement = View.extend({
             data.fillColor = this.convertColor(fillColor);
         }
         var pattern = this.$('#h-element-fill-pattern').val();
-        if (this.annotationElement.get('type') !== 'point') {
+        if (!['point', 'text'].includes(this.annotationElement.get('type'))) {
             data.pattern = pattern === 'none' ? '' : pattern;
+        }
+        if (this.annotationElement.get('type') === 'text') {
+            data.text = sanitizeText(this.$('#h-element-text').val());
+            if (!data.text) {
+                validation += 'The text cannot be empty. ';
+                this.$('#h-element-text').parent().addClass('has-error');
+            }
+            var fontSize = this.$('#h-element-font-size').val();
+            if (fontSize) {
+                data.fontSize = parseFloat(fontSize);
+                if (!(data.fontSize > 0) || !isFinite(data.fontSize)) {
+                    validation += 'Invalid font size. ';
+                    this.$('#h-element-font-size').parent().addClass('has-error');
+                }
+            }
         }
 
         if (validation) {
