@@ -795,6 +795,8 @@ var DrawWidget = Panel.extend({
         }
         if (type === 'brush') {
             this._setBrushMode(forceRefresh);
+        } else if (type === 'reassign') {
+            this._setBrushMode(forceRefresh, 'reassign', _.noop);
         } else if (type) {
             this.parentView._resetSelection();
             // always show the active annotation when drawing a new element
@@ -1082,8 +1084,8 @@ var DrawWidget = Panel.extend({
         };
         this._saveEditOptions(opts);
         this.$('.h-draw[data-type="brush"]').attr('shape', this._editOptions.brush_shape);
-        if (this._drawingType === 'brush') {
-            this.drawElement(undefined, 'brush', true);
+        if (['brush', 'reassign'].includes(this._drawingType)) {
+            this.drawElement(undefined, this._drawingType, true);
         }
     },
 
