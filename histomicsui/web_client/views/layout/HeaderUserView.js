@@ -1,10 +1,10 @@
-import {getCurrentUser} from '@girder/core/auth';
-import GirderHeaderUserView from '@girder/core/views/layout/HeaderUserView';
-
 import events from '../../events';
 import editHotkeys from '../../dialogs/editHotkeys';
 
 import headerUserTemplate from '../../templates/layout/headerUser.pug';
+
+const {getCurrentUser} = girder.auth;
+const GirderHeaderUserView = girder.views.layout.HeaderUserView;
 
 var HeaderUserView = GirderHeaderUserView.extend({
     events() {

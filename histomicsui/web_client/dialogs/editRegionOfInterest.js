@@ -1,11 +1,11 @@
-import $ from 'jquery';
 import 'url-search-params-polyfill';
-
-import View from '@girder/core/views/View';
-import {formatSize} from '@girder/core/misc';
 
 import editRegionOfInterest from '../templates/dialogs/editRegionOfInterest.pug';
 import '../stylesheets/panels/zoomWidget.styl';
+
+const $ = girder.$;
+const View = girder.views.View;
+const {formatSize} = girder.misc;
 
 var EditRegionOfInterest = View.extend({
     events: {

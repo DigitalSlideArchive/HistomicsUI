@@ -1,12 +1,12 @@
 import tinycolor from 'tinycolor2';
-
-import View from '@girder/core/views/View';
-import {sanitizeText} from '@girder/large_image_annotation/annotations/text';
+import JsColor from '@eastdesire/jscolor';
 
 import EditHeatmapOrGridDataContainer from '../vue/components/EditHeatmapOrGridDataContainer.vue';
 
 import editElement from '../templates/dialogs/editElement.pug';
-import '@girder/core/utilities/jquery/girderModal';
+
+const View = girder.views.View;
+const sanitizeText = girder.plugins.large_image_annotation.annotations.text.sanitizeText;
 
 /**
  * Create a modal dialog with fields to edit the properties of
@@ -26,7 +26,17 @@ var EditElement = View.extend({
             })
         ).girderModal(this);
         this.createVueModal();
-        this.$('.h-colorpicker').colorpicker();
+
+        const lineColorElement = this.$('#h-element-line-color')[0];
+        const fillColorElement = this.$('#h-element-fill-color')[0];
+        (() => new JsColor(lineColorElement, {
+            format: 'rgba',
+            value: this.annotationElement.toJSON().lineColor
+        }))();
+        (() => new JsColor(fillColorElement, {
+            format: 'rgba',
+            value: this.annotationElement.toJSON().fillColor
+        }))();
         return this;
     },
 

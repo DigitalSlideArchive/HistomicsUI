@@ -1,6 +1,3 @@
-import $ from 'jquery';
-import _ from 'underscore';
-
 import StyleCollection from '../../collections/StyleCollection';
 import {ensureAllowedGroupsExist, getCommonAllowedGroups} from '../../utilities/allowedGroups';
 import {applyHotkeyTitles} from '../../hotkeys';
@@ -8,6 +5,9 @@ import View from '../View';
 
 import template from '../../templates/popover/annotationContextMenu.pug';
 import '../../stylesheets/popover/annotationContextMenu.styl';
+
+const $ = girder.$;
+const _ = girder._;
 
 const AnnotationContextMenu = View.extend({
     events: {

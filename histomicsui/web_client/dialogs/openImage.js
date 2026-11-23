@@ -1,11 +1,10 @@
-import $ from 'jquery';
-
-import BrowserWidget from '@girder/core/views/widgets/BrowserWidget';
-import ItemModel from '@girder/core/models/ItemModel';
-import FolderModel from '@girder/core/models/FolderModel';
-
 import events from '../events';
 import router from '../router';
+
+const $ = girder.$;
+const BrowserWidget = girder.views.widgets.BrowserWidget;
+const ItemModel = girder.models.ItemModel;
+const FolderModel = girder.models.FolderModel;
 
 var dialog;
 
