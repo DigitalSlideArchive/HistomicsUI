@@ -687,8 +687,10 @@ var DrawWidget = Panel.extend({
      *
      * @param {boolean} [forceRefresh] If true, update the annotation mode even
      *      if it hasn't changed.
+     * @param {string} [type] The drawing type to report.
+     * @param {function} [action] Called with each brush click or drag event.
      */
-    _setBrushMode(forceRefresh) {
+    _setBrushMode(forceRefresh, type = 'brush', action = this._brushAction) {
         if (!this._brushPanBound) {
             this._brushPanBound = _.bind(this._brushPan, this);
         }
@@ -697,8 +699,8 @@ var DrawWidget = Panel.extend({
         this.viewer.annotationLayer.geoOff(geo.event.annotation.cursor_action);
         this.viewer.annotationLayer.geoOff(geo.event.pan, this._brushPanBound);
         this.viewer.annotationLayer.removeAllAnnotations();
-        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_click, (evt) => this._brushAction(evt));
-        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_action, (evt) => this._brushAction(evt));
+        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_click, (evt) => action.call(this, evt));
+        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_action, (evt) => action.call(this, evt));
         const shape = this._editOptions.brush_shape || 'square';
         let size = parseFloat(this._editOptions.brush_size) || 50;
         const scale = this._editOptions.brush_screen;
@@ -711,7 +713,7 @@ var DrawWidget = Panel.extend({
         this.viewer.annotationLayer.addAnnotation(annot);
         this._setBrushCoordinates(annot, size);
         this.viewer.annotationLayer.mode(this.viewer.annotationLayer.modes.cursor, annot);
-        this._drawingType = 'brush';
+        this._drawingType = type;
         this.viewer.viewer.draw();
     },
 
