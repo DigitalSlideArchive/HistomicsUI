@@ -200,6 +200,8 @@ var ImageView = View.extend({
         if (this.model.id) {
             this._getConfig(this.model.id);
             this._openId = this.model.id;
+            // a shape can't still be being edited in the old viewer
+            this._editElementShapeAllowRefresh();
             if (this.viewerWidget) {
                 this.viewerWidget.destroy();
             }
@@ -344,6 +346,7 @@ var ImageView = View.extend({
         return this;
     },
     destroy() {
+        this._editElementShapeAllowRefresh();
         if (this.viewerWidget) {
             this.viewerWidget.destroy();
         }
@@ -1202,6 +1205,7 @@ var ImageView = View.extend({
             'draw.circle': 'circle',
             'draw.polygon': 'polygon',
             'draw.line': 'line',
+            'draw.text': 'text',
             'draw.brush': 'brush'
         };
         switch (action) {
@@ -1405,7 +1409,10 @@ var ImageView = View.extend({
 
     getElementsInPolygon(poly) {
         const results = [];
-        this.viewerWidget.featureLayer.features().forEach((feature) => {
+        // text elements are in their own layer
+        const features = this.viewerWidget.featureLayer.features().concat(
+            this.viewerWidget.textLayer ? this.viewerWidget.textLayer.features() : []);
+        features.forEach((feature) => {
             if (feature._centroidFeature) {
                 return;
             }
@@ -1497,16 +1504,34 @@ var ImageView = View.extend({
     _editElement(element) {
         const annotation = this.annotations.get(element.originalAnnotation);
         this._editAnnotation(annotation);
-        editElement(annotation.elements().get(element.id), this._defaultGroup);
+        const dialog = editElement(annotation.elements().get(element.id), this._defaultGroup);
+        this.annotationSelector.deferRefreshWhileOpen(dialog);
+    },
+
+    /**
+     * Allow the annotation list to refresh again after editing a shape.
+     */
+    _editElementShapeAllowRefresh() {
+        if (this._editElementShapeRefresh) {
+            const allowRefresh = this._editElementShapeRefresh;
+            this._editElementShapeRefresh = null;
+            allowRefresh();
+        }
     },
 
     _editElementShape(element, annotationId) {
+        // if a different shape was being edited, it no longer is
+        this._editElementShapeAllowRefresh();
         this._preeditDrawMode = this.drawWidget ? this.drawWidget.drawingType() : undefined;
         if (this.drawWidget && this.drawWidget.drawingType()) {
             this.drawWidget.cancelDrawMode();
         }
         const annotation = this.annotations.get(element.originalAnnotation || annotationId);
         this._editAnnotation(annotation);
+        if (element.get('type') === 'text') {
+            this._editTextElement(annotation, annotation.elements().get(element.id));
+            return;
+        }
         const geojson = girder.plugins.large_image_annotation.annotations.convert(element);
         this._currentAnnotationEditShape = {
             annotation,
@@ -1524,11 +1549,75 @@ var ImageView = View.extend({
         }
         // geoOff state so the annotation isn't added by large_image_annotation
         this.viewerWidget.annotationLayer.geoOff(geo.event.annotation.state);
+        // refreshing the annotation list would replace the element model
+        this._editElementShapeRefresh = this.annotationSelector.deferRefresh();
         this.viewerWidget.annotationLayer.mode(this.viewerWidget.annotationLayer.modes.edit, annot[0]).draw();
         if (!this._editElementShapeFinishBound) {
             this._editElementShapeFinishBound = _.bind(this._editElementShapeFinish, this);
         }
         this.viewerWidget.annotationLayer.geoOn(geo.event.annotation.state, this._editElementShapeFinishBound);
+    },
+
+    /**
+     * Get the options for editing text elements in place.  The
+     * `textAnnotations.enterKey` value of the config file determines whether
+     * the enter key adds a line (`newline`, the default) or finishes the text
+     * (`finish`).
+     *
+     * @returns {object} Options for the viewer's text editor.
+     */
+    _textEditOptions() {
+        const config = (this._folderConfig || {}).textAnnotations || {};
+        return {enterKey: config.enterKey === 'finish' ? 'finish' : 'newline'};
+    },
+
+    /**
+     * Move a text element or edit its text in place.  Dragging the text moves
+     * it and clicking it edits it.  If the text is empty when editing
+     * finishes, the element is removed.
+     *
+     * @param {AnnotationModel} annotation The annotation with the element.
+     * @param {ElementModel} element The text element to edit.
+     */
+    _editTextElement(annotation, element) {
+        const preeditDrawMode = this._preeditDrawMode;
+        // Closing the context menu moves the focus to the map, which would
+        // finish editing immediately, so start after that has happened.
+        window.setTimeout(() => {
+            if (!this.viewerWidget || !element || !annotation.elements().get(element.id)) {
+                return;
+            }
+            this.viewerWidget.hideAnnotation(annotation.id, element.id);
+            // refreshing the annotation list would replace the element model
+            this._editElementShapeRefresh = this.annotationSelector.deferRefresh();
+            const options = _.extend({movable: true}, this._textEditOptions());
+            this.viewerWidget.startTextEdit(element.toJSON(), options).done((text, center) => {
+                if (!text) {
+                    if (this.drawWidget && this.activeAnnotation === annotation) {
+                        this.drawWidget.deleteElement(undefined, element.id);
+                    } else {
+                        annotation.elements().remove(element);
+                    }
+                    return;
+                }
+                const update = {};
+                if (text !== element.get('text')) {
+                    update.text = text;
+                }
+                if (!_.isEqual(center, element.get('center'))) {
+                    update.center = center;
+                }
+                if (!_.isEmpty(update)) {
+                    element.set(update);
+                }
+            }).always(() => {
+                this.viewerWidget.hideAnnotation();
+                if (this.drawWidget && preeditDrawMode) {
+                    this.drawWidget.drawElement(undefined, preeditDrawMode);
+                }
+                this._editElementShapeAllowRefresh();
+            });
+        }, 0);
     },
 
     _editElementShapeFinish(event) {
@@ -1555,6 +1644,7 @@ var ImageView = View.extend({
                 }, 0);
             }
         }
+        this._editElementShapeAllowRefresh();
     },
 
     _redrawSelection() {

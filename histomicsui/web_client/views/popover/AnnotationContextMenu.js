@@ -7,6 +7,7 @@ import template from '../../templates/popover/annotationContextMenu.pug';
 import '../../stylesheets/popover/annotationContextMenu.styl';
 
 const $ = girder.$;
+const _ = girder._;
 
 const AnnotationContextMenu = View.extend({
     events: {
@@ -52,7 +53,7 @@ const AnnotationContextMenu = View.extend({
         evt.stopPropagation();
         this.collection.each((element) => {
             if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id) {
-                if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
+                if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.attributes.type)) {
                     this.parentView.drawWidget.updateCount(element.attributes.group || this.parentView._defaultGroup, -1);
                 } else if (element.attributes.type === 'pixelmap') {
                     this.parentView.drawWidget.countPixelmap(element, -1);
@@ -88,7 +89,7 @@ const AnnotationContextMenu = View.extend({
         }
         this.collection.each((element) => {
             if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id &&
-                    element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.attributes.type)) {
+                    element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.attributes.type)) {
                 this.parentView.drawWidget.updateCount(element.attributes.group || this.parentView._defaultGroup, -1);
                 this.parentView.drawWidget.updateCount(group || this.parentView._defaultGroup, 1);
                 refresh = true;
@@ -98,7 +99,8 @@ const AnnotationContextMenu = View.extend({
             } else {
                 element.unset('group', {delaySave: true});
             }
-            element.set(styleAttrs, {delaySave: true});
+            // text only has a color
+            element.set(element.get('type') === 'text' ? _.pick(styleAttrs, 'lineColor', 'label', 'group') : styleAttrs, {delaySave: true});
         });
         this.collection.trigger('h:save');
         this.trigger('h:close');
