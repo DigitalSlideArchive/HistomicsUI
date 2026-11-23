@@ -43,7 +43,7 @@ setup(
     ],
     install_requires=[
         'girder<5',
-        'girder-large-image-annotation>=1.33.5',
+        'girder-large-image-annotation>=1.37.0',
         'girder-slicer-cli-web[girder]>=1.4.0',
         'cachetools',
         'orjson',

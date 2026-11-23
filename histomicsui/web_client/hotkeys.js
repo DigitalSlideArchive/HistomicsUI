@@ -81,6 +81,7 @@ const hotkeyActions = [
     {id: 'draw.circle', category: 'Drawing', label: 'Draw a circle', keys: ['c']},
     {id: 'draw.polygon', category: 'Drawing', label: 'Draw a polygon', keys: ['p']},
     {id: 'draw.line', category: 'Drawing', label: 'Draw a line', keys: ['l']},
+    {id: 'draw.text', category: 'Drawing', label: 'Add text', keys: ['t']},
     {id: 'draw.brush', category: 'Drawing', label: 'Draw with a brush', keys: ['b']},
     {id: 'draw.finish', category: 'Drawing', label: 'Finish the current polygon or line', keys: ['enter']},
     {id: 'draw.cancel', category: 'Drawing', label: 'Stop drawing', keys: ['esc']},
