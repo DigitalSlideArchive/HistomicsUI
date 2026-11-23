@@ -699,7 +699,10 @@ var DrawWidget = Panel.extend({
         } else {
             $el = this.$('button.h-draw[data-type="' + type + '"]');
         }
-        if (this.viewer.annotationLayer.mode() === type && this._drawingType === type && (!type || this.viewer.annotationLayer.currentAnnotation) && !forceRefresh) {
+        // Text is drawn as a point that is then edited, so the annotation
+        // layer is in point mode while text drawing is active.
+        const layerMode = type === 'text' ? 'point' : type;
+        if (this.viewer.annotationLayer.mode() === layerMode && this._drawingType === type && (!type || this.viewer.annotationLayer.currentAnnotation) && !forceRefresh) {
             return;
         }
         if (type === 'text' && this._drawingType === 'text' && !forceRefresh && this.viewer.$('.g-li-annotation-text-edit').length) {
@@ -741,7 +744,8 @@ var DrawWidget = Panel.extend({
             this.viewer.startDrawMode(type, options)
                 .then((element, annotations, opts) => this._addDrawnElements(element, annotations, opts))
                 .fail(() => {
-                    if (this._drawingType && this._drawingType !== this.viewer.annotationLayer.mode() && this.viewer.annotationLayer.mode() !== 'edit') {
+                    const activeMode = this._drawingType === 'text' ? 'point' : this._drawingType;
+                    if (this._drawingType && activeMode !== this.viewer.annotationLayer.mode() && this.viewer.annotationLayer.mode() !== 'edit') {
                         this.drawElement(undefined, this._drawingType, !!this._drawingType);
                     }
                 });
