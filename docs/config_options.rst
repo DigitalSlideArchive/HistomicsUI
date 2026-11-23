@@ -103,6 +103,19 @@ User Hotkeys
 
 Logged-in users can choose their own keys from **Keyboard shortcuts** in the user menu.  These are saved as a  ``hotkeys `` section, in the same format as above, in a  ``.histomicsui_user_config.yaml `` file in the user's private folder (normally  ``Private ``; see large_image's per-user configuration files), which can also be edited directly.  If the user makes that folder public, their hotkeys no longer apply.  User hotkeys apply in every folder and take precedence over the folder's config file.  **Reset all** in the dialog removes them.
 
+Text Annotations
+________________
+
+When typing a text annotation, the enter key adds a line and control-enter finishes the text.  This can be switched so that enter finishes the text and shift-enter or control-enter adds a line.  Clicking elsewhere always finishes the text, and escape always cancels it.
+
+::
+
+    ---
+    textAnnotations:
+      # "newline" (the default): enter adds a line and control-enter finishes.
+      # "finish": enter finishes and shift-enter or control-enter adds a line.
+      enterKey: finish
+
 Unselected Annotation Capacity
 ______________________________
 When annotation elements are selected, the annotations not included in the user's selection have their opacity decreased to 0.33 times their specified opacity. This can be modified:

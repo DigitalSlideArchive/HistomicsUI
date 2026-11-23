@@ -338,6 +338,80 @@ girderTest.promise.done(function () {
                 });
             });
 
+            it('keep shape edits when the annotation list refreshes while editing', function () {
+                var refreshes = 0, annotationId, element, original, moved, centers;
+                function countRefresh() {
+                    refreshes += 1;
+                }
+
+                runs(function () {
+                    var bodyView = huiTest.app.bodyView;
+                    annotationId = bodyView.annotationSelector._activeAnnotation.id;
+                    element = bodyView.annotations.get(annotationId).elements().at(0);
+                    original = element.get('center').slice();
+                    bodyView.annotations.on('g:changed', countRefresh);
+                    bodyView._editElementShape(element, annotationId);
+                    expect(bodyView.viewerWidget.annotationLayer.mode()).toBe('edit');
+                    // a notification that asks to refresh the annotation list
+                    girder.utilities.eventStream.trigger('g:event.large_image_annotation.create', {
+                        data: {itemId: bodyView.annotationSelector.parentItem.id}
+                    });
+                });
+                waitsFor(function () {
+                    return girder.rest.numberOutstandingRestRequests() === 0;
+                }, 'rest requests to finish');
+                runs(function () {
+                    var map = huiTest.geojsMap();
+                    var layer = huiTest.app.bodyView.viewerWidget.annotationLayer;
+                    expect(refreshes).toBe(0);
+                    expect(layer.mode()).toBe('edit');
+                    // move the point and finish editing
+                    moved = [original[0] + 50, original[1] + 25, original[2]];
+                    layer.annotations()[0].options('position', window.geo.transform.transformCoordinates(
+                        map.ingcs(), map.gcs(), {x: moved[0], y: moved[1]}));
+                    layer.annotations()[0].state(window.geo.annotation.state.done);
+                });
+                // the refresh happens once the shape is no longer being edited
+                waitsFor(function () {
+                    return refreshes > 0;
+                }, 'annotation list to refresh');
+                girderTest.waitForLoad();
+                runs(function () {
+                    huiTest.app.bodyView.annotations.off('g:changed', countRefresh);
+                    girder.rest.restRequest({url: 'annotation/' + annotationId}).done(function (resp) {
+                        centers = resp.annotation.elements.map(function (element) {
+                            return element.center;
+                        });
+                    });
+                });
+                waitsFor(function () {
+                    return centers !== undefined;
+                }, 'annotation to be fetched');
+                runs(function () {
+                    var current = huiTest.app.bodyView.annotations.get(annotationId).elements().at(0);
+                    expect(centers.length).toBe(1);
+                    expect(centers[0][0]).toBeCloseTo(moved[0], 3);
+                    expect(centers[0][1]).toBeCloseTo(moved[1], 3);
+                    expect(current.get('center')[0]).toBeCloseTo(moved[0], 3);
+                    // a later refresh is not deferred
+                    refreshes = 0;
+                    huiTest.app.bodyView.annotations.on('g:changed', countRefresh);
+                    girder.utilities.eventStream.trigger('g:event.large_image_annotation.create', {
+                        data: {itemId: huiTest.app.bodyView.annotationSelector.parentItem.id}
+                    });
+                });
+                waitsFor(function () {
+                    return refreshes > 0;
+                }, 'annotation list to refresh again');
+                girderTest.waitForLoad();
+                runs(function () {
+                    huiTest.app.bodyView.annotations.off('g:changed', countRefresh);
+                    // restore the location for the following tests
+                    huiTest.app.bodyView.annotations.get(annotationId).elements().at(0).set('center', original);
+                });
+                girderTest.waitForLoad();
+            });
+
             it('draw another point', function () {
                 runs(function () {
                     $('.h-draw[data-type="point"]').click();
@@ -795,6 +869,497 @@ girderTest.promise.done(function () {
                         $('.h-image-body').trigger($.Event('keydown', {key: 'r'}));
                         expect($('.h-draw.active').length).toBe(0);
                     });
+                });
+            });
+        });
+
+        describe('Text elements', function () {
+            var baseCount, textId, annotationInfo = {};
+
+            function textElements() {
+                return huiTest.app.bodyView.drawWidget.collection.filter(function (model) {
+                    return model.get('type') === 'text';
+                });
+            }
+
+            function editor() {
+                return $('.h-image-view-body .g-li-annotation-text-edit');
+            }
+
+            function clickMap(x, y) {
+                var interactor = huiTest.geojsMap().interactor();
+                interactor.simulateEvent('mousedown', {map: {x: x, y: y}, button: 'left'});
+                interactor.simulateEvent('mouseup', {map: {x: x, y: y}, button: 'left'});
+            }
+
+            function mover() {
+                return $('.h-image-view-body .g-li-annotation-text-move');
+            }
+
+            /* Start the "Edit Shape" action on the text element.  This shows
+             * the text so it can be moved; if edit is true, click on it to
+             * edit the text. */
+            function editShape(edit) {
+                runs(function () {
+                    var element = huiTest.app.bodyView.drawWidget.collection.get(textId);
+                    huiTest.app.bodyView._editElementShape(element, huiTest.app.bodyView.activeAnnotation.id);
+                });
+                waitsFor(function () {
+                    return mover().length === 1;
+                }, 'the movable text to be shown');
+                runs(function () {
+                    expect(editor().length).toBe(0);
+                    // the drawn text is hidden while it is edited
+                    expect(huiTest.app.bodyView.viewerWidget._hideElement).toBe(textId);
+                    if (edit) {
+                        mover().trigger($.Event('mousedown', {which: 1, pageX: 10, pageY: 10}));
+                        mover().trigger($.Event('mouseup', {which: 1, pageX: 10, pageY: 10}));
+                        expect(mover().length).toBe(0);
+                        expect(editor().length).toBe(1);
+                    }
+                });
+            }
+
+            function finishEditor(text) {
+                editor().val(text).trigger('input');
+                editor().trigger($.Event('keydown', {key: 'Enter', ctrlKey: true}));
+            }
+
+            it('draw text', function () {
+                runs(function () {
+                    baseCount = $('.h-elements-container .h-element').length;
+                    expect($('.h-draw[data-type="text"]').length).toBe(1);
+                    $('.h-draw[data-type="text"]').click();
+                });
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'draw mode to activate');
+                runs(function () {
+                    expect($('.h-draw[data-type="text"]').hasClass('active')).toBe(true);
+                    clickMap(150, 150);
+                });
+                waitsFor(function () {
+                    return editor().length === 1;
+                }, 'the text editor to be shown');
+                runs(function () {
+                    // re-rendering the draw panel, such as after another
+                    // change is saved, doesn't discard what is being typed
+                    var input = editor()[0];
+                    editor().val('Still here').trigger('input');
+                    huiTest.app.bodyView.drawWidget.render();
+                    expect(editor().length).toBe(1);
+                    expect(editor()[0]).toBe(input);
+                    expect(editor().val()).toBe('Still here');
+                    expect($('.h-draw[data-type="text"]').hasClass('active')).toBe(true);
+                    huiTest.app.bodyView.drawWidget.drawElement(undefined, 'text');
+                    expect(editor()[0]).toBe(input);
+                    expect(editor().val()).toBe('Still here');
+                    expect(document.activeElement).toBe(editor()[0]);
+                    // keys typed in the editor are not keyboard shortcuts
+                    editor().trigger($.Event('keydown', {key: 'r'}));
+                    expect($('.h-draw.active').attr('data-type')).toBe('text');
+                    finishEditor('  A comment\twith a tab\nand a second line  ');
+                });
+                waitsFor(function () {
+                    return $('.h-elements-container .h-element').length === baseCount + 1;
+                }, 'text to be created');
+                runs(function () {
+                    var elements = textElements();
+                    expect(editor().length).toBe(0);
+                    expect(elements.length).toBe(1);
+                    textId = elements[0].id;
+                    expect(elements[0].get('text')).toBe('A comment with a tab\nand a second line');
+                    expect(elements[0].get('lineColor')).toBe('rgb(0,0,0)');
+                    expect(elements[0].get('fontSize')).toBe(16);
+                    expect(elements[0].get('fillColor')).toBe(undefined);
+                    expect(elements[0].get('lineWidth')).toBe(undefined);
+                    expect(elements[0].get('pattern')).toBe(undefined);
+                    expect($('.h-elements-container .h-element[data-id="' + textId + '"] .h-element-label').text()).toMatch(/^default text \d+$/);
+                    // text drawing stays on
+                    expect($('.h-draw[data-type="text"]').hasClass('active')).toBe(true);
+                });
+                checkAutoSave('drawn 1', null, annotationInfo);
+                runs(function () {
+                    var saved = annotationInfo.annotation.annotation.elements.filter(function (element) {
+                        return element.type === 'text';
+                    });
+                    expect(saved.length).toBe(1);
+                    expect(saved[0].text).toBe('A comment with a tab\nand a second line');
+                    expect(saved[0].center.length).toBe(3);
+                });
+            });
+
+            it('empty text is discarded', function () {
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'draw mode to be active');
+                runs(function () {
+                    clickMap(250, 150);
+                });
+                waitsFor(function () {
+                    return editor().length === 1;
+                }, 'the text editor to be shown');
+                runs(function () {
+                    finishEditor('  \n ');
+                    expect(editor().length).toBe(0);
+                    expect(textElements().length).toBe(1);
+                    expect($('.h-elements-container .h-element').length).toBe(baseCount + 1);
+                    // still in text mode
+                    expect($('.h-draw[data-type="text"]').hasClass('active')).toBe(true);
+                });
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'draw mode to be active again');
+                runs(function () {
+                    // escape while typing cancels the text
+                    clickMap(250, 150);
+                });
+                waitsFor(function () {
+                    return editor().length === 1;
+                }, 'the text editor to be shown again');
+                runs(function () {
+                    editor().val('Canceled').trigger('input');
+                    editor().trigger($.Event('keydown', {key: 'Escape'}));
+                    expect(editor().length).toBe(0);
+                    expect(textElements().length).toBe(1);
+                });
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'draw mode to be active after canceling');
+                runs(function () {
+                    clickMap(250, 150);
+                });
+                waitsFor(function () {
+                    return editor().length === 1;
+                }, 'the text editor to be shown a third time');
+                runs(function () {
+                    // clicking the button while typing keeps the text and
+                    // turns off text mode
+                    editor().val('Kept when the tool is turned off').trigger('input');
+                    editor().trigger('blur');
+                    $('.h-draw[data-type="text"]').click();
+                });
+                waitsFor(function () {
+                    return textElements().length === 2;
+                }, 'the text to be added');
+                runs(function () {
+                    expect(textElements()[1].get('text')).toBe('Kept when the tool is turned off');
+                    expect($('.h-draw[data-type="text"]').hasClass('active')).toBe(false);
+                    expect(huiTest.app.bodyView.drawWidget.drawingType()).toBe(null);
+                    expect($('.geojs-map.annotation-input').length).toBe(0);
+                    huiTest.app.bodyView.drawWidget.deleteElement(undefined, textElements()[1].id);
+                    expect(textElements().length).toBe(1);
+                    expect($('.h-elements-container .h-element').length).toBe(baseCount + 1);
+                });
+            });
+
+            it('toggle text mode with a keyboard shortcut', function () {
+                $('.h-image-body').trigger($.Event('keydown', {key: 't'}));
+                expect($('.h-draw.active').attr('data-type')).toBe('text');
+                $('.h-image-body').trigger($.Event('keydown', {key: 't'}));
+                expect($('.h-draw.active').length).toBe(0);
+            });
+
+            it('edit text in place', function () {
+                var element, center;
+                editShape(true);
+                runs(function () {
+                    element = huiTest.app.bodyView.drawWidget.collection.get(textId);
+                    center = element.get('center').slice();
+                    expect(editor().val()).toBe('A comment with a tab\nand a second line');
+                    expect(editor().attr('rows')).toBe('2');
+                    finishEditor('Edited in place');
+                    // the text wasn't moved
+                    expect(element.get('center')).toEqual(center);
+                    expect(editor().length).toBe(0);
+                    expect(element.get('text')).toBe('Edited in place');
+                    expect(huiTest.app.bodyView.viewerWidget._hideElement).toBe(undefined);
+                    expect($('.h-elements-container .h-element').length).toBe(baseCount + 1);
+                });
+                checkAutoSave('drawn 1', null, annotationInfo);
+                runs(function () {
+                    var saved = annotationInfo.annotation.annotation.elements.filter(function (element) {
+                        return element.type === 'text';
+                    });
+                    expect(saved[0].text).toBe('Edited in place');
+                });
+            });
+
+            it('canceling an in place edit keeps the text', function () {
+                var element;
+                editShape(true);
+                runs(function () {
+                    element = huiTest.app.bodyView.drawWidget.collection.get(textId);
+                    editor().val('Not kept').trigger('input');
+                    editor().trigger($.Event('keydown', {key: 'Escape'}));
+                    expect(editor().length).toBe(0);
+                    expect(element.get('text')).toBe('Edited in place');
+                    expect(huiTest.app.bodyView.viewerWidget._hideElement).toBe(undefined);
+                });
+            });
+
+            it('move text by dragging it', function () {
+                var element, center, display;
+                editShape(false);
+                runs(function () {
+                    element = huiTest.app.bodyView.drawWidget.collection.get(textId);
+                    center = element.get('center').slice();
+                    display = huiTest.geojsMap().gcsToDisplay({x: center[0], y: center[1]});
+                    expect(mover().text()).toBe('Edited in place');
+                    mover().trigger($.Event('mousedown', {which: 1, pageX: 100, pageY: 100}));
+                    $(document).trigger($.Event('mousemove', {which: 1, pageX: 140, pageY: 75}));
+                    $(document).trigger($.Event('mouseup', {which: 1, pageX: 140, pageY: 75}));
+                    // dragging doesn't start editing or change the element yet
+                    expect(mover().length).toBe(1);
+                    expect(editor().length).toBe(0);
+                    expect(element.get('center')).toEqual(center);
+                    // clicking elsewhere finishes
+                    mover().trigger('blur');
+                    expect(mover().length).toBe(0);
+                    var moved = huiTest.geojsMap().gcsToDisplay({x: element.get('center')[0], y: element.get('center')[1]});
+                    expect(moved.x).toBeCloseTo(display.x + 40, 0);
+                    expect(moved.y).toBeCloseTo(display.y - 25, 0);
+                    expect(element.get('center')[2]).toBe(center[2]);
+                    expect(element.get('text')).toBe('Edited in place');
+                    expect(huiTest.app.bodyView.viewerWidget._hideElement).toBe(undefined);
+                    center = element.get('center').slice();
+                });
+                checkAutoSave('drawn 1', null, annotationInfo);
+                runs(function () {
+                    var saved = annotationInfo.annotation.annotation.elements.filter(function (element) {
+                        return element.type === 'text';
+                    });
+                    expect(saved[0].center[0]).toBeCloseTo(center[0], 3);
+                    expect(saved[0].center[1]).toBeCloseTo(center[1], 3);
+                    expect(saved[0].text).toBe('Edited in place');
+                });
+                // escape cancels a move
+                editShape(false);
+                runs(function () {
+                    mover().trigger($.Event('mousedown', {which: 1, pageX: 100, pageY: 100}));
+                    $(document).trigger($.Event('mousemove', {which: 1, pageX: 160, pageY: 160}));
+                    $(document).trigger($.Event('mouseup', {which: 1, pageX: 160, pageY: 160}));
+                    mover().trigger($.Event('keydown', {key: 'Escape'}));
+                    expect(mover().length).toBe(0);
+                    expect(element.get('center')).toEqual(center);
+                    expect(huiTest.app.bodyView.viewerWidget._hideElement).toBe(undefined);
+                });
+            });
+
+            it('keep text edits when the annotation list refreshes while editing', function () {
+                var refreshes = 0, annotationId, saved;
+                function countRefresh() {
+                    refreshes += 1;
+                }
+                function requestRefresh() {
+                    // a notification that asks to refresh the annotation list
+                    girder.utilities.eventStream.trigger('g:event.large_image_annotation.create', {
+                        data: {itemId: huiTest.app.bodyView.annotationSelector.parentItem.id}
+                    });
+                }
+                editShape(false);
+                runs(function () {
+                    annotationId = huiTest.app.bodyView.annotationSelector._activeAnnotation.id;
+                    huiTest.app.bodyView.annotations.on('g:changed', countRefresh);
+                    requestRefresh();
+                });
+                waitsFor(function () {
+                    return girder.rest.numberOutstandingRestRequests() === 0;
+                }, 'rest requests to finish');
+                runs(function () {
+                    // nothing was refreshed while the text could be moved
+                    expect(refreshes).toBe(0);
+                    expect(mover().length).toBe(1);
+                    mover().trigger($.Event('mousedown', {which: 1, pageX: 10, pageY: 10}));
+                    mover().trigger($.Event('mouseup', {which: 1, pageX: 10, pageY: 10}));
+                    requestRefresh();
+                });
+                waitsFor(function () {
+                    return girder.rest.numberOutstandingRestRequests() === 0;
+                }, 'rest requests to finish again');
+                runs(function () {
+                    // or while it is being typed
+                    expect(refreshes).toBe(0);
+                    expect(editor().length).toBe(1);
+                    finishEditor('Edited during a refresh');
+                });
+                // the refresh happens once the text is no longer being edited
+                waitsFor(function () {
+                    return refreshes > 0;
+                }, 'annotation list to refresh');
+                girderTest.waitForLoad();
+                runs(function () {
+                    huiTest.app.bodyView.annotations.off('g:changed', countRefresh);
+                    girder.rest.restRequest({url: 'annotation/' + annotationId}).done(function (resp) {
+                        saved = resp.annotation.elements.filter(function (element) {
+                            return element.type === 'text';
+                        });
+                    });
+                });
+                waitsFor(function () {
+                    return saved !== undefined;
+                }, 'annotation to be fetched');
+                runs(function () {
+                    expect(saved.length).toBe(1);
+                    expect(saved[0].text).toBe('Edited during a refresh');
+                    expect(textElements().length).toBe(1);
+                    expect(textElements()[0].get('text')).toBe('Edited during a refresh');
+                    // put the text back for the following tests
+                    textElements()[0].set('text', 'Edited in place');
+                });
+                girderTest.waitForLoad();
+            });
+
+            it('the config file can make enter finish the text', function () {
+                var element, config;
+                runs(function () {
+                    element = huiTest.app.bodyView.drawWidget.collection.get(textId);
+                    config = huiTest.app.bodyView._folderConfig;
+                    expect(huiTest.app.bodyView._textEditOptions()).toEqual({enterKey: 'newline'});
+                });
+                editShape(true);
+                runs(function () {
+                    // by default, enter doesn't finish
+                    editor().val('Enter is a new line').trigger('input');
+                    editor().trigger($.Event('keydown', {key: 'Enter'}));
+                    expect(editor().length).toBe(1);
+                    editor().trigger($.Event('keydown', {key: 'Escape'}));
+                    expect(element.get('text')).toBe('Edited in place');
+                    huiTest.app.bodyView._folderConfig = _.extend({}, config, {textAnnotations: {enterKey: 'finish'}});
+                    expect(huiTest.app.bodyView._textEditOptions()).toEqual({enterKey: 'finish'});
+                });
+                editShape(true);
+                runs(function () {
+                    editor().val('Finished with enter').trigger('input');
+                    editor().trigger($.Event('keydown', {key: 'Enter', shiftKey: true}));
+                    expect(editor().length).toBe(1);
+                    editor().trigger($.Event('keydown', {key: 'Enter'}));
+                    expect(editor().length).toBe(0);
+                    expect(element.get('text')).toBe('Finished with enter');
+                    // put things back
+                    element.set('text', 'Edited in place');
+                    huiTest.app.bodyView._folderConfig = config;
+                });
+                // new text uses the setting, too
+                runs(function () {
+                    huiTest.app.bodyView._folderConfig = _.extend({}, config, {textAnnotations: {enterKey: 'finish'}});
+                    $('.h-draw[data-type="text"]').click();
+                });
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'draw mode to activate');
+                runs(function () {
+                    clickMap(300, 250);
+                });
+                waitsFor(function () {
+                    return editor().length === 1;
+                }, 'the text editor to be shown');
+                runs(function () {
+                    editor().val('New with enter').trigger('input');
+                    editor().trigger($.Event('keydown', {key: 'Enter'}));
+                    expect(editor().length).toBe(0);
+                });
+                waitsFor(function () {
+                    return textElements().length === 2;
+                }, 'the text to be added');
+                runs(function () {
+                    expect(textElements()[1].get('text')).toBe('New with enter');
+                    huiTest.app.bodyView._folderConfig = config;
+                    $('.h-draw[data-type="text"]').click();
+                    huiTest.app.bodyView.drawWidget.deleteElement(undefined, textElements()[1].id);
+                    expect(textElements().length).toBe(1);
+                    expect($('.h-draw[data-type="text"]').hasClass('active')).toBe(false);
+                });
+            });
+
+            it('edit text properties', function () {
+                var element;
+                runs(function () {
+                    element = huiTest.app.bodyView.drawWidget.collection.get(textId);
+                    $('.h-elements-container .h-element[data-id="' + textId + '"] .h-edit-element').click();
+                });
+                girderTest.waitForDialog();
+                runs(function () {
+                    expect($('#g-dialog-container #h-element-text').val()).toBe('Edited in place');
+                    expect($('#g-dialog-container #h-element-font-size').val()).toBe('16');
+                    expect($('#g-dialog-container #h-element-line-color').length).toBe(1);
+                    // text doesn't have these properties
+                    expect($('#g-dialog-container #h-element-line-width').length).toBe(0);
+                    expect($('#g-dialog-container #h-element-fill-color').length).toBe(0);
+                    expect($('#g-dialog-container #h-element-fill-pattern').length).toBe(0);
+                    // empty text and bad sizes are not allowed
+                    $('#g-dialog-container #h-element-text').val('   ');
+                    $('#g-dialog-container #h-element-font-size').val('-3');
+                    $('#g-dialog-container .h-submit').click();
+                    expect($('#g-dialog-container .g-validation-failed-message').hasClass('hidden')).toBe(false);
+                    expect($('#g-dialog-container .g-validation-failed-message').text()).toMatch(/text cannot be empty/);
+                    expect($('#g-dialog-container .g-validation-failed-message').text()).toMatch(/Invalid font size/);
+                    expect(element.get('text')).toBe('Edited in place');
+                    $('#g-dialog-container #h-element-text').val(' From the dialog\r\nline two\u0007 ');
+                    $('#g-dialog-container #h-element-font-size').val('24');
+                    $('#g-dialog-container #h-element-line-color').val('#ff0000');
+                    $('#g-dialog-container .h-submit').click();
+                });
+                girderTest.waitForLoad();
+                runs(function () {
+                    expect(element.get('text')).toBe('From the dialog\nline two');
+                    expect(element.get('fontSize')).toBe(24);
+                    expect(element.get('lineColor')).toBe('rgb(255, 0, 0)');
+                    expect(element.get('fillColor')).toBe(undefined);
+                    expect(element.get('lineWidth')).toBe(undefined);
+                    expect(element.get('pattern')).toBe(undefined);
+                });
+                checkAutoSave('drawn 1', null, annotationInfo);
+                runs(function () {
+                    var saved = annotationInfo.annotation.annotation.elements.filter(function (element) {
+                        return element.type === 'text';
+                    });
+                    expect(saved[0].text).toBe('From the dialog\nline two');
+                    expect(saved[0].fontSize).toBe(24);
+                });
+            });
+
+            it('a long comment can be edited', function () {
+                var element, lines = [], longText;
+                runs(function () {
+                    for (var i = 0; i < 200; i += 1) {
+                        var words = [];
+                        for (var j = 0; j < 15; j += 1) {
+                            words.push('word' + (i * 15 + j));
+                        }
+                        lines.push(words.join(' '));
+                    }
+                    longText = lines.join('\n');
+                    element = huiTest.app.bodyView.drawWidget.collection.get(textId);
+                });
+                editShape(true);
+                runs(function () {
+                    finishEditor(longText);
+                    expect(element.get('text')).toBe(longText);
+                });
+                checkAutoSave('drawn 1', null, annotationInfo);
+                runs(function () {
+                    var saved = annotationInfo.annotation.annotation.elements.filter(function (element) {
+                        return element.type === 'text';
+                    });
+                    expect(saved[0].text).toBe(longText);
+                    expect(saved[0].text.split(/\s+/).length).toBe(3000);
+                });
+            });
+
+            it('removing all of the text deletes the element', function () {
+                editShape(true);
+                runs(function () {
+                    finishEditor(' \n ');
+                    expect(editor().length).toBe(0);
+                    expect(textElements().length).toBe(0);
+                    expect($('.h-elements-container .h-element').length).toBe(baseCount);
+                });
+                checkAutoSave('drawn 1', null, annotationInfo);
+                runs(function () {
+                    expect(annotationInfo.annotation.annotation.elements.filter(function (element) {
+                        return element.type === 'text';
+                    }).length).toBe(0);
                 });
             });
         });

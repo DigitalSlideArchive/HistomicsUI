@@ -249,7 +249,7 @@ var DrawWidget = Panel.extend({
                 const oldLabel = labelElement.text().split(' ');
                 if (label) {
                     newLabel = label;
-                } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
+                } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(elemType)) {
                     let oldnum = parseInt(oldLabel[oldLabel.length - 1] || '');
                     if (!_.isFinite(oldnum)) {
                         oldnum = '';
@@ -259,7 +259,7 @@ var DrawWidget = Panel.extend({
                     newLabel = oldLabel;
                 }
                 this.$(`.h-element[data-id="${id}"] .h-element-label`).text(newLabel).attr('title', label);
-                if (origGroup !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(elemType)) {
+                if (origGroup !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(elemType)) {
                     this.updateCount(origGroup || this.parentView._defaultGroup, -1);
                     this.updateCount(group || this.parentView._defaultGroup, 1);
                 }
@@ -278,6 +278,7 @@ var DrawWidget = Panel.extend({
         let pointAnnot = false;
         switch (annot.get('type')) {
             case 'point':
+            case 'text':
                 points = [annot.get('center')];
                 pointAnnot = true;
                 break;
@@ -344,7 +345,7 @@ var DrawWidget = Panel.extend({
         if (evt) {
             id = this._getId(evt);
         }
-        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(this.collection.get(id).attributes.type)) {
+        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(this.collection.get(id).attributes.type)) {
             this.updateCount(this.collection.get(id).attributes.group || this.parentView._defaultGroup, -1);
         } else if (this.collection.get(id).attributes.type === 'pixelmap') {
             this.countPixelmap(this.collection.get(id), -1);
@@ -363,8 +364,13 @@ var DrawWidget = Panel.extend({
      */
     addElements(elements) {
         elements.forEach((el) => {
-            if (el.pattern === '' || el.type === 'point') {
+            if (el.pattern === '' || el.type === 'point' || el.type === 'text') {
                 delete el.pattern;
+            }
+            if (el.type === 'text') {
+                // text only has a color
+                delete el.fillColor;
+                delete el.lineWidth;
             }
         });
         this._skipRenderHTML = this._skipRenderHTML || true;
@@ -696,7 +702,14 @@ var DrawWidget = Panel.extend({
         if (this.viewer.annotationLayer.mode() === type && this._drawingType === type && (!type || this.viewer.annotationLayer.currentAnnotation) && !forceRefresh) {
             return;
         }
-        if (this.viewer.annotationLayer.mode()) {
+        if (type === 'text' && this._drawingType === 'text' && !forceRefresh && this.viewer.$('.g-li-annotation-text-edit').length) {
+            // Restarting text drawing would discard the text that is being
+            // typed, so leave it alone.
+            return;
+        }
+        // While text is typed in place, the annotation layer has no mode, but
+        // text drawing is still active.
+        if (this.viewer.annotationLayer.mode() || this._drawingType === 'text') {
             this._drawingType = null;
             this.viewer.annotationLayer.mode(null);
             this.viewer.annotationLayer.geoOff(geo.event.annotation.state);
@@ -714,6 +727,11 @@ var DrawWidget = Panel.extend({
             this._drawingType = type;
 
             const options = {modeOptions: {}};
+            if (type === 'text') {
+                // show the text in the current style's color while typing
+                options.textStyle = {lineColor: this._style.get('lineColor')};
+                options.textEdit = this.parentView._textEditOptions();
+            }
             if (this._editOptions.size_mode === 'fixed_aspect_ratio') {
                 options.modeOptions.constraint = this._editOptions.fixed_width / this._editOptions.fixed_height;
             } else if (this._editOptions.size_mode === 'fixed_size') {
@@ -1196,7 +1214,7 @@ var DrawWidget = Panel.extend({
     _highlightElement(evt) {
         const id = $(evt.currentTarget).data('id');
         const annotType = this.collection._byId[id].get('type');
-        if (this.annotationSelector._interactiveMode && ['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(annotType)) {
+        if (this.annotationSelector._interactiveMode && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(annotType)) {
             $(evt.currentTarget).find('.h-view-element').show();
         }
         this.parentView.trigger('h:highlightAnnotation', this.annotation.id, id);
@@ -1245,7 +1263,7 @@ var DrawWidget = Panel.extend({
             return ('' + userLabel).toLowerCase();
         }
         const shape = this._elementShape(model);
-        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle'].includes(element.type)) {
+        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.type)) {
             return `${this._elementGroupName(model)} ${shape}`.toLowerCase();
         }
         return ('' + shape).toLowerCase();
