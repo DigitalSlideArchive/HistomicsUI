@@ -1754,6 +1754,47 @@ var ImageView = View.extend({
             annotation.set('annotation', annotationData);
         });
     },
+    /**
+     * Move the selected elements to a group and give them its style.
+     *
+     * @param {string|null} group The group, or null to remove the group.
+     * @param {StyleModel} [style] The style to apply.
+     */
+    _setSelectionGroup(group, style) {
+        const styleAttrs = Object.assign({}, style ? style.toJSON() : {});
+        Object.keys(styleAttrs).forEach((k) => {
+            if (!['fillColor', 'lineColor', 'lineWidth', 'label', 'pattern'].includes(k)) {
+                delete styleAttrs[k];
+            }
+        });
+        styleAttrs.pattern = styleAttrs.pattern || 'none';
+        let refresh = false;
+        if (this.drawWidget) {
+            this.drawWidget._skipRenderHTML = 'skip';
+        }
+        this.selectedElements.each((element) => {
+            if (this.drawWidget && this.activeAnnotation.id === element.originalAnnotation.id &&
+                    element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.attributes.type)) {
+                this.drawWidget.updateCount(element.attributes.group || this._defaultGroup, -1);
+                this.drawWidget.updateCount(group || this._defaultGroup, 1);
+                refresh = true;
+            }
+            if (group) {
+                styleAttrs.group = group;
+            } else {
+                element.unset('group', {delaySave: true});
+            }
+            // text only has a color
+            element.set(element.get('type') === 'text' ? _.pick(styleAttrs, 'lineColor', 'label', 'group') : styleAttrs, {delaySave: true});
+        });
+        this.selectedElements.trigger('h:save');
+        if (this.drawWidget) {
+            delete this.drawWidget._skipRenderHTML;
+        }
+        if (this.drawWidget && refresh) {
+            this.drawWidget.render();
+        }
+    },
     _removeSelection() {
         const groupedAnnotations = this.selectedElements.groupBy((element) => element.originalAnnotation.id);
         _.each(groupedAnnotations, (elements, annotationId) => { /* eslint-disable backbone/no-silent */
