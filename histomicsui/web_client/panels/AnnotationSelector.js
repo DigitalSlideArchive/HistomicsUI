@@ -654,7 +654,7 @@ var AnnotationSelector = Panel.extend({
     },
 
     _changeAnnotationHighlight(model) {
-        this.$(`.h-annotation[data-id="${model.id}"]`).toggleClass('h-highlight-annotation', model.get('highlighted'));
+        this.$(`.h-annotation[data-id="${model.id}"]`).toggleClass('h-highlight-annotation', !!model.get('highlight'));
     },
 
     _changeGlobalOpacity() {
