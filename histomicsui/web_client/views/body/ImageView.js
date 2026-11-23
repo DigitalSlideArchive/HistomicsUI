@@ -1421,7 +1421,15 @@ var ImageView = View.extend({
         return this.getElementsInPolygon(poly);
     },
 
-    getElementsInPolygon(poly) {
+    /**
+     * Find the annotation elements inside a polygon.
+     *
+     * @param {geo.polygonObject} poly The polygon to search.
+     * @param {boolean} [partial] If true, also find elements that are only
+     *      partly inside the polygon.
+     * @returns {object[]} A list of `{element, annotationId}`.
+     */
+    getElementsInPolygon(poly, partial = false) {
         const results = [];
         // text elements are in their own layer
         const features = this.viewerWidget.featureLayer.features().concat(
@@ -1430,7 +1438,7 @@ var ImageView = View.extend({
             if (feature._centroidFeature) {
                 return;
             }
-            const r = feature.polygonSearch(poly, {partial: false});
+            const r = feature.polygonSearch(poly, {partial});
             r.found.forEach((feature) => {
                 const annotationId = feature.properties ? feature.properties.annotation : null;
                 const element = feature.properties ? feature.properties.element : null;
