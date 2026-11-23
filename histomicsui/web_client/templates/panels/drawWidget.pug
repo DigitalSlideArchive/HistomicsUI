@@ -79,6 +79,10 @@ block content
         | #[span.icon-pencil]Line
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
+        type='button', data-type='text', data-hotkey-title='Add new text (keyboard shortcut: {draw.text})', class=drawingType === 'text' ? 'active' : null)
+        | #[span.icon-font]Text
+    .btn-group.btn-group-sm
+      button.h-draw.btn.btn-default(
         type='button', data-type='brush', data-hotkey-title='Draw with a brush (keyboard shortcut: {draw.brush})', class=drawingType === 'brush' ? 'active' : null, shape=opts.brush_shape)
         span.shape.square
           | #[span.icon-check-empty]

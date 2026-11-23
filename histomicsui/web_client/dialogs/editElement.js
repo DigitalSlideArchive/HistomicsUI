@@ -1,6 +1,7 @@
 import tinycolor from 'tinycolor2';
 
 import View from '@girder/core/views/View';
+import {sanitizeText} from '@girder/large_image_annotation/annotations/text';
 
 import EditHeatmapOrGridDataContainer from '../vue/components/EditHeatmapOrGridDataContainer.vue';
 
@@ -80,8 +81,23 @@ var EditElement = View.extend({
             data.fillColor = this.convertColor(fillColor);
         }
         var pattern = this.$('#h-element-fill-pattern').val();
-        if (this.annotationElement.get('type') !== 'point') {
+        if (!['point', 'text'].includes(this.annotationElement.get('type'))) {
             data.pattern = pattern === 'none' ? '' : pattern;
+        }
+        if (this.annotationElement.get('type') === 'text') {
+            data.text = sanitizeText(this.$('#h-element-text').val());
+            if (!data.text) {
+                validation += 'The text cannot be empty. ';
+                this.$('#h-element-text').parent().addClass('has-error');
+            }
+            var fontSize = this.$('#h-element-font-size').val();
+            if (fontSize) {
+                data.fontSize = parseFloat(fontSize);
+                if (!(data.fontSize > 0) || !isFinite(data.fontSize)) {
+                    validation += 'Invalid font size. ';
+                    this.$('#h-element-font-size').parent().addClass('has-error');
+                }
+            }
         }
 
         if (validation) {

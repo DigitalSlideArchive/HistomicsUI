@@ -113,9 +113,20 @@ Annotation Controls
 
 - **Draw an annotation element**:
 
-  - **o**, **r**, **i**, **c**, **p**, **l**, **b**: Switch to point,
-    rectangle, ellipse, circle, polygon, line, or brush drawing mode.  If
+  - **o**, **r**, **i**, **c**, **p**, **l**, **t**, **b**: Switch to point,
+    rectangle, ellipse, circle, polygon, line, text, or brush drawing mode.  If
     already in that mode, turn off drawing mode.
+
+    - In text mode, click to place the text and then type it in place.  The
+      text is centered on the clicked location.  **Enter** adds another line.
+      **Ctrl-Enter** or clicking elsewhere finishes the text, and **Escape**
+      cancels it.  Text that is empty or only whitespace is discarded.  What
+      **Enter** does can be changed in the config file.
+
+    - Use "Edit Shape" on existing text to change it: drag the text to move
+      it, or click it to edit it in place.  Clicking elsewhere finishes and
+      **Escape** cancels.  If all of the text is removed, the element is
+      deleted.
 
     - **shift**: When drawing a rectangle or an ellipse, after starting to draw
       it, holding down shift will adjust it to a square or circle.
