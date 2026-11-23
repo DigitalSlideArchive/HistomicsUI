@@ -209,6 +209,8 @@ var ImageView = View.extend({
         if (this.model.id) {
             this._getConfig(this.model.id);
             this._openId = this.model.id;
+            // a shape can't still be being edited in the old viewer
+            this._editElementShapeAllowRefresh();
             if (this.viewerWidget) {
                 this.viewerWidget.destroy();
             }
@@ -353,6 +355,7 @@ var ImageView = View.extend({
         return this;
     },
     destroy() {
+        this._editElementShapeAllowRefresh();
         if (this.viewerWidget) {
             this.viewerWidget.destroy();
         }
@@ -1510,7 +1513,20 @@ var ImageView = View.extend({
         this.annotationSelector.deferRefreshWhileOpen(dialog);
     },
 
+    /**
+     * Allow the annotation list to refresh again after editing a shape.
+     */
+    _editElementShapeAllowRefresh() {
+        if (this._editElementShapeRefresh) {
+            const allowRefresh = this._editElementShapeRefresh;
+            this._editElementShapeRefresh = null;
+            allowRefresh();
+        }
+    },
+
     _editElementShape(element, annotationId) {
+        // if a different shape was being edited, it no longer is
+        this._editElementShapeAllowRefresh();
         this._preeditDrawMode = this.drawWidget ? this.drawWidget.drawingType() : undefined;
         if (this.drawWidget && this.drawWidget.drawingType()) {
             this.drawWidget.cancelDrawMode();
@@ -1534,6 +1550,8 @@ var ImageView = View.extend({
         }
         // geoOff state so the annotation isn't added by large_image_annotation
         this.viewerWidget.annotationLayer.geoOff(geo.event.annotation.state);
+        // refreshing the annotation list would replace the element model
+        this._editElementShapeRefresh = this.annotationSelector.deferRefresh();
         this.viewerWidget.annotationLayer.mode(this.viewerWidget.annotationLayer.modes.edit, annot[0]).draw();
         if (!this._editElementShapeFinishBound) {
             this._editElementShapeFinishBound = _.bind(this._editElementShapeFinish, this);
@@ -1565,6 +1583,7 @@ var ImageView = View.extend({
                 }, 0);
             }
         }
+        this._editElementShapeAllowRefresh();
     },
 
     _redrawSelection() {

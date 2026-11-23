@@ -338,6 +338,80 @@ girderTest.promise.done(function () {
                 });
             });
 
+            it('keep shape edits when the annotation list refreshes while editing', function () {
+                var refreshes = 0, annotationId, element, original, moved, centers;
+                function countRefresh() {
+                    refreshes += 1;
+                }
+
+                runs(function () {
+                    var bodyView = huiTest.app.bodyView;
+                    annotationId = bodyView.annotationSelector._activeAnnotation.id;
+                    element = bodyView.annotations.get(annotationId).elements().at(0);
+                    original = element.get('center').slice();
+                    bodyView.annotations.on('g:changed', countRefresh);
+                    bodyView._editElementShape(element, annotationId);
+                    expect(bodyView.viewerWidget.annotationLayer.mode()).toBe('edit');
+                    // a notification that asks to refresh the annotation list
+                    girder.utilities.eventStream.trigger('g:event.large_image_annotation.create', {
+                        data: {itemId: bodyView.annotationSelector.parentItem.id}
+                    });
+                });
+                waitsFor(function () {
+                    return girder.rest.numberOutstandingRestRequests() === 0;
+                }, 'rest requests to finish');
+                runs(function () {
+                    var map = huiTest.geojsMap();
+                    var layer = huiTest.app.bodyView.viewerWidget.annotationLayer;
+                    expect(refreshes).toBe(0);
+                    expect(layer.mode()).toBe('edit');
+                    // move the point and finish editing
+                    moved = [original[0] + 50, original[1] + 25, original[2]];
+                    layer.annotations()[0].options('position', window.geo.transform.transformCoordinates(
+                        map.ingcs(), map.gcs(), {x: moved[0], y: moved[1]}));
+                    layer.annotations()[0].state(window.geo.annotation.state.done);
+                });
+                // the refresh happens once the shape is no longer being edited
+                waitsFor(function () {
+                    return refreshes > 0;
+                }, 'annotation list to refresh');
+                girderTest.waitForLoad();
+                runs(function () {
+                    huiTest.app.bodyView.annotations.off('g:changed', countRefresh);
+                    girder.rest.restRequest({url: 'annotation/' + annotationId}).done(function (resp) {
+                        centers = resp.annotation.elements.map(function (element) {
+                            return element.center;
+                        });
+                    });
+                });
+                waitsFor(function () {
+                    return centers !== undefined;
+                }, 'annotation to be fetched');
+                runs(function () {
+                    var current = huiTest.app.bodyView.annotations.get(annotationId).elements().at(0);
+                    expect(centers.length).toBe(1);
+                    expect(centers[0][0]).toBeCloseTo(moved[0], 3);
+                    expect(centers[0][1]).toBeCloseTo(moved[1], 3);
+                    expect(current.get('center')[0]).toBeCloseTo(moved[0], 3);
+                    // a later refresh is not deferred
+                    refreshes = 0;
+                    huiTest.app.bodyView.annotations.on('g:changed', countRefresh);
+                    girder.utilities.eventStream.trigger('g:event.large_image_annotation.create', {
+                        data: {itemId: huiTest.app.bodyView.annotationSelector.parentItem.id}
+                    });
+                });
+                waitsFor(function () {
+                    return refreshes > 0;
+                }, 'annotation list to refresh again');
+                girderTest.waitForLoad();
+                runs(function () {
+                    huiTest.app.bodyView.annotations.off('g:changed', countRefresh);
+                    // restore the location for the following tests
+                    huiTest.app.bodyView.annotations.get(annotationId).elements().at(0).set('center', original);
+                });
+                girderTest.waitForLoad();
+            });
+
             it('draw another point', function () {
                 runs(function () {
                     $('.h-draw[data-type="point"]').click();
