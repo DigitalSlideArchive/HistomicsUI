@@ -244,12 +244,6 @@ var SaveAnnotation = View.extend({
     },
 
     render() {
-        // clean up old colorpickers when rerendering
-        // const hColorPicker = this.$('.h-colorpicker');
-        // if (hColorPicker.colorpicker) {
-        //     hColorPicker.colorpicker('destroy');
-        // }
-
         let elementTypes = [];
         if (this.annotation.get('annotation').elements) {
             elementTypes = this.annotation.get('annotation').elements
@@ -345,6 +339,7 @@ var SaveAnnotation = View.extend({
                 }))();
             }
         });
+        this._initLegendColorPickers(this.$('.h-legend-entries'));
 
         if (this.annotation.id) {
             if (!this.annotation.meta) {
@@ -480,13 +475,25 @@ var SaveAnnotation = View.extend({
     },
 
     /**
+     * Attach color pickers to the legend color inputs within an element.
+     * These may be empty, which the form validation reports.
+     */
+    _initLegendColorPickers($el) {
+        $el.find('.h-legend-line-color, .h-legend-fill-color, .h-legend-stop-color').each((idx, input) => {
+            if (!input.jscolor) {
+                (() => new JsColor(input, {format: 'auto', required: false}))();
+            }
+        });
+    },
+
+    /**
      * Add an empty row to the legend editor.
      */
     addLegendEntry(evt) {
         evt.preventDefault();
         const row = $(saveAnnotationLegendEntryRow({entry: {}}));
         this.$('.h-legend-entries').append(row);
-        row.find('.h-colorpicker').colorpicker();
+        this._initLegendColorPickers(row);
         row.find('.h-legend-label').focus();
     },
 
@@ -497,7 +504,7 @@ var SaveAnnotation = View.extend({
         evt.preventDefault();
         const row = $(saveAnnotationLegendEntryRow({entry: {fillColor: ['', '']}}));
         this.$('.h-legend-entries').append(row);
-        row.find('.h-colorpicker').colorpicker();
+        this._initLegendColorPickers(row);
         row.find('.h-legend-label').focus();
     },
 
@@ -509,7 +516,7 @@ var SaveAnnotation = View.extend({
         const row = $(evt.currentTarget).closest('.h-legend-entry');
         const stop = $(saveAnnotationLegendStopRow({color: '', label: ''}));
         row.find('.h-legend-stops').append(stop);
-        stop.find('.h-colorpicker').colorpicker();
+        this._initLegendColorPickers(stop);
         stop.find('.h-legend-stop-color').focus();
     },
 
@@ -518,7 +525,6 @@ var SaveAnnotation = View.extend({
      */
     removeLegendStop(evt) {
         const stop = $(evt.currentTarget).closest('.h-legend-stop');
-        stop.find('.h-colorpicker').colorpicker('destroy');
         stop.remove();
     },
 
@@ -527,7 +533,6 @@ var SaveAnnotation = View.extend({
      */
     removeLegendEntry(evt) {
         const row = $(evt.currentTarget).closest('.h-legend-entry');
-        row.find('.h-colorpicker').colorpicker('destroy');
         row.remove();
     },
 
@@ -735,7 +740,6 @@ var SaveAnnotation = View.extend({
     },
 
     destroy() {
-        this.$('.h-colorpicker').colorpicker('destroy');
         SaveAnnotation.prototype.destroy.call(this);
     }
 });

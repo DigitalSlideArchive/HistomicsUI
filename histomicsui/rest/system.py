@@ -269,7 +269,7 @@ def restartServer(self):
     restart = Restart(cherrypy.engine)
     restart.subscribe()
     restart.start()
-    return {'restarted': datetime.datetime.now(datetime.timezone.utc)}
+    return {'restarted': datetime.datetime.now(datetime.UTC)}
 
 
 @autoDescribeRoute(
@@ -283,7 +283,7 @@ def restartServer(self):
 @access.admin
 @boundHandler()
 def getOldJobs(self, age, status):
-    age = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(-age)
+    age = datetime.datetime.now(datetime.UTC) + datetime.timedelta(-age)
     query = {'updated': {'$lt': age}}
     if status:
         query['status'] = {'$in': [int(s) for s in status.split(',')]}
@@ -301,7 +301,7 @@ def getOldJobs(self, age, status):
 @access.admin
 @boundHandler()
 def deleteOldJobs(self, age, status):
-    age = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(-age)
+    age = datetime.datetime.now(datetime.UTC) + datetime.timedelta(-age)
     query = {'updated': {'$lt': age}}
     if status:
         query['status'] = {'$in': [int(s) for s in status.split(',')]}

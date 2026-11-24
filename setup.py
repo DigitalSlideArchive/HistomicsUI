@@ -45,10 +45,10 @@ setup(
         'girder>=5',
         'girder-jobs>=5',
         'girder-slicer-cli-web>=5',
-        'girder-large-image==1.37.1a210',
-        'girder-large-image-annotation==1.37.1a210',
-        'large-image-tasks==1.37.1a210',
-        'large-image-converter==1.37.1a210',
+        'girder-large-image==1.37.1a214',
+        'girder-large-image-annotation==1.37.1a214',
+        'large-image-tasks==1.37.1a214',
+        'large-image-converter==1.37.1a214',
     ],
     extras_require={
         'analysis': [],  # kept for backwards compatibility
