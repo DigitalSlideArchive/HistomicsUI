@@ -72,6 +72,10 @@ commands:
           command: PYTEST_ADDOPTS="--reruns=3" PYTEST_NUMPROCESSES=2 tox -e << parameters.env >> | cat; test ${PIPESTATUS[0]} -eq 0
   coverage:
     description: "Upload coverage"
+    parameters:
+      files:
+        type: string
+        default: .tox/coverage/py_coverage.xml,.tox/coverage/cobertura-coverage.xml
     steps:
       - run:
           name: Install Codecov client
@@ -81,7 +85,7 @@ commands:
       - run:
           name: Upload coverage
           # Retry as codecov can be flaky
-          command: for i in $(seq 1 10); do [ $i -gt 1 ] && echo "retrying $i" && sleep 5; ./codecov --disable search pycov gcov --file .tox/coverage/py_coverage.xml,.tox/coverage/cobertura-coverage.xml && s=0 && break || s=$?; done; (exit $s)
+          command: for i in $(seq 1 10); do [ $i -gt 1 ] && echo "retrying $i" && sleep 5; ./codecov --disable search pycov gcov --file << parameters.files >> && s=0 && break || s=$?; done; (exit $s)
 
 jobs:
   py311:
@@ -143,6 +147,8 @@ jobs:
       - install_playwright
       - tox:
           env: webtest
+      - coverage:
+          files: .tox/coverage/cobertura-coverage.xml
       - store_artifacts:
           path: histomicsui/web_client/test-results
           destination: playwright-test-results

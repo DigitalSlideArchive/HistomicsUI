@@ -522,10 +522,10 @@ var MetadataPlot = Panel.extend({
         }
         let colorScale, sColorScale;
         if (plotData.series.c && (plotData.series.c.type === 'number' || !plotData.series.c.distinctcount || plotData.series.c.distinctcount > discretePalette.length)) {
-            colorScale = window.d3.scale.linear().domain(continuousPalette.map((_, i) => i / (continuousPalette.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(continuousPalette);
+            colorScale = window.d3.scaleLinear().domain(continuousPalette.map((_, i) => i / (continuousPalette.length - 1) * ((plotData.series.c.max - plotData.series.c.min) || 0) + plotData.series.c.min)).range(continuousPalette);
         }
         if (plotData.series.s && (plotData.series.s.type === 'number' || !plotData.series.s.distinctcount || plotData.series.s.distinctcount > discretePalette.length)) {
-            sColorScale = window.d3.scale.linear().domain(continuousPalette.map((_, i) => i / (continuousPalette.length - 1) * ((plotData.series.s.max - plotData.series.s.min) || 0) + plotData.series.s.min)).range(continuousPalette);
+            sColorScale = window.d3.scaleLinear().domain(continuousPalette.map((_, i) => i / (continuousPalette.length - 1) * ((plotData.series.s.max - plotData.series.s.min) || 0) + plotData.series.s.min)).range(continuousPalette);
         }
         const plotlyData = {
             x: plotData.series.x ? plotData.data.map((d) => d[plotData.series.x.index]) : 0,

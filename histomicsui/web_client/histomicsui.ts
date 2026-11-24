@@ -44,6 +44,8 @@ const initializeHistomicsApp = async (apiRoot: string, el: string | HTMLElement 
                 });
                 document.title = histomicsSettings['histomicsui.brand_name'];
                 app.bindRoutes();
+                // Expose the app instance for the Playwright tests.
+                (window as any).histomicsApp = app;
                 girder.events.trigger('g:appload.after', app);
                 resolve(app);
                 return app;

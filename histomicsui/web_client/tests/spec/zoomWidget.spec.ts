@@ -3,6 +3,10 @@ import {test, expect} from '@playwright/test';
 import {createUser, login, uploadSampleFile} from '../util';
 import {setupServer} from '../server';
 
+// The tests in this file build on one another, so run them in order and, if
+// one fails, retry them as a group on a fresh server.
+test.describe.configure({mode: 'serial'});
+
 test.describe('Test zoom widget', () => {
     setupServer();
 
