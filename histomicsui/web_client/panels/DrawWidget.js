@@ -684,7 +684,8 @@ var DrawWidget = Panel.extend({
 
     /**
      * Select the active annotation's elements under a brush click or drag
-     * that aren't already in the current group.
+     * that aren't already in the current group.  On release, move them to the
+     * current group.
      *
      * @param {geo.event} evt A cursor_action or cursor_click event.
      */
@@ -707,6 +708,11 @@ var DrawWidget = Panel.extend({
         elements.forEach((element, idx) => {
             this.parentView._selectElement(element, {silent: idx !== elements.length - 1});
         });
+        // applies once per stroke
+        if ((evt.event === geo.event.annotation.cursor_click || evt.evt.event === geo.event.actionup) && selected.length) {
+            this.parentView._setSelectionGroup(group, this._style);
+            this.parentView._resetSelection();
+        }
     },
 
     /**
