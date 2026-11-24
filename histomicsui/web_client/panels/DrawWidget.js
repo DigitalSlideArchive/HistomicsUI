@@ -17,6 +17,7 @@ import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
 import getAllowedGroups, {ensureAllowedGroupsExist} from '../utilities/allowedGroups';
+import {elementArea, elementContainsPolygon} from '../utilities/elementGeometry';
 import {applyHotkeyTitles} from '../hotkeys';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
@@ -684,8 +685,9 @@ var DrawWidget = Panel.extend({
 
     /**
      * Select the active annotation's elements under a brush click or drag
-     * that aren't already in the current group.  On release, move them to the
-     * current group.
+     * that aren't already in the current group.  Elements that contain the
+     * brush only count if it touches nothing else, and then only the smallest.
+     * On release, move the selected elements to the current group.
      *
      * @param {geo.event} evt A cursor_action or cursor_click event.
      */
@@ -697,9 +699,16 @@ var DrawWidget = Panel.extend({
         const hits = {};
         polygons.forEach((polygon) => {
             const [outer, ...inner] = polygon.map((ring) => ring.map((pt) => ({x: pt[0], y: -pt[1]})));
-            this.parentView.getElementsInPolygon({outer, inner}, true).forEach(({element, annotationId}) => {
-                if (annotationId === this.annotation.id && types.includes(element.get('type')) &&
-                        element.get('group') !== group && !selected.get(element.id)) {
+            const found = this.parentView.getElementsInPolygon({outer, inner}, true)
+                .filter(({element, annotationId}) => annotationId === this.annotation.id && types.includes(element.get('type')))
+                .map(({element}) => element);
+            const containers = found.filter((element) => elementContainsPolygon(element.attributes, {outer, inner}));
+            let touched = found.filter((element) => !containers.includes(element));
+            if (!touched.length && containers.length) {
+                touched = [_.min(containers, (element) => elementArea(element.attributes))];
+            }
+            touched.forEach((element) => {
+                if (element.get('group') !== group && !selected.get(element.id)) {
                     hits[element.id] = element;
                 }
             });
