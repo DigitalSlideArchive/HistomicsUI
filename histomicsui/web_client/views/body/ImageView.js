@@ -1442,8 +1442,9 @@ var ImageView = View.extend({
             r.found.forEach((feature) => {
                 const annotationId = feature.properties ? feature.properties.annotation : null;
                 const element = feature.properties ? feature.properties.element : null;
-                if (element && element.id && annotationId) {
-                    const annotation = this.annotations.get(annotationId);
+                // selection highlights aren't from a loaded annotation
+                const annotation = annotationId ? this.annotations.get(annotationId) : null;
+                if (element && element.id && annotation) {
                     results.push({
                         element: annotation.elements().get(element.id),
                         annotationId
