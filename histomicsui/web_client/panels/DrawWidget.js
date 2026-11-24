@@ -10,6 +10,7 @@ import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/
 import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
 import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
 import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
+import {geometryKeys} from '@girder/large_image_annotation/annotations/geometry';
 
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
@@ -532,10 +533,7 @@ var DrawWidget = Panel.extend({
      */
     _cutElements(features, polylist) {
         const layer = this.viewer.annotationLayer;
-        // geometry fields of the polyline, rectangle, ellipse, and circle
-        // schemas in large_image's girder_large_image_annotation/models/annotation.py;
-        // update this list if those schemas change
-        const geometryKeys = ['id', 'type', 'points', 'closed', 'holes', 'center', 'width', 'height', 'rotation', 'normal', 'radius'];
+        const omitKeys = ['id', 'type'].concat(geometryKeys);
         const results = [];
         features.forEach((feature) => {
             layer.removeAllAnnotations(undefined, false);
@@ -546,7 +544,7 @@ var DrawWidget = Panel.extend({
             });
             layer.removeAllAnnotations(undefined, false);
             layer.fromPolygonList(remaining, {});
-            const props = _.omit(this.collection.get(feature.id).toJSON(), geometryKeys);
+            const props = _.omit(this.collection.get(feature.id).toJSON(), omitKeys);
             layer.annotations().forEach((annot) => {
                 const element = convertAnnotation(annot);
                 if (!element.points || element.points.length) {
