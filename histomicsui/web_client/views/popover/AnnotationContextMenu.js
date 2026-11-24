@@ -1,8 +1,8 @@
 import $ from 'jquery';
-import _ from 'underscore';
 
 import StyleCollection from '../../collections/StyleCollection';
 import {ensureAllowedGroupsExist, getCommonAllowedGroups} from '../../utilities/allowedGroups';
+import {groupedElementTypes} from '../../utilities/elementTypes';
 import {applyHotkeyTitles} from '../../hotkeys';
 import View from '../View';
 
@@ -53,7 +53,7 @@ const AnnotationContextMenu = View.extend({
         evt.stopPropagation();
         this.collection.each((element) => {
             if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id) {
-                if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.attributes.type)) {
+                if (groupedElementTypes.includes(element.attributes.type)) {
                     this.parentView.drawWidget.updateCount(element.attributes.group || this.parentView._defaultGroup, -1);
                 } else if (element.attributes.type === 'pixelmap') {
                     this.parentView.drawWidget.countPixelmap(element, -1);
@@ -76,40 +76,8 @@ const AnnotationContextMenu = View.extend({
     },
     _setStyleDefinition(group) {
         const style = this.styles.get({id: group}) || this.styles.get({id: this.parentView._defaultGroup});
-        const styleAttrs = Object.assign({}, style ? style.toJSON() : {});
-        Object.keys(styleAttrs).forEach((k) => {
-            if (!['fillColor', 'lineColor', 'lineWidth', 'label', 'pattern'].includes(k)) {
-                delete styleAttrs[k];
-            }
-        });
-        styleAttrs.pattern = styleAttrs.pattern || 'none';
-        let refresh = false;
-        if (this.parentView.drawWidget) {
-            this.parentView.drawWidget._skipRenderHTML = 'skip';
-        }
-        this.collection.each((element) => {
-            if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id &&
-                    element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.attributes.type)) {
-                this.parentView.drawWidget.updateCount(element.attributes.group || this.parentView._defaultGroup, -1);
-                this.parentView.drawWidget.updateCount(group || this.parentView._defaultGroup, 1);
-                refresh = true;
-            }
-            if (group) {
-                styleAttrs.group = group;
-            } else {
-                element.unset('group', {delaySave: true});
-            }
-            // text only has a color
-            element.set(element.get('type') === 'text' ? _.pick(styleAttrs, 'lineColor', 'label', 'group') : styleAttrs, {delaySave: true});
-        });
-        this.collection.trigger('h:save');
+        this.parentView._setSelectionGroup(group, style);
         this.trigger('h:close');
-        if (this.parentView.drawWidget) {
-            delete this.parentView.drawWidget._skipRenderHTML;
-        }
-        if (this.parentView.drawWidget && refresh) {
-            this.parentView.drawWidget.render();
-        }
     },
     _getAnnotationGroups() {
         let annotations = this.collection.map((element) => element.originalAnnotation).filter((a) => a);

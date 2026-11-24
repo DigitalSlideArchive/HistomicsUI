@@ -1612,6 +1612,218 @@ girderTest.promise.done(function () {
             });
         });
 
+        describe('Reassign', function () {
+            var bodyView, drawWidget, startIds, oldBrush;
+            var ids = {};
+
+            function toImage(x, y) {
+                return huiTest.geojsMap().displayToGcs({x: x, y: y});
+            }
+
+            function imageSize(size) {
+                return Math.abs(toImage(size, 0).x - toImage(0, 0).x);
+            }
+
+            function imagePolygon(points) {
+                return points.map(function (pt) {
+                    return toImage(pt[0], pt[1]);
+                });
+            }
+
+            function circle(name, x, y, r, group) {
+                var center = toImage(x, y);
+                ids[name] = bodyView.viewerWidget._guid();
+                return {id: ids[name], type: 'circle', center: [center.x, center.y, 0], radius: imageSize(r), group: group};
+            }
+
+            function square(name, x, y, size, group) {
+                var center = toImage(x, y);
+                ids[name] = bodyView.viewerWidget._guid();
+                return {id: ids[name], type: 'rectangle', center: [center.x, center.y, 0], width: imageSize(size), height: imageSize(size), group: group};
+            }
+
+            function text(name, x, y, group) {
+                var center = toImage(x, y);
+                ids[name] = bodyView.viewerWidget._guid();
+                return {id: ids[name], type: 'text', center: [center.x, center.y, 0], text: 'Reassign', group: group};
+            }
+
+            function group(name) {
+                return drawWidget.collection.get(ids[name]).get('group');
+            }
+
+            function foundIds(points, partial) {
+                return bodyView.getElementsInPolygon(imagePolygon(points), partial).map(function (result) {
+                    return result.element.id;
+                });
+            }
+
+            function waitForReassignMode() {
+                waitsFor(function () {
+                    return bodyView.viewerWidget.annotationLayer.annotations().length === 1;
+                }, 'reassign mode to be ready');
+            }
+
+            function drag(points, y) {
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousemove', {map: {x: points[0], y: y}});
+                    interactor.simulateEvent('mousedown', {map: {x: points[0], y: y}, button: 'left'});
+                    points.slice(1).forEach(function (x) {
+                        interactor.simulateEvent('mousemove', {map: {x: x, y: y}, button: 'left'});
+                    });
+                    interactor.simulateEvent('mouseup', {map: {x: points[points.length - 1], y: y}, button: 'left'});
+                });
+            }
+
+            it('add elements to reassign', function () {
+                runs(function () {
+                    bodyView = huiTest.app.bodyView;
+                    drawWidget = bodyView.drawWidget;
+                    startIds = drawWidget.collection.pluck('id');
+                    oldBrush = {size: $('.h-brush-size').val(), screen: $('.h-brush-screen').is(':checked')};
+                    $('.h-brush-size').val(6);
+                    $('.h-brush-screen').prop('checked', true).trigger('change');
+                    drawWidget.addElements([
+                        circle('A', 500, 350, 120, 'reassignA'),
+                        circle('B', 440, 350, 30, 'reassignB'),
+                        circle('C', 490, 350, 30, 'reassignB'),
+                        circle('D', 540, 350, 30, 'reassignB'),
+                        square('E', 700, 350, 20, 'reassignB'),
+                        text('F', 700, 420, 'reassignB')
+                    ]);
+                });
+                waitsFor(function () {
+                    var found = foundIds([[370, 220], [730, 220], [730, 480], [370, 480]], true);
+                    return Object.keys(ids).every(function (name) {
+                        return found.indexOf(ids[name]) >= 0;
+                    });
+                }, 'reassign elements to be drawn');
+                girderTest.waitForLoad();
+            });
+
+            it('finds elements partly inside a polygon', function () {
+                runs(function () {
+                    var box = [[400, 345], [420, 345], [420, 355], [400, 355]];
+                    expect(foundIds(box, true)).toContain(ids.B);
+                    expect(foundIds(box, false)).not.toContain(ids.B);
+                });
+            });
+
+            it('turns on with the button and the hotkey', function () {
+                runs(function () {
+                    expect($('button.h-draw[data-type="reassign"]').attr('title')).toBe(
+                        'Brush over elements to move them to the current group (keyboard shortcut: G)');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'g'}));
+                    expect($('.h-draw.active').attr('data-type')).toBe('reassign');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'g'}));
+                    expect($('.h-draw.active').length).toBe(0);
+                    expect(bodyView.viewerWidget.annotationLayer.annotations().length).toBe(0);
+                    $('.h-draw[data-type="reassign"]').click();
+                    expect($('.h-draw.active').attr('data-type')).toBe('reassign');
+                    drawWidget._setStyleGroup({id: 'reassignT'});
+                });
+                waitForReassignMode();
+            });
+
+            it('reassigns the innermost element on a click', function () {
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousemove', {map: {x: 425, y: 350}});
+                    interactor.simulateEvent('mousemove', {map: {x: 430, y: 350}});
+                    interactor.simulateEvent('mousedown', {map: {x: 430, y: 350}, button: 'left'});
+                    interactor.simulateEvent('mouseup', {map: {x: 430, y: 350}, button: 'left'});
+                });
+                waitsFor(function () {
+                    return group('B') === 'reassignT';
+                }, 'a click to reassign the inner circle');
+                girderTest.waitForLoad();
+                runs(function () {
+                    expect(group('A')).toBe('reassignA');
+                    expect(group('C')).toBe('reassignB');
+                    expect(bodyView.selectedElements.length).toBe(0);
+                });
+            });
+
+            it('leaves the outer element when dragging through inner ones', function () {
+                waitForReassignMode();
+                drag([445, 446, 555], 350);
+                waitsFor(function () {
+                    return group('C') === 'reassignT' && group('D') === 'reassignT';
+                }, 'a drag to reassign the inner circles');
+                girderTest.waitForLoad();
+                runs(function () {
+                    expect(group('A')).toBe('reassignA');
+                });
+            });
+
+            it('reassigns the outer element when only it is brushed', function () {
+                waitForReassignMode();
+                drag([500, 501, 520], 430);
+                waitsFor(function () {
+                    return group('A') === 'reassignT';
+                }, 'a drag to reassign the outer circle');
+                girderTest.waitForLoad();
+            });
+
+            it('reassigns text with only its color', function () {
+                waitForReassignMode();
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousemove', {map: {x: 695, y: 420}});
+                    interactor.simulateEvent('mousemove', {map: {x: 700, y: 420}});
+                    interactor.simulateEvent('mousedown', {map: {x: 700, y: 420}, button: 'left'});
+                    interactor.simulateEvent('mouseup', {map: {x: 700, y: 420}, button: 'left'});
+                });
+                waitsFor(function () {
+                    return group('F') === 'reassignT';
+                }, 'a click to reassign the text');
+                girderTest.waitForLoad();
+                runs(function () {
+                    var element = drawWidget.collection.get(ids.F);
+                    expect(element.get('fillColor')).toBeUndefined();
+                    expect(element.get('lineWidth')).toBeUndefined();
+                });
+            });
+
+            it('applies nothing and removes the cursor on escape', function () {
+                waitForReassignMode();
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    var layer = bodyView.viewerWidget.annotationLayer;
+                    interactor.simulateEvent('mousemove', {map: {x: 700, y: 350}});
+                    interactor.simulateEvent('mousedown', {map: {x: 700, y: 350}, button: 'left'});
+                    interactor.simulateEvent('mousemove', {map: {x: 701, y: 350}, button: 'left'});
+                    expect(bodyView.selectedElements.length).toBe(1);
+                    layer.mode(null, undefined, undefined, 'escape');
+                    $('.h-image-body').trigger($.Event('keydown', {key: 'Escape'}));
+                    interactor.simulateEvent('mouseup', {map: {x: 701, y: 350}, button: 'left'});
+                    expect($('.h-draw.active').length).toBe(0);
+                    expect(layer.annotations().length).toBe(0);
+                    expect(bodyView.selectedElements.length).toBe(0);
+                });
+                girderTest.waitForLoad();
+                runs(function () {
+                    expect(group('E')).toBe('reassignB');
+                });
+            });
+
+            it('remove the reassign test elements', function () {
+                runs(function () {
+                    $('.h-brush-size').val(oldBrush.size);
+                    $('.h-brush-screen').prop('checked', oldBrush.screen).trigger('change');
+                    drawWidget._setStyleGroup({id: drawWidget.parentView._defaultGroup});
+                    drawWidget.collection.remove(drawWidget.collection.filter(function (el) {
+                        return startIds.indexOf(el.id) < 0;
+                    }));
+                });
+                waitsFor(function () {
+                    return drawWidget.collection.length === startIds.length;
+                }, 'reassign test elements to be removed');
+                girderTest.waitForLoad();
+            });
+        });
+
         describe('Sort By', function () {
             var drawWidget;
             var testLabels = ['Alpha', 'Bravo', 'Charlie', 'Delta'];

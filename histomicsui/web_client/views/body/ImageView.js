@@ -35,6 +35,7 @@ import editElement from '../../dialogs/editElement';
 import editHotkeys from '../../dialogs/editHotkeys';
 import router from '../../router';
 import {USER_CONFIG_NAME, actionForEvent, applyHotkeyTitles, geojsKeyboardActions, resolveHotkeys, setCurrentHotkeys} from '../../hotkeys';
+import {groupedElementTypes} from '../../utilities/elementTypes';
 import events from '../../events';
 import {HuiSettings} from '../utils';
 import View from '../View';
@@ -1220,7 +1221,8 @@ var ImageView = View.extend({
             'draw.polygon': 'polygon',
             'draw.line': 'line',
             'draw.text': 'text',
-            'draw.brush': 'brush'
+            'draw.brush': 'brush',
+            'draw.reassign': 'reassign'
         };
         switch (action) {
             case 'group':
@@ -1316,10 +1318,16 @@ var ImageView = View.extend({
             case 'draw.cancel':
                 // When geojs is engaged, this value will be false. This allows us to handle events where geojs is not engaged separately.
                 if (this.viewerWidget.annotationLayer.geoIsOn(geo.event.annotation.mode)) {
+                    const layer = this.drawWidget.viewer.annotationLayer;
+                    const cursor = layer.mode() === layer.modes.cursor;
                     const button = this.$el.find('button.h-draw.active');
                     button.removeClass('active');
                     this.drawWidget._drawingType = null;
-                    this.drawWidget.viewer.annotationLayer.mode(null);
+                    layer.mode(null);
+                    // geojs keeps the brush cursor shape after leaving cursor mode
+                    if (cursor) {
+                        layer.removeAllAnnotations();
+                    }
                 }
                 break;
             default:
@@ -1421,7 +1429,15 @@ var ImageView = View.extend({
         return this.getElementsInPolygon(poly);
     },
 
-    getElementsInPolygon(poly) {
+    /**
+     * Find the annotation elements inside a polygon.
+     *
+     * @param {geo.polygonObject} poly The polygon to search.
+     * @param {boolean} [partial] If true, also find elements that are only
+     *      partly inside the polygon.
+     * @returns {object[]} A list of `{element, annotationId}`.
+     */
+    getElementsInPolygon(poly, partial = false) {
         const results = [];
         // text elements are in their own layer
         const features = this.viewerWidget.featureLayer.features().concat(
@@ -1430,12 +1446,13 @@ var ImageView = View.extend({
             if (feature._centroidFeature) {
                 return;
             }
-            const r = feature.polygonSearch(poly, {partial: false});
+            const r = feature.polygonSearch(poly, {partial});
             r.found.forEach((feature) => {
                 const annotationId = feature.properties ? feature.properties.annotation : null;
                 const element = feature.properties ? feature.properties.element : null;
-                if (element && element.id && annotationId) {
-                    const annotation = this.annotations.get(annotationId);
+                // selection highlights aren't from a loaded annotation
+                const annotation = annotationId ? this.annotations.get(annotationId) : null;
+                if (element && element.id && annotation) {
                     results.push({
                         element: annotation.elements().get(element.id),
                         annotationId
@@ -1753,6 +1770,47 @@ var ImageView = View.extend({
             annotationData.elements = annotation.elements().toJSON();
             annotation.set('annotation', annotationData);
         });
+    },
+    /**
+     * Move the selected elements to a group and give them its style.
+     *
+     * @param {string|null} group The group, or null to remove the group.
+     * @param {StyleModel} [style] The style to apply.
+     */
+    _setSelectionGroup(group, style) {
+        const styleAttrs = Object.assign({}, style ? style.toJSON() : {});
+        Object.keys(styleAttrs).forEach((k) => {
+            if (!['fillColor', 'lineColor', 'lineWidth', 'label', 'pattern'].includes(k)) {
+                delete styleAttrs[k];
+            }
+        });
+        styleAttrs.pattern = styleAttrs.pattern || 'none';
+        let refresh = false;
+        if (this.drawWidget) {
+            this.drawWidget._skipRenderHTML = 'skip';
+        }
+        this.selectedElements.each((element) => {
+            if (this.drawWidget && this.activeAnnotation.id === element.originalAnnotation.id &&
+                    element.attributes.group !== group && groupedElementTypes.includes(element.attributes.type)) {
+                this.drawWidget.updateCount(element.attributes.group || this._defaultGroup, -1);
+                this.drawWidget.updateCount(group || this._defaultGroup, 1);
+                refresh = true;
+            }
+            if (group) {
+                styleAttrs.group = group;
+            } else {
+                element.unset('group', {delaySave: true});
+            }
+            // text only has a color
+            element.set(element.get('type') === 'text' ? _.pick(styleAttrs, 'lineColor', 'label', 'group') : styleAttrs, {delaySave: true});
+        });
+        this.selectedElements.trigger('h:save');
+        if (this.drawWidget) {
+            delete this.drawWidget._skipRenderHTML;
+        }
+        if (this.drawWidget && refresh) {
+            this.drawWidget.render();
+        }
     },
     _removeSelection() {
         const groupedAnnotations = this.selectedElements.groupBy((element) => element.originalAnnotation.id);

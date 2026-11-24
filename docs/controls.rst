@@ -200,6 +200,19 @@ Annotation Controls
 
   - **[**, **]**: Change the size of the brush.
 
+  These also set the brush used for reassigning style groups.
+
+- **Reassign style group**:
+
+  - **g**: Switch to reassign mode.  If already in that mode, turn it off.
+    Left-click or left-drag the brush over elements of the current annotation
+    to move them to the current style group when the mouse is released.  An
+    element that the brush is entirely inside is only changed if the brush
+    touches no other element, so an element inside another can be changed on
+    its own.
+
+  - **esc**: Cancel the current stroke and turn off reassign mode.
+
 - **Change Style Group**:
 
   - **q**, **w**: Change the currently selected style group by cycling though

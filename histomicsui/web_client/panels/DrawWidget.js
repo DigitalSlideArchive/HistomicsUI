@@ -17,6 +17,8 @@ import StyleModel from '../models/StyleModel';
 import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
 import getAllowedGroups, {ensureAllowedGroupsExist} from '../utilities/allowedGroups';
+import {elementArea, elementContainsPolygon} from '../utilities/elementGeometry';
+import {groupedElementTypes} from '../utilities/elementTypes';
 import {applyHotkeyTitles} from '../hotkeys';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
@@ -129,6 +131,7 @@ var DrawWidget = Panel.extend({
                 groups: this._groupsForDisplay(),
                 style: this._style.id,
                 defaultGroup: this.parentView._defaultGroup,
+                groupedElementTypes,
                 highlighted: this._highlighted,
                 name,
                 opts: this._editOptions,
@@ -251,7 +254,7 @@ var DrawWidget = Panel.extend({
                 const oldLabel = labelElement.text().split(' ');
                 if (label) {
                     newLabel = label;
-                } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(elemType)) {
+                } else if (groupedElementTypes.includes(elemType)) {
                     let oldnum = parseInt(oldLabel[oldLabel.length - 1] || '');
                     if (!_.isFinite(oldnum)) {
                         oldnum = '';
@@ -261,7 +264,7 @@ var DrawWidget = Panel.extend({
                     newLabel = oldLabel;
                 }
                 this.$(`.h-element[data-id="${id}"] .h-element-label`).text(newLabel).attr('title', label);
-                if (origGroup !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(elemType)) {
+                if (origGroup !== group && groupedElementTypes.includes(elemType)) {
                     this.updateCount(origGroup || this.parentView._defaultGroup, -1);
                     this.updateCount(group || this.parentView._defaultGroup, 1);
                 }
@@ -347,7 +350,7 @@ var DrawWidget = Panel.extend({
         if (evt) {
             id = this._getId(evt);
         }
-        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(this.collection.get(id).attributes.type)) {
+        if (groupedElementTypes.includes(this.collection.get(id).attributes.type)) {
             this.updateCount(this.collection.get(id).attributes.group || this.parentView._defaultGroup, -1);
         } else if (this.collection.get(id).attributes.type === 'pixelmap') {
             this.countPixelmap(this.collection.get(id), -1);
@@ -382,6 +385,7 @@ var DrawWidget = Panel.extend({
                 elements,
                 style: this._style.id,
                 defaultGroup: this.parentView._defaultGroup,
+                groupedElementTypes,
                 highlighted: this._highlighted,
                 firstRender: false,
                 updateCount: this.updateCount,
@@ -596,19 +600,47 @@ var DrawWidget = Panel.extend({
      *    specified, it is a union operation.
      */
     _brushAction(evt) {
-        let annotations = this.viewer.annotationLayer.toPolygonList({pixelTolerance: this._pixelTolerance()});
-        let elements = [convertAnnotation(this.viewer.annotationLayer.annotations()[0])];
-        if (!elements[0].id) {
-            elements[0].id = this.viewer._guid();
+        if (evt.event === geo.event.annotation.cursor_action && evt.operation &&
+                evt.operation !== 'union' && evt.operation !== 'difference') {
+            return;
+        }
+        const {polygons: annotations, blurred} = this._brushStrokePolygons(evt);
+        let elements;
+        if (blurred) {
+            elements = [{
+                type: 'polyline',
+                closed: true,
+                points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1], z: 0})),
+                id: this.viewer._guid()
+            }];
+        } else {
+            elements = [convertAnnotation(this.viewer.annotationLayer.annotations()[0])];
+            if (!elements[0].id) {
+                elements[0].id = this.viewer._guid();
+            }
         }
         const opts = {
             currentBooleanOperation: evt.operation || 'union',
             asPolygonList: true
         };
+        this._addDrawnElements(elements, annotations, opts);
+        this._setBrushMode(true);
+        // update sooner so that the hit test will work
+        this.viewer.drawAnnotation(this.annotation);
+    },
+
+    /**
+     * Get the area covered by the brush for a click or drag event.  A drag
+     * also covers the path from the previous brush position.
+     *
+     * @param {geo.event} evt A cursor_action or cursor_click event.
+     * @returns {object} `polygons`: the covered area as a geojs polygon list.
+     *    `blurred`: true if the path from the previous position was added.
+     */
+    _brushStrokePolygons(evt) {
+        let polygons = this.viewer.annotationLayer.toPolygonList({pixelTolerance: this._pixelTolerance()});
+        let blurred = false;
         if (evt.event === geo.event.annotation.cursor_action) {
-            if (evt.operation && evt.operation !== 'union' && evt.operation !== 'difference') {
-                return;
-            }
             // if this is the same action as the previous one, "blur" the brush
             // shapes along the direction of travel
             if (this._lastBrushState && this._lastBrushState.stateId && this._lastBrushState.stateId === evt.evt.state.stateId) {
@@ -642,13 +674,8 @@ var DrawWidget = Panel.extend({
                             [c2x + size / 2 * Math.cos(ang), c2y + size / 2 * Math.sin(ang)]
                         ]]];
                     }
-                    annotations = geo.util.polyops.union(annotations, blur);
-                    elements = [{
-                        type: 'polyline',
-                        closed: true,
-                        points: annotations[0][0].map((pt) => ({x: pt[0], y: -pt[1], z: 0})),
-                        id: this.viewer._guid()
-                    }];
+                    polygons = geo.util.polyops.union(polygons, blur);
+                    blurred = true;
                 }
             }
             this._lastBrushState = evt.evt.state;
@@ -656,10 +683,47 @@ var DrawWidget = Panel.extend({
         } else {
             this._lastBrushState = null;
         }
-        this._addDrawnElements(elements, annotations, opts);
-        this._setBrushMode(true);
-        // update sooner so that the hit test will work
-        this.viewer.drawAnnotation(this.annotation);
+        return {polygons, blurred};
+    },
+
+    /**
+     * Select the active annotation's elements under a brush click or drag
+     * that aren't already in the current group.  Elements that contain the
+     * brush only count if it touches nothing else, and then only the smallest.
+     * On release, move the selected elements to the current group.
+     *
+     * @param {geo.event} evt A cursor_action or cursor_click event.
+     */
+    _reassignAction(evt) {
+        const {polygons} = this._brushStrokePolygons(evt);
+        const group = this._style.get('group');
+        const selected = this.parentView.selectedElements;
+        const hits = {};
+        polygons.forEach((polygon) => {
+            const [outer, ...inner] = polygon.map((ring) => ring.map((pt) => ({x: pt[0], y: -pt[1]})));
+            const found = this.parentView.getElementsInPolygon({outer, inner}, true)
+                .filter(({element, annotationId}) => annotationId === this.annotation.id && groupedElementTypes.includes(element.get('type')))
+                .map(({element}) => element);
+            const containers = found.filter((element) => elementContainsPolygon(element.attributes, {outer, inner}));
+            let touched = found.filter((element) => !containers.includes(element));
+            if (!touched.length && containers.length) {
+                touched = [_.min(containers, (element) => elementArea(element.attributes))];
+            }
+            touched.forEach((element) => {
+                if (element.get('group') !== group && !selected.get(element.id)) {
+                    hits[element.id] = element;
+                }
+            });
+        });
+        const elements = Object.values(hits);
+        elements.forEach((element, idx) => {
+            this.parentView._selectElement(element, {silent: idx !== elements.length - 1});
+        });
+        // applies once per stroke
+        if ((evt.event === geo.event.annotation.cursor_click || evt.evt.event === geo.event.actionup) && selected.length) {
+            this.parentView._setSelectionGroup(group, this._style);
+            this.parentView._resetSelection();
+        }
     },
 
     /**
@@ -667,8 +731,10 @@ var DrawWidget = Panel.extend({
      *
      * @param {boolean} [forceRefresh] If true, update the annotation mode even
      *      if it hasn't changed.
+     * @param {string} [type] The drawing type to report.
+     * @param {function} [action] Called with each brush click or drag event.
      */
-    _setBrushMode(forceRefresh) {
+    _setBrushMode(forceRefresh, type = 'brush', action = this._brushAction) {
         if (!this._brushPanBound) {
             this._brushPanBound = _.bind(this._brushPan, this);
         }
@@ -677,8 +743,8 @@ var DrawWidget = Panel.extend({
         this.viewer.annotationLayer.geoOff(geo.event.annotation.cursor_action);
         this.viewer.annotationLayer.geoOff(geo.event.pan, this._brushPanBound);
         this.viewer.annotationLayer.removeAllAnnotations();
-        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_click, (evt) => this._brushAction(evt));
-        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_action, (evt) => this._brushAction(evt));
+        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_click, (evt) => action.call(this, evt));
+        this.viewer.annotationLayer.geoOn(geo.event.annotation.cursor_action, (evt) => action.call(this, evt));
         const shape = this._editOptions.brush_shape || 'square';
         let size = parseFloat(this._editOptions.brush_size) || 50;
         const scale = this._editOptions.brush_screen;
@@ -691,7 +757,7 @@ var DrawWidget = Panel.extend({
         this.viewer.annotationLayer.addAnnotation(annot);
         this._setBrushCoordinates(annot, size);
         this.viewer.annotationLayer.mode(this.viewer.annotationLayer.modes.cursor, annot);
-        this._drawingType = 'brush';
+        this._drawingType = type;
         this.viewer.viewer.draw();
     },
 
@@ -773,6 +839,9 @@ var DrawWidget = Panel.extend({
         }
         if (type === 'brush') {
             this._setBrushMode(forceRefresh);
+        } else if (type === 'reassign') {
+            this.parentView._resetSelection();
+            this._setBrushMode(forceRefresh, 'reassign', this._reassignAction);
         } else if (type) {
             this.parentView._resetSelection();
             // always show the active annotation when drawing a new element
@@ -1060,8 +1129,8 @@ var DrawWidget = Panel.extend({
         };
         this._saveEditOptions(opts);
         this.$('.h-draw[data-type="brush"]').attr('shape', this._editOptions.brush_shape);
-        if (this._drawingType === 'brush') {
-            this.drawElement(undefined, 'brush', true);
+        if (['brush', 'reassign'].includes(this._drawingType)) {
+            this.drawElement(undefined, this._drawingType, true);
         }
     },
 
@@ -1275,7 +1344,7 @@ var DrawWidget = Panel.extend({
     _highlightElement(evt) {
         const id = $(evt.currentTarget).data('id');
         const annotType = this.collection._byId[id].get('type');
-        if (this.annotationSelector._interactiveMode && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(annotType)) {
+        if (this.annotationSelector._interactiveMode && groupedElementTypes.includes(annotType)) {
             $(evt.currentTarget).find('.h-view-element').show();
         }
         this.parentView.trigger('h:highlightAnnotation', this.annotation.id, id);
@@ -1324,7 +1393,7 @@ var DrawWidget = Panel.extend({
             return ('' + userLabel).toLowerCase();
         }
         const shape = this._elementShape(model);
-        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.type)) {
+        if (groupedElementTypes.includes(element.type)) {
             return `${this._elementGroupName(model)} ${shape}`.toLowerCase();
         }
         return ('' + shape).toLowerCase();
