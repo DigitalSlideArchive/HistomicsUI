@@ -1220,7 +1220,8 @@ var ImageView = View.extend({
             'draw.polygon': 'polygon',
             'draw.line': 'line',
             'draw.text': 'text',
-            'draw.brush': 'brush'
+            'draw.brush': 'brush',
+            'draw.reassign': 'reassign'
         };
         switch (action) {
             case 'group':

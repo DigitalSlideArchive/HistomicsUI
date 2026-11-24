@@ -113,7 +113,7 @@ block content
             | Screen
     .btn-group.btn-group-sm
       button.h-draw.btn.btn-default(
-        type='button', data-type='reassign', title='Brush over elements to move them to the current group', class=drawingType === 'reassign' ? 'active' : null)
+        type='button', data-type='reassign', data-hotkey-title='Brush over elements to move them to the current group (keyboard shortcut: {draw.reassign})', class=drawingType === 'reassign' ? 'active' : null)
         | #[span.icon-tags]Reassign
   .h-sort-row
     label.h-sort-label(for='h-sort-mode') Sort By

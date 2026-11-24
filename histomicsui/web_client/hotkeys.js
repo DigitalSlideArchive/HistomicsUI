@@ -83,6 +83,7 @@ const hotkeyActions = [
     {id: 'draw.line', category: 'Drawing', label: 'Draw a line', keys: ['l']},
     {id: 'draw.text', category: 'Drawing', label: 'Add text', keys: ['t']},
     {id: 'draw.brush', category: 'Drawing', label: 'Draw with a brush', keys: ['b']},
+    {id: 'draw.reassign', category: 'Drawing', label: 'Reassign elements into the current group', keys: ['g']},
     {id: 'draw.finish', category: 'Drawing', label: 'Finish the current polygon or line', keys: ['enter']},
     {id: 'draw.cancel', category: 'Drawing', label: 'Stop drawing', keys: ['esc']},
     {id: 'brush.shape', category: 'Drawing', label: 'Next brush shape', keys: ['shift+b']},
