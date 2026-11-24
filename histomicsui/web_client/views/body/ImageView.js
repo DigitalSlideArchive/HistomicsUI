@@ -1316,10 +1316,16 @@ var ImageView = View.extend({
             case 'draw.cancel':
                 // When geojs is engaged, this value will be false. This allows us to handle events where geojs is not engaged separately.
                 if (this.viewerWidget.annotationLayer.geoIsOn(geo.event.annotation.mode)) {
+                    const layer = this.drawWidget.viewer.annotationLayer;
+                    const cursor = layer.mode() === layer.modes.cursor;
                     const button = this.$el.find('button.h-draw.active');
                     button.removeClass('active');
                     this.drawWidget._drawingType = null;
-                    this.drawWidget.viewer.annotationLayer.mode(null);
+                    layer.mode(null);
+                    // geojs keeps the brush cursor shape after leaving cursor mode
+                    if (cursor) {
+                        layer.removeAllAnnotations();
+                    }
                 }
                 break;
             default:
