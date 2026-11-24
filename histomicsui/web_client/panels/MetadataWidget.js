@@ -69,6 +69,11 @@ var MetadataWidgetPanel = Panel.extend({
                 };
             }
             func.call(this.item, (accessLevel) => {
+                // Girder can grant users with read access permission to edit
+                // item metadata via an access flag.
+                if (this.item.get('_canEditMetadata') && accessLevel < AccessType.WRITE) {
+                    accessLevel = AccessType.WRITE;
+                }
                 this.accessLevel = accessLevel;
                 MetadataWidget.prototype.render.call(this);
             });
@@ -87,7 +92,7 @@ var MetadataWidgetPanel = Panel.extend({
         }
         this.$el.html(metadataWidgetPanelTemplate({
             contents,
-            accessLevel: this.item.attributes._accessLevel,
+            accessLevel: this.accessLevel,
             AccessType,
             firstKey,
             firstValue,
