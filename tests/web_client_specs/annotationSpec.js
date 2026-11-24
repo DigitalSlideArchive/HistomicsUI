@@ -1364,6 +1364,254 @@ girderTest.promise.done(function () {
             });
         });
 
+        describe('Exclusive groups', function () {
+            it('is off by default and is stored when toggled', function () {
+                var drawWidget = huiTest.app.bodyView.drawWidget;
+                expect($('.h-exclusive-groups').is(':checked')).toBe(false);
+                expect(drawWidget._editOptions.exclusive_groups).toBeFalsy();
+
+                $('.h-exclusive-groups').prop('checked', true).trigger('change');
+                expect(drawWidget._editOptions.exclusive_groups).toBe(true);
+                var stored = JSON.parse(window.localStorage.getItem('histomicsui'));
+                expect(stored[drawWidget._localId].exclusive_groups).toBe(true);
+
+                $('.h-exclusive-groups').prop('checked', false).trigger('change');
+                expect(drawWidget._editOptions.exclusive_groups).toBe(false);
+            });
+
+            // shapes are drawn at x 400-850, y 300-600, clear of the earlier
+            // draw panel tests
+            var drawWidget, startIds;
+
+            function groupElements(group) {
+                return drawWidget.collection.filter(function (el) {
+                    return el.get('group') === group;
+                });
+            }
+
+            function ringArea(pts) {
+                var sum = 0;
+                for (var i = 0, j = pts.length - 1; i < pts.length; j = i, i += 1) {
+                    sum += pts[j][0] * pts[i][1] - pts[i][0] * pts[j][1];
+                }
+                return Math.abs(sum) / 2;
+            }
+
+            function elementArea(el) {
+                if (el.get('type') === 'rectangle') {
+                    return el.get('width') * el.get('height');
+                }
+                var area = ringArea(el.get('points'));
+                (el.get('holes') || []).forEach(function (hole) {
+                    area -= ringArea(hole);
+                });
+                return area;
+            }
+
+            function groupArea(group) {
+                return groupElements(group).reduce(function (total, el) {
+                    return total + elementArea(el);
+                }, 0);
+            }
+
+            function setGroup(group) {
+                runs(function () {
+                    drawWidget._setStyleGroup({id: group});
+                });
+            }
+
+            function drawRectangle(x1, y1, x2, y2, op) {
+                var toggle;
+                var modifiers = {union: ['shift'], xor: ['shift', 'alt']}[op];
+                waitsFor(function () {
+                    return $('.geojs-map.annotation-input').length > 0;
+                }, 'rectangle mode to be active');
+                if (op) {
+                    waitsFor(function () {
+                        toggle = toggle ? 0 : 1;
+                        huiTest.geojsMap().interactor().simulateEvent('mousemove', {
+                            map: {x: x1 - 10 + toggle, y: y1},
+                            button: 'left',
+                            modifiers: modifiers
+                        });
+                        return $('.geojs-map.annotation-' + op).length > 0;
+                    }, op + ' mode to be active');
+                }
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    var first = {map: {x: x1, y: y1}, button: 'left'};
+                    if (op) {
+                        first.modifiers = modifiers;
+                    }
+                    interactor.simulateEvent('mousedown', first);
+                    interactor.simulateEvent('mouseup', first);
+                    interactor.simulateEvent('mousedown', {map: {x: x2, y: y2}, button: 'left'});
+                    interactor.simulateEvent('mouseup', {map: {x: x2, y: y2}, button: 'left'});
+                });
+                girderTest.waitForLoad();
+            }
+
+            it('turn on exclusive groups and select the rectangle tool', function () {
+                runs(function () {
+                    drawWidget = huiTest.app.bodyView.drawWidget;
+                    startIds = drawWidget.collection.pluck('id');
+                    $('.h-exclusive-groups').prop('checked', true).trigger('change');
+                    $('.h-draw[data-type="rectangle"]').click();
+                });
+            });
+
+            it('cuts the other group on a union', function () {
+                var areaA;
+                setGroup('exclusiveA');
+                drawRectangle(400, 300, 500, 400);
+                waitsFor(function () {
+                    return groupElements('exclusiveA').length === 1;
+                }, 'group A rectangle to be added');
+                runs(function () {
+                    areaA = groupArea('exclusiveA');
+                });
+                setGroup('exclusiveB');
+                drawRectangle(450, 350, 550, 450, 'union');
+                waitsFor(function () {
+                    return groupElements('exclusiveB').length === 1;
+                }, 'group B shape to be added');
+                runs(function () {
+                    var cut = groupElements('exclusiveA');
+                    expect(cut.length).toBe(1);
+                    expect(cut[0].get('type')).toBe('polyline');
+                    // a quarter of the rectangle is covered
+                    expect(elementArea(cut[0]) / areaA).toBeGreaterThan(0.7);
+                    expect(elementArea(cut[0]) / areaA).toBeLessThan(0.8);
+                });
+            });
+
+            it('removes a fully covered element of the other group', function () {
+                setGroup('exclusiveA');
+                drawRectangle(600, 300, 620, 320);
+                waitsFor(function () {
+                    return groupElements('exclusiveA').length === 2;
+                }, 'second group A rectangle to be added');
+                setGroup('exclusiveB');
+                drawRectangle(580, 280, 640, 340, 'union');
+                waitsFor(function () {
+                    return groupElements('exclusiveB').length === 2;
+                }, 'second group B shape to be added');
+                runs(function () {
+                    expect(groupElements('exclusiveA').length).toBe(1);
+                });
+            });
+
+            it('cuts other groups with the brush, including from no group', function () {
+                var areaA;
+                setGroup('exclusiveA');
+                drawRectangle(400, 500, 500, 600);
+                waitsFor(function () {
+                    return groupElements('exclusiveA').length === 2;
+                }, 'group A rectangle to be added for the brush');
+                runs(function () {
+                    areaA = groupArea('exclusiveA');
+                    drawWidget._setStyleGroup({id: drawWidget.parentView._defaultGroup});
+                    $('.h-draw[data-type="brush"]').click();
+                });
+                waitsFor(function () {
+                    return huiTest.geojsMap().layers()[3].annotations().length === 1;
+                }, 'brush mode to activate');
+                runs(function () {
+                    var interactor = huiTest.geojsMap().interactor();
+                    interactor.simulateEvent('mousemove', {map: {x: 445, y: 550}});
+                    interactor.simulateEvent('mousemove', {map: {x: 450, y: 550}});
+                    interactor.simulateEvent('mousedown', {map: {x: 450, y: 550}, button: 'left'});
+                    interactor.simulateEvent('mouseup', {map: {x: 450, y: 550}, button: 'left'});
+                });
+                waitsFor(function () {
+                    return groupArea('exclusiveA') < areaA;
+                }, 'brush to cut the group A rectangle');
+                girderTest.waitForLoad();
+                runs(function () {
+                    groupElements('exclusiveA').forEach(function (el) {
+                        expect(el.get('type')).toBe('polyline');
+                    });
+                    $('.h-draw[data-type="rectangle"]').click();
+                });
+            });
+
+            it('cuts other groups only where an xor adds area', function () {
+                var countB, oldIds, rectA, totalA;
+                setGroup('exclusiveB');
+                runs(function () {
+                    countB = groupElements('exclusiveB').length;
+                });
+                drawRectangle(600, 480, 680, 580);
+                waitsFor(function () {
+                    return groupElements('exclusiveB').length === countB + 1;
+                }, 'group B rectangle to be added for the xor');
+                runs(function () {
+                    oldIds = drawWidget.collection.pluck('id');
+                });
+                setGroup('exclusiveA');
+                drawRectangle(660, 480, 760, 580);
+                waitsFor(function () {
+                    rectA = groupElements('exclusiveA').filter(function (el) {
+                        return oldIds.indexOf(el.id) < 0;
+                    })[0];
+                    return rectA;
+                }, 'overlapping group A rectangle to be added');
+                runs(function () {
+                    totalA = groupArea('exclusiveA');
+                });
+                setGroup('exclusiveB');
+                drawRectangle(640, 500, 720, 560, 'xor');
+                waitsFor(function () {
+                    return groupArea('exclusiveA') < totalA;
+                }, 'xor to cut the group A rectangle');
+                runs(function () {
+                    var lost = (totalA - groupArea('exclusiveA')) / elementArea(rectA);
+                    expect(lost).toBeGreaterThan(0.2);
+                    expect(lost).toBeLessThan(0.28);
+                });
+            });
+
+            it('leaves other groups alone when turned off', function () {
+                var areaA, countB;
+                runs(function () {
+                    $('.h-exclusive-groups').prop('checked', false).trigger('change');
+                    countB = groupElements('exclusiveB').length;
+                });
+                setGroup('exclusiveA');
+                drawRectangle(700, 300, 800, 400);
+                waitsFor(function () {
+                    return groupElements('exclusiveA').filter(function (el) {
+                        return el.get('type') === 'rectangle';
+                    }).length === 1;
+                }, 'group A rectangle to be added with the option off');
+                runs(function () {
+                    areaA = groupArea('exclusiveA');
+                });
+                setGroup('exclusiveB');
+                drawRectangle(750, 350, 850, 450, 'union');
+                waitsFor(function () {
+                    return groupElements('exclusiveB').length === countB + 1;
+                }, 'group B shape to be added with the option off');
+                runs(function () {
+                    expect(groupArea('exclusiveA')).toBe(areaA);
+                });
+            });
+
+            it('remove the test elements', function () {
+                runs(function () {
+                    $('.h-draw[data-type="rectangle"]').click();
+                    drawWidget._setStyleGroup({id: drawWidget.parentView._defaultGroup});
+                    drawWidget.collection.remove(drawWidget.collection.filter(function (el) {
+                        return startIds.indexOf(el.id) < 0;
+                    }));
+                });
+                waitsFor(function () {
+                    return drawWidget.collection.length === startIds.length;
+                }, 'test elements to be removed');
+                girderTest.waitForLoad();
+            });
+        });
+
         describe('Sort By', function () {
             var drawWidget;
             var testLabels = ['Alpha', 'Bravo', 'Charlie', 'Delta'];

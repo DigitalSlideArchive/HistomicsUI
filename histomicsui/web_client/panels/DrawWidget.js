@@ -10,6 +10,7 @@ import convertAnnotation from '@girder/large_image_annotation/annotations/geojs/
 import convertRectangle from '@girder/large_image_annotation/annotations/geometry/rectangle';
 import convertEllipse from '@girder/large_image_annotation/annotations/geometry/ellipse';
 import convertCircle from '@girder/large_image_annotation/annotations/geometry/circle';
+import {geometryKeys} from '@girder/large_image_annotation/annotations/geometry';
 
 import StyleCollection from '../collections/StyleCollection';
 import StyleModel from '../models/StyleModel';
@@ -36,6 +37,7 @@ var DrawWidget = Panel.extend({
         'change .h-sort-mode': '_changeSortMode',
         'click .h-sort-order': '_toggleSortOrder',
         'change .h-brush-shape,.h-brush-size,.h-brush-screen': '_changeBrush',
+        'change .h-exclusive-groups': '_changeExclusiveGroups',
         'change .h-fixed-shape,.h-fixed-height,.h-fixed-width': '_changeShapeConstraint',
         'click .h-configure-style-group': '_styleGroupEditor',
         'mouseenter .h-element': '_highlightElement',
@@ -447,16 +449,22 @@ var DrawWidget = Panel.extend({
         }
         const oldids = {};
         const geojson = {type: 'FeatureCollection', features: []};
+        const exclusive = ['union', 'xor'].includes(op) && this._editOptions.exclusive_groups;
+        const otherGroups = [];
         near.forEach((n) => n.found.forEach((element) => {
             // filter to match current style group
             if (element.properties.element && element.properties.element.group !== this._style.get('group')) {
+                if (exclusive) {
+                    otherGroups.push(element);
+                    oldids[element.id] = true;
+                }
                 return;
             }
             element.properties.annotationId = element.properties.annotation.id;
             geojson.features.push(element);
             oldids[element.id] = true;
         }));
-        if (!geojson.features.length && polylist.length < 2) {
+        if (!geojson.features.length && !otherGroups.length && polylist.length < 2) {
             return false;
         }
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
@@ -477,6 +485,14 @@ var DrawWidget = Panel.extend({
             this.viewer.annotationLayer.cutOperation(annotations[0]);
         }
         const newAnnot = this.viewer.annotationLayer.annotations();
+        // other groups lose the part of the drawn shape now in this group
+        let cutArea = [];
+        if (otherGroups.length) {
+            cutArea = geo.util.polyops.intersect(this.viewer.annotationLayer, polylist, {
+                style: 'flat-listlist',
+                pixelTolerance: this._pixelTolerance()
+            });
+        }
 
         this.viewer.annotationLayer.removeAllAnnotations(undefined, false);
         const elements = newAnnot.map((annot) => {
@@ -486,10 +502,11 @@ var DrawWidget = Panel.extend({
             }
             return result;
         }).filter((annot) => !annot.points || annot.points.length);
+        const cutElements = this._cutElements(otherGroups, cutArea);
         if (this.parentView.annotationSelector) {
             this.annotation._inBooleanOp = true;
         }
-        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length}));
+        Object.keys(oldids).forEach((id) => this.deleteElement(undefined, id, {delaySave: elements.length + cutElements.length}));
         this.addElements(
             _.map(elements, (el) => {
                 el = _.extend(el, _.omit(this._style.toJSON(), 'id'));
@@ -497,13 +514,46 @@ var DrawWidget = Panel.extend({
                     delete el.group;
                 }
                 return el;
-            })
+            }).concat(cutElements)
         );
         if (this.parentView.annotationSelector) {
             delete this.annotation._inBooleanOp;
             this.parentView.annotationSelector._saveAnnotation(this.annotation);
         }
         return true;
+    },
+
+    /**
+     * Remove an area from elements, keeping each element's own group, label,
+     * and style.
+     *
+     * @param {object[]} features GeoJSON features of the elements to cut.
+     * @param {geo.polygonList} polylist The area to remove.
+     * @returns {object[]} The remaining parts as new elements.
+     */
+    _cutElements(features, polylist) {
+        const layer = this.viewer.annotationLayer;
+        const omitKeys = ['id', 'type'].concat(geometryKeys);
+        const results = [];
+        features.forEach((feature) => {
+            layer.removeAllAnnotations(undefined, false);
+            layer.geojson({type: 'FeatureCollection', features: [feature]});
+            const remaining = geo.util.polyops.difference(layer, polylist, {
+                style: 'flat-listlist',
+                pixelTolerance: this._pixelTolerance()
+            });
+            layer.removeAllAnnotations(undefined, false);
+            layer.fromPolygonList(remaining, {});
+            const props = _.omit(this.collection.get(feature.id).toJSON(), omitKeys);
+            layer.annotations().forEach((annot) => {
+                const element = convertAnnotation(annot);
+                if (!element.points || element.points.length) {
+                    results.push(_.extend(element, props, {id: this.viewer._guid()}));
+                }
+            });
+        });
+        layer.removeAllAnnotations(undefined, false);
+        return results;
     },
 
     /**
@@ -1013,6 +1063,13 @@ var DrawWidget = Panel.extend({
         if (this._drawingType === 'brush') {
             this.drawElement(undefined, 'brush', true);
         }
+    },
+
+    /**
+     * Store whether adding to a group removes the area from other groups.
+     */
+    _changeExclusiveGroups() {
+        this._saveEditOptions({exclusive_groups: this.$('.h-exclusive-groups').is(':checked')});
     },
 
     /**
