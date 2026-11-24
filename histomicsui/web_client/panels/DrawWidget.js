@@ -683,6 +683,33 @@ var DrawWidget = Panel.extend({
     },
 
     /**
+     * Select the active annotation's elements under a brush click or drag
+     * that aren't already in the current group.
+     *
+     * @param {geo.event} evt A cursor_action or cursor_click event.
+     */
+    _reassignAction(evt) {
+        const {polygons} = this._brushStrokePolygons(evt);
+        const group = this._style.get('group');
+        const types = ['point', 'polyline', 'rectangle', 'ellipse', 'circle'];
+        const selected = this.parentView.selectedElements;
+        const hits = {};
+        polygons.forEach((polygon) => {
+            const [outer, ...inner] = polygon.map((ring) => ring.map((pt) => ({x: pt[0], y: -pt[1]})));
+            this.parentView.getElementsInPolygon({outer, inner}, true).forEach(({element, annotationId}) => {
+                if (annotationId === this.annotation.id && types.includes(element.get('type')) &&
+                        element.get('group') !== group && !selected.get(element.id)) {
+                    hits[element.id] = element;
+                }
+            });
+        });
+        const elements = Object.values(hits);
+        elements.forEach((element, idx) => {
+            this.parentView._selectElement(element, {silent: idx !== elements.length - 1});
+        });
+    },
+
+    /**
      * Switch to or update brush mode.
      *
      * @param {boolean} [forceRefresh] If true, update the annotation mode even
@@ -796,7 +823,8 @@ var DrawWidget = Panel.extend({
         if (type === 'brush') {
             this._setBrushMode(forceRefresh);
         } else if (type === 'reassign') {
-            this._setBrushMode(forceRefresh, 'reassign', _.noop);
+            this.parentView._resetSelection();
+            this._setBrushMode(forceRefresh, 'reassign', this._reassignAction);
         } else if (type) {
             this.parentView._resetSelection();
             // always show the active annotation when drawing a new element
