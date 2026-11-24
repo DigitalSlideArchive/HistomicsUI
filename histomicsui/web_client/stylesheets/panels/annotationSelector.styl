@@ -14,12 +14,18 @@
     position relative
     margin 2px 5px
 
+  .h-annotation-opacity-lock
+    cursor pointer
+    margin 2px 0
+
 .h-annotation
   padding 2px
   line-height 1.1
   font-weight initial
   margin-left 5px
   border-radius 3px
+  display flex
+  flex-wrap wrap
 
   span
     cursor pointer
@@ -29,14 +35,22 @@
     margin-right 0.5em
 
   .h-annotation-right
-    float right
+    flex-shrink 0
+
+  .h-layer-opacity-changed
+    color #337ab7
+
+  .h-layer-opacity
+    flex-basis 100%
+    padding-top 2px
+    display flex
 
   a
     color #333
 
   .h-annotation-name
-    width 170px
-    display inline-block
+    flex 1 1 0%
+    min-width 0
     text-overflow ellipsis
     white-space nowrap
     overflow hidden
