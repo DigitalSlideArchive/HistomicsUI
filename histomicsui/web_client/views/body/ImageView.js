@@ -35,6 +35,7 @@ import editElement from '../../dialogs/editElement';
 import editHotkeys from '../../dialogs/editHotkeys';
 import router from '../../router';
 import {USER_CONFIG_NAME, actionForEvent, applyHotkeyTitles, geojsKeyboardActions, resolveHotkeys, setCurrentHotkeys} from '../../hotkeys';
+import {groupedElementTypes} from '../../utilities/elementTypes';
 import events from '../../events';
 import {HuiSettings} from '../utils';
 import View from '../View';
@@ -1790,7 +1791,7 @@ var ImageView = View.extend({
         }
         this.selectedElements.each((element) => {
             if (this.drawWidget && this.activeAnnotation.id === element.originalAnnotation.id &&
-                    element.attributes.group !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.attributes.type)) {
+                    element.attributes.group !== group && groupedElementTypes.includes(element.attributes.type)) {
                 this.drawWidget.updateCount(element.attributes.group || this._defaultGroup, -1);
                 this.drawWidget.updateCount(group || this._defaultGroup, 1);
                 refresh = true;

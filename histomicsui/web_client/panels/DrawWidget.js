@@ -18,6 +18,7 @@ import editElement from '../dialogs/editElement';
 import editStyleGroups from '../dialogs/editStyleGroups';
 import getAllowedGroups, {ensureAllowedGroupsExist} from '../utilities/allowedGroups';
 import {elementArea, elementContainsPolygon} from '../utilities/elementGeometry';
+import {groupedElementTypes} from '../utilities/elementTypes';
 import {applyHotkeyTitles} from '../hotkeys';
 import drawWidget from '../templates/panels/drawWidget.pug';
 import drawWidgetElement from '../templates/panels/drawWidgetElement.pug';
@@ -130,6 +131,7 @@ var DrawWidget = Panel.extend({
                 groups: this._groupsForDisplay(),
                 style: this._style.id,
                 defaultGroup: this.parentView._defaultGroup,
+                groupedElementTypes,
                 highlighted: this._highlighted,
                 name,
                 opts: this._editOptions,
@@ -252,7 +254,7 @@ var DrawWidget = Panel.extend({
                 const oldLabel = labelElement.text().split(' ');
                 if (label) {
                     newLabel = label;
-                } else if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(elemType)) {
+                } else if (groupedElementTypes.includes(elemType)) {
                     let oldnum = parseInt(oldLabel[oldLabel.length - 1] || '');
                     if (!_.isFinite(oldnum)) {
                         oldnum = '';
@@ -262,7 +264,7 @@ var DrawWidget = Panel.extend({
                     newLabel = oldLabel;
                 }
                 this.$(`.h-element[data-id="${id}"] .h-element-label`).text(newLabel).attr('title', label);
-                if (origGroup !== group && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(elemType)) {
+                if (origGroup !== group && groupedElementTypes.includes(elemType)) {
                     this.updateCount(origGroup || this.parentView._defaultGroup, -1);
                     this.updateCount(group || this.parentView._defaultGroup, 1);
                 }
@@ -348,7 +350,7 @@ var DrawWidget = Panel.extend({
         if (evt) {
             id = this._getId(evt);
         }
-        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(this.collection.get(id).attributes.type)) {
+        if (groupedElementTypes.includes(this.collection.get(id).attributes.type)) {
             this.updateCount(this.collection.get(id).attributes.group || this.parentView._defaultGroup, -1);
         } else if (this.collection.get(id).attributes.type === 'pixelmap') {
             this.countPixelmap(this.collection.get(id), -1);
@@ -383,6 +385,7 @@ var DrawWidget = Panel.extend({
                 elements,
                 style: this._style.id,
                 defaultGroup: this.parentView._defaultGroup,
+                groupedElementTypes,
                 highlighted: this._highlighted,
                 firstRender: false,
                 updateCount: this.updateCount,
@@ -694,13 +697,12 @@ var DrawWidget = Panel.extend({
     _reassignAction(evt) {
         const {polygons} = this._brushStrokePolygons(evt);
         const group = this._style.get('group');
-        const types = ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'];
         const selected = this.parentView.selectedElements;
         const hits = {};
         polygons.forEach((polygon) => {
             const [outer, ...inner] = polygon.map((ring) => ring.map((pt) => ({x: pt[0], y: -pt[1]})));
             const found = this.parentView.getElementsInPolygon({outer, inner}, true)
-                .filter(({element, annotationId}) => annotationId === this.annotation.id && types.includes(element.get('type')))
+                .filter(({element, annotationId}) => annotationId === this.annotation.id && groupedElementTypes.includes(element.get('type')))
                 .map(({element}) => element);
             const containers = found.filter((element) => elementContainsPolygon(element.attributes, {outer, inner}));
             let touched = found.filter((element) => !containers.includes(element));
@@ -1342,7 +1344,7 @@ var DrawWidget = Panel.extend({
     _highlightElement(evt) {
         const id = $(evt.currentTarget).data('id');
         const annotType = this.collection._byId[id].get('type');
-        if (this.annotationSelector._interactiveMode && ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(annotType)) {
+        if (this.annotationSelector._interactiveMode && groupedElementTypes.includes(annotType)) {
             $(evt.currentTarget).find('.h-view-element').show();
         }
         this.parentView.trigger('h:highlightAnnotation', this.annotation.id, id);
@@ -1391,7 +1393,7 @@ var DrawWidget = Panel.extend({
             return ('' + userLabel).toLowerCase();
         }
         const shape = this._elementShape(model);
-        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.type)) {
+        if (groupedElementTypes.includes(element.type)) {
             return `${this._elementGroupName(model)} ${shape}`.toLowerCase();
         }
         return ('' + shape).toLowerCase();

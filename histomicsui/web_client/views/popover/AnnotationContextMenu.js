@@ -2,6 +2,7 @@ import $ from 'jquery';
 
 import StyleCollection from '../../collections/StyleCollection';
 import {ensureAllowedGroupsExist, getCommonAllowedGroups} from '../../utilities/allowedGroups';
+import {groupedElementTypes} from '../../utilities/elementTypes';
 import {applyHotkeyTitles} from '../../hotkeys';
 import View from '../View';
 
@@ -52,7 +53,7 @@ const AnnotationContextMenu = View.extend({
         evt.stopPropagation();
         this.collection.each((element) => {
             if (this.parentView.drawWidget && this.parentView.activeAnnotation.id === element.originalAnnotation.id) {
-                if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.attributes.type)) {
+                if (groupedElementTypes.includes(element.attributes.type)) {
                     this.parentView.drawWidget.updateCount(element.attributes.group || this.parentView._defaultGroup, -1);
                 } else if (element.attributes.type === 'pixelmap') {
                     this.parentView.drawWidget.countPixelmap(element, -1);

@@ -16,7 +16,7 @@ if elements.length
       var type = element.type === 'polyline' ? (element.closed ? 'polygon' : 'line') : element.type;
       var displayId = ++displayIdOffset + displayIdStart;
       var label = ((element.label || {}).value || type);
-      if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.type)) {
+      if (groupedElementTypes.includes(element.type)) {
         if (counts[groupName]) {
           counts[groupName]++;
         } else {
@@ -30,7 +30,7 @@ if elements.length
         }
       }
       if (!(element.label || {}).value) {
-        if (['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'].includes(element.type)) {
+        if (groupedElementTypes.includes(element.type)) {
           label = groupName + ' ' + label + ' ' + displayId;
         } else {
           if (typeCounts[type] > 1) {
