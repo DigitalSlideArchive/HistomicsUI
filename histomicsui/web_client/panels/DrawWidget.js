@@ -694,7 +694,7 @@ var DrawWidget = Panel.extend({
     _reassignAction(evt) {
         const {polygons} = this._brushStrokePolygons(evt);
         const group = this._style.get('group');
-        const types = ['point', 'polyline', 'rectangle', 'ellipse', 'circle'];
+        const types = ['point', 'polyline', 'rectangle', 'ellipse', 'circle', 'text'];
         const selected = this.parentView.selectedElements;
         const hits = {};
         polygons.forEach((polygon) => {
